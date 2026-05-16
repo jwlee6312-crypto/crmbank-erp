@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hsod.mapper.HsodMapper">
+
+    <select id="HSOD_100U_STR" resultType="map">
+        EXEC HSOD_100U_STR #{ACTKIND}, #{CMPYCD}, #{ORDYM}, #{ORDNO}, #{ORDKIND}, #{DEPTCD}, #{CUSTCD}, #{WHCD},
+        #{AREA}, #{ORDYMD}, #{ORDEMP}, #{PAYCNDT}, #{OUTYMD}, #{TRANCD}, #{ADDRESS}, #{REMARK},
+        #{TOTSUM}, #{STS}, #{UPDEMP}, #{TRANAMT}
+    </select>
+
+    <select id="HSOD_101U_STR" resultType="map">
+        EXEC HSOD_101U_STR #{ACTKIND}, #{CMPYCD}, #{ORDYM}, #{ORDNO}, #{OROWNO}, #{ORDYMD}, #{DEPTCD},
+        #{CUSTCD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{ORDQTY}, #{PCTYPE}, #{ORDAMT}, #{ORDVAT}, #{UPDEMP}
+    </select>
+
+    <select id="HSOD_110S_STR" resultType="map">
+        EXEC HSOD_110S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTFR}, #{CUSTTO}, #{YMDFR}, #{YMDTO}
+    </select>
+
+    <select id="HSOD_120U_STR" resultType="map">
+        EXEC HSOD_120U_STR #{ACTKIND}, #{CMPYCD},
+        #{ORDKIND}, #{SELGBN}, #{ORDYMD_F}, #{ORDYMD_T}, #{ORDYM}, #{ORDNO}, #{OUTYMD},
+        #{DEPTCD}, #{WHCD}, #{ORDEMP}, #{UPDEMP}
+    </select>
+
+    <select id="HSOD_210U_STR" resultType="map">
+        EXEC HSOD_210U_STR #{ACTKIND}, #{CMPYCD}, #{GBN }, #{FRYMD}, #{TOYMD}, #{IOYM}, #{IONO},
+        #{CUSTCD}, #{DEPTCD}, #{IOYMD}, #{IOAMT}, #{IOVAT}, #{REMARK}, #{UPDEMP}
+    </select>
+
+</mapper>

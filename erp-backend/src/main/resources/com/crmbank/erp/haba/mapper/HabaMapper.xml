@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.haba.mapper.HabaMapper">
+
+    <select id="HABA_030U_STR" resultType="map">
+        EXEC HABA_030U_STR #{ACTKIND}, #{CMPYCD}, #{UNITCD}, #{UNITNM}, #{SAUPNO}, #{BOSSNM}, #{LEGALNO}, #{POSTNO}, #{ADDRESS}, #{UPTAE}, #{UPJONG}, #{TELNO}, #{FAXNO}, #{DSPORD}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HABA_060U_STR" resultType="map">
+        EXEC HABA_060U_STR #{ACTKIND}, #{CMPYCD}, #{DEPTCD}, #{DEPTNM}, #{DEPTSNM}, #{DEPTENM}, #{UPDEPT}, #{DEPTDUM}, #{DEPTEMP}, #{DEPTOPN}, #{DEPTCLD}, #{TAXUNIT}, #{COSTGBN}, #{DSPORD}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HABA_100U_STR" resultType="map">
+        EXEC HABA_100U_STR #{ACTKIND}, #{CMPYCD}, #{CLSYMD}, #{GLINE1}, #{GLINE2}, #{GLINE3}, #{GLINE4}, #{GLINE5},
+        #{BGTYPE}, #{STKGBN}, #{MNFYN}, #{STOKYN}, #{SLIPYN}, #{PRICEGBN}, #{CARDCUST}, #{LOGOIMG}, #{STAMPIMG}, #{UPDEMP},
+        #{YEOSINYN}, #{IOCNFMYN}, #{OUTACCTYN}
+    </select>
+
+    <select id="HABA_900U_STR" resultType="map">
+        EXEC HABA_900U_STR #{ACTKIND}, #{CMPYCD}, #{LTDNM}, #{LTDENM}, #{SAUPNO}, #{BOSSNM}, #{LEGALNO}, #{POSTNO}, #{ADDRESS}, #{UPTAE}, #{UPJONG}, #{TELNO}, #{FONDYMD}, #{CLSMM}, #{DOMAIN}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HABA_910U_STR" resultType="map">
+        EXEC HABA_910U_STR #{ACTKIND}, #{CMPYCD}, #{USERID}, #{USERNM}, #{DEPTCD}, #{DEPTNM}, #{PW}, #{TELNO}, #{HPNO}, #{EMAIL}, #{USEYN}, #{USERID}, #{PRICEGBN}
+    </select>
+
+    <select id="HABA_920U_STR" resultType="map">
+        EXEC HABA_920U_STR
+            #{ACTKIND}, #{WORD}, #{CMPYCD}, #{USERID}, #{USERNM},
+            #{DEPTCD}, #{DEPTNM}, #{EMPNO}, #{SALSYN}, #{PW},
+            #{TELNO}, #{HPNO}, #{EMAIL}, #{SDEPT}, #{USEYN},
+            #{USERGRP}, #{UPDEMP}, #{PRICEGBN}, #{POSITIONOFF}
+    </select>
+
+    <select id="HABA_935U_STR" resultType="map">
+        EXEC HABA_935U_STR #{ACTKIND}, #{CMPYCD}, #{USERGRP}, #{UPMUCD}, #{GRPCD}, #{PGMID}, #{USEYN}, #{MYPGM}, #{USERID}
+    </select>
+
+</mapper>

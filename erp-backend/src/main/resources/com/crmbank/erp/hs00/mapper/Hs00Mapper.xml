@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hs00.mapper.Hs00Mapper">
+
+    <select id="HS00_000S_STR" resultType="map">
+        EXEC HS00_000S_STR #{GUBUN}, #{CMPYCD}, #{GBNCD}, #{CODE}, #{CODENM}, #{ETCVAL}
+    </select>
+
+</mapper>

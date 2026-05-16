@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hppl.mapper.HpplMapper">
+
+    <select id="HPPL_100U_STR" resultType="map">
+        EXEC HPPL_100U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{YYMMDD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{PLNQTY}, #{UPDEMP}
+    </select>
+
+    <select id="HPPL_110S_STR" resultType="map">
+        EXEC HPPL_110S_STR #{CMPYCD}, #{YYMMDD}
+    </select>
+
+    <select id="HPPL_120U_STR" resultType="map">
+        EXEC HPPL_120U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{YYMMDD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{PLNQTY}, #{UPDEMP}
+    </select>
+
+</mapper>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hsst.mapper.HsstMapper">
+
+    <select id="HSST_100S_STR" resultType="map">
+        EXEC HSST_100S_STR #{CMPYCD}, #{SELGBN}, #{DEPTCD}, #{CUSTFR}, #{CUSTTO}, #{YMDFR}, #{YMDTO}
+    </select>
+    <select id="HSST_120S_STR" resultType="map">
+        EXEC HSST_120S_STR #{CMPYCD}, #{DEPTCD}, #{YMD}
+    </select>
+    <select id="HSST_130S_STR" resultType="map">
+        EXEC HSST_130S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+    </select>
+    <select id="HSST_150S_STR" resultType="map">
+        EXEC HSST_150S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+    </select>
+    <select id="HSST_180S_STR" resultType="map">
+        EXEC HSST_180S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+    </select>
+    <select id="HSST_200S_STR" resultType="map">
+        EXEC HSST_200S_STR #{CMPYCD}, #{YMD}, #{WHCD}, #{ASTKIND}, #{ITEMNM}, #{PageNo}, #{MaxCnt}
+    </select>
+    <select id="HSST_210S_STR" resultType="map">
+        EXEC HSST_210S_STR #{CMPYCD}, #{YMD}, #{DEPTCD}, #{CUSTCDFR}, #{CUSTCDTO}
+    </select>
+    <select id="HSST_300S_STR" resultType="map">
+        EXEC HSST_300S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+    </select>
+    <select id="HSST_320S_STR" resultType="map">
+        EXEC HSST_320S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+    </select>
+    <select id="HSST_340S_STR" resultType="map">
+        EXEC HSST_340S_STR #{CMPYCD}, #{DEPTCD}, #{YM}
+    </select>
+    <select id="HSST_360S_STR" resultType="map">
+        EXEC HSST_360S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCD}, #{YM}
+    </select>
+    <select id="HSST_510S_STR" resultType="map">
+        EXEC HSST_510S_STR #{CMPYCD}, #{DEPTCD}, #{ITEMCD}, #{FYMD}, #{TYMD}
+    </select>
+    <select id="HSST_520S_STR" resultType="map">
+        EXEC HSST_520S_STR #{CMPYCD}, #{DEPTCD}, #{YYMM}
+    </select>
+    <select id="HSST_570S_STR" resultType="map">
+        EXEC HSST_570S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCD}, #{YMDFR}, #{YMDTO}, #{ITEMCD}
+    </select>
+    <select id="HSST_600S_STR" resultType="map">
+        EXEC HSST_600S_STR #{CMPYCD}, #{YY}, #{DEPTCD}
+    </select>
+    <select id="HSST_610S_STR" resultType="map">
+        EXEC HSST_610S_STR #{CMPYCD}, #{YY}, #{DEPTCD}
+    </select>
+</mapper>

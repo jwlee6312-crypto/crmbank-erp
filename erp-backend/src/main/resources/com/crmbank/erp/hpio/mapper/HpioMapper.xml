@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hpio.mapper.HpioMapper">
+
+    <!-- LOT 부여작업 -->
+    <select id="HPIO_200U_STR" resultType="map">
+        EXEC HPIO_200U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{LOTYMD}, #{LOTNO},
+        #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{LOTSIZE}, #{STYMD}, #{TOYMD},
+        #{BIGO}, #{USEYN}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+    </select>
+
+    <!-- 작업지시서 -->
+    <select id="HPIO_210U_STR" resultType="map">
+        EXEC HPIO_210U_STR #{ACTKIND}, #{CMPYCD}, #{PROYMD}, #{LINECD}, #{PROGCD},
+        #{LOTYMD}, #{LOTNO}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{ORDQTY},
+        #{BIGO}, #{USEYN}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+    </select>
+
+    <!-- 생산실적 -->
+    <select id="HPIO_300U_STR" resultType="map">
+        EXEC HPIO_300U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{PROYMD},
+        #{ORDYMD}, #{EQUPCD}, #{PRODCD}, #{WORKJO}, #{WKGBN}, #{WHCD},
+        #{ITEMCD}, #{CUSTCD}, #{ITSIZE}, #{UNIT}, #{PRDQTY}, #{GODQTY},
+        #{ERRQTY}, #{ERRCD}, #{WONINCD}, #{LOTYMD}, #{LOTNO}, #{WORKMM},
+        #{BIGO}, #{USEYN}, #{ORDYM}, #{ORDNO}, #{BOMVER}, #{OUTAMT},
+        #{OUTVAT}, #{UPDEMP}
+    </select>
+
+    <!-- 생산투입실적 -->
+    <select id="HPIO_301U_STR" resultType="map">
+        EXEC HPIO_301U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{PROYMD},
+        #{ORDYMD}, #{EQUPCD}, #{PRODCD}, #{WORKJO}, #{WKGBN}, #{ITEMCD},
+        #{MITEMCD}, #{MITSIZE}, #{MUNIT}, #{WHCD}, #{BEFPROG}, #{ASTKIND},
+        #{CUSTCD}, #{SOQTY}, #{INQTY}, #{BIGO}, #{USEYN}, #{LOTYMD},
+        #{LOTNO}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+    </select>
+
+    <!-- 제품입고 -->
+    <select id="HPIO_400U_STR" resultType="map">
+        EXEC HPIO_400U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{PROYMDFR},
+        #{PROYMDTO}, #{ORDYMD}, #{DEPTCD}, #{WHCD}, #{EQUPCD}, #{PRODCD},
+        #{WORKJO}, #{WKGBN}, #{ITEMCD}, #{CUSTCD}, #{ITSIZE}, #{UNIT},
+        #{INQTY}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{ORDYM}, #{ORDNO}
+    </select>
+
+    <!-- 제품입고취소 -->
+    <select id="HPIO_410U_STR" resultType="map">
+        EXEC HPIO_410U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{WHCD},
+        #{INYMDFR}, #{INYMDTO}, #{EQUPCD}, #{PRODCD}, #{WORKJO}, #{WKGBN},
+        #{ITEMCD}, #{CUSTCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}
+    </select>
+
+    <!-- 제품입고현황 -->
+    <select id="HPIO_420S_STR" resultType="map">
+        EXEC HPIO_420S_STR #{CMPYCD}, #{WHCD}, #{PROYMDF}, #{PROYMDT}
+    </select>
+
+    <!-- 제품입고현황(상세) -->
+    <select id="HPIO_430S_STR" resultType="map">
+        EXEC HPIO_430S_STR #{CMPYCD}, #{WHCD}, #{ITEMCD}, #{PROYMDF}, #{PROYMDT}
+    </select>
+
+    <!-- 임가공/외주가공 계약 품의 -->
+    <select id="HPIO_290U_STR" resultType="map">
+        EXEC HPIO_290U_STR #{ACTKIND}, #{CMPYCD}, #{PUMYM}, #{PUMNO}, #{DEPTCD},
+        #{PUMGBN}, #{GELCND}, #{CUSTCD}, #{PUMYMD}, #{FRYMD}, #{TOYMD},
+        #{CFMYN}, #{REMARK}, #{UPDEMP}
+    </select>
+
+    <!-- 임가공/외주가공 계약 품의(상세) -->
+    <select id="HPIO_291U_STR" resultType="map">
+        EXEC HPIO_291U_STR #{ACTKIND}, #{CMPYCD}, #{PUMYM}, #{PUMNO}, #{ITEMCD},
+        #{ITEMCD_O}, #{ITSIZE}, #{UNIT}, #{PRICE}, #{REMARK}, #{UPDEMP}
+    </select>
+
+    <!-- 외주가공출고 MASTER -->
+    <select id="HPIO_340U_STR" resultType="map">
+        EXEC HPIO_340U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{PRODCD}, #{LINECD}, #{PROGCD},
+        #{OUTYMD}, #{ODEPTCD}, #{OWHCD}, #{OCUSTCD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{PROQTY}, #{PROYMD},
+        #{IDEPTCD}, #{IWHCD}, #{REMARK}, #{INYN}, #{PUMYM}, #{PUMNO}, #{INYM}, #{INNO}, #{UPDEMP}
+    </select>
+
+    <!-- 외주가공출고 상세 -->
+    <select id="HPIO_341U_STR" resultType="map">
+        EXEC HPIO_341U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{ONO}, #{IOROWNO}, #{INO},
+        #{LINECD}, #{PROGCD}, #{ODEPTCD}, #{OWHCD}, #{CUSTCD}, #{IOYMD}, #{IDEPTCD},
+        #{IWHCD}, #{ITEMCD}, #{UNIT}, #{IOQTY}, #{PUMYM}, #{PUMNO}, #{UPDEMP}
+    </select>
+
+    <!-- 생산실적(외주가공) -->
+    <select id="HPIO_350U_STR" resultType="map">
+        EXEC HPIO_350U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{PROYMD},
+        #{ORDYMD}, #{EQUPCD}, #{PRODCD}, #{WORKJO}, #{WKGBN}, #{WHCD},
+        #{ITEMCD}, #{ITEMCD_O}, #{CUSTCD}, #{ITSIZE}, #{UNIT}, #{PRDQTY},
+        #{GODQTY}, #{ERRQTY}, #{ERRCD}, #{WONINCD}, #{LOTYMD}, #{LOTNO},
+        #{WORKMM}, #{BIGO}, #{OUTYM}, #{OUTNO}, #{OUTPRICE}, #{OUTAMT},
+        #{OUTVAT}, #{USEYN}, #{UPDEMP}
+    </select>
+
+    <!-- 생산투입실적(외주가공) -->
+    <select id="HPIO_351U_STR" resultType="map">
+        EXEC HPIO_351U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{PROYMD},
+        #{ORDYMD}, #{EQUPCD}, #{PRODCD}, #{WORKJO}, #{WKGBN}, #{ITEMCD},
+        #{CUSTCD}, #{MITEMCD}, #{MITEMCD_O}, #{MITSIZE}, #{MUNIT}, #{WHCD},
+        #{BEFPROG}, #{ASTKIND}, #{SOQTY}, #{INQTY}, #{BIGO}, #{USEYN}, #{UPDEMP}
+    </select>
+
+    <!-- 이관출고 MASTER -->
+    <select id="HPIO_500U_STR" resultType="map">
+        EXEC HPIO_500U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{PRODCD}, #{LINECD}, #{PROGCD},
+        #{OUTYMD}, #{ODEPTCD}, #{OWHCD}, #{OCUSTCD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{PROQTY}, #{PROYMD},
+        #{IDEPTCD}, #{IWHCD}, #{REMARK}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+    </select>
+
+    <!-- 이관 출고내역 처리 -->
+    <select id="HPIO_501U_STR" resultType="map">
+        EXEC HPIO_501U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{ONO}, #{IOROWNO}, #{INO},
+        #{LINECD}, #{PROGCD}, #{ODEPTCD}, #{OWHCD}, #{CUSTCD}, #{IOYMD}, #{IDEPTCD},
+        #{IWHCD}, #{ITEMCD}, #{UNIT}, #{IOQTY}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+    </select>
+
+    <!-- 타계정출고 MASTER -->
+    <select id="HPIO_510U_STR" resultType="map">
+        EXEC HPIO_510U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO},
+        #{IOYMD}, #{IOTYPE}, #{CUSTCD}, #{DEPTCD}, #{WHCD}, #{USERID},
+        #{INYN}, #{INO}, #{REMARK}, #{CFMYN}, #{UPDEMP}
+    </select>
+
+    <!-- 타계정 출고내역 처리 -->
+    <select id="HPIO_511U_STR" resultType="map">
+        EXEC HPIO_511U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO},
+        #{DEPTCD}, #{CUSTCD}, #{WHCD}, #{USERID}, #{IOYMD}, #{IOTYPE}, #{ITEMCD},
+        #{ITSIZE}, #{UNIT}, #{INO}, #{ITEMCD_T}, #{ITSIZE_T}, #{UNIT_T},
+        #{IOQTY}, #{IOAMT}, #{IOVAT}, #{USEDEPT}, #{CFMYN}, #{UPDEMP}
+    </select>
+
+    <!-- 재공타계정출고 MASTER -->
+    <select id="HPIO_520U_STR" resultType="map">
+        EXEC HPIO_520U_STR #{ACTKIND}, #{CMPYCD}, #{IOYM}, #{IONO}, #{IOYMD}, #{LINECD}, #{PROGCD}, #{REMARK}, #{UPDEMP}
+    </select>
+
+    <!-- 재공 타계정 출고내역 처리 -->
+    <select id="HPIO_521U_STR" resultType="map">
+        EXEC HPIO_521U_STR #{ACTKIND}, #{CMPYCD}, #{OUTYM}, #{OUTNO}, #{TROWNO}, #{LINECD}, #{PROGCD}, #{OUTYMD},
+        #{TATYPE}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{QTY}, #{AMT}, #{DEPTCD}, #{CUSTCD}, #{REMARK}, #{CFMYN}, #{UPDEMP}
+    </select>
+
+    <!-- 외주가공생산실적등록 -->
+    <select id="HPIO_870U_STR" resultType="map">
+        EXEC HPIO_870U_STR #{ACTKIND}, #{CMPYCD}, #{FROMYMD}, #{TOYMD}, #{LINECD},
+        #{PROGCD}, #{SLIPYN}, #{IOGBN}, #{IOYM}, #{IONO}, #{CUSTCD}, #{PRODCD}, #{UPDEMP}
+    </select>
+
+    <!-- 입출고현황 -->
+    <select id="HPIO_640S_STR" resultType="map">
+        EXEC HPIO_640S_STR #{CMPYCD}, #{WHCD}, #{FYMD}, #{TYMD}, #{ASTKIND}
+    </select>
+
+    <!-- 창고 입출고 현황 -->
+    <select id="HPIO_650S_STR" resultType="map">
+        EXEC HPIO_650S_STR #{CMPYCD}, #{WHCD}, #{FYMD}, #{TYMD}, #{ASTKIND}, #{ITEMCD}
+    </select>
+
+    <!-- 공정별 입출고현황 -->
+    <select id="HPIO_660S_STR" resultType="map">
+        EXEC HPIO_660S_STR #{CMPYCD}, #{LINECD}, #{PROGCD}, #{FYMD}, #{TYMD}
+    </select>
+
+    <!-- 입고현황 -->
+    <select id="HPIO_710S_STR" resultType="map">
+        EXEC HPIO_710S_STR #{CMPYCD}, #{WHCD}, #{IOTYPE}, #{YMDFR}, #{YMDTO}, #{CUSTCD}, #{ITEMCD}
+    </select>
+
+    <!-- 창고별현재고 -->
+    <select id="HPIO_720S_STR" resultType="map">
+        EXEC HPIO_720S_STR #{CMPYCD}, #{YMD}, #{WHCD}, #{ASTKIND}
+    </select>
+
+    <!-- 작업지시현황 -->
+    <select id="HPIO_230S_STR" resultType="map">
+        EXEC HPIO_230S_STR #{CMPYCD}, #{LINECD}, #{ORDYMDF}, #{ORDYMDT}
+    </select>
+
+    <!-- 출고의뢰서 관리 -->
+    <select id="HPIO_850S_STR" resultType="map">
+        EXEC HPIO_850S_STR #{ACTKIND}, #{CMPYCD}, #{FROMYMD}, #{TOYMD}, #{LINECD},
+        #{PROGCD}, #{SLIPYN}, #{IOGBN}, #{IOYM}, #{IONO}, #{CUSTCD}, #{PRODCD}
+    </select>
+
+    <!-- 투입자재집계표 -->
+    <select id="HPIO_370S_STR" resultType="map">
+        EXEC HPIO_370S_STR #{CMPYCD}, #{SELGBN}, #{LINECD}, #{PROGCD}, #{PROYMDF}, #{PROYMDT}
+    </select>
+
+    <!-- 투입자재현황 -->
+    <select id="HPIO_380S_STR" resultType="map">
+        EXEC HPIO_380S_STR #{CMPYCD}, #{SELGBN}, #{LINECD}, #{PROGCD}, #{PRODCD}, #{MITEMCD}, #{PROYMDF}, #{PROYMDT}
+    </select>
+
+    <!-- 품목별 투입자재현황 -->
+    <select id="HPIO_390S_STR" resultType="map">
+        EXEC HPIO_390S_STR #{CMPYCD}, #{LINECD}, #{PROGCD}, #{PROYMDF}, #{PROYMDT}
+    </select>
+
+</mapper>

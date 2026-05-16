@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hpba.mapper.HpbaMapper">
+
+    <!-- 공정도 관리 -->
+    <select id="HPBA_200U_STR" resultType="map">
+        EXEC HPBA_200U_STR #{ACTKIND}, #{CMPYCD}, #{ITEMCD}, #{LINECD}, #{ASTKIND},
+        #{PROGCD}, #{ITSIZE}, #{UNIT}, #{PROGORD}, #{CAPAHH}, #{GADRATE},
+        #{PQTYTT}, #{PQTYDD}, #{GADTMDD}, #{JUNGRATE}, #{STDWORKHH}, #{UPDEMP}
+    </select>
+
+    <!-- bom 관리 -->
+    <select id="HPBA_210U_STR" resultType="map">
+        EXEC HPBA_210U_STR #{ACTKIND}, #{CMPYCD}, #{ITEMCD}, #{LINECD}, #{PROGCD},
+        #{MITEMCD}, #{MITSIZE}, #{MUNIT}, #{INQTY}, #{LOSRATE}, #{CALGBN},
+        #{INGBN}, #{JODGBN}, #{BEFPROG}, #{FRYMD}, #{TOYMD}, #{USEYN}, #{UPDEMP}
+    </select>
+
+    <!-- 생산라인 관리 -->
+    <select id="HPBA_130U_STR" resultType="map">
+        EXEC HPBA_130U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{LINENM}, #{DEPTCD},
+        #{DSPORD}, #{USEYN}, #{BIGO}, #{UPDEMP}
+    </select>
+
+    <!-- 공정코드 관리 -->
+    <select id="HPBA_100U_STR" resultType="map">
+        EXEC HPBA_100U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{PROGNM},
+        #{DEPTCD}, #{BIGO}, #{DSPORD}, #{USEYN}, #{UPDEMP}
+    </select>
+
+    <!-- 코드정보 -->
+    <select id="HPBA_900U_STR" resultType="map">
+        EXEC HPBA_900U_STR #{ACTKIND}, #{CMPYCD}, #{CDGBN}, #{CODE}, #{CDNM},
+        #{REMARK}, #{DSPORD}, #{USEYN}, #{UPDEMP}
+    </select>
+
+    <!-- 재고금액 등록 -->
+    <select id="HPBA_800U_STR" resultType="map">
+        EXEC HPBA_800U_STR #{ACTKIND}, #{CMPYCD}, #{YM}, #{MITEMCD}, #{BSQTY}, #{BSAMT}, #{UPDEMP}
+    </select>
+
+    <!-- 창고 재고수량 등록 -->
+    <select id="HPBA_810U_STR" resultType="map">
+        EXEC HPBA_810U_STR #{ACTKIND}, #{CMPYCD}, #{YM}, #{WHCD}, #{MITEMCD}, #{BSQTY}, #{UPDEMP}
+    </select>
+
+    <!-- 재공재공 금액 수불 등록 -->
+    <select id="HPBA_820U_STR" resultType="map">
+        EXEC HPBA_820U_STR #{ACTKIND}, #{CMPYCD}, #{YM}, #{LINECD}, #{PROGCD},
+        #{ITEMCD}, #{BSQTY}, #{BSAMT}, #{UPDEMP}
+    </select>
+
+    <!-- 재공재고 수량 수불 등록 -->
+    <select id="HPBA_830U_STR" resultType="map">
+        EXEC HPBA_830U_STR #{ACTKIND}, #{CMPYCD}, #{YM}, #{LINECD}, #{PROGCD},
+        #{ITEMCD}, #{BSQTY}, #{UPDEMP}
+    </select>
+
+    <!-- 외주 재공재고 수량 수불 등록 -->
+    <select id="HPBA_840U_STR" resultType="map">
+        EXEC HPBA_840U_STR #{ACTKIND}, #{CMPYCD}, #{YM}, #{LINECD}, #{PROGCD},
+        #{CUSTCD}, #{ITEMCD}, #{BSQTY}, #{UPDEMP}
+    </select>
+
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.crm.mapper.inbound.InboundMapper">
+
+    <!-- [1. 통합 Interaction 로그] -->
+    <insert id="insertTotalInteractionLog" parameterType="com.crmbank.erp.crm.dto.TotalCallLogDto">
+        MERGE INTO TOTAL_INTERACTION_LOG AS TARGET
+        USING (SELECT #{UNIQUEID} AS INTERACTION_ID) AS SOURCE
+        ON (TARGET.INTERACTION_ID = SOURCE.INTERACTION_ID)
+        WHEN MATCHED THEN
+            UPDATE SET SOURCE_ID = #{LINKEDID}, REC_FILE = #{REC_FILE}, UPDTIME = GETDATE()
+        WHEN NOT MATCHED THEN
+            INSERT (INTERACTION_ID, CMPYCD, MEDIA_TYPE, SOURCE_ID, DIRECTION, SRC_NO, DST_NO, START_TIME, STATUS, RESULT_CD, REC_FILE, ADDTIME)
+            VALUES (#{UNIQUEID}, #{CMPYCD}, #{MEDIA_TYPE}, #{LINKEDID}, #{DIRECTION}, #{SRC_NO}, #{DST_NO}, ISNULL(#{START_TIME}, GETDATE()), '010', '100', #{REC_FILE}, GETDATE());
+    </insert>
+
+    <update id="updateCallAnswer" parameterType="map">
+        UPDATE TOTAL_INTERACTION_LOG
+        SET ANSWER_TIME = GETDATE(), STATUS = '200', RESULT_CD = '200', EXTEN = #{EXTEN}, USERID = #{USERID},
+            EXT_DATA = (SELECT #{QUEUE_NM} AS queue_nm FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
+        WHERE INTERACTION_ID = #{UNIQUEID}
+    </update>
+
+    <update id="updateCallHangup" parameterType="map">
+        UPDATE TOTAL_INTERACTION_LOG
+        SET END_TIME = GETDATE(),
+            TALK_SEC = DATEDIFF(SECOND, ISNULL(ANSWER_TIME, START_TIME), GETDATE()),
+            HANGUP_CAUSE = CAST(#{HANGUP_CAUSE} AS VARCHAR), RESULT_CD = #{RESULT_CD}, REC_FILE = #{REC_FILE}, STATUS = '300'
+        WHERE INTERACTION_ID = #{UNIQUEID}
+    </update>
+
+    <!-- [2. 기준 정보 및 체크] -->
+    <select id="checkWorkMode" parameterType="map" resultType="string">
+        SELECT TOP 1 USEYN FROM HABA900T_TBL WHERE CMPYCD = #{CMPYCD} AND CDTYPE = '605' AND CODECD = '000'
+    </select>
+
+    <!-- [3. 고객 정보 조회] -->
+    <select id="findCustomerByPhoneMap" parameterType="map" resultType="map">
+        SELECT TOP 1 B.CUSTCD, B.CUSTNM, ISNULL(A.PHONENO, B.TELNO) AS HPNO, B.EMAIL
+        FROM PHONE_NUMBER_MAP A
+        INNER JOIN HABA020T_TBL B ON B.CMPYCD = #{CMPYCD} AND A.CUSTCD = B.CUSTCD
+        WHERE REPLACE(A.PHONENO, '-', '') = REPLACE(#{PHONE}, '-', '') AND A.USEYN = 'Y'
+    </select>
+
+    <insert id="insertCallMst" parameterType="com.crmbank.erp.crm.dto.CallMstDto">
+        INSERT INTO CALL_MST_TBL (CMPYCD, SVCNO, DEPTCD, CUSTCD, SVCYMD, TRB_MENT, ANS_MENT, START_TIME, END_TIME, CONSULTID, REC_FILE, INTERACTION_ID, ADDTIME, UPDTIME, UPDEMP)
+        VALUES (#{CMPYCD}, #{SVCNO}, #{DEPTCD}, #{CUSTCD}, #{SVCYMD}, #{TRB_MENT}, #{ANS_MENT}, #{START_TIME}, #{END_TIME}, #{CONSULTID}, #{REC_FILE}, #{INTERACTION_ID}, GETDATE(), GETDATE(), #{UPDEMP})
+    </insert>
+
+</mapper>

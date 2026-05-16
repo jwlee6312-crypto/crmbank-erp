@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.comm.mapper.CommMapper">
+
+    <select id="HABA_935U_STR" resultType="map">
+        EXEC HABA_935U_STR #{ACTKIND}, #{CMPYCD}, #{USERGRP}, #{UPMUCD}, #{GRPCD}, #{PGMID}, #{USEYN}, #{MYPGM}, #{USERID}
+    </select>
+
+    <select id="HABA_100U_STR" resultType="map">
+        EXEC HABA_100U_STR #{ACTKIND}, #{CMPYCD}, #{USERID}, #{CONFIG_JSON}
+    </select>
+
+    <select id="HABA_030U_STR" resultType="map">
+        EXEC HABA_030U_STR
+            #{ACTKIND}, #{CMPYCD}, #{UNITCD}, #{UNITNM}, #{SAUPNO}, #{BOSSNM},
+            #{LEGALNO}, #{POSTNO}, #{ADDRESS}, #{UPTAE}, #{UPJONG}, #{TELNO},
+            #{FAXNO}, #{DSPORD}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HAAA_800U_STR" resultType="map">
+        EXEC HAAA_800U_STR #{ACTKIND}, #{PGMID}, #{PGMNM}, #{UPMUCD}, #{GRPCD}, #{GRPNM}, #{DSPORD}, #{USEYN}, #{USERID}
+    </select>
+    <select id="HAAA_810U_STR" resultType="map">
+        EXEC HAAA_810U_STR #{ACTKIND}, #{UPMUCD}, #{GRPCD}, #{GRPNM}, #{DSPORD}, #{USEYN}, #{USERID}
+    </select>
+    <select id="HABA_920U_STR" resultType="map">
+        EXEC HABA_920U_STR #{ACTKIND}, #{CMPYCD}, #{USERID}, #{PW}, #{USERNM}, #{TELNO}, #{INNER_NO}, #{HPNO}, #{DEPTCD}, #{EMPNO}, #{SDEPTCD}, #{POSITIONOFF}, #{USERGRP}, #{EMAIL}, #{PRICEGBN}, #{USEYN}, #{SALSYN}, #{USERID}
+    </select>
+    <select id="HABA_900U_STR" resultType="map">
+        EXEC HABA_900U_STR #{ACTKIND}, #{CMPYCD}, #{LTDNM}, #{LTDENM}, #{SAUPNO}, #{BOSSNM}, #{LEGALNO}, #{POSTNO}, #{ADDRESS}, #{UPTAE}, #{UPJONG}, #{TELNO}, #{FONDYMD}, #{CLSMM}, #{DOMAIN}, #{USEYN}, #{USERID}
+    </select>
+    <select id="HABA_910U_STR" resultType="map">
+        EXEC HABA_910U_STR #{ACTKIND}, #{CMPYCD}, #{USERID}, #{USERNM}, #{DEPTCD}, #{DEPTNM}, #{PW}, #{TELNO}, #{HPNO}, #{EMAIL}, #{USEYN}, #{USERID}, #{PRICEGBN}
+    </select>
+    <select id="HABA_060U_STR" resultType="map">
+        EXEC HABA_060U_STR #{ACTKIND}, #{CMPYCD}, #{DEPTCD}, #{DEPTNM}, #{DEPTSNM}, #{DEPTENM}, #{UPDEPT}, #{DEPTDUM}, #{DEPTEMP}, #{DEPTOPN}, #{DEPTCLD}, #{TAXUNIT}, #{COSTGBN}, #{DSPORD}, #{USEYN}, #{USERID}
+    </select>
+    <select id="HAAA_010U_STR" resultType="map">
+        EXEC HAAA_010U_STR #{ACTKIND}, #{CDTYPE}, #{CODECD}, #{CODENM}, #{DSPORD}, #{REMARK}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HS00_000S_STR" resultType="map">
+        EXEC HS00_000S_STR #{GUBUN}, #{CMPYCD}, #{GBNCD}, #{CODE}
+    </select>
+
+    <select id="HP00_000S_STR" resultType="map">
+        EXEC HP00_000S_STR #{GUBUN}, #{CMPYCD}, #{GBNCD}, #{CODE}
+    </select>
+
+    <select id="GET_CODE_LIST" resultType="map">
+        SELECT CDTYPE, CODECD, CODENM, REMARK, DSPORD, USEYN FROM HABA900T_TBL WHERE CDTYPE = #{CDTYPE} AND USEYN = 'Y' ORDER BY DSPORD
+    </select>
+    <select id="GET_TOP_MENU_LIST" resultType="map">
+        SELECT CODECD, CODENM FROM HABA900T_TBL WHERE CDTYPE = '320' AND USEYN = 'Y' ORDER BY DSPORD
+    </select>
+    <select id="GET_LEFT_MENU_LIST" resultType="map">
+        SELECT A.UPMUCD, A.GRPCD, ISNULL(B.GRPNM,'') AS GRPNM, A.PGMID, A.PGMNM FROM HAAA800T_TBL A INNER JOIN HAAA810T_TBL B ON A.UPMUCD = B.UPMUCD AND A.GRPCD = B.GRPCD WHERE A.UPMUCD = #{UPMUCD} AND A.USEYN = 'Y' ORDER BY B.DSPORD, A.DSPORD
+    </select>
+    <select id="GET_COMPANY_INFO" resultType="map">
+        EXEC HABA_900U_STR 'S0', #{CMPYCD}
+    </select>
+    <select id="GET_USER_INFO" resultType="map">
+        EXEC HA00_010S_STR #{CMPYCD}, 'U0', '', #{USERID}
+    </select>
+    <insert id="INSERT_LOGIN_HISTORY">
+        INSERT INTO HABA970T_TBL (CMPYCD, USERID, ADDTIME, IOGBN, IP) VALUES (#{CMPYCD}, #{USERID}, GETDATE(), #{IOGBN}, #{IP})
+    </insert>
+    <delete id="DELETE_USER_CONN">
+        DELETE FROM HABA980T_TBL WHERE CMPYCD = #{CMPYCD} AND USERID = #{USERID}
+    </delete>
+</mapper>

@@ -1,0 +1,55 @@
+import { api } from '@/utils/axios'
+import type { AxiosResponse } from 'axios'
+
+export interface SelectData {
+	CODECD: string
+	CODENM: string
+}
+
+/**
+ * 🅰️ ERP (MSSQL) 공통코드 조회
+ */
+export async function fetchSelectData(CDTYPE: string): Promise<SelectData[]> {
+	return fetchSelectDataList<SelectData>('/code', { CDTYPE })
+}
+
+/**
+ * 🅱️ CRM (MSSQL 통합) 공통코드 조회
+ */
+export async function fetchCrmSelectData(CDTYPE: string): Promise<SelectData[]> {
+	return fetchSelectDataList<SelectData>('/crm/outbound/code', { CDTYPE })
+}
+
+/**
+ * 범용 셀렉트 데이터 조회 (대문자 표준)
+ */
+export async function fetchSelectDataList<T>(url: string, params?: any): Promise<T[]> {
+	try {
+		let requestParams: any = {};
+
+		if (typeof params === 'string') {
+			requestParams = { CDTYPE: params };
+		} else if (params) {
+			Object.keys(params).forEach(key => {
+				requestParams[key.toUpperCase()] = params[key];
+			});
+		}
+
+		const res: AxiosResponse<any> = await api.get(url, {
+			params: requestParams,
+		})
+
+		const list = res.data.data || res.data || []
+		return Array.isArray(list) ? list : []
+	} catch (e) {
+		console.error(`[fetchSelectDataList] ${url} 조회 실패:`, e)
+		return []
+	}
+}
+
+/**
+ * 유저 정보 조회
+ */
+export async function fetchUserData(): Promise<any[]> {
+	return fetchSelectDataList<any>('/user', {})
+}

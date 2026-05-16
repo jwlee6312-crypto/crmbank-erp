@@ -1,0 +1,328 @@
+<template>
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+
+  <div class="hpba840u-wrapper d-flex flex-column h-100 bg-white p-0">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-box-seam me-2 text-primary" style="font-size: 18px;"></i>
+        기초자료 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        <span class="text-primary fw-bolder">외주가공 재공기초재고수량 등록 (HPBA840U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-2">
+        <button class="btn-erp btn-init" @click="initialize">
+          <i class="bi bi-arrow-clockwise"></i> 초기화
+        </button>
+        <button class="btn-erp btn-search" @click="fetchList">
+          <i class="bi bi-search"></i> 조회
+        </button>
+        <button class="btn-erp btn-save" @click="saveData">
+          <i class="bi bi-save"></i> 저장
+        </button>
+      </div>
+    </div>
+
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-3">
+      <!-- 🅰️ 입력 폼 영역 -->
+      <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 8px;">
+        <div class="card-body p-0">
+          <table class="erp-table-full">
+            <colgroup>
+              <col style="width: 100px;"><col>
+              <col style="width: 100px;"><col>
+              <col style="width: 100px;"><col>
+              <col style="width: 100px;"><col>
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="required">연&nbsp;&nbsp;&nbsp;&nbsp;월</th>
+                <td>
+                  <div class="d-flex align-items-center gap-2" style="width: 200px;">
+                    <select v-model="formData.YY" class="form-select form-select-sm">
+                      <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
+                    </select>
+                    <select v-model="monthStr" class="form-select form-select-sm">
+                      <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}월</option>
+                    </select>
+                  </div>
+                </td>
+                <th class="required">생산라인</th>
+                <td>
+                  <select v-model="formData.LINECD" class="form-select form-select-sm" style="width: 150px;" @change="onLineChange">
+                    <option value="">라인 선택</option>
+                    <option v-for="opt in lineOptions" :key="opt.LINECD" :value="opt.LINECD">
+                      [{{ opt.LINECD }}] {{ opt.LINENM }}
+                    </option>
+                  </select>
+                </td>
+                <th class="required">생산공정</th>
+                <td>
+                  <select v-model="formData.PROGCD" class="form-select form-select-sm" style="width: 150px;">
+                    <option value="">공정 선택</option>
+                    <option v-for="opt in progOptions" :key="opt.PROGCD" :value="opt.PROGCD">
+                      [{{ opt.PROGCD }}] {{ opt.PROGNM }}
+                    </option>
+                  </select>
+                </td>
+                <th class="required">외 주 처</th>
+                <td>
+                  <div class="input-group input-group-sm" style="width: 180px;">
+                    <input v-model="formData.CUSTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="formData.CUSTNM" type="text" class="form-control" placeholder="외주처 선택" @keyup.enter="openHelp('CUST')" />
+                    <button class="btn btn-outline-secondary" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th class="required">품&nbsp;&nbsp;&nbsp;&nbsp;목</th>
+                <td colspan="3">
+                  <div class="input-group input-group-sm" style="width: 480px;">
+                    <input v-model="formData.ITEMCD" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.ITEMNM" type="text" class="form-control" placeholder="품목 선택" @keyup.enter="openHelp('ITEM')" />
+                    <input v-model="formData.ITSIZE" type="text" class="form-control bg-light" style="max-width: 120px;" readonly />
+                    <input v-model="formData.UNIT" type="text" class="form-control bg-light text-center" style="max-width: 50px;" readonly />
+                    <button class="btn btn-outline-secondary" @click="openHelp('ITEM')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="required">재고수량</th>
+                <td colspan="3">
+                  <div class="d-flex align-items-center gap-3">
+                    <input v-model="formData.QTY" type="number" class="form-control form-control-sm text-end border-primary" style="width: 150px;" />
+                    <span class="text-muted small"><i class="bi bi-info-circle me-1"></i> 외주처에 남아 있는 재고수량을 입력하십시오.</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 🅲 그리드 영역 -->
+      <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column" style="border-radius: 8px;">
+        <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+          <span class="fw-bold small text-dark"><i class="bi bi-table me-1 text-primary"></i> 외주 재공 기초 재고 등록 내역</span>
+          <span class="text-muted small">목록을 클릭하면 수정 모드로 전환됩니다.</span>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
+          <div ref="gridElement" style="height: 100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📊 하단 정보 바 -->
+    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
+      <div class="row align-items-center w-100">
+        <div class="col-md-4 small">등록건수: <span class="fw-bold text-info">{{ itemCount }}</span> 건</div>
+        <div class="col-md-8 text-end text-muted small">
+          <i class="bi bi-exclamation-circle me-1"></i> 연월, 라인, 공정, 외주처, 품목별로 하나의 기초 재고 정보만 존재할 수 있습니다.
+        </div>
+      </div>
+    </div>
+
+    <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
+import { useAlerts } from '@/composables/useAlerts'
+import { api } from '@/utils/axios'
+import { useAuthStore } from '@/stores/authStore'
+import { useFormReset } from '@/composables/useFormReset'
+import type { ModalProps } from '@/types/modal'
+
+const authStore = useAuthStore()
+const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
+const { resetForm } = useFormReset()
+
+const now = new Date()
+
+// 1. 상태 관리
+const formData = reactive({
+  ACTKIND: 'A0',
+  YY: String(now.getFullYear()),
+  MM: now.getMonth() + 1,
+  LINECD: '010',
+  LINENM: '통합라인',
+  PROGCD: '',
+  PROGNM: '',
+  CUSTCD: '',
+  CUSTNM: '',
+  ITEMCD: '',
+  ITEMNM: '',
+  ITSIZE: '',
+  UNIT: '',
+  QTY: 0
+})
+
+const lineOptions = ref<any[]>([])
+const progOptions = ref<any[]>([])
+
+const monthStr = computed({
+    get: () => String(formData.MM).padStart(2, '0'),
+    set: (v) => { formData.MM = Number(v) }
+})
+
+const yearOptions = ref<string[]>([])
+const monthOptions = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+
+const gridElement = ref<HTMLElement | null>(null)
+let grid: Tabulator | null = null
+const itemCount = ref(0)
+
+const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear()
+    for (let i = 0; i < 5; i++) yearOptions.value.push(String(currentYear - i))
+}
+
+const fetchLineOptions = async () => {
+  try {
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'L0', CMPYCD: authStore.CMPYCD, GBNCD: 'Y' } })
+    lineOptions.value = res.data
+  } catch (e) {}
+}
+
+const fetchProgOptions = async (lineCd: string) => {
+  if (!lineCd) { progOptions.value = []; return; }
+  try {
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'G0', CMPYCD: authStore.CMPYCD, LINECD: lineCd } })
+    progOptions.value = res.data
+  } catch (e) {}
+}
+
+const onLineChange = () => {
+    formData.PROGCD = ''
+    fetchProgOptions(formData.LINECD)
+}
+
+const initGrid = () => {
+  if (gridElement.value) {
+    grid = new Tabulator(gridElement.value, {
+      layout: "fitColumns",
+      height: "100%",
+      placeholder: "조회된 데이터가 없습니다.",
+      columns: [
+        { title: "품목코드", field: "ITEMCD", width: 100, hozAlign: "center" },
+        { title: "품 목", field: "ITEMNM", minWidth: 200, cssClass: "fw-bold" },
+        { title: "규격", field: "ITSIZE", width: 150 },
+        { title: "단위", field: "UNIT", width: 70, hozAlign: "center" },
+        { title: "기초재고수량", field: "STKQTY", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().QTYPNT||0 }, cssClass: "text-primary fw-bold" },
+        { title: "단가", field: "PRICE", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
+        { title: "기초재고금액", field: "STKAMT", width: 120, hozAlign: "right", formatter: "money" }
+      ],
+    })
+
+    grid.on("rowClick", (e, row) => {
+        const data = row.getData()
+        Object.assign(formData, {
+            ...data,
+            ACTKIND: 'U0',
+            YY: data.YM.substring(0, 4),
+            MM: Number(data.YM.substring(4, 6)),
+            QTY: data.STKQTY
+        })
+        fetchProgOptions(formData.LINECD)
+    })
+  }
+}
+
+const fetchList = async () => {
+  if (!formData.LINECD || !formData.PROGCD || !formData.CUSTCD) return vAlertError('라인, 공정, 외주처를 선택하세요.')
+  try {
+    const res = await api.post('/api/hpba/HPBA_840U_STR', {
+      ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, YY: formData.YY, MM: monthStr.value,
+      LINECD: formData.LINECD, PROGCD: formData.PROGCD, CUSTCD: formData.CUSTCD, ITEMCD: formData.ITEMCD
+    })
+
+    const mapped = res.data.map((i: any) => ({
+        ...i,
+        YM: i.YM || (formData.YY + monthStr.value),
+        PRICE: Number(i.STKQTY) !== 0 ? Number((Number(i.STKAMT) / Number(i.STKQTY)).toFixed(2)) : 0
+    }))
+
+    grid?.setData(mapped); itemCount.value = mapped.length; vAlert('조회되었습니다.')
+  } catch (e) { vAlertError('조회 실패') }
+}
+
+const saveData = async () => {
+  if (!formData.LINECD || !formData.PROGCD || !formData.CUSTCD) return vAlertError('라인, 공정, 외주처를 선택하세요.')
+  if (!formData.ITEMCD) return vAlertError('품목을 선택하세요.')
+  if (formData.QTY === 0) return vAlertError('수량을 입력하세요.')
+
+  if (!confirm('외주 재공 기초 재고 정보를 저장하시겠습니까?')) return
+
+  try {
+    await api.post('/api/hpba/HPBA_840U_STR', { ...formData, MM: monthStr.value, CMPYCD: authStore.CMPYCD, USERID: authStore.USERID })
+    vAlert('정상적으로 저장되었습니다.'); fetchList(); initializeFormOnly()
+  } catch (e) { vAlertError('저장 처리 중 오류 발생') }
+}
+
+const initializeFormOnly = () => {
+    formData.ACTKIND = 'A0'; formData.ITEMCD = ''; formData.ITEMNM = ''; formData.ITSIZE = ''; formData.UNIT = ''; formData.QTY = 0
+}
+
+const initialize = () => {
+  resetForm(formData)
+  Object.assign(formData, { ACTKIND: 'A0', YY: String(now.getFullYear()), MM: now.getMonth() + 1, LINECD: '010', LINENM: '통합라인', QTY: 0 })
+  grid?.clearData(); itemCount.value = 0
+  fetchProgOptions(formData.LINECD)
+}
+
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
+
+function openHelp(type: string) {
+  let config: any = {}
+  if (type === 'CUST') {
+    config = {
+        title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'CDNM',
+        data: { GUBUN: '010', CMPYCD: authStore.CMPYCD },
+        columns: [{ title: '코드', field: 'CODE', width: 100 }, { title: '거래처명', field: 'CDNM', width: 200 }],
+        onConfirm: (data: any) => { formData.CUSTCD = data.CODE; formData.CUSTNM = data.CDNM; }
+    }
+  } else if (type === 'ITEM') {
+    config = {
+      title: '품목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'ITEMNM',
+      data: { GUBUN: 'I0', CMPYCD: authStore.CMPYCD, codegbn: '210' },
+      columns: [{ title: '코드', field: 'ITEMCD', width: 100 }, { title: '품목명', field: 'ITEMNM', width: 250 }, { title: '규격', field: 'ITSIZE', width: 120 }],
+      onConfirm: (data: any) => {
+          formData.ITEMCD = data.ITEMCD;
+          formData.ITEMNM = data.ITEMNM;
+          formData.ITSIZE = data.ITSIZE;
+          formData.UNIT = data.UNIT;
+      }
+    }
+  }
+  Object.assign(modalProps, config); modalVisible.value = true
+}
+
+const formatDateString = (v: any, sep: string) => v && String(v).length >= 6 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${v.length === 8 ? sep + v.substring(6, 8) : ''}` : (v || '')
+
+onMounted(() => {
+  generateYearOptions()
+  fetchLineOptions()
+  fetchProgOptions(formData.LINECD)
+  nextTick(() => { initGrid(); })
+})
+</script>
+
+<style scoped>
+.hpba840u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #f4f7fa !important; }
+.erp-header { background-color: #ffffff !important; }
+.btn-erp { padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; border: none; }
+.btn-init { background-color: #f8f9fa !important; color: #495057 !important; border: 1px solid #ced4da !important; }
+.btn-search { background-color: #4361ee !important; color: #fff !important; }
+.btn-save { background-color: #2ec4b6 !important; color: #fff !important; }
+.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.erp-table-full th { width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 11.5px; padding: 10px !important; color: #495057; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 6px 12px !important; background-color: #fff; vertical-align: middle; }
+.required::after { content: ' *'; color: #dc3545; }
+:deep(.tabulator) { border: none; font-size: 12.5px; border-radius: 0 0 8px 8px; }
+:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; font-weight: 700; }
+:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; color: #333; }
+</style>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hsip.mapper.HsipMapper">
+
+    <select id="HSIP_100U_STR" resultType="map">
+        EXEC HSIP_100U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{DEPTCD}, #{OFFERNO},
+        #{SUPERGBN}, #{IMPTGBN}, #{ISSYMD}, #{CUSTCD}, #{CURRCD}, #{FRGNRATE}, #{NACD},
+        #{SHIPPORT}, #{PRICOND}, #{PRITEXT}, #{ARVPORT}, #{PAYCOND}, #{PAYTERM}, #{LCAMT},
+        #{WONAMT}, #{FRGNAMT}, #{XTAMT}, #{BIGO}, #{INYMD}, #{APVYN}, #{APVYMD}, #{APVEMP}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_101U_STR" resultType="map">
+        EXEC HSIP_101U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{PROWNO}, #{ITEMCD}, #{ITSIZE},
+        #{UNIT}, #{QTY}, #{AMT}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_110U_STR" resultType="map">
+        EXEC HSIP_110U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{SHIPSEQ}, #{SHIPYMD},
+        #{ARVYMD}, #{STORSEAT}, #{BLNO}, #{FRGNRATE}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_111U_STR" resultType="map">
+        EXEC HSIP_111U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{SHIPSEQ}, #{SROWNO},
+        #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{QTY}, #{AMT}, #{WONAMT}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_120U_STR" resultType="map">
+        EXEC HSIP_120U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{SHIPSEQ}, #{PASSSEQ},
+        #{PASSYMD}, #{TAXORG}, #{PASSNO}, #{WHCD}, #{DEPTCD}, #{IOYM}, #{IONO}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_121U_STR" resultType="map">
+        EXEC HSIP_121U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{SHIPSEQ}, #{PASSSEQ},
+        #{PROWNO}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{GQTY}, #{QTY}, #{AMT},
+        #{IOYM}, #{IONO}, #{IOROWNO}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_130U_STR" resultType="map">
+        EXEC HSIP_130U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{DOCNO}, #{DEPTCD}, #{PUBYMD}, #{BIGO}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_131U_STR" resultType="map">
+        EXEC HSIP_131U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{DOCNO}, #{ROWNO}, #{COSTCD},
+        #{DEPTCD}, #{SHIPSEQ}, #{PASSSEQ}, #{PUBYMD}, #{COSTAMT}, #{CURRCD}, #{FRGNRATE},
+        #{FRGNAMT}, #{PAYCUST}, #{MGTNO}, #{BIGO}, #{SLIPYMD}, #{SLIPNO}, #{SROWNO}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_140U_STR" resultType="map">
+        EXEC HSIP_140U_STR #{ACTKIND}, #{CMPYCD}, #{DEPTCD}, #{IOYMDFR}, #{IOYMDTO}, #{FILENO},
+        #{DOCNO}, #{CROWNO}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_145U_STR" resultType="map">
+        EXEC HSIP_145U_STR #{ACTKIND}, #{CMPYCD}, #{COSTCD}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD},
+        #{FILENO}, #{DOCNO}, #{CROWNO}, #{JSANYMD}, #{SPYAMT}, #{VATAMT}, #{CUSTCD}, #{TAXUNIT},
+        #{VATTYPE}, #{SLIPYMD}, #{SLIPNO}, #{SLIPKIND}, #{HDEPTCD}, #{BUSINESS}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_150U_STR" resultType="map">
+        EXEC HSIP_150U_STR #{ACTKIND}, #{CMPYCD}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_155U_STR" resultType="map">
+        EXEC HSIP_155U_STR #{ACTKIND}, #{CMPYCD}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_160U_STR" resultType="map">
+        EXEC HSIP_160U_STR #{ACTKIND}, #{CMPYCD}, #{DEPTCD}, #{FRYMD}, #{TOYMD}, #{DIVYN},
+        #{FILENO}, #{SHIPSEQ}, #{PASSSEQ}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_161S_STR" resultType="map">
+        EXEC HSIP_161S_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{SHIPSEQ}, #{PASSSEQ}, #{DIVYN}, #{ITEMCD}
+    </select>
+
+    <select id="HSIP_180U_STR" resultType="map">
+        EXEC HSIP_180U_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{SHIPSEQ}, #{PASSSEQ},
+        #{IOYM}, #{IONO}, #{IOROWNO}, #{IOAMT}, #{UPDEMP}
+    </select>
+
+    <select id="HSIP_200S_STR" resultType="map">
+        EXEC HSIP_200S_STR #{ACTKIND}, #{CMPYCD}, #{FILENO}, #{DEPTCD}
+    </select>
+
+    <select id="HSIP_210S_STR" resultType="map">
+        EXEC HSIP_210S_STR #{CMPYCD}, #{YY}, #{DEPTCD}
+    </select>
+
+</mapper>

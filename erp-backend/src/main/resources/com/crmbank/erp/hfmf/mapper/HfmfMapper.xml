@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hfmf.mapper.HfmfMapper">
+    <!-- 1   품목별 배부적수 등록-->
+    <select id="FMF1020U_STR" resultType="map">
+        EXEC FMF1020U_STR #{CMPYCD}, #{ACTKIND},  #{YYMM}, #{ITEMCD}, #{DIVRATE}
+    </select>
+    <!--2 제조비용관리-->
+    <select id="FMF1040U_STR" resultType="map">
+        EXEC FMF1040U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{COSTCD}, #{ACCT}, #{COSTAMT}, #{USERID}
+    </select>
+    <!--  3  작업장 배부적수 등록-->
+    <select id="FMF1050U_STR" resultType="map">
+        EXEC FMF1050U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{COSTCD}, #{LINECD}, #{DIVSTD},
+        #{RATE}, #{REMARK}, #{USERID}
+    </select>
+    <!-- 4 생산실적집계-->
+    <select id="FMF2010U_STR" resultType="map">
+        EXEC FMF2010U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{COLGBN}, #{USERID}
+    </select>
+    <!--5 공정별배부작업-->
+    <select id="FMF2020U_STR" resultType="map">
+        EXEC FMF2020U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{CHASU}, #{USERID}
+    </select>
+    <!--6 작업장별 배부 명세서	   -->
+    <select id="FMF2060R_STR" resultType="map">
+        EXEC FMF2060R_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{COSTCD}
+    </select>
+    <!--7 공정제조비용관리-->
+    <select id="FMF2070U_STR" resultType="map">
+        EXEC FMF2070U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{COSTCD}, #{ACCT}, #{LINECD}, #{ADSTAMT}, #{USERID}
+    </select>
+
+    <!--8 제조원가계산작업-->
+    <select id="FMF2110U_STR" resultType="map">
+        EXEC FMF2110U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{JOBORD}, #{USERID}, #{MsgYn}, #{MsgText}
+    </select>
+    <!--9 품목별 제조원가 계산서-->
+    <select id="FMF2120R_STR" resultType="map">
+        EXEC FMF2120R_STR #{CMPYCD}, #{YYMM}, #{ITEMCD}
+    </select>
+    <!--10 월별 제품 제조원가명세서-->
+    <select id="FMF2140R_STR" resultType="map">
+        EXEC FMF2140R_STR #{CMPYCD}, #{YYMM}, #{ITEMCD}
+    </select>
+    <!--11 제조경비 배부명세서-->
+    <select id="FMF2150R_STR" resultType="map">
+        EXEC FMF2150R_STR #{CMPYCD}, #{YYMM}, #{DEPTCD}
+    </select>
+    <!--12 제품별 제조원가 현황-->
+    <select id="FMF2160R_STR" resultType="map">
+        EXEC FMF2160R_STR #{CMPYCD}, #{YYMM}, #{ITEMCD}
+    </select>
+    <!--13 외주가공 제조원가 현황-->
+    <select id="FMF2180R_STR" resultType="map">
+        EXEC FMF2180R_STR #{CMPYCD}, #{YYMM}, #{ITEMCD}
+    </select>
+    <!--14 재료비 현황-->
+    <select id="FMF2190R_STR" resultType="map">
+        EXEC FMF2190R_STR #{CMPYCD}, #{YYMM}, #{ITEMCD}
+    </select>
+    <!--15 제조원가명세서-->
+    <select id="FMF2210R_STR" resultType="map">
+        EXEC FMF2210R_STR #{CMPYCD}, #{YYMM}
+    </select>
+    <!--16 원가마감정보등록 -->
+    <select id="FMF3010U_STR" resultType="map">
+        EXEC FMF3010U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{JAGBN}, #{USERID}
+    </select>
+
+</mapper>

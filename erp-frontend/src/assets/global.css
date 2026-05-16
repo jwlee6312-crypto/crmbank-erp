@@ -1,0 +1,110 @@
+* {
+    box-sizing: border-box;
+}
+
+/* DefaultLayout.vue 설정 */
+.default-css {
+    min-width: 1510px;
+    min-height: 100vh;
+    background: rgb(255, 255, 255);
+}
+
+.main-page {
+    height: calc(100vh - 56px);
+}
+
+/* SideMenu.vue 사이드바 설정 */
+.side-bar {
+    background: #ffffff;
+    width: 230px;
+    flex-shrink: 0;
+    overflow: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.side-bar::-webkit-scrollbar { display: none; }
+
+/* 💎 [시스템 표준] 행추가 버튼 디자인 (HSIO020U 기준 고도화) */
+.btn-grid-row-add {
+    height: 26px !important;
+    padding: 0 12px !important;
+    border-radius: 3px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    border: 1px solid #4361ee !important;
+    background-color: #fff !important;
+    color: #4361ee !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+}
+.btn-grid-row-add:hover {
+    background-color: #4361ee !important;
+    color: #fff !important;
+}
+.btn-grid-row-add i { font-size: 14px !important; }
+
+/* 💎 [시스템 표준] Tabulator 디자인 */
+.tabulator {
+    border: none !important;
+    font-size: 12.5px !important;
+    background-color: transparent !important;
+}
+.tabulator-header {
+    background-color: #f1f5f9 !important;
+    border-bottom: 2px solid #dee2e6 !important;
+}
+.tabulator-col-title {
+    line-height: 1.3 !important;
+    text-align: center !important;
+    font-weight: 800 !important;
+    color: #334155 !important;
+}
+.tabulator-row.tabulator-selected {
+    background-color: #f0f7ff !important;
+    border-left: 4px solid #005a9f !important;
+}
+
+/* 💡 그리드 하단 합계 행(Footer Calculation) 공통 스타일 */
+.tabulator-footer {
+    background-color: #f8fafc !important;
+    border-top: 1px solid #dee2e6 !important;
+    padding: 2px !important;
+}
+.tabulator-calcs-holder {
+    background-color: #fffde7 !important; /* 연한 노란색 강조 */
+    font-weight: 800 !important;
+    color: #1e293b !important;
+    border-top: 1px solid #dee2e6 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* 💎 전역 팝업(모달) 프리미엄 컴팩트 디자인 */
+.erp-modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(1.5px); z-index: 10000;
+  display: flex; align-items: center; justify-content: center;
+}
+.erp-modal-container {
+  background: #fff; border-radius: 4px; overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.erp-modal-header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-bottom: 2px solid #005a9f;
+  padding: 6px 12px !important;
+  color: #fff;
+}
+.header-icon-box-xs {
+  background: rgba(255,255,255,0.1); width: 22px; height: 22px;
+  border-radius: 3px; display: flex; align-items: center; justify-content: center;
+}
+
+.required-label::after { content: " *"; color: #ef4444; }
+.manual-btn { margin-left: 5px; margin-right: 5px; color: #005a9f; cursor: pointer }
+.shadow-inner-soft { box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03); }
+.animate-scale-in { animation: scaleIn 0.15s ease-out; }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
