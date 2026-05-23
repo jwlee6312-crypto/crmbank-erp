@@ -138,8 +138,10 @@
 								<label class="form-check-label fw-bold text-danger" for="escCheck">타 부서 업무 이관 (에스컬레이션/VOC 등록)</label>
 							</div>
 							<div v-if="consultData.escalation_yn === 'Y'" class="mt-2 scale-in">
-								<label class="form-label mini-label fw-bold text-muted mb-1">이관 요청 메모 (담당자 전달용)</label>
-								<textarea class="form-control form-control-sm border-danger-subtle" rows="3" v-model="consultData.esc_memo" placeholder="이관할 부서 담당자가 확인할 수 있도록 구체적인 요청 사항을 입력하세요."></textarea>
+								<label class="form-label mini-label fw-bold text-danger mb-1">
+									<i class="bi bi-send-plus-fill me-1"></i>업무 이관 상세 (전달 부서/담당자/내용)
+								</label>
+								<textarea class="form-control form-control-sm border-danger-subtle" rows="3" v-model="consultData.esc_memo" placeholder="어느 부서의 누구에게 어떤 내용을 전달해야 하는지 구체적으로 작성해 주세요."></textarea>
 							</div>
 						</div>
 					</div>
@@ -344,7 +346,18 @@ watch(activeTab, async (tab) => { await loadTabData(tab); });
 
 const initGrids = async () => {
 	await nextTick();
-	if (tableRef1.value && !tableInstance1) tableInstance1 = new Tabulator(tableRef1.value, { layout: 'fitColumns', height: '350px', columns: [{ title: "접수번호", field: "svcno" }, { title: "상담일시", field: "start_time" }, { title: "상담원", field: "consultnm" }, { title: "상담요약", field: "summary" }]});
+	if (tableRef1.value && !tableInstance1) tableInstance1 = new Tabulator(tableRef1.value, {
+		layout: 'fitColumns',
+		height: '350px',
+		columns: [
+			{ title: "접수번호", field: "svcno", width: 120 },
+			{ title: "상담일시", field: "start_time", width: 140 },
+			{ title: "발신번호", field: "hpno", width: 110 },
+			{ title: "발신자", field: "call_usernm", width: 90 },
+			{ title: "상담원", field: "consultnm", width: 90 },
+			{ title: "상담요약", field: "ai_summary", widthGrow: 1 }
+		]
+	});
 	if (tableRef2.value && !tableInstance2) tableInstance2 = new Tabulator(tableRef2.value, { layout: 'fitColumns', height: '350px', columns: [{ title: "접수번호", field: "svcno" }, { title: "접수일자", field: "acceptymd" }, { title: "수리기사", field: "fixed_usernm" }, { title: "수리결과", field: "fixed_ment" }]});
 	if (tableRef3.value && !tableInstance3) tableInstance3 = new Tabulator(tableRef3.value, { layout: 'fitColumns', height: '350px', columns: [{ title: "발생일", field: "ymd" }, { title: "품목/적요", field: "itemnm" }, { title: "합계", field: "totamt", hozAlign: 'right', formatter: 'money' }]});
 };
@@ -374,7 +387,16 @@ const handleSave = async () => {
 	if (!customerInfo.value.custcd) { vAlertError('거래처를 선택해 주세요.'); return; }
 	try {
 		await api.post('/api/crm/inbound/save', {
-			dto: { ...consultData.value, custcd: customerInfo.value.custcd, cmpycd: 'HAIONNET', svcymd: consultData.value.date.replaceAll('-', ''), linkedid: ctiStore.incomingCall?.linkedid },
+			dto: {
+				...consultData.value,
+				custcd: customerInfo.value.custcd,
+				cmpycd: 'HAIONNET',
+				svcymd: consultData.value.date.replaceAll('-', ''),
+				linkedid: ctiStore.incomingCall?.linkedid,
+				call_telno: customerInfo.value.hpno,
+				call_usernm: customerInfo.value.usernm,
+				call_email: customerInfo.value.email
+			},
 			recordings: ctiStore.recordingFile ? [ctiStore.recordingFile] : []
 		});
 		vAlert('상담 내용이 저장되었습니다.');

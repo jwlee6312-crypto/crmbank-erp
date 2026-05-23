@@ -308,19 +308,28 @@ const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 
 <style scoped>
 .hsio730u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
+.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
+.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
 
-.btn-init { background-color: #ffffff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #ffffff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #ffffff !important; border: none !important; }
-.btn-danger { background-color: #d32f2f !important; color: #ffffff !important; border: none !important; }
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
+}
 
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 6px 12px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; background-color: #fff; vertical-align: middle; font-size: 12.5px; }
-.required::after { content: ' *'; color: #dc3545; }
+.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
+.erp-table-full th {
+  background-color: #f8fafc; border: 1px solid #dee2e6;
+  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
+  white-space: nowrap;
+}
+.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
+.required::after { content: ' *'; color: #ef4444; }
 
-:deep(.tabulator-col) { background-color: #f8f9fa !important; color: #495057 !important; height: 40px !important; font-weight: 700 !important; }
-:deep(.tabulator-col-content), :deep(.tabulator-cell) { display: flex !important; align-items: center !important; height: 100% !important; padding: 0 4px !important; }
-:deep(.tabulator-cell[data-field="IOQTY"]), :deep(.tabulator-cell[data-field="PRICE"]), :deep(.tabulator-cell[data-field="IOAMT"]) { justify-content: flex-end; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 </style>
+

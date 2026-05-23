@@ -53,9 +53,9 @@
 								<th class="required text-center">회사코드</th>
 								<td><input v-model="formData.CMPYCD" type="text" class="form-control fw-bold text-primary text-center" maxlength="10" :disabled="formData.ACTKIND === 'U0'" /></td>
 								<th class="required">회사명(상호)</th>
-								<td><input v-model="formData.LTDNM" type="text" class="form-control" /></td>
+								<td><input v-model="formData.CMPYNM" type="text" class="form-control" /></td>
 								<th>영문상호</th>
-								<td><input v-model="formData.LTDENM" type="text" class="form-control" /></td>
+								<td><input v-model="formData.CMPYENM" type="text" class="form-control" /></td>
 							</tr>
 							<tr>
 								<th class="required">사업자번호</th>
@@ -137,7 +137,7 @@ const { resetForm } = useFormReset()
 const searchForm = reactive({ SCH_CMPYNM: '' })
 const formData = reactive({
 	ACTKIND: 'S0',
-	CMPYCD: '', LTDNM: '', LTDENM: '', SAUPNO: '', BOSSNM: '', LEGALNO: '',
+	CMPYCD: '', CMPYNM: '', CMPYENM: '', SAUPNO: '', BOSSNM: '', LEGALNO: '',
 	POSTNO: '', ADDRESS: '', UPTAE: '', UPJONG: '', TELNO: '', CLSMM: '12',
 	FONDYMD: '', DOMAIN: '', USEYN: 'Y', USERID: authStore.USER_ID
 })
@@ -158,7 +158,7 @@ async function search() {
 }
 
 async function save() {
-	if (!formData.CMPYCD || !formData.LTDNM) return vAlertError('회사코드와 상호는 필수 입력사항입니다.')
+	if (!formData.CMPYCD || !formData.CMPYNM) return vAlertError('회사코드와 상호는 필수 입력사항입니다.')
 	try {
 		const act = formData.ACTKIND === 'S0' ? 'A0' : 'U0';
 		const param = {
@@ -200,7 +200,7 @@ onMounted(async () => {
 			columnDefaults: { headerSort: false, headerHozAlign: 'center' },
 			columns: [
 				{ title: '코드', field: 'CMPYCD', hozAlign: 'center', width: 100, cssClass: 'fw-bold text-primary border-end' },
-				{ title: '회사명(상호)', field: 'LTDNM', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
+				{ title: '회사명(상호)', field: 'CMPYNM', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
 				{ title: '사업자번호', field: 'SAUPNO', hozAlign: 'center', width: 130 },
 				{ title: '대표자', field: 'BOSSNM', hozAlign: 'center', width: 110 },
 				{ title: '연락처', field: 'TELNO', width: 150 },

@@ -116,19 +116,19 @@ onMounted(async () => {
 			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 70 },
 			columns: [
 				{ title: '품목 명칭', field: 'ITEMNM', minWidth: 250, widthGrow: 1, cssClass: 'fw-bold text-dark border-end' },
-				{ title: '합 계', field: 'AMTSUM', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-info-subtle fw-bold' },
-				{ title: '1월', field: 'AMT01', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '2월', field: 'AMT02', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '3월', field: 'AMT03', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '4월', field: 'AMT04', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '5월', field: 'AMT05', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '6월', field: 'AMT06', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '7월', field: 'AMT07', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '8월', field: 'AMT08', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '9월', field: 'AMT09', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '10월', field: 'AMT10', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '11월', field: 'AMT11', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '12월', field: 'AMT12', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } }
+				{ title: '합 계', field: 'AMTSUM', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-info-subtle fw-bold' },
+				{ title: '1월', field: 'AMT01', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '2월', field: 'AMT02', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '3월', field: 'AMT03', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '4월', field: 'AMT04', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '5월', field: 'AMT05', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '6월', field: 'AMT06', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '7월', field: 'AMT07', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '8월', field: 'AMT08', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '9월', field: 'AMT09', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '10월', field: 'AMT10', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '11월', field: 'AMT11', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '12월', field: 'AMT12', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } }
 			]
 		})
 	}
@@ -137,16 +137,31 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.hsip210s-wrapper { height: 100%; overflow: hidden; padding: 0 !important; }
-.tabulator-full-height { height: 100% !important; border: none; }
-.btn-erp { padding: 4px 15px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid #ced4da; transition: all 0.2s; }
-.btn-init { background-color: #fff; color: #6c757d; }
-.btn-search { background-color: #2d3748; color: #fff; border: none; }
-.erp-table-full { table-layout: fixed; border-collapse: collapse !important; width: 100%; border-bottom: 1px solid #dee2e6 !important; }
-.erp-table-full th { background-color: #f1f5f9; border-right: 1px solid #dee2e6 !important; text-align: center; font-weight: 800; font-size: 12.5px; color: #334155; vertical-align: middle; padding: 8px 10px !important; white-space: nowrap !important; }
-.erp-table-full td { border: 1px solid #dee2e6 !important; padding: 4px 8px !important; vertical-align: middle; white-space: nowrap !important; font-size: 12.5px; overflow: hidden; }
-.grid-title { background-color: #f8fafc; font-size: 12px; }
-:deep(.tabulator) { border: none; font-size: 12.5px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; }
+.hsip210s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
+.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
+.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
+
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
+.overflow-hidden { overflow: hidden !important; }
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
+}
+.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
+.required::after { content: ' *'; color: #dc3545; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
+
+/* 🚀 팝업 가독성 표준 스타일 */
+:deep(.modal-content) { background-color: #ffffff !important; }
+:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
+:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
+
 </style>

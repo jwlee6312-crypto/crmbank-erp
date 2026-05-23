@@ -45,14 +45,12 @@ const routes = [
 
 const router = createRouter({ history: createWebHistory(), routes })
 
-// 💡 첫 진입 시 세션 체크를 생략할 화이트리스트 (상담실 포함)
-const FIRST_HIT_WHITELIST = ['/', '/auth/login', '/manual', '/HGOA/HGOA100C']
-
+// 💡 직접 접속 시에도 튕기지 않도록 패턴 허용 (H로 시작하는 업무 페이지 허용)
 router.beforeEach(async (to, from, next) => {
 	const authStore = useAuthStore();
     const { checkSession } = useSession()
 
-	// 1. 버전 체크 (사용자 소스 복구)
+	// 1. 버전 체크
 	const versionOk = await checkVer()
 	if (!versionOk) {
         alert('버전이 업데이트 되었습니다.');
@@ -60,8 +58,11 @@ router.beforeEach(async (to, from, next) => {
         return next('/auth/login')
     }
 
-	// 2. 화이트리스트 및 첫 진입 체크
-	if (!from.matched.length && !FIRST_HIT_WHITELIST.includes(to.path)) {
+	// 2. 화이트리스트 및 첫 진입 체크 (직접 주소 입력 및 새로고침 대응)
+    // H로 시작하는 8자리 프로그램 ID 패턴이면 세션 체크만 하고 통과시킵니다.
+    const isBusinessPage = /^\/[A-Z]{4}\d{3}[A-Z]$/.test(to.path) || to.path.includes('/HGOA');
+
+	if (!from.matched.length && !isBusinessPage && !['/', '/auth/login', '/manual', '/HGOA/HGOA100C'].includes(to.path)) {
         return next('/')
     }
 

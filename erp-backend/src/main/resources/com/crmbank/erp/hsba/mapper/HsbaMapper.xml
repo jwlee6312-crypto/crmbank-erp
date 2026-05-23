@@ -1,10 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.crmbank.erp.hsba.mapper.HsbaMapper">
+
+    <select id="HSBA_010U_STR" resultType="map">
+        EXEC HSBA_010U_STR
+            #{ACTKIND}, #{CMPYCD}, #{ASTKIND}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{ITEMNM}, #{ITEMENM},
+            #{INUNIT}, #{INQTY}, #{OUTUNIT}, #{OUTQTY}, #{SETYN}, #{AGRPCD}, #{BGRPCD}, #{IMPRICE}, #{OMPRICE},
+            #{STOCK}, #{QTYPNT}, #{VATYN}, #{SOTAXYN}, #{UDOGYN}, #{BARCODE}, #{HSCODE}, #{REMARK}, #{USEYN},
+            #{IN_CUSTCD}, #{MAKER}, #{UPDEMP}
+    </select>
+
+    <select id="HSBA_020U_STR" resultType="map">
+        EXEC HSBA_020U_STR #{ACTKIND}, #{CMPYCD}, #{ASTKIND}, #{AGRPCD}, #{AGRPNM}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HSBA_030U_STR" resultType="map">
+        EXEC HSBA_030U_STR #{ACTKIND}, #{CMPYCD}, #{ASTKIND}, #{AGRPCD}, #{BGRPCD}, #{AGRPNM}, #{BGRPNM}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HSBA_040U_STR" resultType="map">
+        EXEC HSBA_040U_STR #{ACTKIND}, #{CMPYCD}, #{UNIT}, #{UNITNM}, #{REMARK}, #{DSPORD}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HSBA_060U_STR" resultType="map">
+        EXEC HSBA_060U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{ITEMCD}, #{PRCGBN}, #{PRICE}, #{STDYN}, #{REMARK}, #{USEYN}, #{USERID}
+    </select>
+
+    <select id="HSBA_070U_STR" resultType="map">
+        EXEC HSBA_070U_STR
+            #{ACTKIND}, #{CMPYCD}, #{CUSTCD}, #{CUSTNO}, #{CUSTNM}, #{CUSTGBN}, #{BOSSNM},
+            #{JUMINNO}, #{LEGALNO}, #{CUSTKIND}, #{CUSTTYPE}, #{TELNO}, #{FAXNO}, #{POSTNO},
+            #{ADDRESS}, #{IOGBN}, #{INPRCGBN}, #{OUTPRCGBN}, #{HDAMT}, #{RCVDD},
+            #{AGRPCD}, #{BGRPCD}, #{CGRPCD}, #{AREA}, #{CDAMDANG}, #{CTELNO}, #{CEMAIL}, #{REMARK},
+            #{STATUS}, #{BANKNM}, #{GUJOA}, #{FNDYMD}, #{STDYMD}, #{CLSYMD}, #{SINGRD},
+            #{ELCYN}, #{USEYN}, #{UPDEMP}, #{GIGBCD}, #{OUTCUSTCD}
+    </select>
+
+
     <select id="HSBA_065U_STR" resultType="map">
         EXEC HSBA_065U_STR #{ACTKIND}, #{CMPYCD}, #{ASTKIND}, #{ITEMCD}, #{ITEMNM}, #{PRICE},
         #{CUSTCD}, #{REMARK}, #{AUTOYN}, #{SELGBN}, #{UPDEMP}
     </select>
+
     <select id="HSBA_090U_STR" resultType="map">
         EXEC HSBA_090U_STR #{ACTKIND}, #{CMPYCD}, #{CUSTCD}, #{CUSTNO}, #{CUSTNM}, #{CUSTGBN}, #{BOSSNM},
         #{JUMINNO}, #{LEGALNO}, #{CUSTKIND}, #{CUSTTYPE}, #{TELNO}, #{FAXNO}, #{POSTNO},
@@ -18,10 +55,51 @@
         EXEC HSBA_140U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{CUSTCD},#{NACD},#{SHIPPORT},
         #{ARVPORT},#{CURRCD},#{PAYCOND},#{PRICOND},#{USEYN}, #{UPDEMP}
     </select>
+
+    <select id="HSBA_130U_STR" resultType="map">
+        EXEC HSBA_130U_STR #{ACTKIND}, #{CMPYCD}, #{CUSTCD}, #{CUSTNM}, #{TRANCD}, #{AREA},
+        #{POSTNO}, #{ADDRESS}, #{DAMDANG}, #{TELNO}, #{EMAIL}, #{USEYN}, #{UPDEMP}
+    </select>
+
+    <select id="HSBA_170U_STR" resultType="map">
+        EXEC HSBA_170U_STR #{ACTKIND}, #{CMPYCD}, #{CUSTCD}, #{CUSTNM}, #{ROWNO}, #{DAMKIND}, #{DAMGBN},
+        #{DAMYEO}, #{DAMMGT}, #{DAMSEL}, #{SAMHAN}, #{RCVDD}, #{FRYMD}, #{TOYMD}, #{SOUNM}, #{BIGO}, #{USEYN}, #{UPDEMP}
+     </select>
+
+    <select id="HSBA_190U_STR" resultType="map">
+        EXEC HSBA_190U_STR #{ACTKIND}, #{CMPYCD}, #{CUSTCD}, #{CUSTNM}, #{ROWNO}, #{DEPTNM},
+        #{DAMDANG}, #{TELNO}, #{EMAIL}, #{USEYN}, #{UPDEMP}
+    </select>
+
+    <select id="HSBA_280U_STR" resultType="map">
+        EXEC HSBA_280U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{CUSTCD},#{NACD},#{SHIPPORT},
+        #{ARVPORT},#{CURRCD},#{PAYCOND},#{PRICOND},#{USEYN}, #{UPDEMP}
+    </select>
+
+    <!-- 재고자산 계정관리 (HSBA700U) -->
+    <select id="HSBA_700U_STR" resultType="map">
+        EXEC HSBA_700U_STR
+            #{ACTKIND}, #{CMPYCD}, #{ASTKIND}, #{ASTKINDNM}, #{IMACCTCD},
+            #{IPACCTCD}, #{IVACCTCD}, #{OMACCTCD}, #{OPACCTCD}, #{OVACCTCD}, #{USERID}
+    </select>
+
+    <!-- 입금 계정관리 (HSBA710U) -->
+    <select id="HSBA_710U_STR" resultType="map">
+        EXEC HSBA_710U_STR
+            #{ACTKIND}, #{CMPYCD}, #{IMGBN}, #{IMGBNNM}, #{DACCTCD},
+            #{DACCTNM}, #{CACCTCD}, #{CACCTNM}, #{USERID}
+    </select>
+
+    <!-- 타계정 계정과목 등록 (HSBA720U) -->
+    <select id="HSBA_720U_STR" resultType="map">
+        EXEC HSBA_720U_STR #{ACTKIND}, #{CMPYCD}, #{TATYPE}, #{DACCTCD}, #{CACCTCD}, #{USERID}
+    </select>
+
     <select id="HSBA_730U_STR" resultType="map">
         EXEC HSBA_730U_STR #{ACTKIND}, #{CMPYCD}, #{DACCTCD}, #{CACCTCD},
         #{DDACCTCD}, #{DCACCTCD}, #{UPDEMP}
     </select>
+
     <select id="HSBA_750U_STR" resultType="map">
         EXEC HSBA_750U_STR #{ACTKIND}, #{CMPYCD}, #{COSTCD}, #{COSTNM}, #{COSTGBN},
         #{DIVCD}, #{BIGO}, #{USEYN}, #{UPDEMP}
@@ -32,7 +110,7 @@
         #{DACCTNM}, #{CACCTCD}, #{CACCTNM}, #{UPDEMP}
     </select>
 
-    <!-- 재고자산 계정관리 -->
+    <!-- 재고자산 계정관리 상세 -->
     <select id="HSBA_701U_STR" resultType="map">
         EXEC HSBA_701U_STR #{ACTKIND}, #{CMPYCD}, #{SLIPKIND}, #{SEQ}, #{ASTKIND}, #{ACCTCD1},
         #{ACCTCD2}, #{VACCTCD}, #{ACCTNM1}, #{ACCTNM2}, #{VACCTNM}, #{UPDEMP}
@@ -65,6 +143,13 @@
         EXEC HSBA_820U_STR #{ACTKIND}, #{CMPYCD}, #{YM}, #{DEPTCD}, #{CUSTCD}, #{AMT}, #{UPDEMP}
     </select>
 
+    <!-- 거래처 미지급금 등록 -->
+    <select id="HSBA_830U_STR" resultType="map">
+        EXEC HSBA_830U_STR #{ACTKIND}, #{CMPYCD}, #{YM}, #{CUSTCD}, #{AMT}, #{UPDEMP}
+    </select>
 
+    <select id="HSBA_900U_STR" resultType="map">
+        EXEC HSBA_900U_STR #{ACTKIND}, #{CMPYCD}, #{CDGBN}, #{CODE}, #{CDNM}, #{REMARK}, #{DSPORD}, #{USEYN}, #{UPDEMP}
+    </select>
 
 </mapper>

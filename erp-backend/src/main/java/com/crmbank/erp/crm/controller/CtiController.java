@@ -1,9 +1,12 @@
 package com.crmbank.erp.crm.controller;
 
+import com.crmbank.erp.comm.dto.UserSession;
+import com.crmbank.erp.crm.service.AsteriskService;
+import com.crmbank.erp.crm.service.CtiInboundService;
+import com.crmbank.erp.crm.service.CtiOutboundService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.crmbank.erp.crm.service.AsteriskService;
-import com.crmbank.erp.crm.service.CtiOutboundService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +29,7 @@ public class CtiController {
 
     private final AsteriskService asteriskService;
     private final CtiOutboundService ctiOutboundService;
+    private final CtiInboundService ctiInboundService;
 
     @GetMapping("/answer")
     public Map<String, Object> answerCall(@RequestParam String exten) {
@@ -46,9 +50,30 @@ public class CtiController {
     }
 
     @GetMapping("/transfer")
-    public Map<String, Object> transferCall(@RequestParam String exten, @RequestParam String target) {
-        log.info("📥 [API] 돌려주기 요청 -> {} to {}", exten, target);
-        asteriskService.transferCall(exten, target);
+    public Map<String, Object> transferCall(
+            @RequestParam String exten,
+            @RequestParam String target,
+            @RequestParam Map<String, Object> params,
+            HttpSession session) {
+
+        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        String cmpycd = user != null ? user.getCMPYCD() : "HAIONNET";
+
+        log.info("📥 [API] 돌려주기 요청 -> {} to {} (Company: {})", exten, target, cmpycd);
+
+        String linkedId = asteriskService.getEXTEN_LINKED_ID().get(exten);
+        String myChannel = asteriskService.getEXTEN_CHANNEL_MAP().get(exten);
+
+        ctiInboundService.transferCall(
+                exten,
+                target,
+                params,
+                linkedId,
+                myChannel,
+                linkedId != null ? asteriskService.getSESSION_CHANNELS().get(linkedId) : null,
+                cmpycd
+        );
+
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         return result;

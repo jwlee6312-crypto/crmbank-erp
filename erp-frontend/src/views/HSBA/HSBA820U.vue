@@ -111,22 +111,9 @@
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-6 small">
-          조회 건수: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건
-        </div>
-        <div class="col-md-6 text-end">
-          <span class="fs-5 fw-light">총 미수금 합계: <span class="fw-bold text-white ms-2">{{ formatNumber(totalMisuSum) }}</span></span>
-        </div>
-      </div>
-    </div>
   </div>
 
   <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
-</div>
 </template>
 
 <script setup lang="ts">

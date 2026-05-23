@@ -3,7 +3,7 @@
 	프로그램명	: 매입정산 (Purchase Settlement)
 	작성일자	: 25.02.24
 	작성자	    : AI Assistant
-	설명        : [최종완성] HSIO550U(레이아웃) + HSOD100U(스타일/정렬) 표준 적용
+	설명        : [표준 필드 적용] TAXUNIT, UNITNM / CODECD, CODENM
 	=============================================================
 -->
 
@@ -11,13 +11,12 @@
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
 	<div class="hsio110u-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1. 상단 액션 바 (표준 버튼 배치) -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-calculator-fill me-2 text-primary" style="font-size: 18px;"></i>
 				구매정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
 				매입관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">매입정산</span>
+				<span class="text-primary fw-bolder">매입정산 (HSIO110U)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-init" @click="initialize">초기화</button>
@@ -26,7 +25,6 @@
 			</div>
 		</div>
 
-		<!-- 🔍 2. 최상단 검색 조건 -->
 		<div class="p-2 pb-0">
 			<div class="card border shadow-sm bg-light bg-opacity-50">
 				<div class="card-body py-2 px-3">
@@ -52,9 +50,7 @@
 			</div>
 		</div>
 
-		<!-- 📊 3. 메인 작업 영역 (좌우 분할 레이아웃) -->
 		<div class="d-flex flex-row flex-grow-1 overflow-hidden p-2 gap-2">
-			<!-- 🅰️ 좌측: 매입 거래처 목록 -->
 			<div class="card border shadow-sm d-flex flex-column" style="width: 280px; min-width: 280px;">
 				<div class="card-header bg-light py-1 px-3 border-bottom">
 					<span class="fw-bold small text-dark"><i class="bi bi-list-ul me-1"></i> 매입 거래처 목록</span>
@@ -64,9 +60,7 @@
 				</div>
 			</div>
 
-			<!-- 🅱️ 우측: 상세 정보 및 품목 그리드 -->
 			<div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
-				<!-- 마스터 정보 (고밀도 배치) -->
 				<div class="card border shadow-sm overflow-hidden">
 					<div class="card-body p-0">
 						<table class="erp-table-full">
@@ -91,17 +85,19 @@
 											<input v-model="formData.DEPTNM" type="text" class="form-control bg-light" readonly />
 										</div>
 									</td>
-                                    <th>사업장/유형</th>
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <select v-model="formData.TAXUNIT" class="form-select form-select-sm" style="width: 50%;">
-                                                <option v-for="opt in saOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
-                                            </select>
-                                            <select v-model="formData.VATTYPE" class="form-select form-select-sm" style="width: 50%;">
-                                                <option v-for="opt in vatOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
-                                            </select>
-                                        </div>
-                                    </td>
+									<th>사업장/유형</th>
+									<td>
+										<div class="d-flex gap-1">
+											<select v-model="formData.TAXUNIT" class="form-select form-select-sm" style="width: 50%;">
+												<option value="">-- 사업장 --</option>
+												<option v-for="opt in saOptions" :key="opt.TAXUNIT" :value="opt.TAXUNIT">{{ opt.UNITNM }}</option>
+											</select>
+											<select v-model="formData.VATTYPE" class="form-select form-select-sm" style="width: 50%;">
+												<option value="">-- 부가세 --</option>
+												<option v-for="opt in vatOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+											</select>
+										</div>
+									</td>
 								</tr>
 								<tr>
 									<th>발&nbsp;행&nbsp;일</th>
@@ -116,7 +112,6 @@
 					</div>
 				</div>
 
-				<!-- 그리드 영역 (무한 확장 및 정중앙 정렬) -->
 				<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
 					<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="height: 40px;">
 						<span class="fw-bold small text-dark d-flex align-items-center">
@@ -131,8 +126,6 @@
 			</div>
 		</div>
 	</div>
-
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
@@ -144,28 +137,26 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import AppAlert from '@/components/AppAlert.vue'
-import Modal from '@/components/Modal.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
+const now = new Date()
 const searchForm = reactive({
   DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-  IOYMDFR: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-  IOYMDTO: new Date().toISOString().substring(0, 10)
+  IOYMDFR: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
+  IOYMDTO: now.toISOString().substring(0, 10)
 })
 
 const formData = reactive<any>({
   ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, CUSTCD: '', CUSTNM: '', DEPTCD: '', DEPTNM: '',
-  TAXUNIT: '', VATTYPE: '010', PUBYMD: new Date().toISOString().substring(0, 10),
-  CLSYMD: '', SCLSYM: ''
+  TAXUNIT: '', VATTYPE: '010', PUBYMD: now.toISOString().substring(0, 10)
 })
 
 const saOptions = ref<any[]>([]); const vatOptions = ref<any[]>([]);
 const poGridRef = ref<HTMLDivElement | null>(null); const itemGridRef = ref<HTMLDivElement | null>(null)
 let poGrid: Tabulator | null = null; let itemGrid: Tabulator | null = null
-const activeItemCount = ref(0)
 
 const totals = computed(() => {
   const items = itemGrid?.getData().filter((r: any) => r.PROCYN === 'Y') || []
@@ -173,6 +164,27 @@ const totals = computed(() => {
   const vat = items.reduce((acc, cur: any) => acc + (Number(cur.JSANVAT) || 0), 0)
   return { amt, vat, sum: amt + vat }
 })
+
+async function fetchOptions() {
+  try {
+    const [resSa, resVat] = await Promise.all([
+      api.post('/api/ha00/HA00_00P_STR', { GUBUN: 'SA', CMPYCD: authStore.CMPYCD }),
+      api.post('/api/ha00/HA00_00P_STR', { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '120' })
+    ])
+
+    // 사업장: TAXUNIT, UNITNM 필드 고정
+    saOptions.value = (resSa.data || []).map((i: any) => ({
+      TAXUNIT: String(i.TAXUNIT || i.CODECD || i.CODE || '').trim(),
+      UNITNM: String(i.UNITNM || i.CODENM || i.CDNM || '').trim()
+    }))
+
+    // 부가세 유형: CODECD, CODENM 필드 고정
+    vatOptions.value = (resVat.data || []).map((i: any) => ({
+      CODECD: String(i.CODECD || i.CODE || i.TAXUNIT || '').trim(),
+      CODENM: String(i.CODENM || i.CDNM || i.UNITNM || '').trim()
+    }))
+  } catch (e) { console.error('기초 코드 로드 실패') }
+}
 
 async function fetchCustList() {
   try {
@@ -182,8 +194,7 @@ async function fetchCustList() {
       IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
       DEPTCD: searchForm.DEPTCD
     });
-    console.log(res.data);
-    poGrid?.setData(res.data.data || []); itemGrid?.clearData(); vAlert('조회되었습니다.')
+    poGrid?.setData(res.data || []); itemGrid?.clearData(); vAlert('조회되었습니다.')
   } catch (e) { vAlertError('목록 조회 실패') }
 }
 
@@ -197,7 +208,7 @@ async function fetchDetail(row: any) {
       IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
       IOYMDTO: searchForm.IOYMDTO.replace(/-/g, '')
     })
-    itemGrid?.setData(res.data.data || [])
+    itemGrid?.setData(res.data || [])
   } catch (e) { vAlertError('상세 조회 실패') }
 }
 
@@ -224,10 +235,7 @@ function initialize() {
 }
 
 onMounted(async () => {
-  // 기초 코드 로드
-  api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'SA', CMPYCD: authStore.CMPYCD } }).then(r => saOptions.value = r.data);
-  api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '120' } }).then(r => vatOptions.value = r.data);
-
+  await fetchOptions();
   if (poGridRef.value) {
     poGrid = new Tabulator(poGridRef.value, {
       layout: 'fitColumns', height: '100%', selectable: 1,
@@ -235,7 +243,6 @@ onMounted(async () => {
     })
     poGrid.on('rowClick', (e, row) => fetchDetail(row))
   }
-
   if (itemGridRef.value) {
     itemGrid = new Tabulator(itemGridRef.value, {
       layout: 'fitColumns', height: '100%',
@@ -247,41 +254,28 @@ onMounted(async () => {
         { title: '규격', field: 'ITSIZE', width: 200 },
         { title: '단위', field: 'UNIT', width: 60, hozAlign: 'center' },
         { title: '수량', field: 'JSANQTY', hozAlign: 'right', width: 150, formatter: 'money' },
-        { title: '단가', field: 'PRICE', hozAlign: 'right', width: 150, formatter: 'money', mutatorData: (v, d) => Number(d.JSANAMT)/(Number(d.JSANQTY)||1) },
         { title: '공급가', field: 'JSANAMT', hozAlign: 'right', width: 150, formatter: 'money' },
         { title: '부가세', field: 'JSANVAT', hozAlign: 'right', width: 150, formatter: 'money' }
       ]
     })
-    itemGrid.on('rowSelectionChanged', (data) => { activeItemCount.value = data.length; })
   }
 })
 
 const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(4,6)}-${val.substring(6,8)}` : val;
 const openHelp = (type: string) => { /* 팝업 로직 */ }
-const modalVisible = ref(false); const modalProps = reactive<any>({ title: '', path: '', onConfirm: () => {} })
 </script>
 
 <style scoped>
-.hsio110u-wrapper { height: 100%; overflow: hidden; }
-.tabulator-full-height { height: 100% !important; border: none; }
-
-.erp-header { background-color: #ffffff !important; }
-
-/* 💎 개별 파일의 스타일을 삭제하여 global.css 표준 디자인이 적용되도록 함 */
+.hsio110u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
 .btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 .btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
 .btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
 .btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.btn-danger { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
-
-erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  width: 1%; white-space: nowrap;
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12.5px; padding: 10px 15px !important; color: #495057;
-}
-.erp-table-full td { border: 1px solid #dee2e6; padding: 6px 10px !important; vertical-align: middle; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-.bg-yellow { background-color: #fffde7 !important; }
+.form-control, .form-select { font-size: 12px !important; height: 28px !important; padding: 2px 8px !important; }
+.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8fafc; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 </style>

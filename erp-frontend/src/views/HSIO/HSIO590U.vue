@@ -102,19 +102,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-3 small">건수: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="me-4 small opacity-75">공급가 합계: <span class="fw-bold text-info ms-1">{{ formatNumber(registerData.SPLAMT) }}</span></span>
-          <span class="me-4 small opacity-75">부가세 합계: <span class="fw-bold text-warning ms-1">{{ formatNumber(registerData.VATAMT) }}</span></span>
-          <span class="fs-5 ms-2 fw-light">총 합계: <span class="fw-bold text-white ms-2">{{ formatNumber(registerData.SUMAMT) }}</span></span>
-        </div>
-      </div>
-    </div>
-
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
@@ -292,13 +279,28 @@ onMounted(async () => {
 
 <style scoped>
 .hsio590u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 .btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
 .btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
 .btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.bg-light-primary { background-color: #f0f7ff !important; color: #005a9f !important; }
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: auto !important; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 1% !important; white-space: nowrap !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 6px 12px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
+
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
+}
+
+.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
+.erp-table-full th {
+  background-color: #f8fafc; border: 1px solid #dee2e6;
+  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
+  white-space: nowrap;
+}
+.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
+.required::after { content: ' *'; color: #ef4444; }
+
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 </style>
+

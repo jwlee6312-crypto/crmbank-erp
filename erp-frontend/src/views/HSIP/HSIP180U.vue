@@ -141,15 +141,15 @@ onMounted(async () => {
 			placeholder: '데이터가 존재하지 않습니다.',
 			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 100 },
 			columns: [
-				{ title: '선택', formatter: 'rowSelection', titleFormatter: 'rowSelection', hozAlign: 'center', headerHozAlign: 'center', width: 50 },
-				{ title: '품목코드', field: 'ITEMCD', width: 110, cssClass: 'bg-light' },
+				{ title: '선택', formatter: 'rowSelection', titleFormatter: 'rowSelection', hozAlign: 'center', headerHozAlign: 'center', width: 100 },
+				{ title: '품목코드', field: 'ITEMCD', width: 150, cssClass: 'bg-light' },
 				// 💡 품목명: widthGrow를 부여하여 남은 모든 우측 공간 점유 (여백 제거)
 				{ title: '품목 명칭 (규격)', field: 'ITEMNM', minWidth: 250, widthGrow: 10, cssClass: 'fw-bold border-start' },
-				{ title: '입고일자', field: 'IOYMD', hozAlign: 'center', width: 110, formatter: (c) => {
+				{ title: '입고일자', field: 'IOYMD', hozAlign: 'center', width: 150, formatter: (c) => {
 					const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}.${v.substring(4,6)}.${v.substring(6,8)}` : v
 				}},
-				{ title: '입고수량', field: 'IOQTY', hozAlign: 'right', width: 110, formatter: 'money' },
-				{ title: '최종 수입원가 (KRW)', field: 'IOAMT', hozAlign: 'right', width: 160, editor: 'number', formatter: 'money', cssClass: 'bg-yellow fw-bold text-danger' }
+				{ title: '입고수량', field: 'IOQTY', hozAlign: 'right', width: 150, formatter: 'money' },
+				{ title: '최종 수입원가 (KRW)', field: 'IOAMT', hozAlign: 'right', width: 200, editor: 'number', formatter: 'money', cssClass: 'bg-yellow fw-bold text-danger' }
 			]
 		})
 
@@ -160,27 +160,32 @@ onMounted(async () => {
 	}
 })
 </script>
-
 <style scoped>
-.hsip180u-wrapper { height: 100%; overflow: hidden; padding: 0 !important; }
-.tabulator-full-height { height: 100% !important; border: none; }
-.btn-erp { padding: 4px 15px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid #ced4da; transition: all 0.2s; }
-.btn-init { background-color: #fff; color: #6c757d; }
-.btn-init:hover { background-color: #f8f9fa; border-color: #6c757d; }
-.btn-search { background-color: #2d3748; color: #fff; border: none; }
-.btn-save { background-color: #005a9f; color: #fff; border: none; }
-.btn-print { background-color: #f59e0b; color: #fff; border: none; }
+.hsip180u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
+.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
+.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
 
-.erp-table-full { table-layout: fixed; border-collapse: collapse !important; width: 100%; border-bottom: 1px solid #dee2e6 !important; }
-.erp-table-full th { background-color: #f1f5f9; border-right: 1px solid #dee2e6 !important; text-align: center; font-weight: 800; font-size: 12.5px; color: #334155; vertical-align: middle; padding: 8px 10px !important; white-space: nowrap !important; }
-.erp-table-full td { border: 1px solid #dee2e6 !important; padding: 4px 8px !important; vertical-align: middle; white-space: nowrap !important; font-size: 12.5px; overflow: hidden; }
-.erp-table-full th.required::after { content: ' *'; color: #ef4444; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
+.overflow-hidden { overflow: hidden !important; }
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
+}
+.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
+.required::after { content: ' *'; color: #dc3545; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 
-.form-control-sm { border-radius: 2px; border: 1px solid #cbd5e1; font-size: 12.5px; height: 28px; width: 100%; }
-.bg-yellow { background-color: #fffbeb !important; }
-.grid-title { background-color: #f8fafc; font-size: 12px; }
+/* 🚀 팝업 가독성 표준 스타일 */
+:deep(.modal-content) { background-color: #ffffff !important; }
+:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
+:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
 
-:deep(.tabulator-col) { background-color: #f8fafc !important; font-weight: 800 !important; color: #475569 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12.5px; }
-:deep(.tabulator-cell) { font-size: 12.5px; }
-:deep(.tabulator-row.tabulator-selected) { background-color: #f0f7ff !important; border-left: 4px solid #005a9f !important; }
 </style>

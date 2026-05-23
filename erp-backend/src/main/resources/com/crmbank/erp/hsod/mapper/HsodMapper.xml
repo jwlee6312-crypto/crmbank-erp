@@ -14,7 +14,7 @@
     </select>
 
     <select id="HSOD_110S_STR" resultType="map">
-        EXEC HSOD_110S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTFR}, #{CUSTTO}, #{YMDFR}, #{YMDTO}
+        EXEC HSOD_110S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCDFR}, #{CUSTCDTO}, #{FRYMD}, #{TOYMD}
     </select>
 
     <select id="HSOD_120U_STR" resultType="map">
@@ -24,7 +24,7 @@
     </select>
 
     <select id="HSOD_210U_STR" resultType="map">
-        EXEC HSOD_210U_STR #{ACTKIND}, #{CMPYCD}, #{GBN }, #{FRYMD}, #{TOYMD}, #{IOYM}, #{IONO},
+        EXEC HSOD_210U_STR #{ACTKIND}, #{CMPYCD}, #{GBN}, #{FRYMD}, #{TOYMD}, #{IOYM}, #{IONO},
         #{CUSTCD}, #{DEPTCD}, #{IOYMD}, #{IOAMT}, #{IOVAT}, #{REMARK}, #{UPDEMP}
     </select>
 

@@ -35,10 +35,18 @@ export default defineConfig({
 		host: '0.0.0.0',
 		port: 5173,
 		fs: {
-			strict: false, // 파일 접근 범위 널널하게
+			strict: false,
 		},
-		// 💡 백엔드(Spring Boot) 연동을 위한 프록시 설정 추가
 		proxy: {
+			// 💡 /api/crm 으로 시작하는 요청은 /api 를 제거하고 백엔드로 전달
+			// (백엔드 컨트롤러가 /crm 으로 시작하기 때문)
+			'/api/crm': {
+				target: 'http://localhost:8080',
+				changeOrigin: true,
+				secure: false,
+				rewrite: (path) => path.replace(/^\/api/, ''),
+			},
+			// 💡 나머지 /api 요청은 그대로 백엔드로 전달
 			'/api': {
 				target: 'http://localhost:8080',
 				changeOrigin: true,

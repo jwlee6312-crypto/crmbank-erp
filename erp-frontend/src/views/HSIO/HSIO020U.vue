@@ -299,25 +299,31 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hsio020u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #f8f9fa; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
+.hsio020u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
+.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
 .btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.btn-danger { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
 
-/* 💎 HPIO200U 스타일 기반 행추가 버튼 표준화 */
-.btn-grid-row-add { height: 28px; padding: 0 15px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; border: 1px solid #4361ee; background-color: #fff; color: #4361ee; }
-.btn-grid-row-add:hover { background-color: #eef2ff; color: #374fc7; border-color: #374fc7; }
-
-.search-bar { background-color: #f1f5f9 !important; }
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; background-color: #fff; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px 12px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 10px !important; vertical-align: middle; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
+.overflow-hidden { overflow: hidden !important; }
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
+}
+.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
 .required::after { content: ' *'; color: #dc3545; }
-.bg-yellow { background-color: #fffde7 !important; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 
-:deep(.tabulator) { border: none; font-size: 12.5px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; font-weight: 700 !important; }
+/* 🚀 팝업 가독성 표준 스타일 */
+:deep(.modal-content) { background-color: #ffffff !important; }
+:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
+:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
+
 </style>

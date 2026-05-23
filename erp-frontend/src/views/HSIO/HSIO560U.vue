@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio560u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -114,16 +114,6 @@
           <div class="card-body p-0 flex-grow-1 bg-white">
             <div ref="gridElement" style="height: 100%;"></div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-3 small">선택 건수: <span class="fw-bold text-warning">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="fs-6 fw-light text-danger italic">※ 정산이 완료된 품목은 취소할 수 없습니다.</span>
         </div>
       </div>
     </div>
@@ -284,18 +274,3 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-.hsio560u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-save { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.cust-list .list-group-item { cursor: pointer; transition: background 0.15s; font-size: 12px; border-left: 3px solid transparent; }
-.cust-list .list-group-item:hover { background-color: #f8f9fa; }
-.cust-list .list-group-item.active { border-left: 3px solid #dc3545; background-color: #fff5f5; }
-.bg-light-blue { background-color: #f0f7ff !important; }
-.erp-table-full th { width: 12% !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 6px !important; color: #444; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px !important; vertical-align: middle; }
-.extra-small { font-size: 10px; }
-.italic { font-style: italic; }
-</style>

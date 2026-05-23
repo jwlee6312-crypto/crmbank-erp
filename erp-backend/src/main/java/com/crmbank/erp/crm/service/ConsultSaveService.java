@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -38,9 +39,19 @@ public class ConsultSaveService {
         LocalDateTime startDtime = null;
         LocalDateTime endDtime = null;
         try {
-            if (request.getStartTime() != null) startDtime = LocalDateTime.parse(request.getStartTime(), formatter);
-            if (request.getEndTime() != null) endDtime = LocalDateTime.parse(request.getEndTime(), formatter);
-        } catch (Exception e) { }
+            if (request.getStartTime() != null) {
+                String st = request.getStartTime();
+                if (st.length() == 10) st += " 00:00:00";
+                startDtime = LocalDateTime.parse(st, formatter);
+            }
+            if (request.getEndTime() != null) {
+                String et = request.getEndTime();
+                if (et.length() == 10) et += " 23:59:59";
+                endDtime = LocalDateTime.parse(et, formatter);
+            }
+        } catch (Exception e) {
+            log.warn("Time parsing failed: {}", e.getMessage());
+        }
 
         if (startDtime == null) startDtime = LocalDateTime.now().minusMinutes(5);
         if (endDtime == null) endDtime = LocalDateTime.now();
@@ -49,49 +60,66 @@ public class ConsultSaveService {
         String mediaType = (request.getMediaType() != null && !request.getMediaType().isEmpty()) ? request.getMediaType() : "chat";
 
         CampRsltMstDto mstDto = CampRsltMstDto.builder()
-                .cmpycd(cmpycd)
-                .call_seq(request.getCallSeq()) 
-                .camp_no(request.getCampNo())
-                .rslt_cd(request.getRsltCd())
-                .remark(request.getMemo())
-                .userid(request.getUserid())
-                .interaction_id(interactionId)
-                .media_type(mediaType)
-                .chat_log(chatLog)
-                .ai_summary(aiSummary)
-                .rec_file(request.getRecFile())
-                .start_dtime(startDtime)
-                .end_dtime(endDtime)
-                .updemp(request.getUserid())
-                .addtime(LocalDateTime.now())
-                .updtime(LocalDateTime.now())
+                .CMPYCD(cmpycd)
+                .CALL_SEQ(request.getCallSeq())
+                .CAMP_NO(request.getCampNo())
+                .RSLT_CD(request.getRsltCd())
+                .REMARK(request.getMemo())
+                .USERID(request.getUserid())
+                .LINE_NUM(request.getLineNum())   // 내선번호
+                .CALL_TELNO(request.getCallTelno()) // 고객연락처
+                .INTERACTION_ID(interactionId)
+                .MEDIA_TYPE(mediaType)
+                .CHAT_LOG(chatLog)
+                .AI_SUMMARY(aiSummary)
+                .REC_FILE(request.getRecFile())
+                .START_DTIME(startDtime)
+                .END_DTIME(endDtime)
+                .UPDEMP(request.getUserid())
+                .ADDTIME(LocalDateTime.now())
+                .UPDTIME(LocalDateTime.now())
                 .build();
         
         outboundMapper.insertCampaignRsltMst(mstDto);
 
         if (request.getSurveys() != null) {
-            for (Map<String, String> survey : request.getSurveys()) {
+            for (Map<String, Object> survey : request.getSurveys()) {
+                String survNo = (String) survey.get("surv_no");
+                String ansNo = survey.get("ans_no") != null ? (String) survey.get("ans_no") : "001";
+
+                // 💡 프론트에서 이미 점수를 가져왔으므로 DB 조회 없이 전달받은 점수 사용
+                Object pointObj = survey.get("point");
+                BigDecimal point = BigDecimal.ZERO;
+                if (pointObj != null) {
+                    try {
+                        point = new BigDecimal(pointObj.toString());
+                    } catch (Exception e) {
+                        log.warn("Point parsing failed for value: {}", pointObj);
+                    }
+                }
+
                 CampRsltDtlDto dtlDto = CampRsltDtlDto.builder()
-                        .cmpycd(cmpycd)
-                        .rslt_no(mstDto.getRslt_no())
-                        .surv_no(survey.get("surv_no"))
-                        .ans_no(survey.get("ans_no") != null ? survey.get("ans_no") : "001")
-                        .remark(survey.get("essay"))
-                        .updemp(request.getUserid())
-                        .addtime(LocalDateTime.now())
-                        .updtime(LocalDateTime.now())
+                        .CMPYCD(cmpycd)
+                        .RSLT_NO(mstDto.getRSLT_NO())
+                        .SURV_NO(survNo)
+                        .ANS_NO(ansNo)
+                        .POINT(point) // 💡 전달받은 점수 바로 등록
+                        .REMARK((String) survey.get("essay"))
+                        .UPDEMP(request.getUserid())
+                        .ADDTIME(LocalDateTime.now())
+                        .UPDTIME(LocalDateTime.now())
                         .build();
                 outboundMapper.insertCampaignRsltDtl(dtlDto);
             }
         }
 
         Map<String, Object> statusParam = new HashMap<>();
-        statusParam.put("cmpycd", cmpycd);
-        statusParam.put("call_seq", request.getCallSeq());
-        statusParam.put("status", "030");
-        statusParam.put("rslt_cd", request.getRsltCd());
-        statusParam.put("resv_dtime", request.getResvDtime());
-        statusParam.put("resv_memo", request.getResvMemo());
+        statusParam.put("CMPYCD", cmpycd);
+        statusParam.put("CALL_SEQ", request.getCallSeq());
+        statusParam.put("STATUS", "030");
+        statusParam.put("RSLT_CD", request.getRsltCd());
+        statusParam.put("RESV_DTIME", request.getResvDtime());
+        statusParam.put("RESV_Memo", request.getResvMemo());
         outboundMapper.updateCallListStatus(statusParam);
     }
 }

@@ -47,8 +47,8 @@ public class OutboundController {
     @PostMapping("/camp-save")
     public void saveCamp(@RequestBody CampMstDto dto, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        dto.setCmpycd(user != null ? user.getCMPYCD() : "HAIONNET");
-        dto.setUpdemp(user != null ? user.getUSERID() : "SYSTEM");
+        dto.setCMPYCD(user != null ? user.getCMPYCD() : "HAIONNET");
+        dto.setUPDEMP(user != null ? user.getUSERID() : "SYSTEM");
         outboundService.saveCampMst(dto);
     }
 
@@ -145,8 +145,13 @@ public class OutboundController {
         return outboundService.getCampaignHistory(getParams(params, session));
     }
 
+    @GetMapping("/rslt-dtl")
+    public List<Map<String, Object>> getRsltDtl(@RequestParam Map<String, Object> params, HttpSession session) {
+        return outboundService.getCampaignRsltDtl(getParams(params, session));
+    }
+
     /**
-     * 💡 [최종] 캠페인 상담 통합 저장 (MySQL 로직 기반)
+     * 💡 [최종] 캠페인 상담 통합 저장 (에러 보정 및 안정화)
      * 프론트엔드 HGOA100U.vue에서 호출함
      */
     @PostMapping("/save-consolidated")

@@ -143,8 +143,9 @@ async function fetchOptions() {
     slipKindOptions.value = resSlip.data.map((i: any) => ({ CODECD: Object.values(i)[0], CODENM: Object.values(i)[1] }))
 
     // 재고자산 (100)
-    const resAsset = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '100' } })
-    assetKindOptions.value = resAsset.data.map((i: any) => ({ CODECD: Object.values(i)[0], CODENM: Object.values(i)[1] }))
+
+    const resAsset = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '100' } })
+    assetKindOptions.value = resAsset.data.map((i: any) => ({ CODECD: i.CODE, CODENM: i.CDNM }))
   } catch (e) { console.error('옵션 로드 실패') }
 }
 

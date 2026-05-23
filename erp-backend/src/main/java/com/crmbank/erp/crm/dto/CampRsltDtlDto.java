@@ -16,13 +16,13 @@ import lombok.Builder;
 @Builder
 public class CampRsltDtlDto {
 
-    private String cmpycd;           // 회사코드
-    private Integer rslt_no;         // 상담결과번호
-    private String surv_no;          // 질문번호
-    private String ans_no;           // 답변번호
-    private BigDecimal point;        // 점수
-    private String remark;           // 비고
-    private LocalDateTime addtime;   // 등록일시
-    private LocalDateTime updtime;   // 수정일시
-    private String updemp;           // 수정자
+    private String CMPYCD;           // 회사코드
+    private Integer RSLT_NO;         // 상담결과번호
+    private String SURV_NO;          // 질문번호
+    private String ANS_NO;           // 답변번호
+    private BigDecimal POINT;        // 점수
+    private String REMARK;           // 비고
+    private LocalDateTime ADDTIME;   // 등록일시
+    private LocalDateTime UPDTIME;   // 수정일시
+    private String UPDEMP;           // 수정자
 }

@@ -2,9 +2,9 @@
 	=============================================================
 	프로그램명	  : 인바운드 상담현황
     프로그램 ID	: HGIA020S
-	작성일자	    : 2026.04.11
+	작성일자	    : 2026.05.19
 	작성자	      : AI Assistant
-	Description	: 인바운드 상담 내역을 조회하고 녹취 파일을 청취하는 현황 화면
+	Description	: 인바운드 상담 내역을 조회하고 녹취 파일을 청취하는 현황 화면 (이전 버전 복구 및 발신자 정보 추가)
 	=============================================================
 -->
 
@@ -19,7 +19,7 @@
 			<button class="btn btn-sm btn-outline-success px-3" @click="exportExcel">Excel</button>
 		</div>
 
-		<!-- 2. 조회 조건 영역 (HGOA100U 스타일) -->
+		<!-- 2. 조회 조건 영역 -->
 		<div class="card shadow-sm border-0 mb-1 flex-shrink-0">
 			<div class="card-body p-2 px-3">
 				<div class="row g-3 align-items-center">
@@ -48,9 +48,9 @@
 			</div>
 		</div>
 
-		<!-- 4. 녹취 플레이어 모달 (오디오 전용) -->
-		<div v-if="showAudioPlayer" class="audio-player-overlay d-flex justify-content-center align-items-center">
-			<div class="card shadow-lg border-0" style="width: 400px; border-radius: 15px;">
+		<!-- 4. 녹취 플레이어 모달 -->
+		<div v-if="showAudioPlayer" class="audio-player-overlay d-flex justify-content-center align-items-center" @click.self="closePlayer">
+			<div class="card shadow-lg border-0" style="width: 400px; border-radius: 15px; overflow: hidden;">
 				<div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
 					<span class="small fw-bold"><i class="bi bi-play-circle-fill me-2 text-info"></i>녹취 파일 재생</span>
 					<button type="button" class="btn-close btn-close-white" @click="closePlayer"></button>
@@ -68,8 +68,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator, type CellComponent } from 'tabulator-tables'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { getDate } from '@/composables/useDate'
@@ -101,18 +102,20 @@ onMounted(() => {
 			layout: 'fitColumns',
 			height: '100%',
 			placeholder: "조회된 상담 내역이 없습니다.",
+			columnDefaults: { headerHozAlign: 'center', headerSort: false, resizable: false },
 			columns: [
-				{ title: "상담일시", field: "start_time", width: 150, hozAlign: 'center', headerSort: false },
-				{ title: "고객명", field: "custnm", width: 120, hozAlign: 'left' },
-				{ title: "수신번호", field: "hpno", width: 120, hozAlign: 'center' },
-				{ title: "접수번호", field: "svcno", width: 130, hozAlign: 'center' },
-				{ title: "상담요약", field: "ai_summary", minWidth: 200, hozAlign: 'left', headerSort: false },
-				{ title: "이관메모", field: "esc_memo", width: 150, hozAlign: 'left', headerSort: false },
+				{ title: "상담일시", field: "start_time", width: 140, hozAlign: 'center', formatter: (c:any) => c.getValue()?.substring(2, 16) || '-' },
+				{ title: "고객사명", field: "custnm", width: 150, hozAlign: 'left', cssClass: 'fw-bold' },
+				{ title: "발신번호", field: "hpno", width: 120, hozAlign: 'center', cssClass: 'text-primary fw-bold' },
+				{ title: "발신자명", field: "call_usernm", width: 100, hozAlign: 'center' },
+				{ title: "발신이메일", field: "call_email", width: 150, hozAlign: 'left' },
+				{ title: "접수번호", field: "svcno", width: 120, hozAlign: 'center' },
+				{ title: "상담요약", field: "ai_summary", minWidth: 200, hozAlign: 'left' },
 				{ title: "상담원", field: "consultnm", width: 100, hozAlign: 'center' },
 				{
-					title: "녹취", field: "rec_file", width: 80, hozAlign: 'center', headerSort: false,
+					title: "녹취", field: "rec_file", width: 60, hozAlign: 'center',
 					formatter: (cell: CellComponent) => {
-						return cell.getValue() ? `<button class="btn btn-xs btn-primary py-0 px-2"><i class="bi bi-play-fill"></i></button>` : '';
+						return cell.getValue() ? `<button class="btn btn-xs btn-primary py-0 px-2 shadow-none"><i class="bi bi-play-fill"></i></button>` : '';
 					},
 					cellClick: (e, cell) => {
 						const file = cell.getValue();
@@ -139,13 +142,12 @@ const handleSearch = async () => {
 		}
 		const res = await api.get('/crm/inbound/status-list', { params });
 		mainGrid?.setData(res.data || []);
-		vAlert('조회되었습니다.');
-	} catch (e) { vAlertError('조회 중 오류 발생'); }
+	} catch (e) { vAlertError('조회 실패'); }
 }
 
 const playRecording = (file: string) => {
 	currentFile.value = file;
-	audioUrl.value = `${import.meta.env.VITE_API_URL}/crm/cti/stream-record?file=${file}`;
+	audioUrl.value = `${import.meta.env.VITE_API_URL}/crm/inbound/play-recording?file=${file}`;
 	showAudioPlayer.value = true;
 }
 
@@ -157,6 +159,10 @@ const closePlayer = () => {
 const exportExcel = () => {
 	mainGrid?.download("xlsx", "인바운드상담현황.xlsx");
 }
+
+onUnmounted(() => {
+    mainGrid?.destroy();
+})
 </script>
 
 <style scoped>
@@ -166,5 +172,5 @@ const exportExcel = () => {
 .audio-player-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 12000; }
 .btn-xs { padding: 1px 5px; font-size: 0.75rem; }
 :deep(.tabulator-header) { background-color: #f8f9fa !important; font-weight: bold; }
-:deep(.tabulator-footer) { background-color: #fdf7e3 !important; font-weight: bold; }
+:deep(.tabulator-row:hover) { background-color: #f0f7ff !important; cursor: pointer; }
 </style>

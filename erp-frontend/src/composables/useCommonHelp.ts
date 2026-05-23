@@ -11,16 +11,18 @@ export function useCommonHelp() {
 
   /**
    * 💡 공통 도움창 호출 함수
-   * @param type 팝업 유형 (DEPT, CUST, ITEM 등)
+   * @param type 팝업 유형 (DEPT, CUST, ITEM, EMP 등)
    * @param callback 선택 완료 후 실행될 콜백 함수
    * @param extraData 추가 파라미터 (예: { ASTKIND: '2' } 등)
    */
   const openHelp = (type: string, callback: (data: any) => void, extraData: any = {}) => {
+    const commonPath = '/api/ha00/HA00_00P_STR'
+
     if (type === 'DEPT') {
       // 💡 부서: 부서코드, 부서명
       Object.assign(modalProps, {
         title: '부서 선택',
-        path: '/api/ha00/HA00_00P_STR',
+        path: commonPath,
         defaultField: 'DEPTNM',
         large: false,
         data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD, GBNCD: '', CODE: '', REMARK: '' },
@@ -34,7 +36,7 @@ export function useCommonHelp() {
       // 💡 거래처: 거래처, 거래처명, 비고
       Object.assign(modalProps, {
         title: '거래처 선택',
-        path: '/api/ha00/HA00_00P_STR',
+        path: commonPath,
         defaultField: 'CUSTNM',
         large: true,
         data: { GUBUN: 'C4', CMPYCD: authStore.CMPYCD, GBNCD: '', CODE: '', REMARK: '' },
@@ -47,7 +49,6 @@ export function useCommonHelp() {
       })
     } else if (type === 'ITEM') {
       // 💡 품목: 품목코드, 품목명, 규격, 단위, 재고자산명(ASTKINDNM), 재고수량(QTY)
-      // ASTKIND '2'는 영업 공통 코드로 상품(12), 원부자재(10), 제품(20), 반제품(21)을 포함
       Object.assign(modalProps, {
         title: '품목 선택',
         path: '/api/hs00/HS00_000S_STR',
@@ -56,7 +57,7 @@ export function useCommonHelp() {
         data: {
           GUBUN: 'I1',
           CMPYCD: authStore.CMPYCD,
-          GBNCD: extraData.ASTKIND || extraData.GBNCD || '2', // 💡 기본값 '2' (영업공통)
+          GBNCD: extraData.ASTKIND || extraData.GBNCD || '2',
           CODE: '',
           CODENM: '',
           ETCVAL: ''
@@ -75,6 +76,20 @@ export function useCommonHelp() {
             headerSort: false,
             formatter: (cell: any) => new Intl.NumberFormat().format(Number(cell.getValue()) || 0)
           }
+        ],
+        onConfirm: callback
+      })
+    } else if (type === 'EMP') {
+      // 💡 사원: 사원ID, 사원명
+      Object.assign(modalProps, {
+        title: '사원 선택',
+        path: commonPath,
+        defaultField: 'USERNM',
+        large: false,
+        data: { GUBUN: 'SD', CMPYCD: authStore.CMPYCD, GBNCD: '', CODE: '', REMARK: '' },
+        columns: [
+          { title: '사원ID', field: 'USERID', width: 100, hozAlign: 'center', headerSort: false },
+          { title: '사원명', field: 'USERNM', minWidth: 150, widthGrow: 1, headerSort: false }
         ],
         onConfirm: callback
       })

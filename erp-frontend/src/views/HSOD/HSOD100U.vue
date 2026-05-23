@@ -1,9 +1,9 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsod100u-wrapper d-flex flex-column h-100 bg-light p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-cart-check-fill me-2 text-primary" style="font-size: 18px;"></i>
         영업정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
@@ -21,7 +21,7 @@
     <!-- 💡 2. 메인 컨텐츠 영역 (gap-3 적용) -->
     <div class="flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3">
       <!-- 🅰️ 마스터 정보 카드 -->
-      <div class="card border-0 shadow-sm overflow-hidden">
+      <div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
           <div class="fw-bold small text-dark"><i class="bi bi-info-circle-fill me-1 text-secondary"></i>주문 기본 정보</div>
           <div v-if="masterData.STS === 'Y'" class="badge bg-success-subtle text-success border border-success-subtle px-2">승인완료</div>
@@ -79,31 +79,21 @@
 
       <!-- 🅱️ 디테일 품목 리스트 -->
       <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-        <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+        <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1 text-secondary"></i> 주문 품목 리스트</span>
           <button class="btn btn-grid-row-add" @click="addRow" :disabled="masterData.STS === 'Y'">
             <i class="bi bi-plus-circle"></i> 행추가
           </button>
         </div>
-        <div class="card-body p-0 flex-grow-1 overflow-hidden bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 overflow-hidden bg-white" style="position: relative;">
+          <div ref="gridElement" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-      <div class="row align-items-center">
-        <div class="col-md-3 small opacity-75">선택 품목: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="fs-5 ms-2 fw-light">총 합계금액: <span class="fw-bold text-info ms-2">{{ formatNumber(sumTotal) }}</span> 원</span>
-        </div>
-      </div>
-    </div>
-
-    <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
-    <ItemHelpModal :visible="itemHelpVisible" :cmpycd="authStore.CMPYCD" :astKind="String(masterData.ASTKIND || '2')" @close="itemHelpVisible = false" @confirm="onSelectItem" />
   </div>
+
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+  <ItemHelpModal :visible="itemHelpVisible" :cmpycd="authStore.CMPYCD" :astKind="String(masterData.ASTKIND || '2')" @close="itemHelpVisible = false" @confirm="onSelectItem" />
 </template>
 
 <script setup lang="ts">
@@ -191,23 +181,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hsod100u-wrapper { height: 100%; overflow: hidden; }
-.btn-erp { padding: 4px 18px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.btn-delete { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #e2e8f0; }
-.erp-table-full th { background-color: #f8fafc; border: 1px solid #e2e8f0 !important; text-align: center; font-weight: 800; font-size: 12.5px; color: #475569; vertical-align: middle; padding: 10px 15px !important; white-space: nowrap !important; }
-.erp-table-full td { vertical-align: middle; padding: 6px 10px !important; border: 1px solid #e2e8f0 !important; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-
-.form-control, .form-select { border-radius: 4px; border: 1px solid #cbd5e1; font-size: 13px; height: 32px; width: 100%; font-weight: 500; }
-.form-control:focus, .form-select:focus { border-color: #005a9f; box-shadow: 0 0 0 2px rgba(0, 90, 159, 0.1); }
-
-:deep(.tabulator) { border: none; font-size: 12.5px; background-color: transparent !important; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; font-weight: 800; color: #334155; }
-:deep(.tabulator-row.tabulator-selected) { background-color: #f0f7ff !important; border-left: 4px solid #005a9f !important; }
+/* 🎨 전역 스타일(global.css)이 적용되므로 특수 레이아웃만 남깁니다. */
 </style>

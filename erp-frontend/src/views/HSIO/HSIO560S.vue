@@ -292,15 +292,30 @@ onMounted(async () => {
 
 <style scoped>
 .hsio560s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-save { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.cust-list .list-group-item { cursor: pointer; transition: background 0.15s; border-left: 3px solid transparent; }
-.cust-list .list-group-item:hover { background-color: #f8f9fa; }
-.cust-list .list-group-item.active { border-left: 3px solid #dc3545; background-color: #fff5f5; }
-.erp-table-full th { width: 12% !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 6px !important; color: #444; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px !important; vertical-align: middle; }
-.extra-small { font-size: 10px; }
-.italic { font-style: italic; }
+.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
+.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
+
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
+.overflow-hidden { overflow: hidden !important; }
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
+}
+.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
+.required::after { content: ' *'; color: #dc3545; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
+
+/* 🚀 팝업 가독성 표준 스타일 */
+:deep(.modal-content) { background-color: #ffffff !important; }
+:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
+:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
+
 </style>

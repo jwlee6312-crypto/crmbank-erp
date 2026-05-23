@@ -1,4 +1,4 @@
-<!--관리정보/시스템관리/사용자마스터 [ERP 프리미엄 표준 - 공통 팝업 및 핸들러 명칭 통일] -->
+<!--관리정보/시스템관리/사용자마스터 [ERP 프리미엄 표준 - 1열 고밀도 배치] -->
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
@@ -32,9 +32,9 @@
 				</div>
 			</div>
 
-			<!-- 💡 3. 상세 정보 입력 영역 (3열 5행 & 핸들러 명칭 통일) -->
+			<!-- 💡 3. 상세 정보 입력 영역 (가로 통합 배치) -->
 			<div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
-				<div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
 					<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-secondary"></i>사용자 정보 상세 관리</div>
 					<div v-if="formData.ACTKIND === 'U0'" class="badge bg-primary text-white px-2">수정 중</div>
 					<div v-else class="badge bg-success text-white px-2">신규 등록</div>
@@ -42,9 +42,12 @@
 				<div class="card-body p-0 bg-white">
 					<table class="erp-table-full border-0">
 						<colgroup>
-							<col style="width: 120px;" /><col />
-							<col style="width: 120px;" /><col />
-							<col style="width: 120px;" /><col />
+							<col style="width: 70px;" /><col style="width: 150px;" /> <!-- 아이디 -->
+							<col style="width: 70px;" /><col style="width: 150px;" /> <!-- 성명 -->
+							<col style="width: 70px;" /><col style="width: 150px;" /> <!-- 비밀번호 -->
+							<col style="width: 70px;" /><col  /> <!-- 부서 -->
+							<col style="width: 70px;" /><col style="width: 150px;" /> <!-- 직위 -->
+							<col style="width: 70px;" /><col style="width: 150px;" /> <!-- 내선번호 -->
 						</colgroup>
 						<tbody>
 							<tr>
@@ -52,25 +55,21 @@
 								<td>
 									<div class="input-group input-group-sm flex-nowrap">
 										<input v-model="formData.USERID" type="text" class="form-control fw-bold text-primary text-center" maxlength="10" :disabled="formData.ACTKIND === 'U0'" />
-										<button v-if="formData.ACTKIND === 'S0'" class="btn btn-outline-primary px-2 border-start-0" @click="checkDuplicateId" title="중복확인"><i class="bi bi-person-check"></i></button>
+										<button v-if="formData.ACTKIND === 'S2'" class="btn btn-outline-primary px-2 border-start-0" @click="checkDuplicateId" title="중복확인"><i class="bi bi-person-check"></i></button>
 									</div>
 								</td>
-								<th class="required">비밀번호</th>
-								<td><input v-model="formData.PW" type="password" class="form-control" maxlength="20" placeholder="비밀번호 설정" /></td>
 								<th class="required">성    명</th>
-								<td><input v-model="formData.USERNM" type="text" class="form-control" placeholder="사용자 이름" /></td>
-							</tr>
-							<tr>
-								<th class="required">소속부서</th>
-								<td>
-									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="formData.DEPTCD" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 60px;" readonly />
-										<input v-model="formData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="handleOpenHelp('DEPT')" />
-										<button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
-									</div>
-								</td>
-								<th>사    번</th>
-								<td><input v-model="formData.EMPNO" type="text" class="form-control text-center" placeholder="사번" /></td>
+								<td><input v-model="formData.USERNM" type="text" class="form-control" placeholder="성명" /></td>
+								<th class="required">비밀번호</th>
+								<td><input v-model="formData.PW" type="password" class="form-control" maxlength="20" placeholder="비밀번호" /></td>
+								<th class="required">부    서</th>
+                                <td>
+                                    <div class="input-group input-group-sm flex-nowrap">
+                                        <input v-model="formData.DEPTCD" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 50px;" readonly />
+                                        <input v-model="formData.DEPTNM" type="text" class="form-control" placeholder="부서명" @keyup.enter="handleOpenHelp('DEPT')" />
+                                        <button class="btn btn-outline-secondary px-1" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
+                                    </div>
+                                </td>
 								<th>직    위</th>
 								<td>
 									<select v-model="formData.POSITIONOFF" class="form-select">
@@ -78,36 +77,38 @@
 										<option v-for="opt in posOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
 									</select>
 								</td>
-							</tr>
-							<tr>
-								<th>연 락 처</th>
-								<td><input v-model="formData.TELNO" type="text" class="form-control text-center" placeholder="02-000-0000" /></td>
 								<th>내선번호</th>
 								<td><input v-model="formData.INNER_NO" type="text" class="form-control text-center" /></td>
+							</tr>
+							<tr>
+
+								<th>연 락 처</th>
+								<td><input v-model="formData.TELNO" type="text" class="form-control text-center" placeholder="02-000-0000" /></td>
 								<th>핸 드 폰</th>
 								<td><input v-model="formData.HPNO" type="text" class="form-control text-center text-primary fw-bold" placeholder="010-0000-0000" /></td>
-							</tr>
-							<tr>
+								<th>사    번</th>
+                                <td><input v-model="formData.EMPNO" type="text" class="form-control text-center" /></td>
 								<th>이 메 일</th>
-								<td colspan="3"><input v-model="formData.EMAIL" type="email" class="form-control" placeholder="example@haion.net" /></td>
+								<td><input v-model="formData.EMAIL" type="email" class="form-control" placeholder="example@haion.net" /></td>
+								<th>영업여부</th>
+								<td>
+									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
+										<input v-model="formData.SALSYN" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="salsYnSwitch">
+										<label class="form-check-label ms-2 small fw-bold" for="salsYnSwitch">{{ formData.SALSYN === 'Y' ? '영업' : '일반' }}</label>
+									</div>
+								</td>
 								<th>사용여부</th>
 								<td class="bg-light-subtle">
-									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100 ps-4">
+									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
 										<input v-model="formData.USEYN" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useYnSwitch920">
-										<label class="form-check-label ms-2 small fw-bold" for="useYnSwitch920">{{ formData.USEYN === 'Y' ? '사용 중' : '중지' }}</label>
+										<label class="form-check-label ms-2 small fw-bold" for="useYnSwitch920">{{ formData.USEYN === 'Y' ? '사용' : '중지' }}</label>
 									</div>
 								</td>
 							</tr>
-							<tr>
-								<th class="border-bottom-0">비    고</th>
-								<td colspan="3" class="border-bottom-0"><input v-model="formData.REMARK" type="text" class="form-control" placeholder="특이사항 입력" /></td>
-								<th class="border-bottom-0 text-center">영업여부</th>
-								<td class="border-bottom-0">
-									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100 ps-4">
-										<input v-model="formData.SALSYN" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="salsYnSwitch">
-										<label class="form-check-label ms-2 small fw-bold" for="salsYnSwitch">{{ formData.SALSYN === 'Y' ? '영업사원' : '일반관리' }}</label>
-									</div>
-								</td>
+							<!-- 특이사항 (사용자 요청으로 HIDDEN 처리) -->
+							<tr style="display: none;">
+								<th>비    고</th>
+								<td colspan="11"><input v-model="formData.REMARK" type="text" class="form-control" /></td>
 							</tr>
 						</tbody>
 					</table>
@@ -140,7 +141,6 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
-import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
@@ -162,7 +162,7 @@ async function fetchList() {
 			ACTKIND: 'S2', WORD: searchForm.WORD, CMPYCD: authStore.CMPYCD,
 			USERID: '', USERNM: '', DEPTCD: '', DEPTNM: '', EMPNO: '', SALSYN: '', PW: '',
 			TELNO: '', HPNO: '', EMAIL: '', SDEPT: '', USEYN: '', USERGRP: '',
-			UPDEMP: authStore.USER_ID, PRICEGBN: '', POSITIONOFF: ''
+			UPDEMP: authStore.USER_ID, PRICEGBN: '', POSITIONOFF: '', POSITIONOFFNM: '', INNER_NO: ''
 		})
 		await nextTick()
 		mainGrid?.setData(res.data || [])
@@ -195,7 +195,6 @@ function initialize() {
 
 function checkDuplicateId() { vAlert('중복 체크가 완료되었습니다.') }
 
-// 💡 핸들러 명칭 표준화: handleOpenHelp
 function handleOpenHelp(type: string) {
 	if (type === 'DEPT') {
 		openHelp('DEPT', (data) => {
@@ -212,11 +211,14 @@ onMounted(async () => {
 			placeholder: '표시할 사용자가 없습니다.',
 			columnDefaults: { headerSort: false, headerHozAlign: 'center' },
 			columns: [
-				{ title: '아이디', field: 'USERID', hozAlign: 'center', width: 120, cssClass: 'fw-bold text-primary border-end' },
-				{ title: '성명', field: 'USERNM', hozAlign: 'center', width: 110 },
+				{ title: '아이디', field: 'USERID', hozAlign: 'center', width: 150, cssClass: 'fw-bold text-primary border-end' },
+				{ title: '성명', field: 'USERNM', hozAlign: 'center', width: 150 },
 				{ title: '소속부서', field: 'DEPTNM', widthGrow: 1, cssClass: 'border-start' },
-				{ title: '핸드폰', field: 'HPNO', width: 140 },
-				{ title: '사용', field: 'USEYN', hozAlign: 'center', width: 70, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+				{ title: '직위', field: 'POSITIONOFFNM', hozAlign: 'center', width: 150 },
+				{ title: '핸드폰', field: 'HPNO', width: 200 },
+				{ title: '메일', field: 'EMAIL', width: 250 },
+				{ title: '내선번호', field: 'INNER_NO', hozAlign: 'center', width: 100 },
+        		{ title: '사용', field: 'USEYN', hozAlign: 'center', width: 150, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
 			]
 		})
 		mainGrid.on('rowClick', (e, row) => { Object.assign(formData, row.getData()); formData.ACTKIND = 'U0' })
@@ -242,8 +244,8 @@ onMounted(async () => {
 .btn-delete { background-color: #d32f2f; color: #fff; border: none; }
 
 .erp-table-full { table-layout: fixed !important; border-collapse: collapse !important; width: 100%; border-style: hidden; }
-.erp-table-full th { background-color: #f8fafc; border: 1px solid #e2e8f0 !important; text-align: center; font-weight: 800; font-size: 12.5px; color: #475569; vertical-align: middle; padding: 10px 15px !important; white-space: nowrap; }
-.erp-table-full td { vertical-align: middle; padding: 8px 12px !important; border: 1px solid #e2e8f0 !important; background-color: #fff; }
+.erp-table-full th { background-color: #f8fafc; border: 1px solid #e2e8f0 !important; text-align: center; font-weight: 800; font-size: 12.5px; color: #475569; vertical-align: middle; padding: 10px 10px !important; white-space: nowrap; }
+.erp-table-full td { vertical-align: middle; padding: 6px 8px !important; border: 1px solid #e2e8f0 !important; background-color: #fff; }
 .required::after { content: ' *'; color: #ef4444; }
 
 .form-control, .form-select { border-radius: 4px; border: 1px solid #cbd5e1; font-size: 13px; height: 32px; width: 100%; font-weight: 500; }

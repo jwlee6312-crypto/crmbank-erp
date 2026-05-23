@@ -3,7 +3,7 @@
 
   <div class="hsba900u-wrapper d-flex flex-column h-100 bg-white p-0">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-code-square me-2 text-primary" style="font-size: 18px;"></i>
         기본정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
@@ -18,9 +18,9 @@
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
+    <div class="flex-grow-1 d-flex flex-column gap-2 p-2 overflow-hidden">
       <!-- 🅰️ 코드 입력 정보 -->
-      <div class="card border shadow-sm overflow-hidden">
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
           <span class="fw-bold small text-dark"><i class="bi bi-pencil-square me-1"></i> 코드 정보 입력</span>
           <span v-if="masterData.ACTKIND === 'U0'" class="badge bg-warning text-dark">수정 모드</span>
@@ -44,15 +44,13 @@
                 <td>
                   <input v-model="masterData.CDNM" type="text" class="form-control form-control-sm" maxlength="30" />
                 </td>
-              </tr>
-              <tr>
-                <th>비&nbsp;&nbsp;&nbsp;&nbsp;고</th>
-                <td>
-                  <input v-model="masterData.REMARK" type="text" class="form-control form-control-sm" maxlength="50" />
-                </td>
                 <th>출현순서</th>
                 <td>
                   <input v-model="masterData.DSPORD" type="text" class="form-control form-control-sm text-center" maxlength="3" />
+                </td>
+                <th>비&nbsp;&nbsp;&nbsp;&nbsp;고</th>
+                <td>
+                  <input v-model="masterData.REMARK" type="text" class="form-control form-control-sm" maxlength="50" />
                 </td>
                 <th>사용여부</th>
                 <td>
@@ -68,13 +66,13 @@
       </div>
 
       <!-- 🅱️ 하단 목록 영역 (좌: 코드 그룹, 우: 코드 상세) -->
-      <div class="d-flex flex-grow-1 gap-2 overflow-hidden">
+      <div class="d-flex flex-grow-1 gap-2 overflow-hidden" style="min-height: 0;">
         <!-- 좌측: 코드 그룹 목록 -->
         <div class="card border shadow-sm d-flex flex-column" style="width: 300px;">
           <div class="card-header bg-light py-1 px-3 border-bottom fw-bold small text-dark">
             <i class="bi bi-folder-fill me-1"></i> 코드 그룹
           </div>
-          <div class="card-body p-0 flex-grow-1 bg-white">
+          <div class="card-body p-0 flex-grow-1 bg-white" style="min-height: 0;">
             <div ref="groupGridElement" style="height: 100%;"></div>
           </div>
         </div>
@@ -85,7 +83,7 @@
             <span><i class="bi bi-list-check me-1"></i> 상세 코드 목록</span>
             <span v-if="selectedGroupName" class="text-primary fw-bold">[{{ selectedGroupName }}]</span>
           </div>
-          <div class="card-body p-0 flex-grow-1 bg-white">
+          <div class="card-body p-0 flex-grow-1 bg-white" style="min-height: 0;">
             <div ref="codeGridElement" style="height: 100%;"></div>
           </div>
         </div>
@@ -93,7 +91,7 @@
     </div>
 
     <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
+    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
       <div class="row align-items-center">
         <div class="col-md-6 small">
           조회된 상세 코드: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건
@@ -202,9 +200,10 @@ async function fetchGroupOptions() {
     const res = await api.get('/api/hs00/HS00_000S_STR', {
       params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '010' }
     })
+
     groupOptions.value = res.data.map((i: any) => ({
-      CODECD: String(Object.values(i)[0]).trim(),
-      CODENM: String(Object.values(i)[1]).trim()
+      CODECD: String(i.CODE || i.CODECD || '').trim(),
+      CODENM: String(i.CDNM || i.CODENM || '').trim()
     }))
   } catch (e) { console.error('코드구분 로드 실패') }
 }
@@ -216,8 +215,12 @@ async function fetchGroups() {
       CMPYCD: authStore.CMPYCD,
       CDGBN: '010'
     })
+    console.log('그룹 조회 결과:', res.data)
     groupGrid?.setData(res.data)
-  } catch (e) { vAlertError('그룹 목록 조회 실패') }
+  } catch (e: any) {
+    console.error('그룹 조회 에러 상세:', e.response || e)
+    vAlertError('그룹 목록 조회 실패')
+  }
 }
 
 async function fetchCodes(cdgbn: string) {

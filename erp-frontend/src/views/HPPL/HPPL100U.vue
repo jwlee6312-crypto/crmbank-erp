@@ -20,7 +20,7 @@
     <!-- 💡 2. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
       <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-body p-0">
           <table class="erp-table-full">
             <tbody>
@@ -57,24 +57,20 @@
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
         <div class="card-header bg-light py-1 px-3 border-bottom d-flex justify-content-between align-items-center">
           <span class="fw-bold small text-dark"><i class="bi bi-list-task me-1"></i> 생산 계획 상세</span>
-          <div class="small text-muted">※ 우측으로 스크롤하여 1일부터 말일까지 확인하세요.</div>
+          <div class="d-flex gap-3 align-items-center">
+            <div class="d-flex align-items-center gap-1">
+              <span class="small text-muted">전체선택</span>
+              <input type="checkbox" v-model="allSelected" @change="toggleAllSelection" class="form-check-input" />
+            </div>
+            <div class="small text-muted">※ 우측으로 스크롤하여 1일부터 말일까지 확인하세요.</div>
+          </div>
         </div>
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden" style="position: relative;">
-          <div ref="gridElement" style="height: 100%;"></div>
+          <div ref="gridElement" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-3 small">조회건수: <span class="fw-bold text-info">{{ itemCount }}</span> 건</div>
-        <div class="col-md-9 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 가로 스크롤을 통해 전체 일자를 확인하고 수량을 입력할 수 있습니다.
-        </div>
-      </div>
-    </div>
-
+    <!-- 📊 하단 정보 바 삭제됨 -->
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
@@ -115,8 +111,8 @@ const uiYYMM = computed({
 
 const gridElement = ref<HTMLElement | null>(null)
 let grid: Tabulator | null = null
-const itemCount = ref(0)
 const lastDay = ref(0)
+const allSelected = ref(false)
 
 // 🏭 라인/공정 옵션 로드
 const fetchLineOptions = async () => {
@@ -161,7 +157,6 @@ const initGrid = () => {
       layout: "fitData",
       height: "100%",
       placeholder: "데이터를 조회해 주세요.",
-      selectable: true,
       headerSort: false,
       headerHeight: 65,
       columns: generateColumns()
@@ -181,12 +176,14 @@ const generateColumns = () => {
   lastDay.value = lastDate
 
   const columns: any[] = [
-    // 👈 1. 선택 체크박스 (그룹화 없이 최상위로 배치하여 세로 높이 전체 차지 유도)
+    // 👈 1. 선택 체크박스 (tickCross 포맷터 적용, 빈 상태 디폴트)
     {
-      title: "",
-      formatter: "rowSelection",
-      titleFormatter: "rowSelection",
-      width: 45,
+      title: "선택",
+      field: "PROCYN",
+      formatter: "tickCross",
+      formatterParams: { crossElement: false }, // 👈 'X' 표시 안함
+      editor: true,
+      width: 60,
       hozAlign: "center",
       headerHozAlign: "center",
       vertAlign: "middle",
@@ -231,7 +228,7 @@ const generateColumns = () => {
         for (let i = 0; i < lastDay.value; i++) {
           sum += Number(data[`MM${String(i).padStart(2, '0')}`] || 0)
         }
-        row.update({ QTY_TT: sum })
+        row.update({ QTY_TT: sum, PROCYN: true })
       }
     })
   }
@@ -260,7 +257,7 @@ const fetchList = async () => {
     })
 
     const mappedData = res.data.map((item: any) => {
-      const row = { ...item }
+      const row = { ...item, PROCYN: null } // 👈 null로 초기화하여 'X' 방지
       for (let i = 0; i < lastDay.value; i++) {
         const d = i + 1
         const val = item[String(d)] ?? item[d] ?? item[String(d).padStart(2, '0')] ?? item[i + 5] ?? 0
@@ -270,7 +267,7 @@ const fetchList = async () => {
     })
 
     grid?.setData(mappedData)
-    itemCount.value = mappedData.length
+    allSelected.value = false
     vAlert('조회되었습니다.')
   } catch (e) {
     vAlertError('조회 처리 중 오류 발생')
@@ -278,7 +275,9 @@ const fetchList = async () => {
 }
 
 const saveData = async () => {
-  const selectedData = grid?.getSelectedData() || []
+  const allData = grid?.getData() || []
+  const selectedData = allData.filter((r: any) => r.PROCYN === true) // 👈 체크된 항목만 필터링
+
   if (selectedData.length === 0) return vAlertError('저장할 항목을 선택하세요.')
 
   if (!confirm('생산계획을 저장하시겠습니까?')) return
@@ -310,13 +309,20 @@ const saveData = async () => {
   }
 }
 
+const toggleAllSelection = () => {
+  if (!grid) return
+  const data = grid.getData()
+  // 👈 true 또는 null로 업데이트하여 'X' 방지
+  grid.updateData(data.map(i => ({ ...i, PROCYN: allSelected.value ? true : null })))
+}
+
 const initialize = () => {
   searchData.YYMM = initYM
   searchData.LINECD = ''
   searchData.PROGCD = ''
   progOptions.value = []
   grid?.clearData()
-  itemCount.value = 0
+  allSelected.value = false
   if (grid) grid.setColumns(generateColumns())
 }
 
@@ -378,5 +384,12 @@ onMounted(() => {
 /* 체크박스 정중앙 */
 :deep(.tabulator-cell.tabulator-selectable) {
   justify-content: center !important;
+}
+
+/* 입력 필드 글자 크기 및 높이 최적화 */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
 }
 </style>

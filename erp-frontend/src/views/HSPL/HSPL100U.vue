@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hspl100u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -21,12 +21,9 @@
     <!-- 💡 2. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
       <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
-        <div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center">
-          <span class="fw-bold small text-dark"><i class="bi bi-search me-1"></i> 조회 조건</span>
-        </div>
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-body p-0">
-          <table class="erp-table-full">
+          <table class="erp-table-full border-0">
             <tbody>
               <tr>
                 <th class="required">연&nbsp;&nbsp;&nbsp;&nbsp;도</th>
@@ -39,17 +36,17 @@
                 <th class="required">영업부서</th>
                 <td style="width: 250px;">
                   <div class="input-group input-group-sm">
-                    <input v-model="searchData.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+                    <input v-model="searchData.DEPTCD" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
+                    <input v-model="searchData.DEPTNM" type="text" class="form-control border-start-0" placeholder="부서 선택" @keyup.enter="handleOpenHelp('DEPT')" />
+                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">영업사원</th>
                 <td style="width: 220px;">
                   <div class="input-group input-group-sm">
-                    <input v-model="searchData.USERID" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.USERNM" type="text" class="form-control" placeholder="사원 선택" @keyup.enter="openHelp('EMP')" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('EMP')"><i class="bi bi-search"></i></button>
+                    <input v-model="searchData.USERID" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
+                    <input v-model="searchData.USERNM" type="text" class="form-control border-start-0" placeholder="사원 선택" @keyup.enter="handleOpenHelp('EMP')" />
+                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('EMP')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th>대 분 류</th>
@@ -73,18 +70,8 @@
             <input type="checkbox" v-model="allSelected" @change="toggleAllSelection" class="form-check-input" />
           </div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center text-center">
-        <div class="col-md-2 small border-end border-secondary">조회 품목: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-10 text-end">
-          <span class="fs-5 fw-light">연간 계획 총 수량: <span class="fw-bold text-white ms-2">{{ formatNumber(grandTotal) }}</span></span>
+        <div class="card-body p-0 flex-grow-1 bg-white" style="position: relative;">
+          <div ref="gridElement" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
         </div>
       </div>
     </div>
@@ -103,11 +90,12 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const now = new Date()
 
@@ -124,8 +112,6 @@ const searchData = reactive({
 const agrpOptions = ref<any[]>([])
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
-const activeItemCount = ref(0)
-const grandTotal = ref(0)
 const allSelected = ref(false)
 
 // 2. 그리드 초기화
@@ -138,21 +124,23 @@ const initGrid = () => {
     columnDefaults: { headerSort: false },
     columns: [
       {
-        title: "선택", field: "PROCYN", width: 40, hozAlign: "center",
-        formatter: "tickCross", editor: true
+        title: "선택", field: "PROCYN", width: 60, hozAlign: "center",
+        formatter: "tickCross",
+        formatterParams: { crossElement: false },
+        editor: true
       },
       { title: "품목", field: "ITEMNM", minWidth: 180, cssClass: "fw-bold" },
       {
         title: "합계", field: "PLANSUM", width: 90, hozAlign: "right",
         cssClass: "bg-light-blue fw-bold",
-        formatter: (cell) => formatNumber(cell.getValue())
+        formatter: (cell) => Number(cell.getValue() || 0).toLocaleString()
       },
       ...Array.from({ length: 12 }, (_, i) => {
         const month = String(i + 1).padStart(2, '0')
         return {
           title: `${month}월`,
           field: `MM${month}`,
-          width: 80,
+          width: 90,
           hozAlign: "right",
           editor: "number",
           formatter: "money",
@@ -172,26 +160,18 @@ const initGrid = () => {
         rowSum += Number(data[`MM${String(i).padStart(2, '0')}`]) || 0
     }
     row.update({ PLANSUM: rowSum })
-    updateGrandTotal()
   })
-}
-
-const updateGrandTotal = () => {
-  if (!grid.value) return
-  const data = grid.value.getData()
-  grandTotal.value = data.reduce((acc, cur) => acc + (Number(cur.PLANSUM) || 0), 0)
 }
 
 const toggleAllSelection = () => {
   if (!grid.value) return
   const data = grid.value.getData()
-  grid.value.updateData(data.map(i => ({ ...i, PROCYN: allSelected.value })))
+  grid.value.updateData(data.map(i => ({ ...i, PROCYN: allSelected.value ? true : null })))
 }
 
 // 3. 기능 구현
 async function fetchOptions() {
   try {
-    // 🛠️ 경로 수정: /api/comm -> /api/hs00
     const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'G0', CMPYCD: authStore.CMPYCD, GBNCD: '120' } })
     agrpOptions.value = res.data.map((i: any) => ({ CODECD: Object.values(i)[0], CODENM: Object.values(i)[1] }))
     if (agrpOptions.value.length > 0) searchData.AGRPCD = agrpOptions.value[0].CODECD
@@ -201,7 +181,6 @@ async function fetchOptions() {
 async function search() {
   if (!searchData.DEPTCD || !searchData.USERID) return vAlertError('영업부서와 사원을 선택하세요.')
   try {
-    // 🛠️ 경로 수정: /api/sale -> /api/hspl
     const res = await api.post('/api/hspl/HSPL_100U_STR', {
       ACTKIND: 'S0',
       CMPYCD: authStore.CMPYCD,
@@ -214,24 +193,21 @@ async function search() {
       const mapped = res.data.map((i: any) => {
           let rowSum = 0
           for(let m=1; m<=12; m++) rowSum += Number(i[`MM${String(m).padStart(2, '0')}`]) || 0
-          return { ...i, PROCYN: false, PLANSUM: rowSum }
+          return { ...i, PROCYN: null, PLANSUM: rowSum }
       })
       grid.value.setData(mapped)
-      activeItemCount.value = mapped.length
-      updateGrandTotal()
     }
   } catch (e) { vAlertError('조회 실패') }
 }
 
 async function save() {
-  const selected = grid.value?.getData().filter((i: any) => i.PROCYN)
+  const selected = grid.value?.getData().filter((i: any) => i.PROCYN === true)
   if (!selected || selected.length === 0) return vAlertError('저장할 대상을 선택하세요.')
 
   if (!confirm('선택한 품목의 판매계획을 저장하시겠습니까?')) return
 
   try {
     for (const item of selected) {
-      // 🛠️ 경로 수정: /api/sale -> /api/hspl
       await api.post('/api/hspl/HSPL_100U_STR', {
         ...item,
         ACTKIND: 'A0',
@@ -258,57 +234,30 @@ function initialize() {
     USERNM: authStore.USERNM
   })
   if (grid.value) grid.value.clearData()
-  grandTotal.value = 0
-  activeItemCount.value = 0
+  allSelected.value = false
 }
 
 function print(type: string) {
     vAlert(`${type} 기능은 준비 중입니다.`)
 }
 
-// 4. 팝업 설정
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-function openHelp(type: string) {
-  // 🛠️ 경로 수정: /api/comm -> /api/ha00
-  const commonPath = '/api/ha00/HA00_00P_STR'
+// 팝업 핸들러 (표준화)
+function handleOpenHelp(type: string) {
   if (type === 'DEPT') {
-    Object.assign(modalProps, {
-      title: '영업부서 선택', path: commonPath, defaultField: 'DEPTNM',
-      data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }],
-      onConfirm: (data: any) => { searchData.DEPTCD = data.DEPTCD; searchData.DEPTNM = data.DEPTNM }
-    })
+    openHelp('DEPT', (data: any) => {
+      searchData.DEPTCD = data.DEPTCD;
+      searchData.DEPTNM = data.DEPTNM;
+    });
   } else if (type === 'EMP') {
-    Object.assign(modalProps, {
-      title: '영업사원 선택', path: commonPath, defaultField: 'USERNM',
-      data: { GUBUN: 'SD', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: 'ID', field: 'USERID', width: 100 }, { title: '사원명', field: 'USERNM', width: 150 }],
-      onConfirm: (data: any) => { searchData.USERID = data.USERID; searchData.USERNM = data.USERNM }
-    })
+    openHelp('EMP', (data: any) => {
+      searchData.USERID = data.USERID;
+      searchData.USERNM = data.USERNM;
+    });
   }
-  modalVisible.value = true
 }
-
-const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0)
 
 onMounted(async () => {
   await fetchOptions()
   nextTick(() => initGrid())
 })
 </script>
-
-<style scoped>
-.hspl100u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.bg-light-blue { background-color: #e7f3ff !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: auto !important; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 1% !important; white-space: nowrap !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 10px 15px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 8px 12px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-</style>

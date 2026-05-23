@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio490u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -133,24 +133,10 @@
       <div class="card border shadow-sm flex-grow-1 overflow-hidden bg-white">
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 반품 품목 리스트</span>
-          <button class="btn btn-xs btn-primary fw-bold" @click="addRow" :disabled="masterData.STS === 'Y'">
-            <i class="bi bi-plus-lg me-1"></i> 행추가
-          </button>
+          <button class="btn-grid-row-add" @click="addRow" :disabled="masterData.STS === 'Y'">행추가</button>
         </div>
         <div class="card-body p-0 flex-grow-1 bg-white">
           <div ref="gridElement" style="height: 100%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-3 small">건수: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="me-4 small opacity-75">공급가액: <span class="fw-bold text-info ms-1">{{ formatNumber(totals.amt) }}</span></span>
-          <span class="me-4 small opacity-75">부가세: <span class="fw-bold text-warning ms-1">{{ formatNumber(totals.vat) }}</span></span>
-          <span class="fs-5 ms-2 fw-light">총 합계: <span class="fw-bold text-white ms-2">{{ formatNumber(totals.sum) }}</span></span>
         </div>
       </div>
     </div>
@@ -360,17 +346,3 @@ onMounted(async () => {
   nextTick(initGrid);
 })
 </script>
-
-<style scoped>
-.hsio490u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.btn-danger { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: auto !important; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 12% !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 6px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px !important; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-.btn-xs { padding: 2px 6px; font-size: 11px; border-radius: 3px; }
-</style>

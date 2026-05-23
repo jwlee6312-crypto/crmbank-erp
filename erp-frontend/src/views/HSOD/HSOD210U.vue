@@ -3,7 +3,7 @@
 
   <div class="hsod210u-wrapper d-flex flex-column h-100 bg-white p-0">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-gift-fill me-2 text-primary" style="font-size: 18px;"></i>
         구매정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
@@ -14,16 +14,16 @@
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchList">조회</button>
         <button class="btn-erp btn-save" @click="saveData">저장</button>
-        <button class="btn-erp btn-delete" @click="deleteData" :disabled="formData.ACTKIND !== 'U'">삭제</button>
+        <button class="btn-erp btn-danger" @click="deleteData" :disabled="formData.ACTKIND !== 'U'">삭제</button>
       </div>
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
       <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-body p-0">
-          <table class="erp-table-full">
+          <table class="erp-table-full border-0">
             <tbody>
               <tr>
                 <th>구&nbsp;&nbsp;&nbsp;&nbsp;분</th>
@@ -48,9 +48,9 @@
       </div>
 
       <!-- 🅱️ 입력 폼 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-body p-0">
-          <table class="erp-table-full">
+          <table class="erp-table-full border-0">
             <tbody>
               <tr>
                 <th class="required">구&nbsp;&nbsp;&nbsp;&nbsp;분</th>
@@ -63,17 +63,17 @@
                 <th class="required">거&nbsp;래&nbsp;처</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 250px;">
-                    <input v-model="formData.CUSTCD" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.CUSTNM" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="openHelp('FORM_CUST')" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('FORM_CUST')"><i class="bi bi-search"></i></button>
+                    <input v-model="formData.CUSTCD" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 80px;" readonly />
+                    <input v-model="formData.CUSTNM" type="text" class="form-control border-start-0" placeholder="거래처 선택" @keyup.enter="handleOpenHelp('CUST')" />
+                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('CUST')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th>부&nbsp;&nbsp;&nbsp;&nbsp;서</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 250px;">
-                    <input v-model="formData.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('FORM_DEPT')" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('FORM_DEPT')"><i class="bi bi-search"></i></button>
+                    <input v-model="formData.DEPTCD" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 80px;" readonly />
+                    <input v-model="formData.DEPTNM" type="text" class="form-control border-start-0" placeholder="부서 선택" @keyup.enter="handleOpenHelp('DEPT')" />
+                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
               </tr>
@@ -104,21 +104,12 @@
 
       <!-- 🅲 그리드 영역 -->
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-        <div class="card-header bg-light py-1 px-3 border-bottom fw-bold small text-dark">
-          <i class="bi bi-list-check me-1"></i> 처리 내역
+        <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-list-check me-1 text-primary"></i> 처리 내역 ({{ itemCount }} 건)</span>
+          <span class="text-muted" style="font-size: 11px;">※ 목록에서 행을 클릭하면 수정 모드로 전환됩니다.</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-3 small">조회건수: <span class="fw-bold text-white">{{ itemCount }}</span> 건</div>
-        <div class="col-md-9 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 목록에서 항목을 클릭하면 수정 모드로 전환됩니다.
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden" style="position: relative;">
+          <div ref="gridElement" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
         </div>
       </div>
     </div>
@@ -137,11 +128,12 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const now = new Date()
 const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
@@ -154,7 +146,7 @@ const searchData = reactive({
   TOYMD: initYMD
 })
 
-const formData = reactive({
+const formData = reactive<any>({
   ACTKIND: 'A',
   GBN: '001',
   CUSTCD: '', CUSTNM: '',
@@ -181,13 +173,14 @@ const initGrid = () => {
       layout: "fitColumns",
       height: "100%",
       placeholder: "조회된 데이터가 없습니다.",
+      columnDefaults: { headerSort: false, headerHozAlign: 'center' },
       columns: [
         { title: "구분", field: "GBN", width: 100, hozAlign: "center", formatter: (c) => c.getValue() === '001' ? '판매장려금' : '재고보상금' },
-        { title: "거래처 상호", field: "CUSTNM", minwidth: 250 },
-        { title: "등록일", field: "IOYMD", width: 150, hozAlign: "center", formatter: (c) => formatDateString(c.getValue(), '-') },
-        { title: "금액", field: "IOAMT", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "부가세", field: "IOVAT", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "비고", field: "REMARK",width: 300, hozAlign: "left" },
+        { title: "거래처 상호", field: "CUSTNM", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
+        { title: "등록일", field: "IOYMD", width: 120, hozAlign: "center", formatter: (c) => formatDateString(c.getValue(), '-') },
+        { title: "금액", field: "IOAMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "부가세", field: "IOVAT", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "비고", field: "REMARK", width: 250, hozAlign: "left" },
       ],
     })
 
@@ -278,26 +271,19 @@ const initialize = () => {
   })
 }
 
-// 4. 도움창 관련
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-function openHelp(type: string) {
-  let gubun = 'C4', title = '거래처 선택', field = 'CUSTNM'
-  if (type.includes('DEPT')) { gubun = 'D0'; title = '부서 선택'; field = 'DEPTNM' }
-
-  Object.assign(modalProps, {
-    title, path: '/api/ha00/HA00_00P_STR', defaultField: field,
-    data: { GUBUN: gubun, CMPYCD: authStore.CMPYCD, LIMITOFFSET: 0, LIMITROWS: 20 },
-    columns: gubun === 'D0'
-      ? [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }]
-      : [{ title: '코드', field: 'CUSTCD', width: 70 }, { title: '거래처명', field: 'CUSTNM', width: 180 }],
-    onConfirm: (data: any) => {
-      if (type === 'FORM_DEPT') { formData.DEPTCD = data.DEPTCD; formData.DEPTNM = data.DEPTNM }
-      else if (type === 'FORM_CUST') { formData.CUSTCD = data.CUSTCD; formData.CUSTNM = data.CUSTNM }
-    }
-  })
-  modalVisible.value = true
+// 4. 도움창 핸들러 (표준화)
+const handleOpenHelp = (type: string) => {
+  if (type === 'CUST') {
+    openHelp('CUST', (data: any) => {
+      formData.CUSTCD = data.CUSTCD;
+      formData.CUSTNM = data.CUSTNM;
+    });
+  } else if (type === 'DEPT') {
+    openHelp('DEPT', (data: any) => {
+      formData.DEPTCD = data.DEPTCD;
+      formData.DEPTNM = data.DEPTNM;
+    });
+  }
 }
 
 const formatDateString = (v: any, sep: string) => v && v.length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : v
@@ -309,25 +295,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hsip100u-wrapper { height: 100%; overflow: hidden; }
-.tabulator-full-height { height: 100% !important; border: none; }
-
-.erp-header { background-color: #ffffff !important; }
-
-/* 💎 개별 파일의 스타일을 삭제하여 global.css 표준 디자인이 적용되도록 함 */
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.btn-danger { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
-
-erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  width: 1%; white-space: nowrap;
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12.5px; padding: 10px 15px !important; color: #495057;
-}
-.erp-table-full td { border: 1px solid #dee2e6; padding: 6px 10px !important; vertical-align: middle; background-color: #fff; }
+.hsod210u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
+.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
+.btn-danger { background-color: #dc3545 !important; color: #fff !important; border: none !important; }
+.form-control, .form-select { font-size: 12px !important; height: 28px !important; padding: 2px 8px !important; }
+.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8fafc; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 6px 10px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
 .required::after { content: ' *'; color: #ef4444; }
-.bg-yellow { background-color: #fffde7 !important; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 </style>

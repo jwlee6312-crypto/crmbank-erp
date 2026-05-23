@@ -88,14 +88,12 @@
                     <button class="btn btn-outline-secondary" @click="openHelp('ITEM')" :disabled="masterData.ACTKIND === 'U0'"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
-              </tr>
-              <tr>
                 <th class="required">기초재고수량</th>
                 <td>
                   <input v-model="masterData.QTY" type="text" class="form-control form-control-sm text-end" @input="formatInput('QTY')" />
                 </td>
                 <th class="required">기초재고금액</th>
-                <td colspan="5">
+                <td>
                   <input v-model="masterData.AMT" type="text" class="form-control form-control-sm text-end" style="width: 150px;" @input="formatInput('AMT')" />
                 </td>
               </tr>
@@ -221,7 +219,7 @@ const initGrid = () => {
 async function fetchWhOptions() {
   try {
     const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'W0', CMPYCD: authStore.CMPYCD } })
-    whOptions.value = res.data.map((i: any) => ({ CODECD: Object.values(i)[0], CODENM: Object.values(i)[1] }))
+    whOptions.value = res.data.map((i: any) => ({ CODECD: i.WHCD, CODENM: i.WHNM }))
     if (whOptions.value.length > 0) {
         searchData.WHCD = whOptions.value[0].CODECD
         masterData.WHCD = whOptions.value[0].CODECD

@@ -15,13 +15,13 @@ import lombok.Builder;
 @Builder
 public class SurvGbQuestionDto {
 
-    private String cmpycd;           // 회사코드
-    private String surv_gb;          // 설문유형 (CDTYPE='910')
-    private String surv_no;          // 질문번호 (SURV_MST 외래키)
-    private String sortcd;           // 정렬순서
-    private String useyn;            // 사용여부 (Y/N)
+    private String CMPYCD;           // 회사코드
+    private String SURV_GB;          // 설문유형 (CDTYPE='910')
+    private String SURV_NO;          // 질문번호 (SURV_MST 외래키)
+    private String SORTCD;           // 정렬순서
+    private String USEYN;            // 사용여부 (Y/N)
     
-    private LocalDateTime addtime;   // 등록일시
-    private LocalDateTime updtime;   // 수정일시
-    private String updemp;           // 수정자ID
+    private LocalDateTime ADDTIME;   // 등록일시
+    private LocalDateTime UPDTIME;   // 수정일시
+    private String UPDEMP;           // 수정자ID
 }

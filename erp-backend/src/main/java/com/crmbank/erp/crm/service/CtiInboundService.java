@@ -21,7 +21,7 @@ public class CtiInboundService {
     /**
      * 💡 전화 돌려주기 (Transfer) 실행
      */
-    public void transferCall(String fromExten, String targetExten, Map<String, Object> consultData, String linkedId, String myChannel, Set<String> sessionChannels) {
+    public void transferCall(String fromExten, String targetExten, Map<String, Object> consultData, String linkedId, String myChannel, Set<String> sessionChannels, String cmpycd) {
         new Thread(() -> {
             try {
                 if (linkedId != null) {
@@ -36,7 +36,7 @@ public class CtiInboundService {
                     consultData.put("linkedid", linkedId);
                     consultData.put("from_exten", fromExten);
                     consultData.put("to_exten", targetExten);
-                    consultData.put("cmpycd", "HAIONNET");
+                    consultData.put("cmpycd", cmpycd);
                     inboundMapper.upsertTransferData(consultData);
                     
                     if (sessionChannels != null) {

@@ -18,7 +18,7 @@ public interface InboundMapper {
     // 인바운드 상담현황 조회 (HGIA020S)
     List<Map<String, Object>> selectStatusList(Map<String, Object> params);
 
-    // [2] 통합 인터랙션 로그
+    // [2] 통합 인터랙션 로그 (MSSQL MERGE 사용)
     int insertTotalInteractionLog(TotalCallLogDto dto);
     int updateCallAnswer(Map<String, Object> params);
     int updateCallHangup(Map<String, Object> params);
@@ -36,10 +36,11 @@ public interface InboundMapper {
     CallMstDto selectCallMst(Map<String, Object> params);
     int insertEscalation(CtiEscalationDto dto);
 
-    // [5] 녹취 및 호 전환
+    // [5] 녹취 파일 관리
     int insertCallMonitor(CallMonitorDto dto);
     int deleteCallMonitor(Map<String, Object> params);
-    List<CallMonitorDto> selectCallMonitorList(Map<String, Object> params);
-    int upsertTransferData(Map<String, Object> params);
+
+    // [6] 이관 데이터 관리
     Map<String, Object> selectTransferData(String linkedid);
+    int upsertTransferData(Map<String, Object> params);
 }

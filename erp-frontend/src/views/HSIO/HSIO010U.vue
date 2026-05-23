@@ -26,7 +26,7 @@
           <div class="input-group input-group-sm" style="width: 250px;">
             <input v-model="searchParam.DEPTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
             <input v-model="searchParam.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="fetchRequest" />
-            <button class="btn btn-outline-secondary" @click="openHelp('S_DEPT')"><i class="bi bi-search"></i></button>
+            <button class="btn btn-outline-secondary" @click="handleOpenHelp('S_DEPT')"><i class="bi bi-search"></i></button>
           </div>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -42,18 +42,18 @@
     <!-- 💡 3. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 d-flex flex-column overflow-hidden p-3 gap-3">
       <!-- 🅰️ 마스터 정보 -->
-      <div class="card border-0 shadow-sm overflow-hidden">
-        <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
-          <span class="fw-bold small text-dark"><i class="bi bi-info-circle-fill me-1 text-secondary"></i>요청 기본 정보</span>
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
+        <div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
+          <span class="fw-bold small text-dark"><i class="bi bi-info-circle-fill me-1 text-secondary"></i> 요청 기본 정보</span>
           <div v-if="masterData.STS === 'Y'" class="badge bg-success-subtle text-success border border-success-subtle px-2">승인완료</div>
           <div v-else class="badge bg-danger-subtle text-danger border border-danger-subtle px-2">미승인</div>
         </div>
         <div class="card-body p-0">
           <table class="erp-table-full border-0">
             <colgroup>
-              <col style="width: 110px;" /><col />
-              <col style="width: 110px;" /><col />
-              <col style="width: 110px;" /><col />
+              <col style="width: 100px;" /><col />
+              <col style="width: 100px;" /><col />
+              <col style="width: 100px;" /><col />
             </colgroup>
             <tbody>
               <tr>
@@ -61,8 +61,8 @@
                 <td>
                   <div class="input-group input-group-sm flex-nowrap">
                     <input v-model="masterData.DEPTCD" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
-                    <input v-model="masterData.DEPTNM" type="text" class="form-control border-start-0" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
-                    <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+                    <input v-model="masterData.DEPTNM" type="text" class="form-control border-start-0" placeholder="부서 선택" @keyup.enter="handleOpenHelp('DEPT')" />
+                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">요청번호</th>
@@ -93,25 +93,25 @@
       </div>
 
       <!-- 🅱️ 디테일 정보 -->
-      <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-        <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1 text-secondary"></i> 요청 품목 리스트</span>
-          <button class="btn btn-grid-row-add" @click="addRow" :disabled="masterData.STS === 'Y'">
-            <i class="bi bi-plus-circle"></i> 행추가
+          <button class="btn btn-grid-row-add btn-sm" @click="addRow" :disabled="masterData.STS === 'Y'">
+            <i class="bi bi-plus-circle me-1"></i> 행추가
           </button>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden" style="position: relative;">
+          <div ref="gridElement" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
         </div>
       </div>
     </div>
 
     <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-3 small">선택 품목: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="fs-5 ms-2 fw-light">총 합계금액: <span class="fw-bold text-white ms-2">{{ formatNumber(sumTotal) }}</span> 원</span>
+    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg flex-shrink-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="small">선택 품목: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
+        <div class="text-end">
+          <span class="fs-6 ms-2 fw-light">총 합계금액: <span class="fw-bold text-white ms-2">{{ formatNumber(sumTotal) }}</span> 원</span>
         </div>
       </div>
     </div>
@@ -148,11 +148,11 @@ const initYMD = `${initYM}${String(now.getDate()).padStart(2, '0')}`;
 
 const searchParam = reactive({ DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, REQYM: `${initYM.substring(0, 4)}-${initYM.substring(4, 6)}`, REQNO: '' })
 const masterData = reactive<any>({
-  ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, REQYM: initYM, REQNO: '0000', DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, REQYMD: initYMD, INYMD: initYMD, STS: 'N', USERID: String(authStore.USERID || '').trim(), REMARK: '', ASGBN: 'N'
+  ACTKIND: 'A0', CMPYCD: authStore.CMPYCD, REQYM: initYM, REQNO: '0000', DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, REQYMD: initYMD, INYMD: initYMD, STS: 'N', USERID: String(authStore.USERID || '').trim(), REMARK: '', ASGBN: 'N'
 })
 
 const uiREQYM = computed({ get: () => masterData.REQYM ? `${masterData.REQYM.substring(0, 4)}-${masterData.REQYM.substring(4, 6)}` : '', set: (v) => masterData.REQYM = v.replace('-', '') })
-const uiREQYMD = computed({ get: () => masterData.REQYMD ? `${masterData.REQYMD.substring(0, 4)}-${masterData.ORDYMD.substring(4, 6)}-${masterData.ORDYMD.substring(6, 8)}` : '', set: (v) => masterData.REQYMD = v.replace(/-/g, '') })
+const uiREQYMD = computed({ get: () => masterData.REQYMD ? `${masterData.REQYMD.substring(0, 4)}-${masterData.REQYMD.substring(4, 6)}-${masterData.REQYMD.substring(6, 8)}` : '', set: (v) => masterData.REQYMD = v.replace(/-/g, '') })
 const uiINYMD = computed({ get: () => masterData.INYMD ? `${masterData.INYMD.substring(0, 4)}-${masterData.INYMD.substring(4, 6)}-${masterData.INYMD.substring(6, 8)}` : '', set: (v) => masterData.INYMD = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null);
@@ -194,7 +194,7 @@ const onSelectItem = (d: any) => {
 }
 
 function addRow() { grid.value?.addRow({ REQQTY: 0, PRICE: 0, REQAMT: 0 }) }
-function initialize() { resetForm(masterData); grid.value?.clearData(); updateTotals(); }
+function initialize() { resetForm(masterData); Object.assign(masterData, { ACTKIND: 'A0', REQYM: initYM, REQNO: '0000', DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, REQYMD: initYMD, INYMD: initYMD, STS: 'N' }); grid.value?.clearData(); updateTotals(); }
 const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0)
 
 async function fetchRequest() { if (!searchParam.REQYM || !searchParam.REQNO) return vAlertError('요청번호 입력 필수'); try { const res = await api.post('/api/hsio/HSIO_010U_STR', { ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, REQYM: searchParam.REQYM.replace('-', ''), REQNO: searchParam.REQNO }); if (res.data?.length) { Object.assign(masterData, res.data[0]); fetchDetail() } } catch (e) { vAlertError('조회 실패') } }
@@ -210,15 +210,32 @@ onMounted(() => {
 
 <style scoped>
 .hsio010u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
+.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
 .btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.btn-danger { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
 
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px 12px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 10px !important; background-color: #fff; vertical-align: middle; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
+.overflow-hidden { overflow: hidden !important; }
+
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
+}
+
+.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
 .required::after { content: ' *'; color: #dc3545; }
-.bg-yellow { background-color: #fffde7 !important; }
+
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
+
+/* 🚀 팝업 가독성 표준 스타일 */
+:deep(.modal-content) { background-color: #ffffff !important; }
+:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
+:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
 </style>

@@ -1,9 +1,18 @@
+<!--
+	=============================================================
+	프로그램명	: 그룹별판매계획대실적 (Purchase Plan vs Performance by Group)
+	작성일자	: 25.02.24
+	작성자	    : AI Assistant
+	설명        : [표준화] 팝업 표준(useCommonHelp) 적용 및 하단 요약바 제거
+	=============================================================
+-->
+
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
   <div class="hspl210s-wrapper d-flex flex-column h-100 bg-white p-0">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-graph-up me-2 text-primary" style="font-size: 18px;"></i>
         매출계획 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
@@ -20,10 +29,7 @@
     <!-- 💡 2. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
       <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
-        <div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center">
-          <span class="fw-bold small text-dark"><i class="bi bi-search me-1"></i> 조회 조건</span>
-        </div>
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-body p-0">
           <table class="erp-table-full">
             <tbody>
@@ -38,17 +44,17 @@
                 <th class="required">영업부서</th>
                 <td style="width: 250px;">
                   <div class="input-group input-group-sm">
-                    <input v-model="searchData.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+                    <input v-model="searchData.DEPTCD" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
+                    <input v-model="searchData.DEPTNM" type="text" class="form-control border-start-0" placeholder="부서 선택" @keyup.enter="handleOpenHelp('DEPT')" />
+                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">영업사원</th>
                 <td style="width: 220px;">
                   <div class="input-group input-group-sm">
-                    <input v-model="searchData.USERID" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="searchData.USERNM" type="text" class="form-control" placeholder="사원 선택" @keyup.enter="openHelp('EMP')" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('EMP')"><i class="bi bi-search"></i></button>
+                    <input v-model="searchData.USERID" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
+                    <input v-model="searchData.USERNM" type="text" class="form-control border-start-0" placeholder="사원 선택" @keyup.enter="handleOpenHelp('EMP')" />
+                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('EMP')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <td></td>
@@ -60,26 +66,18 @@
 
       <!-- 🅱️ 데이터 그리드 영역 -->
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-        <div class="card-header bg-white py-1 px-3 border-bottom">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
           <span class="fw-bold small text-dark"><i class="bi bi-table me-1"></i> 그룹별 월간 실적 대비표</span>
+          <span class="small text-muted">※ 각 그룹별로 [계획 / 실적 / 달성율] 순으로 표시됩니다.</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-12 small text-center opacity-75">
-          ※ 각 그룹별로 [계획 / 실적 / 달성율] 순으로 표시됩니다.
+        <div class="card-body p-0 flex-grow-1 bg-white" style="position: relative;">
+          <div ref="gridElement" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
         </div>
       </div>
     </div>
-
-    <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
+
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
@@ -92,11 +90,12 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // 1. 상태 관리
 const searchData = reactive({
@@ -109,7 +108,6 @@ const searchData = reactive({
 
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
-const activeItemCount = ref(0)
 
 // 2. 그리드 초기화
 const initGrid = () => {
@@ -137,7 +135,7 @@ const initGrid = () => {
         title: "합계", field: "TOTAL", width: 100, hozAlign: "right",
         formatter: (cell) => {
             const data = cell.getData();
-            return data.TYPE === '달성율' ? Number(cell.getValue()).toFixed(2) + '%' : formatNumber(cell.getValue());
+            return data.TYPE === '달성율' ? Number(cell.getValue() || 0).toFixed(2) + '%' : formatNumber(cell.getValue());
         }
       },
       ...Array.from({ length: 12 }, (_, i) => {
@@ -150,16 +148,14 @@ const initGrid = () => {
           formatter: (cell: any) => {
             const data = cell.getData();
             const val = cell.getValue();
-            return data.TYPE === '달성율' ? Number(val).toFixed(2) + '%' : formatNumber(val);
+            return data.TYPE === '달성율' ? (Number(val) || 0).toFixed(2) + '%' : formatNumber(val);
           }
         }
       })
     ],
     rowFormatter: (row) => {
         const data = row.getData();
-        if (data.TYPE === '달성율') {
-            row.getElement().style.backgroundColor = "#f9f6e7";
-        }
+        if (data.TYPE === '달성율') row.getElement().style.backgroundColor = "#f9f6e7";
         if (data.IS_TOTAL) {
             row.getElement().style.backgroundColor = "#dfd9bd";
             row.getElement().style.fontWeight = "bold";
@@ -173,133 +169,63 @@ async function search() {
   if (!searchData.DEPTCD || !searchData.USERID) return vAlertError('영업부서와 사원을 선택하세요.')
   try {
     const res = await api.post('/api/hspl/HSPL_210S_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
-      YYYY: searchData.YYYY,
-      DEPTCD: searchData.DEPTCD,
-      USERID: searchData.USERID
+      ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, YYYY: searchData.YYYY,
+      DEPTCD: searchData.DEPTCD, USERID: searchData.USERID
     })
 
     if (grid.value) {
       const displayData: any[] = []
-      let pTotals = Array(13).fill(0) // 0: total, 1-12: months
-      let sTotals = Array(13).fill(0)
+      let pTotals = Array(13).fill(0); let sTotals = Array(13).fill(0)
 
       res.data.forEach((item: any) => {
           const plans = Array.from({ length: 12 }, (_, i) => Number(item[`PL${String(i + 1).padStart(2, '0')}`]) || 0)
           const sales = Array.from({ length: 12 }, (_, i) => Number(item[`SL${String(i + 1).padStart(2, '0')}`]) || 0)
+          const planSum = plans.reduce((a, b) => a + b, 0); const saleSum = sales.reduce((a, b) => a + b, 0)
 
-          const planSum = plans.reduce((a, b) => a + b, 0)
-          const saleSum = sales.reduce((a, b) => a + b, 0)
+          const pRow: any = { ASTKINDNM: item.ASTKINDNM, AGRPNM: item.AGRPNM, BGRPNM: item.BGRPNM, TYPE: '계획', TOTAL: planSum }
+          plans.forEach((v, idx) => { pRow[`MM${String(idx+1).padStart(2, '0')}`] = v; pTotals[idx+1] += v }); pTotals[0] += planSum; displayData.push(pRow)
 
-          // 1. 계획 행
-          const pRow: any = {
-              ASTKINDNM: item.ASTKINDNM,
-              AGRPNM: item.AGRPNM,
-              BGRPNM: item.BGRPNM,
-              TYPE: '계획',
-              TOTAL: planSum
-          }
-          plans.forEach((v, idx) => { pRow[`MM${String(idx+1).padStart(2, '0')}`] = v; pTotals[idx+1] += v })
-          pTotals[0] += planSum
-          displayData.push(pRow)
+          const sRow: any = { ASTKINDNM: item.ASTKINDNM, AGRPNM: item.AGRPNM, BGRPNM: item.BGRPNM, TYPE: '실적', TOTAL: saleSum }
+          sales.forEach((v, idx) => { sRow[`MM${String(idx+1).padStart(2, '0')}`] = v; sTotals[idx+1] += v }); sTotals[0] += saleSum; displayData.push(sRow)
 
-          // 2. 실적 행
-          const sRow: any = {
-              ASTKINDNM: item.ASTKINDNM,
-              AGRPNM: item.AGRPNM,
-              BGRPNM: item.BGRPNM,
-              TYPE: '실적',
-              TOTAL: saleSum
-          }
-          sales.forEach((v, idx) => { sRow[`MM${String(idx+1).padStart(2, '0')}`] = v; sTotals[idx+1] += v })
-          sTotals[0] += saleSum
-          displayData.push(sRow)
-
-          // 3. 달성율 행
-          const rRow: any = {
-              ASTKINDNM: item.ASTKINDNM,
-              AGRPNM: item.AGRPNM,
-              BGRPNM: item.BGRPNM,
-              TYPE: '달성율',
-              TOTAL: planSum !== 0 ? (saleSum / planSum * 100) : 0
-          }
-          plans.forEach((p, idx) => {
-              const s = sales[idx]
-              rRow[`MM${String(idx+1).padStart(2, '0')}`] = p !== 0 ? (s / p * 100) : 0
-          })
-          displayData.push(rRow)
+          const rRow: any = { ASTKINDNM: item.ASTKINDNM, AGRPNM: item.AGRPNM, BGRPNM: item.BGRPNM, TYPE: '달성율', TOTAL: planSum !== 0 ? (saleSum / planSum * 100) : 0 }
+          plans.forEach((p, idx) => { const s = sales[idx]; rRow[`MM${String(idx+1).padStart(2, '0')}`] = p !== 0 ? (s / p * 100) : 0 }); displayData.push(rRow)
       })
 
-      // 합계 행 추가
       if (displayData.length > 0) {
           const tpRow: any = { ASTKINDNM: '합 계', AGRPNM: '', BGRPNM: '', TYPE: '계획', TOTAL: pTotals[0], IS_TOTAL: true }
-          pTotals.slice(1).forEach((v, i) => tpRow[`MM${String(i+1).padStart(2, '0')}`] = v)
-          displayData.push(tpRow)
+          pTotals.slice(1).forEach((v, i) => tpRow[`MM${String(i+1).padStart(2, '0')}`] = v); displayData.push(tpRow)
 
           const tsRow: any = { ASTKINDNM: '', AGRPNM: '', BGRPNM: '', TYPE: '실적', TOTAL: sTotals[0], IS_TOTAL: true }
-          sTotals.slice(1).forEach((v, i) => tsRow[`MM${String(i+1).padStart(2, '0')}`] = v)
-          displayData.push(tsRow)
+          sTotals.slice(1).forEach((v, i) => tsRow[`MM${String(i+1).padStart(2, '0')}`] = v); displayData.push(tsRow)
 
           const trRow: any = { ASTKINDNM: '', AGRPNM: '', BGRPNM: '', TYPE: '달성율', TOTAL: pTotals[0] !== 0 ? (sTotals[0] / pTotals[0] * 100) : 0, IS_TOTAL: true }
-          pTotals.slice(1).forEach((p, i) => {
-              const s = sTotals[i+1]
-              trRow[`MM${String(i+1).padStart(2, '0')}`] = p !== 0 ? (s / p * 100) : 0
-          })
-          displayData.push(trRow)
+          pTotals.slice(1).forEach((p, i) => { const s = sTotals[i+1]; trRow[`MM${String(i+1).padStart(2, '0')}`] = p !== 0 ? (s / p * 100) : 0 }); displayData.push(trRow)
       }
-
       grid.value.setData(displayData)
-      activeItemCount.value = res.data.length
+      vAlert('조회되었습니다.')
     }
   } catch (e) { vAlertError('조회 실패') }
+}
+
+function handleOpenHelp(type: string) {
+  if (type === 'DEPT') openHelp('DEPT', (d) => { searchData.DEPTCD = d.DEPTCD; searchData.DEPTNM = d.DEPTNM });
+  else if (type === 'EMP') openHelp('EMP', (d) => { searchData.USERID = d.USERID; searchData.USERNM = d.USERNM });
 }
 
 function initialize() {
   resetForm(searchData)
   Object.assign(searchData, {
-    YYYY: new Date().getFullYear(),
-    DEPTCD: authStore.DEPTCD,
-    DEPTNM: authStore.DEPTNM,
-    USERID: authStore.USERID,
-    USERNM: authStore.USERNM
+    YYYY: new Date().getFullYear(), DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
+    USERID: authStore.USERID, USERNM: authStore.USERNM
   })
-  if (grid.value) grid.value.clearData()
-  activeItemCount.value = 0
+  grid?.clearData()
 }
 
-function print(type: string) {
-    vAlert(`${type} 기능은 준비 중입니다.`)
-}
-
-// 4. 팝업 설정
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-function openHelp(type: string) {
-  if (type === 'DEPT') {
-    Object.assign(modalProps, {
-      title: '영업부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM',
-      data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }],
-      onConfirm: (data: any) => { searchData.DEPTCD = data.DEPTCD; searchData.DEPTNM = data.DEPTNM }
-    })
-  } else if (type === 'EMP') {
-    Object.assign(modalProps, {
-      title: '영업사원 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'USERNM',
-      data: { GUBUN: 'SD', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: 'ID', field: 'USERID', width: 100 }, { title: '사원명', field: 'USERNM', width: 150 }],
-      onConfirm: (data: any) => { searchData.USERID = data.USERID; searchData.USERNM = data.USERNM }
-    })
-  }
-  modalVisible.value = true
-}
-
+function print(type: string) { vAlert(`${type} 기능은 준비 중입니다.`) }
 const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0)
 
-onMounted(() => {
-  nextTick(() => initGrid())
-})
+onMounted(() => { nextTick(() => initGrid()) })
 </script>
 
 <style scoped>
@@ -312,4 +238,6 @@ onMounted(() => {
 .erp-table-full th { width: 1% !important; white-space: nowrap !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 10px 15px !important; color: #495057; }
 .erp-table-full td { border: 1px solid #dee2e6; padding: 8px 12px !important; background-color: #fff; vertical-align: middle; }
 .required::after { content: ' *'; color: #dc3545; }
+
+.form-control, .form-select { font-size: 12px !important; height: 28px !important; padding: 2px 8px !important; }
 </style>

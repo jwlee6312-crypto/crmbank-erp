@@ -214,58 +214,29 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 🎨 폰트 선명도 보정 및 전역 스타일 */
-.hsio680s-wrapper {
-  height: 100%;
-  overflow: hidden;
-  font-family: 'Pretendard', sans-serif;
-  background-color: #f4f7fa !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+.hsio680s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
+.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
+.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
+.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
+
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
 }
 
-.erp-header { background-color: #ffffff !important; }
-
-/* 🎨 원칙 1-4: 시스템 공통 버튼 색상 표준 적용 */
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; border: none; }
-.btn-init { background-color: #ffffff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #ffffff !important; }
-.btn-excel { background-color: #1d6f42 !important; color: #ffffff !important; }
-
-/* 🎨 원칙 10: 폼 레이블 표준 (연한 회색 배경, 검정 글자) */
 .erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f1f3f5; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px !important; color: #212529; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 8px 4px !important; background-color: #fff; vertical-align: middle; }
+.erp-table-full th {
+  background-color: #f8fafc; border: 1px solid #dee2e6;
+  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
+  white-space: nowrap;
+}
+.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
+.required::after { content: ' *'; color: #ef4444; }
 
-/* 🎨 원칙 9: 폼 라벨 스타일 */
-.erp-label { font-weight: 700; font-size: 12px; color: #212529; min-width: 60px; text-align: right; white-space: nowrap; }
-
-/* 🎨 원칙 5, 6: 그리드 타이틀 색상 및 중앙 정렬 표준 */
-:deep(.tabulator) {
-  border: 1px solid #dee2e6;
-  font-size: 13px;
-  color: #212529 !important;
-  font-family: 'Pretendard', sans-serif !important;
-}
-:deep(.tabulator-header) {
-  background-color: #f8f9fa !important;
-  border-bottom: 2px solid #dee2e6 !important;
-}
-:deep(.tabulator-col-title) {
-  color: #6c757d !important;
-  font-weight: 800;
-  text-align: center !important;
-}
-:deep(.tabulator-cell) {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 4px !important;
-  border-right: 1px solid #eee !important;
-}
-:deep(.tabulator-row.tabulator-selected) { background-color: #eef2ff !important; }
-
-.erp-footer { background-color: #212529 !important; min-height: 50px; }
-.bg-light-danger { background-color: #fff5f5 !important; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 </style>
+

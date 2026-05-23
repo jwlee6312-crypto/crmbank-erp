@@ -1,9 +1,9 @@
-<!--영업관리/출고관리/주문출고처리 [ERP 프리미엄 고밀도 표준 - 최종 복구본] -->
+<!--영업관리/출고관리/주문출고처리 [ERP 프리미엄 고밀도 표준 적용] -->
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio550u-wrapper d-flex flex-column h-100 bg-light p-0">
-    <!-- 🚀 1. 상단 액션 바 (표준 버튼 색상 적용) -->
+  <div class="erp-container">
+    <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-truck me-2 text-primary" style="font-size: 16px;"></i>
@@ -19,10 +19,11 @@
     </div>
 
     <!-- 🔍 2. 상단 조회 필터 -->
-    <div class="search-bar bg-white border-bottom p-2 px-3 d-flex align-items-center flex-shrink-0 gap-4">
+    <div class="search-bar bg-white border-bottom p-2 px-3 d-flex align-items-center flex-shrink-0 gap-4 shadow-sm">
       <div class="d-flex align-items-center gap-2">
         <span class="fw-bold small text-secondary">출고창고:</span>
         <select v-model="searchParam.WHCD" class="form-select form-select-sm" style="width: 120px;">
+          <option value="">전체</option>
           <option v-for="opt in whOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
         </select>
       </div>
@@ -36,32 +37,32 @@
       </div>
     </div>
 
-    <!-- 💡 3. 메인 분할 영역 (Split Layout - gap-3 적용) -->
+    <!-- 💡 3. 메인 분할 영역 -->
     <div class="flex-grow-1 d-flex flex-row gap-3 p-3 overflow-hidden">
 
-      <!-- 🅰️ 좌측: 거래처 목록 (표준 헤더 적용) -->
-      <div class="card border-0 shadow-sm d-flex flex-column flex-shrink-0" style="width: 320px;">
-        <div class="card-header bg-white text-dark fw-bold border-bottom py-2 ps-3 h-auto" style="font-size: 13px;">
-          <i class="bi bi-list-ul me-1 text-secondary"></i> 상 호
+      <!-- 🅰️ 좌측: 거래처 목록 -->
+      <div class="card border shadow-sm d-flex flex-column flex-shrink-0" style="width: 320px;">
+        <div class="card-header bg-white text-dark fw-bold border-bottom py-1 ps-3 h-auto" style="font-size: 13px;">
+          <i class="bi bi-list-ul me-1 text-secondary"></i> 미출고 거래처
         </div>
         <div class="card-body p-0 flex-grow-1 overflow-hidden bg-white">
-          <div ref="custGridRef" class="tabulator-full-height"></div>
+          <div ref="custGridRef" style="height: 100%;"></div>
         </div>
       </div>
 
-      <!-- 🅱️ 우측: 상세 정보 및 주문 내역 (Detail Area) -->
+      <!-- 🅱️ 우측: 상세 정보 및 주문 내역 -->
       <div class="d-flex flex-column flex-grow-1 gap-3 overflow-hidden">
         <!-- 마스터 정보 카드 -->
-        <div class="card border-0 shadow-sm flex-shrink-0 overflow-hidden">
-          <div class="card-header bg-white text-dark fw-bold border-bottom py-2 ps-3 h-auto" style="font-size: 13px;">
+        <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+          <div class="card-header bg-white text-dark fw-bold border-bottom py-1 ps-3 h-auto" style="font-size: 13px;">
             <i class="bi bi-pencil-square me-1 text-secondary"></i> 출고 상세 정보
           </div>
           <div class="card-body p-0 bg-white">
             <table class="erp-table-full border-0">
               <colgroup>
-                <col style="width: 1%;"><col />
-                <col style="width: 1%;"><col />
-                <col style="width: 1%;"><col />
+                <col style="width: 110px;" /><col />
+                <col style="width: 110px;" /><col />
+                <col style="width: 110px;" /><col />
               </colgroup>
               <tbody>
                 <tr>
@@ -75,7 +76,8 @@
                   <th class="required">출고창고</th>
                   <td>
                     <select v-model="masterData.WHCD" class="form-select">
-                      <option v-for="opt in whOptions" :key="opt.WHCD" :value="opt.WHCD">{{ opt.WHNM }}</option>
+                      <option value="">선택</option>
+                      <option v-for="opt in whOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
                     </select>
                   </td>
                   <th class="required">출고일자</th>
@@ -100,23 +102,14 @@
         </div>
 
         <!-- 주문 상세 내역 그리드 -->
-        <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-          <div class="card-header bg-white text-dark fw-bold border-bottom py-2 ps-3 h-auto">
+        <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+          <div class="card-header bg-white text-dark fw-bold border-bottom py-1 ps-3 h-auto d-flex justify-content-between align-items-center">
             <span class="small"><i class="bi bi-list-check me-1 text-secondary"></i> 주문 상세 내역</span>
+            <div class="small text-muted">※ 출고수량을 입력 후 저장하세요.</div>
           </div>
-          <div class="card-body p-0 flex-grow-1 overflow-hidden bg-white">
-            <div ref="detailGridRef" class="tabulator-full-height"></div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden" style="position: relative;">
+            <div ref="detailGridRef" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-      <div class="row align-items-center">
-        <div class="col-md-3 small opacity-75">선택 품목: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="fs-5 ms-2 fw-light">총 출고합계: <span class="fw-bold text-info ms-2">{{ formatNumber(sumTotal) }}</span> 원</span>
         </div>
       </div>
     </div>
@@ -156,7 +149,6 @@ const uiIOYMD = computed({ get: () => masterData.IOYMD ? `${masterData.IOYMD.sub
 const custGridRef = ref<HTMLElement | null>(null); let custGrid: Tabulator | null = null;
 const detailGridRef = ref<HTMLElement | null>(null); let detailGrid: Tabulator | null = null;
 const whOptions = ref<any[]>([])
-const activeItemCount = ref(0); const sumTotal = ref(0);
 
 const initGrids = () => {
   if (custGridRef.value) {
@@ -179,8 +171,8 @@ const initGrids = () => {
       columns: [
         { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
         { title: "주문부서", field: "DEPTNM", width: 120 },
-        { title: "주문일", field: "ORDYMD", width: 100, hozAlign: "center" },
-        { title: "납품일", field: "OUTYMD", width: 100, hozAlign: "center" },
+        { title: "주문일", field: "ORDYMD", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
+        { title: "납품일", field: "OUTYMD", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
         { title: "품 목", field: "ITEMNM", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
         { title: "규격", field: "ITSIZE", width: 150 },
         { title: "단위", field: "UNITNM", width: 70 },
@@ -208,12 +200,8 @@ const fetchDetails = async (custCd: string) => {
         FRYMD: searchParam.FRYMD.replace(/-/g, ''), TOYMD: searchParam.TOYMD.replace(/-/g, '')
     });
     detailGrid?.setData(res.data || []);
-    setTimeout(updateTotals, 100);
   } catch (e) { vAlertError('상세 로드 실패') }
 }
-
-const updateTotals = () => { if (!detailGrid) return; const data = detailGrid.getData(); activeItemCount.value = data.length; sumTotal.value = data.reduce((acc, i) => acc + (Number(i.IOQTY) * (Number(i.PRICE) || 0)), 0) }
-const formatNumber = (v: any) => new Intl.NumberFormat().format(Number(v) || 0)
 
 function handleOpenHelp(type: string) {
     if (type === 'TRAN') openHelp('CUST', (d) => { masterData.TRANCD = d.CUSTCD; masterData.TRANNM = d.CUSTNM });
@@ -221,40 +209,47 @@ function handleOpenHelp(type: string) {
 
 function initialize() {
   resetForm(masterData); masterData.IOYMD = initYMD;
-  custGrid?.clearData(); detailGrid?.clearData(); updateTotals();
+  custGrid?.clearData(); detailGrid?.clearData();
+}
+
+const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(2,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
+
+const save = async () => {
+  const items = detailGrid?.getData().filter((r: any) => Number(r.IOQTY) > 0);
+  if (!items || items.length === 0) return vAlertError('출고 수량을 입력하세요.');
+  if (!masterData.WHCD) return vAlertError('출고 창고를 선택하세요.');
+
+  if (!confirm('저장하시겠습니까?')) return;
+
+  try {
+    const res = await api.post('/api/hsio/HSIO_550U_STR', {
+      ...masterData,
+      ACTKIND: 'A0',
+      ITEMS: items,
+      IOYMD: masterData.IOYMD.replace(/-/g, ''),
+      USERID: authStore.USERID
+    });
+    if (res.data?.[0]?.ERRYN === 'N') {
+      vAlert('저장되었습니다.');
+      fetchCustList();
+      detailGrid?.clearData();
+    } else {
+      vAlertError(res.data?.[0]?.MSG || '저장 실패');
+    }
+  } catch (e) { vAlertError('저장 처리 중 오류 발생'); }
 }
 
 onMounted(() => {
-  api.post('/api/hs00/HS00_000S_STR', { GUBUN: 'W0', CMPYCD: authStore.CMPYCD }).then(r => { whOptions.value = r.data.map((i:any)=>({CODECD:i.CODE||i.CODECD, CODENM:i.CDNM||i.CODENM})) });
+  api.post('/api/hs00/HS00_000S_STR', { GUBUN: 'W0', CMPYCD: authStore.CMPYCD }).then(r => {
+    whOptions.value = (r.data || []).map((i:any)=>({
+      CODECD: String(i.WHCD || i.CODECD || i.CODE || '').trim(),
+      CODENM: String(i.WHNM || i.CODENM || i.CDNM || '').trim()
+    }))
+  });
   nextTick(() => { initGrids(); fetchCustList(); });
 })
 </script>
 
 <style scoped>
-.hsio550u-wrapper { height: 100%; overflow: hidden; }
-.tabulator-full-height { height: 100% !important; border: none; }
-
-/* 💎 표준 버튼 팔레트 */
-.btn-erp { padding: 4px 18px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-/* 💎 프리미엄 테이블 표준 (지능형 라벨) */
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  width: 1%; white-space: nowrap;
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12px; padding: 8px 15px !important; color: #475569;
-}
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
-
-.bg-yellow { background-color: #fffde7 !important; }
-.required::after { content: ' *'; color: #ef4444; }
-
-/* 💎 Tabulator 표준 디자인 */
-:deep(.tabulator) { border: none; font-size: 12.5px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; font-weight: 800 !important; color: #334155 !important; }
-:deep(.tabulator-row.tabulator-selected) { background-color: #f0f7ff !important; border-left: 4px solid #005a9f !important; }
+/* 🎨 전역 표준(global.css)이 적용되므로, 특수 케이스가 아니면 비워둡니다. */
 </style>

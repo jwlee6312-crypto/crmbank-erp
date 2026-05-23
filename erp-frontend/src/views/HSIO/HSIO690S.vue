@@ -189,25 +189,29 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hsip100u-wrapper { height: 100%; overflow: hidden; }
-.tabulator-full-height { height: 100% !important; border: none; }
-
-.erp-header { background-color: #ffffff !important; }
-
-/* 💎 개별 파일의 스타일을 삭제하여 global.css 표준 디자인이 적용되도록 함 */
+.hsio690s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
 .btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 .btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
 .btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
 .btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.btn-danger { background-color: #d32f2f !important; color: #fff !important; border: none !important; }
 
-erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  width: 1%; white-space: nowrap;
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12.5px; padding: 10px 15px !important; color: #495057;
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
 }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 6px 10px !important; vertical-align: middle; background-color: #fff; }
+
+.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
+.erp-table-full th {
+  background-color: #f8fafc; border: 1px solid #dee2e6;
+  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
+  white-space: nowrap;
+}
+.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
 .required::after { content: ' *'; color: #ef4444; }
-.bg-yellow { background-color: #fffde7 !important; }
+
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 </style>
+

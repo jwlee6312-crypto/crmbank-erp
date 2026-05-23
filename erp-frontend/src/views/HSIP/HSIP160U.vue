@@ -186,13 +186,13 @@ onMounted(() => {
 			placeholder: '데이터가 없습니다.',
 			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 100 },
 			columns: [
-				{ title: '선택', formatter: 'rowSelection', titleFormatter: 'rowSelection', hozAlign: 'center', width: 50 },
-				{ title: 'PO No.', field: 'FILENO', width: 150, cssClass: 'fw-bold text-primary' },
-				{ title: '선적', field: 'SHIPSEQ', hozAlign: 'center', width: 70, formatter: (c) => `${c.getValue().substring(0,1)}차` },
-				{ title: '통관', field: 'PASSSEQ', hozAlign: 'center', width: 70, formatter: (c) => `${c.getValue().substring(0,1)}차` },
-				{ title: '거래처(Vender)', field: 'CUSTNM', minWidth: 200, widthGrow: 1, cssClass: 'border-start' },
-				{ title: '총비용(원화)', field: 'COSTAMT', hozAlign: 'right', width: 130, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '배부일자', field: 'DIVYMD', hozAlign: 'center', width: 110 }
+				{ title: '선택', formatter: 'rowSelection', titleFormatter: 'rowSelection', hozAlign: 'center', width: 100 },
+				{ title: 'PO No.', field: 'FILENO', width: 250, cssClass: 'fw-bold text-primary' },
+				{ title: '선적', field: 'SHIPSEQ', hozAlign: 'center', width: 200, formatter: (c) => `${c.getValue().substring(0,1)}차` },
+				{ title: '통관', field: 'PASSSEQ', hozAlign: 'center', width: 200, formatter: (c) => `${c.getValue().substring(0,1)}차` },
+				{ title: '거래처(Vender)', field: 'CUSTNM', minWidth: 300, widthGrow: 1, cssClass: 'border-start' },
+				{ title: '총비용(원화)', field: 'COSTAMT', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '배부일자', field: 'DIVYMD', hozAlign: 'center', width: 200 }
 			]
 		})
 		poGrid.on('rowClick', (e, row) => fetchDetail(row))
@@ -205,13 +205,13 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 80 },
 			columns: [
 				{ title: '품목명칭', field: 'ITEMNM', minWidth: 250, widthGrow: 2, cssClass: 'fw-bold text-dark' },
-				{ title: '규격', field: 'ITSIZE', width: 120 },
-				{ title: '단위', field: 'UNIT', hozAlign: 'center', width: 60 },
-				{ title: '입고수량', field: 'INQTY', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '비용종류', field: 'COSTNM', minWidth: 150, widthGrow: 1, cssClass: 'border-start text-primary' },
-				{ title: '단가(Unit)', field: 'PRICE', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 2 } },
-				{ title: '배부금액', field: 'COSTAMT', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'fw-bold' },
-				{ title: '배부기준', field: 'DIVNM', hozAlign: 'center', width: 100 }
+				{ title: '규격', field: 'ITSIZE', width: 250 },
+				{ title: '단위', field: 'UNIT', hozAlign: 'center', width: 100 },
+				{ title: '입고수량', field: 'INQTY', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '비용종류', field: 'COSTNM', minWidth: 200, widthGrow: 1, cssClass: 'border-start text-primary' },
+				{ title: '단가(Unit)', field: 'PRICE', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 2 } },
+				{ title: '배부금액', field: 'COSTAMT', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'fw-bold' },
+				{ title: '배부기준', field: 'DIVNM', hozAlign: 'center', width: 200 }
 			]
 		})
 	}
@@ -221,20 +221,31 @@ onMounted(() => {
 
 <style scoped>
 .hsip160u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.tabulator-full-height { height: 100% !important; border: none; }
-.btn-erp { padding: 4px 15px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid #ced4da; transition: all 0.2s; }
-.btn-init { background-color: #fff; color: #6c757d; }
-.btn-search { background-color: #2d3748; color: #fff; border: none; }
-.btn-save { background-color: #005a9f; color: #fff; border: none; }
+.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
+.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
 
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px 10px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; font-size: 12.5px; overflow: hidden; }
-.erp-table-full th.required::after { content: ' *'; color: #ef4444; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
+.overflow-hidden { overflow: hidden !important; }
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
+}
+.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
+.required::after { content: ' *'; color: #dc3545; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 
-.grid-title { background-color: #f8fafc; font-size: 12px; }
+/* 🚀 팝업 가독성 표준 스타일 */
+:deep(.modal-content) { background-color: #ffffff !important; }
+:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
+:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
 
-:deep(.tabulator) { border: none; font-size: 12.5px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; }
 </style>
+

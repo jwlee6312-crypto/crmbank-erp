@@ -2,8 +2,9 @@
 	=============================================================
 	프로그램명	  : 캠페인 옴니채널 상담 워크스페이스
     프로그램 ID	: HGOA100U
-	작성일자	    : 25.03.06
+	작성일자	    : 2026.05.19
 	작성자	      : AI Assistant
+	Description	: 캠페인 고객 상담 및 결과 저장 (상담원/내선/점수 연동 마감)
 	=============================================================
 -->
 
@@ -28,13 +29,13 @@
 						<span class="label">전체</span><span class="value">{{ STATS.TOT_CNT || 0 }}</span>
 					</div>
 					<div v-for="item in DETAIL_STATS" :key="item.RSLT_CD"
-						 class="stat-badge-mini pointer" :class="{active: CURRENT_FILTER === item.RSLT_CD}" @click="apply_filter(item.RSLT_CD, 'RSLT_CD')">
+						 class="stat-badge-mini pointer" :class="{active: CURRENT_FILTER === item.RSLT_CD}" @click="apply_filter(item.RSLT_CD)">
 						<span class="label">{{ item.RSLT_NM }}</span><span class="value">{{ item.CNT }}</span>
 					</div>
 				</div>
 			</div>
 			<div class="agent-info-area d-flex align-items-center gap-3 flex-shrink-0">
-                <div v-if="ctiStore.isTalking" class="small text-danger animate-pulse fw-bold"><i class="bi bi-record-circle me-1"></i>녹취 중...</div>
+                <div v-if="ctiStore.isTalking" class="small text-danger animate-pulse fw-bold text-start"><i class="bi bi-record-circle me-1"></i>녹취 중...</div>
 				<div class="agent-status-badge px-3 py-1 rounded bg-success bg-opacity-10 text-success fw-bold border border-success border-opacity-25">
 					<span class="small">내선: {{ authStore.INNER_NO || '미등록' }}</span>
 				</div>
@@ -66,7 +67,7 @@
 				</div>
 			</aside>
 
-			<section class="col-md-7 d-flex flex-column h-100 overflow-hidden bg-white p-2 gap-1 border-end">
+			<section class="col-md-7 d-flex flex-column h-100 overflow-hidden bg-white p-2 gap-1 border-end text-start">
 				<div class="card border shadow-sm flex-shrink-0 mb-1 border-0 border-start border-4 border-primary">
 					<div class="card-body p-0">
 						<div class="d-flex align-items-center bg-white px-3 py-2 text-start gap-4">
@@ -87,39 +88,39 @@
 									<span class="text-muted fw-bold me-1">{{ key }}:</span>{{ val }}
 								</div>
 							</div>
-                            <div v-else class="text-muted extra-small italic opacity-50">고객을 선택해 주세요.</div>
+                            <div v-else class="text-muted extra-small italic opacity-50 text-start">고객을 선택해 주세요.</div>
 						</div>
 					</div>
 				</div>
 
 				<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column border-top border-4 border-success">
-					<div class="card-header bg-white py-1 px-3 fw-bold small text-success border-bottom">상담 설문</div>
+					<div class="card-header bg-white py-1 px-3 fw-bold small text-success border-bottom text-start">상담 설문</div>
                     <div class="card-body p-0 overflow-auto flex-grow-1 bg-white text-start">
 						<div class="survey-container px-3 py-2">
 							<div v-for="(q, idx) in SURVEY_QUESTIONS" :key="q.SURV_NO" class="mb-3 border-bottom pb-2">
-								<div class="fw-bold small mb-1">Q{{ idx + 1 }}. {{ q.QUESTION }}</div>
+								<div class="fw-bold small mb-1 text-start">Q{{ idx + 1 }}. {{ q.QUESTION }}</div>
 								<div class="d-flex flex-wrap gap-1 mb-2">
 									<span v-for="sample in q.SAMPLE_LIST" :key="sample.NO"
-                                          class="badge border px-2 py-1 pointer"
-                                          :class="q.USER_ANS_NO === sample.NO ? 'bg-primary text-white' : 'bg-light text-dark'"
+                                          class="badge border px-2 py-1 pointer transition-all"
+                                          :class="q.USER_ANS_NO === sample.NO ? 'bg-primary text-white shadow-sm' : 'bg-light text-dark'"
                                           @click="q.USER_ANS_NO = sample.NO; q.USER_ESSAY = sample.TEXT">
                                         {{ sample.TEXT }}
                                     </span>
 								</div>
-								<input type="text" v-model="q.USER_ESSAY" class="form-control form-control-sm" placeholder="상세 답변">
+								<input type="text" v-model="q.USER_ESSAY" class="form-control form-control-sm" placeholder="상세 답변 또는 기타 의견">
 							</div>
 						</div>
 					</div>
 					<div class="fixed-footer-section border-top bg-white p-3 flex-shrink-0 shadow-inner">
 						<div class="row g-2 align-items-center">
 							<div class="col-md-3">
-								<select v-model="CALL_RESULT.RSLT_CD" class="form-select form-select-sm fw-bold border-success">
+								<select v-model="CALL_RESULT.RSLT_CD" class="form-select form-select-sm fw-bold border-success shadow-none">
 									<option value="">결과 선택</option>
 									<option v-for="code in RESULT_CODES" :key="code.CODECD" :value="code.CODECD">{{ code.CODENM }}</option>
 								</select>
 							</div>
-							<div class="col-md-6"><input type="text" v-model="CALL_RESULT.MEMO" class="form-control form-control-sm border-success" placeholder="상담 중요 요약 메모"></div>
-							<div class="col-md-3"><button class="btn btn-success btn-sm w-100 fw-bold py-2" @click="handle_save_all" :disabled="IS_SAVING || !SELECTED_CUSTOMER">상담 통합 저장</button></div>
+							<div class="col-md-6"><input type="text" v-model="CALL_RESULT.MEMO" class="form-control form-control-sm border-success shadow-none" placeholder="상담 중요 요약 메모"></div>
+							<div class="col-md-3"><button class="btn btn-success btn-sm w-100 fw-bold py-2 shadow-sm transition-all" @click="handle_save_all" :disabled="IS_SAVING || !SELECTED_CUSTOMER">상담 통합 저장</button></div>
 						</div>
 					</div>
 				</div>
@@ -130,8 +131,8 @@
 					<h6 class="fw-bold mb-0 small"><i class="bi bi-chat-dots-fill me-2 text-info"></i>실시간 상담</h6>
                     <button class="btn btn-outline-info btn-xs py-0 px-2 fw-bold" @click="handle_clear_chat" style="font-size: 0.7rem;">초기화</button>
 				</div>
-				<div class="chat-log flex-grow-1 p-3 bg-light overflow-auto" ref="AGENT_SCROLL_REF">
-					<div v-for="(msg, idx) in AGENT_CHAT_HISTORY" :key="idx" class="d-flex mb-3 animate-fade-in" :class="msg.IS_ME ? 'justify-content-end' : 'justify-content-start'">
+				<div class="chat-log flex-grow-1 p-3 bg-light overflow-auto text-start" ref="AGENT_SCROLL_REF">
+					<div v-for="(msg, idx) in AGENT_CHAT_HISTORY" :key="idx" class="d-flex mb-3" :class="msg.IS_ME ? 'justify-content-end' : 'justify-content-start'">
 						<div class="p-2 px-3 rounded shadow-sm" :class="msg.IS_ME ? 'bg-success text-white' : 'bg-white text-dark'" style="max-width: 90%;">
 							<div class="small" style="white-space: pre-wrap;">{{ msg.TEXT }}</div>
 						</div>
@@ -139,7 +140,7 @@
 				</div>
 				<div class="chat-input p-3 border-top bg-white">
 					<div class="input-group input-group-sm">
-						<input type="text" v-model="AGENT_REPLY_INPUT" class="form-control bg-light border-0 shadow-none" placeholder="답장 입력..." @keyup.enter="send_agent_reply">
+						<input type="text" v-model="AGENT_REPLY_INPUT" class="form-control bg-light border-0 shadow-none px-3" placeholder="답장 입력..." @keyup.enter="send_agent_reply">
 						<button class="btn btn-success px-3" @click="send_agent_reply"><i class="bi bi-send-fill"></i></button>
 					</div>
 				</div>
@@ -196,7 +197,7 @@ const fetch_messages = async () => {
             TEXT: m.content || '',
             IS_ME: String(m.message_type).split('.')[0] === '1' || m.message_type === 'outgoing'
         }));
-        if (JSON.stringify(newHistory) !== JSON.stringify(AGENT_CHAT_HISTORY.value)) {
+        if (newHistory.length > 0 && JSON.stringify(newHistory) !== JSON.stringify(AGENT_CHAT_HISTORY.value)) {
             AGENT_CHAT_HISTORY.value = newHistory;
             nextTick(scrollChatToBottom);
         }
@@ -236,8 +237,14 @@ const handle_camp_change = async () => {
             const sres = await api.get('/crm/outbound/surv-form', { params: { SURV_GB: camp.SURV_GB } });
             const list = Array.isArray(sres.data) ? sres.data : (sres.data.data || []);
             SURVEY_QUESTIONS.value = list.map((q: any) => {
+                // 💡 NO:TEXT:POINT 형식 파싱
                 const samples = q.ANSWERS ? q.ANSWERS.split(/ \/ |, /).map((s: string) => {
-                    const p = s.split(':'); return { NO: p[0]?.trim(), TEXT: (p[1] || p[0])?.trim() };
+                    const p = s.split(':');
+                    return {
+                        NO: p[0]?.trim(),
+                        TEXT: (p[1] || p[0])?.trim(),
+                        POINT: p[2]?.trim() || '0'
+                    };
                 }) : [];
                 return { SURV_NO: q.SURV_NO, QUESTION: q.QUESTION, USER_ESSAY: '', USER_ANS_NO: '', SAMPLE_LIST: samples };
             });
@@ -260,15 +267,31 @@ const handle_save_all = async () => {
     IS_SAVING.value = true;
     try {
         const chat_log_str = AGENT_CHAT_HISTORY.value.map(m => `[${m.IS_ME?'상담원':'고객'}] ${m.TEXT}`).join('\n');
-        await api.post('/common/chat/save-consolidated', {
-            CMPYCD: authStore.cmpycd || 'haionnet',
-            CAMP_NO: SELECTED_CAMP_NO.value, CALL_SEQ: SELECTED_CUSTOMER.value.CALL_SEQ,
-            CUST_EMAIL: CUSTOMER_INFO.EMAIL, CUST_NM: SELECTED_CUSTOMER.value.CUST_NM,
-            RSLT_CD: CALL_RESULT.RSLT_CD, MEMO: CALL_RESULT.MEMO, USERID: authStore.USER_ID,
-            START_TIME: SESSION_START_TIME.value, END_TIME: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        await api.post('/omni/chat/save-consolidated', {
+            CMPYCD: authStore.CMPYCD || 'haionnet',
+            CAMP_NO: SELECTED_CAMP_NO.value,
+            CALL_SEQ: SELECTED_CUSTOMER.value.CALL_SEQ,
+            CUST_EMAIL: CUSTOMER_INFO.EMAIL,
+            CUST_NM: SELECTED_CUSTOMER.value.CUST_NM,
+            CALL_TELNO: CUSTOMER_INFO.TEL_NO,
+            RSLT_CD: CALL_RESULT.RSLT_CD,
+            MEMO: CALL_RESULT.MEMO,
+            USERID: authStore.USER_ID,
+            LINE_NUM: authStore.INNER_NO,
+            START_TIME: SESSION_START_TIME.value,
+            END_TIME: new Date().toISOString().replace('T', ' ').substring(0, 19),
             MEDIA_TYPE: AGENT_CHAT_HISTORY.value.length > 0 ? 'chat' : 'CALL',
             CHAT_HISTORY: chat_log_str,
-            SURVEYS: SURVEY_QUESTIONS.value.map(q => ({ surv_no: q.SURV_NO, ans_no: q.USER_ANS_NO || '001', essay: q.USER_ESSAY }))
+            SURVEYS: SURVEY_QUESTIONS.value.map(q => {
+                // 💡 선택된 답변의 점수(point)를 함께 전달
+                const selectedSample = q.SAMPLE_LIST.find(s => s.NO === q.USER_ANS_NO);
+                return {
+                    surv_no: q.SURV_NO,
+                    ans_no: q.USER_ANS_NO || '001',
+                    essay: q.USER_ESSAY,
+                    point: selectedSample ? selectedSample.POINT : '0'
+                };
+            })
         });
         vAlert('저장되었습니다.'); handle_camp_change();
     } catch (e) { vAlertError('저장 실패'); } finally { IS_SAVING.value = false; }
@@ -280,7 +303,7 @@ const init_customer_table = () => {
         columns: [
             { title: "고객/연락처", field: "CUST_NM", hozAlign: "left", formatter: (cell:any) => {
                 const d = cell.getRow().getData();
-                return `<div class="py-1"><div class="fw-bold small">${d.CUST_NM}</div><div class="text-muted extra-small">${d.TEL_NO || ''}</div></div>`;
+                return `<div class="py-1 text-start"><div class="fw-bold small text-dark">${d.CUST_NM}</div><div class="text-muted extra-small">${d.TEL_NO || ''}</div></div>`;
             }},
             { title: "상태", field: "RSLT_NM", hozAlign: "center", cssClass: "small" }
         ]
@@ -297,7 +320,7 @@ const init_customer_table = () => {
 
 const apply_filter = (code: string) => { CURRENT_FILTER.value = code; load_customer_list(); }
 const format_date = (dt: any) => dt ? new Date(dt).toLocaleString() : '';
-const make_call = () => { if (SELECTED_CUSTOMER.value && CUSTOMER_INFO.TEL_NO) api.get('/api/crm/cti/make-call', { params: { exten: authStore.INNER_NO, dest: CUSTOMER_INFO.TEL_NO.replace(/-/g, ''), context: 'outbound-call' } }); }
+const make_call = () => { if (SELECTED_CUSTOMER.value && CUSTOMER_INFO.TEL_NO) api.get('/crm/cti/make-call', { params: { exten: authStore.INNER_NO, dest: CUSTOMER_INFO.TEL_NO.replace(/-/g, ''), context: 'outbound-call' } }); }
 const handle_invite = async () => { if (CUSTOMER_INFO.EMAIL) { await api.post('/mail/send-invite', { toEmail: CUSTOMER_INFO.EMAIL, custNm: SELECTED_CUSTOMER.value.CUST_NM, custcd: SELECTED_CUSTOMER.value.CALL_SEQ.toString() }); vAlert('초대장 발송 완료'); } }
 
 onMounted(() => {
@@ -318,4 +341,5 @@ onMounted(() => {
 .tabulator-omni { height: 100%; border: none; font-size: 0.8rem; }
 .extra-small { font-size: 0.75rem; }
 .btn-xs { padding: 1px 5px; font-size: 0.7rem; }
+.fw-black { font-weight: 900; }
 </style>

@@ -3,6 +3,7 @@ package com.crmbank.erp.crm.mapper.outbound;
 import com.crmbank.erp.crm.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -53,4 +54,8 @@ public interface OutboundMapper {
     List<Map<String, Object>> selectCampaignHistory(Map<String, Object> params);
     int insertCampaignRsltMst(CampRsltMstDto dto);
     int insertCampaignRsltDtl(CampRsltDtlDto dto);
+    List<Map<String, Object>> selectCampaignRsltDtl(Map<String, Object> params);
+    
+    // 💡 답변 점수 조회
+    BigDecimal selectAnsPoint(Map<String, Object> params);
 }

@@ -15,13 +15,13 @@ import lombok.Builder;
 @Builder
 public class CampSurveyDto {
 
-    private String cmpycd;           // 회사코드
-    private String camp_gb;          // 캠페인구분
-    private String surv_gb;          // 설문구분
-    private String surv_no;          // 질문번호
-    private String sortcd;           // 정렬코드
-    private String useyn;            // 사용여부
-    private LocalDateTime addtime;   // 등록일시
-    private LocalDateTime updtime;   // 수정일시
-    private String updemp;           // 수정자
+    private String CMPYCD;           // 회사코드
+    private String CAMP_GB;          // 캠페인구분
+    private String SURV_GB;          // 설문구분
+    private String SURV_NO;          // 질문번호
+    private String SORTCD;           // 정렬코드
+    private String USEYN;            // 사용여부
+    private LocalDateTime ADDTIME;   // 등록일시
+    private LocalDateTime UPDTIME;   // 수정일시
+    private String UPDEMP;           // 수정자
 }

@@ -1,4 +1,4 @@
-<!--관리정보/시스템관리/분류코드관리 [ERP 프리미엄 고밀도 표준 - 3열 배치] -->
+<!--관리정보/시스템관리/분류코드관리 [ERP 프리미엄 고밀도 표준 - 1열 배치] -->
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
@@ -35,7 +35,7 @@
 				</div>
 			</div>
 
-			<!-- 💡 3. 상세 입수정 영역 (3열 배치) -->
+			<!-- 💡 3. 상세 입수정 영역 (한 줄 배치) -->
 			<div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
 				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
 					<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-secondary"></i>분류 상세 정보</div>
@@ -45,9 +45,11 @@
 				<div class="card-body p-0 bg-white">
 					<table class="erp-table-full border-0">
 						<colgroup>
-							<col style="width: 100px;" /><col />
-							<col style="width: 100px;" /><col />
-							<col style="width: 100px;" /><col />
+							<col style="width: 80px;" /><col />
+							<col style="width: 80px;" /><col />
+							<col style="width: 80px;" /><col />
+							<col style="width: 80px;" /><col />
+							<col style="width: 80px;" /><col />
 						</colgroup>
 						<tbody>
 							<tr>
@@ -61,8 +63,6 @@
 								<td><input v-model="formData.GRPCD" type="text" class="form-control fw-bold text-primary text-center" maxlength="3" :disabled="formData.ACTKIND === 'U0'" /></td>
 								<th class="required">분 류 명</th>
 								<td><input v-model="formData.GRPNM" type="text" class="form-control" placeholder="분류명칭" /></td>
-							</tr>
-							<tr>
 								<th class="required">정렬순서</th>
 								<td><input v-model="formData.DSPORD" type="number" class="form-control text-end" /></td>
 								<th>사용여부</th>
@@ -72,7 +72,6 @@
 										<label class="form-check-label ms-2 small fw-bold" for="useYn810">{{ formData.USEYN === 'Y' ? '사용' : '중지' }}</label>
 									</div>
 								</td>
-								<td colspan="2" class="bg-light"></td>
 							</tr>
 						</tbody>
 					</table>
@@ -123,7 +122,7 @@ async function fetchUpmu() {
 			if (upmuOptions.value.length > 0) {
 				searchForm.UPMUCD = upmuOptions.value[0].CODECD;
 				formData.UPMUCD = upmuOptions.value[0].CODECD;
-				await fetchSearchGrpcd();
+				// await fetchSearchGrpcd(); // HAAA810U doesn't have fetchSearchGrpcd
 			}
 		}
 	} catch (e) { console.error('업무코드 로드 실패') }

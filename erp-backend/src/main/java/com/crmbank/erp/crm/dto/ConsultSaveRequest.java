@@ -21,12 +21,18 @@ public class ConsultSaveRequest {
     
     @JsonProperty("USERID")
     private String userid;
+
+    @JsonProperty("LINE_NUM")
+    private String lineNum;    // 내선번호
     
     @JsonProperty("CUST_EMAIL")
     private String custEmail;
     
     @JsonProperty("CUST_NM")
     private String custNm;
+
+    @JsonProperty("CALL_TELNO")
+    private String callTelno;  // 고객연락처
     
     @JsonProperty("RSLT_CD")
     private String rsltCd;
@@ -37,11 +43,11 @@ public class ConsultSaveRequest {
     @JsonProperty("RESV_DTIME")
     private String resvDtime; 
     
-    @JsonProperty("RESV_MEMO")
+    @JsonProperty("RESV_Memo")
     private String resvMemo;  
     
     @JsonProperty("SURVEYS")
-    private List<Map<String, String>> surveys; 
+    private List<Map<String, Object>> surveys; // 💡 Object 타입으로 변경하여 점수(point) 수신 허용
     
     @JsonProperty("CHAT_HISTORY")
     private String chatHistory;

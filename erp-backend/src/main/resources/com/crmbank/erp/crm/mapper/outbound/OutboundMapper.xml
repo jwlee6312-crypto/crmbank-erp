@@ -19,15 +19,45 @@
 
     <insert id="insertCampMst" parameterType="com.crmbank.erp.crm.dto.CampMstDto">
         INSERT INTO CAMPAIGN_MST (CMPYCD, CAMP_NO, CAMP_NM, SURV_GB, ACTDATE, REMARK, STATUS, START_MENT, END_MENT, ADDTIME, UPDTIME, UPDEMP)
-        VALUES (#{cmpycd}, #{camp_no}, #{camp_nm}, #{surv_gb}, #{actdate}, #{remark}, #{status}, #{start_ment}, #{end_ment}, GETDATE(), GETDATE(), #{updemp})
+        VALUES (#{CMPYCD}, #{CAMP_NO}, #{CAMP_NM}, #{SURV_GB}, #{ACTDATE}, #{REMARK}, #{STATUS}, #{START_MENT}, #{END_MENT}, GETDATE(), GETDATE(), #{UPDEMP})
     </insert>
 
     <update id="updateCampMst" parameterType="com.crmbank.erp.crm.dto.CampMstDto">
         UPDATE CAMPAIGN_MST SET
-            CAMP_NM = #{camp_nm}, SURV_GB = #{surv_gb}, ACTDATE = #{actdate}, REMARK = #{remark},
-            STATUS = #{status}, START_MENT = #{start_ment}, END_MENT = #{end_ment}, UPDTIME = GETDATE(), UPDEMP = #{updemp}
-        WHERE CMPYCD = #{cmpycd} AND CAMP_NO = #{camp_no}
+            CAMP_NM = #{CAMP_NM}, SURV_GB = #{SURV_GB}, ACTDATE = #{ACTDATE}, REMARK = #{REMARK},
+            STATUS = #{STATUS}, START_MENT = #{START_MENT}, END_MENT = #{END_MENT}, UPDTIME = GETDATE(), UPDEMP = #{UPDEMP}
+        WHERE CMPYCD = #{CMPYCD} AND CAMP_NO = #{CAMP_NO}
     </update>
+
+    <!-- 💡 아웃바운드 대상 고객 조회 (HGOA100U / HGOA010S 공용) - SQL 오류 완벽 해결 버전 -->
+    <select id="selectCampCallList" parameterType="map" resultType="map">
+        SELECT
+            A.CALL_SEQ, A.CMPYCD, A.CAMP_NO, A.SURV_GB, A.CUST_NM, A.EMAIL, A.TEL_NO, A.STATUS,
+            ISNULL(A.RSLT_CD,'') AS RSLT_CD, ISNULL(B.CODENM, '미처리') AS RSLT_NM,
+            A.USERID, A.EXT_DATA, R.RSLT_NO,
+            FORMAT(R.START_DTIME, 'YYYY-MM-DD HH:MM:SS') AS START_DTIME,
+            FORMAT(R.END_DTIME, 'YYYY-MM-DD HH:MM:SS') AS END_DTIME,
+            R.REMARK, R.REC_FILE, R.MEDIA_TYPE, R.CHAT_LOG,
+            U.USERNM AS CONSULTNM
+        FROM CAMPAIGN_CALL_LIST A
+        LEFT OUTER JOIN HABA900T_TBL B ON B.CDTYPE = '920' AND A.RSLT_CD = B.CODECD
+        OUTER APPLY (
+            SELECT TOP 1
+                RS.RSLT_NO, RS.START_DTIME, RS.END_DTIME, RS.REMARK, RS.REC_FILE, RS.MEDIA_TYPE, RS.CHAT_LOG, RS.USERID, RS.CMPYCD
+            FROM CAMPAIGN_RSLT_MST RS
+            WHERE RS.CMPYCD = A.CMPYCD AND RS.CALL_SEQ = A.CALL_SEQ
+            ORDER BY RS.RSLT_NO DESC
+        ) R
+        LEFT OUTER JOIN HABA920T_TBL U ON R.USERID = U.USERID AND R.CMPYCD = U.CMPYCD
+        WHERE A.CMPYCD = #{CMPYCD}
+          AND A.CAMP_NO = #{CAMP_NO}
+        <if test="CALL_SEQ != null"> AND a.call_seq = #{CALL_SEQ} </if>
+        <if test="FILTER != null and FILTER != '' and FILTER != '000'"> AND a.rslt_cd = #{FILTER} </if>
+        <if test="KEYWORD != null and KEYWORD != ''">
+            AND (A.CUST_NM LIKE '%' + #{KEYWORD} + '%' OR A.TEL_NO LIKE '%' + #{KEYWORD} + '%')
+        </if>
+        ORDER BY A.CALL_SEQ DESC
+    </select>
 
     <delete id="deleteCampMst" parameterType="map">
         DELETE FROM CAMPAIGN_MST WHERE CMPYCD = #{CMPYCD} AND CAMP_NO = #{CAMP_NO}
@@ -50,12 +80,12 @@
 
     <insert id="insertSurvMst" parameterType="com.crmbank.erp.crm.dto.SurvMstDto">
         INSERT INTO SURV_MST (CMPYCD, SURV_NO, QUESTION, ANS_TP, DSPORD, USEYN, ADDTIME, UPDTIME, UPDEMP)
-        VALUES (#{cmpycd}, #{surv_no}, #{question}, #{ans_tp}, #{dspord}, #{useyn}, GETDATE(), GETDATE(), #{updemp})
+        VALUES (#{CMPYCD}, #{SURV_NO}, #{QUESTION}, #{ANS_TP}, #{DSPORD}, #{USEYN}, GETDATE(), GETDATE(), #{UPDEMP})
     </insert>
 
     <update id="updateSurvMst" parameterType="com.crmbank.erp.crm.dto.SurvMstDto">
-        UPDATE SURV_MST SET QUESTION = #{question}, ANS_TP = #{ans_tp}, DSPORD = #{dspord}, USEYN = #{useyn}, UPDTIME = GETDATE(), UPDEMP = #{updemp}
-        WHERE CMPYCD = #{cmpycd} AND SURV_NO = #{surv_no}
+        UPDATE surv_mst SET question = #{question}, ans_tp = #{ans_tp}, dspord = #{dspord}, useyn = #{useyn}, updtime = GETDATE(), updemp = #{updemp}
+        WHERE cmpycd = #{cmpycd} AND surv_no = #{surv_no}
     </update>
 
     <delete id="deleteSurvMst" parameterType="map">
@@ -69,7 +99,7 @@
 
     <insert id="insertSurvDtl" parameterType="com.crmbank.erp.crm.dto.SurvDtlDto">
         INSERT INTO SURV_DTL (CMPYCD, SURV_NO, ANS_NO, ANS_CONT, ANS_POINT, USEYN, ESSAY_YN, ADDTIME, UPDTIME, UPDEMP)
-        VALUES (#{cmpycd}, #{surv_no}, #{ans_no}, #{ans_cont}, #{ans_point}, #{useyn}, #{essay_yn}, GETDATE(), GETDATE(), #{updemp})
+        VALUES (#{CMPYCD}, #{SURV_NO}, #{ANS_NO}, #{ANS_CONT}, #{ANS_POINT}, #{USEYN}, #{ESSAY_YN}, GETDATE(), GETDATE(), #{UPDEMP})
     </insert>
 
     <delete id="deleteSurvDtlAll" parameterType="map">
@@ -111,7 +141,7 @@
 
     <insert id="insertAttrMapper" parameterType="com.crmbank.erp.crm.dto.CampAttrMapperDto">
         INSERT INTO CAMP_ATTR_MAPPER (CMPYCD, SURV_GB, ATTR_NM, ATTR_KEY, DATA_TYPE, STATS_YN, USEYN, ADDTIME, UPDTIME, UPDEMP)
-        VALUES (#{cmpycd}, #{surv_gb}, #{attr_nm}, #{attr_key}, #{data_type}, #{stats_yn}, #{useyn}, GETDATE(), GETDATE(), #{updemp})
+        VALUES (#{CMPYCD}, #{SURV_GB}, #{ATTR_NM}, #{ATTR_KEY}, #{DATA_TYPE}, #{STATS_YN}, #{USEYN}, GETDATE(), GETDATE(), #{UPDEMP})
     </insert>
 
     <delete id="deleteAttrMapperAll" parameterType="map">
@@ -124,8 +154,14 @@
             CMPYCD, CALL_SEQ, CAMP_NO, START_DTIME, END_DTIME, PHONE_TYPE, CALL_TELNO,
             RSLT_CD, REMARK, USERID, LINE_NUM, INTERACTION_ID, MEDIA_TYPE, CHAT_LOG, AI_SUMMARY, REC_FILE, ADDTIME, UPDTIME, UPDEMP
         ) VALUES (
-            #{cmpycd}, #{call_seq}, #{camp_no}, #{start_dtime}, #{end_dtime}, #{phone_type}, #{call_telno},
-            #{rslt_cd}, #{remark}, #{userid}, #{line_num}, #{interaction_id}, #{media_type}, #{chat_log}, #{ai_summary}, #{rec_file}, GETDATE(), GETDATE(), #{updemp}
+            #{CMPYCD}, #{CALL_SEQ}, #{CAMP_NO},
+            #{START_DTIME, jdbcType=TIMESTAMP}, #{END_DTIME, jdbcType=TIMESTAMP},
+            #{PHONE_TYPE, jdbcType=VARCHAR}, #{CALL_TELNO, jdbcType=VARCHAR},
+            #{RSLT_CD, jdbcType=VARCHAR}, #{REMARK, jdbcType=NVARCHAR},
+            #{USERID, jdbcType=VARCHAR}, #{LINE_NUM, jdbcType=VARCHAR},
+            #{INTERACTION_ID, jdbcType=VARCHAR}, #{MEDIA_TYPE, jdbcType=VARCHAR},
+            #{CHAT_LOG, jdbcType=NVARCHAR}, #{AI_SUMMARY, jdbcType=NVARCHAR},
+            #{REC_FILE, jdbcType=VARCHAR}, GETDATE(), GETDATE(), #{UPDEMP, jdbcType=VARCHAR}
         )
     </insert>
 
@@ -133,19 +169,11 @@
         INSERT INTO CAMPAIGN_RSLT_DTL (
             CMPYCD, RSLT_NO, SURV_NO, ANS_NO, POINT, REMARK, ADDTIME, UPDTIME, UPDEMP
         ) VALUES (
-            #{cmpycd}, #{rslt_no}, #{surv_no}, #{ans_no}, #{point}, #{remark}, GETDATE(), GETDATE(), #{updemp}
+            #{CMPYCD}, #{RSLT_NO}, #{SURV_NO}, #{ANS_NO},
+            #{POINT, jdbcType=DECIMAL}, #{REMARK, jdbcType=NVARCHAR},
+            GETDATE(), GETDATE(), #{UPDEMP, jdbcType=VARCHAR}
         )
     </insert>
-
-    <!-- [4. 콜 리스트] -->
-    <select id="selectCampCallList" parameterType="map" resultType="map">
-        SELECT A.CALL_SEQ, A.CMPYCD, A.CAMP_NO, A.SURV_GB, A.CUST_NM, A.EMAIL, A.TEL_NO, A.STATUS,
-        ISNULL(A.RSLT_CD,'') AS RSLT_CD, ISNULL(B.CODENM,'미처리') AS RSLT_NM, A.USERID, A.EXT_DATA
-        FROM CAMPAIGN_CALL_LIST A LEFT OUTER JOIN HABA900T_TBL B ON B.CDTYPE = '920' AND A.RSLT_CD = B.CODECD
-        WHERE A.CMPYCD = #{CMPYCD} AND A.CAMP_NO = #{CAMP_NO}
-        <if test="CALL_SEQ != null"> AND A.CALL_SEQ = #{CALL_SEQ} </if>
-        ORDER BY A.CALL_SEQ DESC
-    </select>
 
     <insert id="insertCampCallListBatch" parameterType="list">
         INSERT INTO CAMPAIGN_CALL_LIST
@@ -174,7 +202,7 @@
     <!-- 7. 기타/통계 -->
     <select id="selectSurvFormList" parameterType="map" resultType="map">
         SELECT A.SURV_NO AS SURV_NO, B.QUESTION AS QUESTION, B.ANS_TP AS ANS_TP, A.SORTCD AS SORTCD,
-               (SELECT STUFF((SELECT ' / ' + CAST(ANS_NO AS VARCHAR) + ':' + ANS_CONT
+               (SELECT STUFF((SELECT ' / ' + CAST(ANS_NO AS VARCHAR) + ':' + ANS_CONT + ':' + CAST(ISNULL(ANS_POINT, 0) AS VARCHAR)
                 FROM SURV_DTL
                 WHERE CMPYCD = A.CMPYCD AND SURV_NO = A.SURV_NO AND USEYN = 'Y'
                 ORDER BY ANS_NO FOR XML PATH('')), 1, 3, '')) AS ANSWERS
@@ -242,6 +270,20 @@
         AND A.SURV_NO = B.SURV_NO
         WHERE A.CMPYCD = #{CMPYCD}
         AND SURV_GB = #{SURV_GB}
+    </select>
+
+    <select id="selectCampaignRsltDtl" parameterType="map" resultType="map">
+        SELECT A.SURV_NO, B.QUESTION, A.ANS_NO, C.ANS_CONT, A.POINT, A.REMARK
+        FROM CAMPAIGN_RSLT_DTL A
+        JOIN SURV_MST B ON A.CMPYCD = B.CMPYCD AND A.SURV_NO = B.SURV_NO
+        LEFT JOIN SURV_DTL C ON A.CMPYCD = C.CMPYCD AND A.SURV_NO = C.SURV_NO AND A.ANS_NO = C.ANS_NO
+        WHERE A.CMPYCD = #{CMPYCD} AND A.RSLT_NO = #{RSLT_NO}
+        ORDER BY B.DSPORD, A.SURV_NO
+    </select>
+
+    <select id="selectAnsPoint" parameterType="map" resultType="java.math.BigDecimal">
+        SELECT ISNULL(ANS_POINT, 0) FROM SURV_DTL
+        WHERE CMPYCD = #{CMPYCD} AND SURV_NO = #{SURV_NO} AND ANS_NO = #{ANS_NO}
     </select>
 
 </mapper>

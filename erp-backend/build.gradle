@@ -96,7 +96,8 @@ dependencies {
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	// Asterisk-Java
-	implementation 'org.asteriskjava:asterisk-java:3.12.0'
+	// implementation 'org.asteriskjava:asterisk-java:3.12.0'
+	implementation 'org.asteriskjava:asterisk-java:3.41.0'
 
 	// Swagger (SpringDoc OpenAPI)
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'

@@ -1,4 +1,4 @@
-<!--관리정보/시스템관리/프로그램관리 [ERP 프리미엄 고밀도 표준 - 3열 배치] -->
+<!--관리정보/시스템관리/프로그램관리 [ERP 프리미엄 고밀도 표준 - 1열 배치] -->
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
@@ -42,7 +42,7 @@
 				</div>
 			</div>
 
-			<!-- 💡 3. 상세 입수정 영역 (3열 배치 & 줄바꿈 방지) -->
+			<!-- 💡 3. 상세 입수정 영역 (한 줄 배치) -->
 			<div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
 				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
 					<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-secondary"></i>프로그램 정보 관리</div>
@@ -52,34 +52,35 @@
 				<div class="card-body p-0 bg-white">
 					<table class="erp-table-full border-0">
 						<colgroup>
-							<col style="width: 100px;" /><col />
-							<col style="width: 100px;" /><col />
-							<col style="width: 100px;" /><col />
-						</colgroup>
+                            <col style="width: 60px;" /><col style="width: 130px;" /> <!-- ID -->
+                            <col style="width: 60px;" /><col />                       <!-- 명칭 (가변 너비로 가장 크게 설정) -->
+                            <col style="width: 60px;" /><col style="width: 180px;" /> <!-- 업무 -->
+                            <col style="width: 60px;" /><col style="width: 180px;" /> <!-- 그룹 -->
+                            <col style="width: 60px;" /><col style="width: 80px;" />  <!-- 순서 -->
+                            <col style="width: 50px;" /><col style="width: 100px;" />  <!-- 사용 -->
+                        </colgroup>
 						<tbody>
 							<tr>
-								<th class="required">프로그램ID</th>
+								<th class="required">ID</th>
 								<td><input v-model="formData.PGMID" type="text" class="form-control fw-bold text-primary text-center" maxlength="20" placeholder="PGMID" :disabled="formData.ACTKIND === 'U0'"/></td>
-								<th class="required">프로그램명</th>
+								<th class="required">명칭</th>
 								<td><input v-model="formData.PGMNM" type="text" class="form-control" maxlength="30" /></td>
-								<th class="required">업무분류</th>
+								<th class="required">업무</th>
 								<td>
 									<select v-model="formData.UPMUCD" class="form-select">
 										<option v-for="opt in upmuOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
 									</select>
 								</td>
-							</tr>
-							<tr>
-								<th class="required">메뉴그룹</th>
+								<th class="required">그룹</th>
 								<td>
 									<select v-model="formData.GRPCD" class="form-select">
 										<option value="">-- 선택 --</option>
 										<option v-for="item in grpcdOptions" :key="item.GRPCD" :value="item.GRPCD">{{ item.GRPNM }}</option>
 									</select>
 								</td>
-								<th class="required">정렬순서</th>
+								<th class="required">순서</th>
 								<td><input v-model="formData.DSPORD" type="number" class="form-control text-end" /></td>
-								<th>사용여부</th>
+								<th>사용</th>
 								<td>
 									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
 										<input v-model="formData.USEYN" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useYn800">
@@ -136,7 +137,6 @@ watch(() => formData.PGMID, (newVal) => { if (newVal) formData.PGMID = newVal.to
 async function fetchSearchGrpcd() {
 	if (!searchForm.UPMUCD) { searchGrpcdOptions.value = []; return; }
 	try {
-		// 💡 SELGBN 대신 GBNCD 사용
 		const res = await api.post('/api/ha00/HA00_00P_STR', { GUBUN: 'SC', GBNCD: searchForm.UPMUCD, CMPYCD: authStore.CMPYCD })
 		searchGrpcdOptions.value = (res.data || []).map((i: any) => ({ GRPCD: String(i.CODECD || i.GRPCD).trim(), GRPNM: String(i.CODENM || i.GRPNM).trim() }))
 		fetchList()
@@ -146,7 +146,6 @@ async function fetchSearchGrpcd() {
 watch(() => formData.UPMUCD, async (newVal) => {
 	if (!newVal) { grpcdOptions.value = []; return; }
 	try {
-		// 💡 SELGBN 대신 GBNCD 사용
 		const res = await api.post('/api/ha00/HA00_00P_STR', { GUBUN: 'SC', GBNCD: newVal, CMPYCD: authStore.CMPYCD })
 		grpcdOptions.value = (res.data || []).map((i: any) => ({ GRPCD: String(i.CODECD || i.GRPCD).trim(), GRPNM: String(i.CODENM || i.GRPNM).trim() }))
 	} catch (e) { console.error('분류 로드 실패') }
@@ -154,7 +153,6 @@ watch(() => formData.UPMUCD, async (newVal) => {
 
 async function fetchUpmu() {
 	try {
-		// 💡 SELGBN 대신 GBNCD 사용
 		const res = await api.post('/api/ha00/HA00_00P_STR', { GUBUN: 'E0', GBNCD: '320', CMPYCD: authStore.CMPYCD })
 		if (res.data) {
 			upmuOptions.value = res.data.map((i: any) => ({ CODECD: String(i.CODECD || i.CODE).trim(), CODENM: String(i.CODENM || i.CDNM).trim() }))

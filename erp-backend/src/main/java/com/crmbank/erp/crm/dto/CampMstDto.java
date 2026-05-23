@@ -16,22 +16,22 @@ import lombok.Builder;
 @Builder
 public class CampMstDto {
 
-    private String cmpycd;           // 회사코드
-    private String camp_no;          // 캠페인번호
-    private String camp_nm;          // 캠페인명
-    private String surv_gb;          // 설문유형 겸 캠페인구분 (통합 필드)
-    private Long tot_db_cnt;         // 총DB수
-    private Long succ_db_cnt;        // 성공DB수
-    private String useyn;            // 사용여부
-    private String callback_yn;      // 콜백여부
-    private String remark;           // 비고
-    private String actdate;          // 실행일자 (YYYYMMDD)
-    private String status;           // 실행상태 (010:대기, 020:진행, 030:완료)
-    private String start_ment;       // 시작 인사말
-    private String end_ment;         // 종료 인사말
-    private String connect_url;      // 연결URL
-    private String sms_ment;         // SMS멘트
-    private LocalDateTime addtime;   // 등록일시
-    private LocalDateTime updtime;   // 수정일시
-    private String updemp;           // 수정자/상담원ID
+    private String CMPYCD;           // 회사코드
+    private String CAMP_NO;          // 캠페인번호
+    private String CAMP_NM;          // 캠페인명
+    private String SURV_GB;          // 설문유형 겸 캠페인구분 (통합 필드)
+    private Long TOT_DB_CNT;         // 총DB수
+    private Long SUCC_DB_CNT;        // 성공DB수
+    private String USEYN;            // 사용여부
+    private String CALLBACK_YN;      // 콜백여부
+    private String REMARK;           // 비고
+    private String ACTDATE;          // 실행일자 (YYYYMMDD)
+    private String STATUS;           // 실행상태 (010:대기, 020:진행, 030:완료)
+    private String START_MENT;       // 시작 인사말
+    private String END_MENT;         // 종료 인사말
+    private String CONNECT_URL;      // 연결URL
+    private String SMS_MENT;         // SMS멘트
+    private LocalDateTime ADDTIME;   // 등록일시
+    private LocalDateTime UPDTIME;   // 수정일시
+    private String UPDEMP;           // 수정자/상담원ID
 }

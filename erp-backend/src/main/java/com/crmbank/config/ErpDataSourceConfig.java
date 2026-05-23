@@ -26,8 +26,12 @@ import java.util.List;
 
 @Slf4j
 @Configuration
+/**
+ * 💡 ERP (SQL Server) 데이터 소스 설정
+ */
 @MapperScan(
-    basePackages = { "com.crmbank.erp" }, 
+    // 💡 스캔 범위를 .mapper 하위로 좁혀서 빈 주입 충돌 및 기동 에러를 방지합니다.
+    basePackages = { "com.crmbank.erp.**.mapper" }, 
     sqlSessionTemplateRef = "erpSqlSessionTemplate"
 )
 public class ErpDataSourceConfig {
@@ -76,6 +80,7 @@ public class ErpDataSourceConfig {
         sessionFactory.setDataSource(dataSource);
         
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        // 💡 XML 매퍼 위치를 명확히 지정
         sessionFactory.setMapperLocations(resolver.getResources("classpath*:/com/crmbank/erp/**/*.xml"));
         
         org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();

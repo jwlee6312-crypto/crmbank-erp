@@ -110,7 +110,6 @@
   </div>
 
   <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
-</div>
 </template>
 
 <script setup lang="ts">

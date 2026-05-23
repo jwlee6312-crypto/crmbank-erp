@@ -76,14 +76,12 @@
                     <button class="btn btn-outline-secondary" @click="openHelp('ITEM')" :disabled="masterData.ACTKIND === 'U0'"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
-              </tr>
-              <tr>
                 <th class="required">기초재고수량</th>
                 <td>
                   <input v-model="masterData.QTY" type="text" class="form-control form-control-sm text-end" @input="formatInput('QTY')" />
                 </td>
                 <th class="required">기초재고금액</th>
-                <td colspan="3">
+                <td>
                   <input v-model="masterData.AMT" type="text" class="form-control form-control-sm text-end" style="width: 150px;" @input="formatInput('AMT')" />
                 </td>
               </tr>

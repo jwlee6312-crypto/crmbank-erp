@@ -33,10 +33,10 @@ public class OutboundService {
     // 2. 캠페인 마스터 관리
     @Transactional
     public void saveCampMst(CampMstDto dto) {
-        if (dto.getCamp_no() == null || dto.getCamp_no().trim().isEmpty()) {
+        if (dto.getCAMP_NO() == null || dto.getCAMP_NO().trim().isEmpty()) {
             Map<String, Object> p = new HashMap<>();
-            p.put("CMPYCD", dto.getCmpycd());
-            dto.setCamp_no(outboundMapper.generateCampNo(p));
+            p.put("CMPYCD", dto.getCMPYCD());
+            dto.setCAMP_NO(outboundMapper.generateCampNo(p));
             outboundMapper.insertCampMst(dto);
         } else {
             outboundMapper.updateCampMst(dto);
@@ -68,12 +68,12 @@ public class OutboundService {
 
         String SURV_NO = (String) mstMap.get("SURV_NO");
         SurvMstDto mstDto = objectMapper.convertValue(mstMap, SurvMstDto.class);
-        mstDto.setCmpycd(CMPYCD);
-        mstDto.setUpdemp(USERID);
+        mstDto.setCMPYCD(CMPYCD);
+        mstDto.setUPDEMP(USERID);
 
         if (SURV_NO == null || SURV_NO.isEmpty()) {
             SURV_NO = outboundMapper.generateSurvNo(Map.of("CMPYCD", CMPYCD));
-            mstDto.setSurv_no(SURV_NO);
+            mstDto.setSURV_NO(SURV_NO);
             outboundMapper.insertSurvMst(mstDto);
         } else {
             outboundMapper.updateSurvMst(mstDto);
@@ -83,9 +83,9 @@ public class OutboundService {
         if (dtlList != null) {
             for (Map<String, Object> dtl : dtlList) {
                 SurvDtlDto dtlDto = objectMapper.convertValue(dtl, SurvDtlDto.class);
-                dtlDto.setCmpycd(CMPYCD);
-                dtlDto.setSurv_no(SURV_NO);
-                dtlDto.setUpdemp(USERID);
+                dtlDto.setCMPYCD(CMPYCD);
+                dtlDto.setSURV_NO(SURV_NO);
+                dtlDto.setUPDEMP(USERID);
                 outboundMapper.insertSurvDtl(dtlDto);
             }
         }
@@ -145,8 +145,8 @@ public class OutboundService {
         if (list != null) {
             for (Map<String, Object> item : list) {
                 CampAttrMapperDto dto = objectMapper.convertValue(item, CampAttrMapperDto.class);
-                dto.setCmpycd((String) params.get("CMPYCD"));
-                dto.setSurv_gb((String) params.get("SURV_GB"));
+                dto.setCMPYCD((String) params.get("CMPYCD"));
+                dto.setSURV_GB((String) params.get("SURV_GB"));
                 outboundMapper.insertAttrMapper(dto);
             }
         }
@@ -166,6 +166,10 @@ public class OutboundService {
 
     public List<Map<String, Object>> getCampaignHistory(Map<String, Object> params) {
         return outboundMapper.selectCampaignHistory(params);
+    }
+
+    public List<Map<String, Object>> getCampaignRsltDtl(Map<String, Object> params) {
+        return outboundMapper.selectCampaignRsltDtl(params);
     }
 
     /**
@@ -212,11 +216,11 @@ public class OutboundService {
 
         // 3. 상담 결과 마스터 저장 (DTO 필드명 매핑)
         CampRsltMstDto mstDto = CampRsltMstDto.builder()
-                .cmpycd(CMPYCD).camp_no(CAMP_NO).call_seq(CALL_SEQ).rslt_cd(RSLT_CD)
-                .interaction_id(interactionId).remark(REMARK).userid(USERID)
-                .chat_log(chatLog).ai_summary(aiSummary).rec_file(REC_FILE)
-                .start_dtime(startDtime).end_dtime(endDtime).updemp(USERID)
-                .line_num(LINE_NUM)
+                .CMPYCD(CMPYCD).CAMP_NO(CAMP_NO).CALL_SEQ(CALL_SEQ).RSLT_CD(RSLT_CD)
+                .INTERACTION_ID(interactionId).REMARK(REMARK).USERID(USERID)
+                .CHAT_LOG(chatLog).AI_SUMMARY(aiSummary).REC_FILE(REC_FILE)
+                .START_DTIME(startDtime).END_DTIME(endDtime).UPDEMP(USERID)
+                .LINE_NUM(LINE_NUM)
                 .build();
         outboundMapper.insertCampaignRsltMst(mstDto);
 
@@ -225,9 +229,10 @@ public class OutboundService {
         if (surveys != null) {
             for (Map<String, Object> s : surveys) {
                 CampRsltDtlDto dtlDto = CampRsltDtlDto.builder()
-                        .cmpycd(CMPYCD).rslt_no(mstDto.getRslt_no()).surv_no((String) s.get("SURV_NO"))
-                        .ans_no((String) s.get("ANS_NO")).remark((String) s.get("REMARK"))
-                        .updemp(USERID).build();
+                        .CMPYCD(CMPYCD).RSLT_NO(mstDto.getRSLT_NO()).SURV_NO((String) s.get("SURV_NO"))
+                        .ANS_NO((String) s.get("ANS_NO")).REMARK((String) s.get("REMARK"))
+                        .POINT(s.get("POINT") != null ? new java.math.BigDecimal(s.get("POINT").toString()) : java.math.BigDecimal.ZERO)
+                        .UPDEMP(USERID).build();
                 outboundMapper.insertCampaignRsltDtl(dtlDto);
             }
         }

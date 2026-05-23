@@ -214,7 +214,7 @@ onMounted(() => {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
 			columns: [
-				{ title: 'No', formatter: 'rownum', width: 40 },
+				{ title: 'No', formatter: 'rownum', width: 100 },
                 {
                     title: '비용코드', field: 'COSTCD', width: 120,
                     formatter: (cell) => {
@@ -226,9 +226,9 @@ onMounted(() => {
                     cellClick: (e, cell) => { if ((e.target as HTMLElement).classList.contains('bi-search')) openHelp('COST', cell) }
                 },
                 { title: '비용 명칭', field: 'COSTNM', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
-				{ title: '비용(원화)', field: 'COSTAMT', hozAlign: 'right', width: 130, editor: 'number', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '비용(원화)', field: 'COSTAMT', hozAlign: 'right', width: 200, editor: 'number', formatter: 'money', formatterParams: { precision: 0 } },
 				{
-                    title: '선적차수', field: 'SHIPSEQ', width: 120,
+                    title: '선적차수', field: 'SHIPSEQ', width: 200,
                     editor: "select",
                     editorParams: {
                         values: { "10": "1차", "20": "2차", "30": "3차", "40": "4차", "50": "5차" }
@@ -237,7 +237,7 @@ onMounted(() => {
                     formatterParams: { "10": "1차", "20": "2차", "30": "3차", "40": "4차", "50": "5차" }
                 },
 				{
-                    title: '통관차수', field: 'PASSSEQ', width: 120,
+                    title: '통관차수', field: 'PASSSEQ', width: 200,
                     editor: "select",
                     editorParams: (cell: any) => {
                         // 💎 선적차수가 선택된 경우에만 콤보가 나타나거나 해당 차수에 맞는 목록 제공 (여기서는 1~5차 고정 예시)
@@ -248,7 +248,7 @@ onMounted(() => {
                 },
 				{ title: '상세 적요', field: 'BIGO', minWidth: 200, widthGrow: 1, editor: 'input', hozAlign: 'left' },
                 {
-                    title: "삭제", width: 60,
+                    title: "삭제", width: 100,
                     formatter: () => "<i class='bi bi-trash text-danger cursor-pointer' style='font-size: 16px;'></i>",
                     cellClick: (e, c) => { c.getRow().delete() }
                 }
@@ -259,55 +259,31 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 🎨 폰트 선명도 보정 및 전역 스타일 */
-.hsip130u-wrapper {
-  height: 100%;
-  overflow: hidden;
-  font-family: 'Pretendard', sans-serif;
-  background-color: #f4f7fa !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+.hsip130u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
+.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
+.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
 
-.erp-header { background-color: #ffffff !important; }
-
-/* 🎨 원칙 1-4: 시스템 공통 버튼 색상 표준 */
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; border: none; }
-.btn-init { background-color: #ffffff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #ffffff !important; }
-.btn-save { background-color: #005a9f !important; color: #ffffff !important; }
-.btn-delete { background-color: #d32f2f !important; color: #ffffff !important; }
-
-/* 🎨 원칙 10: 폼 레이블 표준 (연한 회색 배경, 검정 글자) */
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f1f3f5; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px !important; color: #212529; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; background-color: #fff; vertical-align: middle; }
-
-/* 🎨 원칙 9: 폼 라벨 스타일 */
-.erp-label { font-weight: 700; font-size: 12px; color: #212529; min-width: 80px; }
-.required::after { content: ' *'; color: #d32f2f; }
-
-/* 🎨 원칙 5, 6: 그리드 타이틀 색상 및 중앙 정렬 */
-:deep(.tabulator) {
-  border: 1px solid #dee2e6;
-  font-size: 13px;
-  color: #212529 !important;
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
+.overflow-hidden { overflow: hidden !important; }
+/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
+.form-control, .form-select {
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 2px 8px !important;
 }
-:deep(.tabulator-header) {
-  background-color: #f8f9fa !important;
-  border-bottom: 2px solid #dee2e6 !important;
-}
-:deep(.tabulator-col-title) {
-  color: #6c757d !important;
-  font-weight: 800;
-  text-align: center !important;
-}
-:deep(.tabulator-cell) {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 4px !important;
-  border-right: 1px solid #eee !important;
-}
-:deep(.tabulator-row.tabulator-selected) { background-color: #eef2ff !important; }
+.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
+.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
+.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
+.required::after { content: ' *'; color: #dc3545; }
+:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
+:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
+
+/* 🚀 팝업 가독성 표준 스타일 */
+:deep(.modal-content) { background-color: #ffffff !important; }
+:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
+:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
+
 </style>

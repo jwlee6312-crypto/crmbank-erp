@@ -1,17 +1,17 @@
 <!--
 	=============================================================
-	프로그램명	: 유형별 출고현황 [디자인 원칙 13가지 + 검색영역 단일행 균등배분]
+	프로그램명	: 유형별 출고현황 [디자인 표준화 버전]
 	작성일자	: 25.02.24
 	작성자	    : AI Assistant
-	설명        : 유형/창고/거래처/품목별 출고 내역 조회
+	설명        : erp-container 표준 레이아웃 적용 (global.css 기반)
 	=============================================================
 -->
 
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hsio610s-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1, 11, 12. 상단 액션 바 -->
+	<div class="erp-container">
+		<!-- 🚀 1. 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-grid-3x3-gap-fill me-2 text-primary" style="font-size: 18px;"></i>
@@ -26,13 +26,13 @@
 				<button class="btn-erp btn-search" @click="fetchData">
 					<i class="bi bi-search"></i> 조회
 				</button>
-				<button class="btn-erp btn-excel" @click="handleExcel">
+				<button class="btn-erp btn-outline-success border" style="font-size: 12px; height: 28px;" @click="handleExcel">
 					<i class="bi bi-file-earmark-excel"></i> 엑셀
 				</button>
 			</div>
 		</div>
 
-		<!-- 🔍 9. 최상단 검색 항목 영역 (단일행 균등 배분 적용) -->
+		<!-- 🔍 2. 최상단 검색 항목 영역 (20~25% 균등 배분) -->
 		<div class="p-2 pb-0 flex-shrink-0">
 			<div class="card border shadow-sm overflow-hidden">
 				<table class="erp-table-full" style="table-layout: fixed;">
@@ -47,8 +47,8 @@
 						<tr>
 							<td>
 								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">출고창고</span>
-									<select v-model="searchForm.WHCD" class="form-select form-select-sm">
+									<span class="erp-label">출고창고</span>
+									<select v-model="searchForm.WHCD" class="form-select">
 										<option value="000">전체</option>
 										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
 									</select>
@@ -56,8 +56,8 @@
 							</td>
 							<td>
 								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">출고유형</span>
-									<select v-model="searchForm.IOTYPE" class="form-select form-select-sm">
+									<span class="erp-label">출고유형</span>
+									<select v-model="searchForm.IOTYPE" class="form-select">
 										<option value="000">전체</option>
 										<option v-for="opt in ioTypeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
 									</select>
@@ -65,29 +65,29 @@
 							</td>
 							<td>
 								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">출고일자</span>
+									<span class="erp-label">출고일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
-										<input v-model="searchForm.FRYMD" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.FRYMD" type="date" class="form-control" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.TOYMD" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.TOYMD" type="date" class="form-control" />
 									</div>
 								</div>
 							</td>
 							<td>
 								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">거래처</span>
-									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="searchForm.CUSTNM" type="text" class="form-control" placeholder="거래처" @keyup.enter="openHelp('CUST')" />
-										<button class="btn btn-outline-secondary" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
+									<span class="erp-label">거래처</span>
+									<div class="input-group flex-nowrap">
+										<input v-model="searchForm.CUSTNM" type="text" class="form-control" placeholder="거래처" @keyup.enter="handleOpenHelp('CUST')" />
+										<button class="btn btn-outline-secondary" @click="handleOpenHelp('CUST')"><i class="bi bi-search"></i></button>
 									</div>
 								</div>
 							</td>
 							<td>
 								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">품목명</span>
-									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="searchForm.ITEMNM" type="text" class="form-control" placeholder="품목명" @keyup.enter="openHelp('ITEM')" />
-										<button class="btn btn-outline-secondary" @click="openHelp('ITEM')"><i class="bi bi-search"></i></button>
+									<span class="erp-label">품목명</span>
+									<div class="input-group flex-nowrap">
+										<input v-model="searchForm.ITEMNM" type="text" class="form-control" placeholder="품목명" @keyup.enter="handleOpenHelp('ITEM')" />
+										<button class="btn btn-outline-secondary" @click="handleOpenHelp('ITEM')"><i class="bi bi-search"></i></button>
 									</div>
 								</div>
 							</td>
@@ -97,23 +97,11 @@
 			</div>
 		</div>
 
-		<!-- 📊 6. 그리드 영역 -->
+		<!-- 📊 3. 중앙 그리드 영역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
-			</div>
-		</div>
-
-		<!-- 📊 4. 하단 요약 바 -->
-		<div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-			<div class="row align-items-center w-100">
-				<div class="col-md-3 small">조회 건수: <span class="fw-bold text-info">{{ rowCount }}</span> 건</div>
-				<div class="col-md-9 text-end">
-					<span class="me-4 small opacity-75">공급가액: <span class="fw-bold text-white ms-1">{{ formatNumber(totals.SPYAMT) }}</span></span>
-					<span class="me-4 small opacity-75">부가세: <span class="fw-bold text-warning ms-1">{{ formatNumber(totals.VATAMT) }}</span></span>
-					<span class="fs-5 ms-2 fw-light">총 합계액: <span class="fw-bold text-white ms-2">{{ formatNumber(totals.SUM) }}</span> 원</span>
+				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden" style="position: relative;">
+					<div ref="mainGridRef" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
 				</div>
 			</div>
 		</div>
@@ -123,20 +111,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const searchForm = reactive({
 	WHCD: '000', IOTYPE: '000',
@@ -146,7 +135,6 @@ const searchForm = reactive({
 })
 
 const whOptions = ref<any[]>([]); const ioTypeOptions = ref<any[]>([]);
-const rowCount = ref(0); const totals = reactive({ SPYAMT: 0, VATAMT: 0, SUM: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const fetchData = async () => {
@@ -156,12 +144,7 @@ const fetchData = async () => {
 			FRYMD: searchForm.FRYMD.replace(/-/g, ''),
 			TOYMD: searchForm.TOYMD.replace(/-/g, '')
 		})
-		const data = res.data || []
-		mainGrid?.setData(data)
-		rowCount.value = data.length
-		totals.SPYAMT = data.reduce((acc: number, cur: any) => acc + (Number(cur.JSANAMT) || 0), 0)
-		totals.VATAMT = data.reduce((acc: number, cur: any) => acc + (Number(cur.JSANVAT) || 0), 0)
-		totals.SUM = totals.SPYAMT + totals.VATAMT
+		mainGrid?.setData(res.data || [])
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
@@ -171,40 +154,30 @@ const initialize = () => {
 	searchForm.WHCD = '000'; searchForm.IOTYPE = '000';
 	searchForm.FRYMD = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10);
 	searchForm.TOYMD = new Date().toISOString().substring(0, 10);
-	mainGrid?.clearData(); rowCount.value = 0;
+	mainGrid?.clearData();
 }
 
 const handleExcel = () => mainGrid?.download("xlsx", "유형별출고현황.xlsx")
 
-const modalVisible = ref(false);
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-function openHelp(type: string) {
+function handleOpenHelp(type: string) {
 	if (type === 'CUST') {
-		Object.assign(modalProps, {
-			title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'CUSTNM',
-			data: { GUBUN: 'C0', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'CUSTCD', width: 100 }, { title: '거래처명', field: 'CUSTNM', width: 200 }],
-			onConfirm: (d: any) => { searchForm.CUSTCD = d.CUSTCD; searchForm.CUSTNM = d.CUSTNM }
-		})
+		openHelp('CUST', (d: any) => {
+			searchForm.CUSTCD = d.CUSTCD;
+			searchForm.CUSTNM = d.CUSTNM;
+		});
 	} else if (type === 'ITEM') {
-		Object.assign(modalProps, {
-			title: '품목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'ITEMNM',
-			data: { GUBUN: 'I1', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'ITEMCD', width: 100 }, { title: '품목명', field: 'ITEMNM', width: 200 }],
-			onConfirm: (d: any) => { searchForm.ITEMCD = d.ITEMCD; searchForm.ITEMNM = d.ITEMNM }
-		})
+		openHelp('ITEM', (d: any) => {
+			searchForm.ITEMCD = d.ITEMCD;
+			searchForm.ITEMNM = d.ITEMNM;
+		});
 	}
-	modalVisible.value = true
 }
-
-const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 
 onMounted(async () => {
 	try {
-		const resWh = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'W0', CMPYCD: authStore.CMPYCD } })
+		const resWh = await api.post('/api/hs00/HS00_000S_STR', { GUBUN: 'W0', CMPYCD: authStore.CMPYCD })
 		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.WHCD, CDNM: i.CDNM || i.WHNM }))
-		const resType = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '130' } })
+		const resType = await api.post('/api/hs00/HS00_000S_STR', { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '130' })
 		ioTypeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE || i.CODECD, CDNM: i.CDNM || i.CODENM }))
 	} catch (e) {}
 
@@ -231,21 +204,5 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.hsio610s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #f4f7fa !important; -webkit-font-smoothing: antialiased; }
-.erp-header { background-color: #ffffff !important; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; border: none; }
-.btn-init { background-color: #ffffff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #ffffff !important; }
-.btn-excel { background-color: #1d6f42 !important; color: #ffffff !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f1f3f5; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px !important; color: #212529; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 8px 4px !important; background-color: #fff; vertical-align: middle; }
-
-.erp-label { font-weight: 700; font-size: 12px; color: #212529; min-width: 60px; text-align: right; white-space: nowrap; }
-:deep(.tabulator) { border: 1px solid #dee2e6; font-size: 13px; color: #212529 !important; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { color: #6c757d !important; font-weight: 800; text-align: center !important; }
-:deep(.tabulator-cell) { display: flex !important; align-items: center !important; justify-content: center !important; border-right: 1px solid #eee !important; }
-.erp-footer { background-color: #212529 !important; min-height: 50px; }
+/* 🎨 개별 스타일 제거 완료. global.css 표준을 따릅니다. */
 </style>

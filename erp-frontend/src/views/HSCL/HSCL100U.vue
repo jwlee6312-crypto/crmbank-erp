@@ -1,9 +1,9 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hscl100u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-calendar-check-fill me-2 text-primary" style="font-size: 18px;"></i>
         재고관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
@@ -18,12 +18,12 @@
     <!-- 💡 2. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
       <!-- 🅰️ 마감 설정 카드 -->
-      <div class="card border shadow-sm overflow-hidden">
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center">
           <span class="fw-bold small text-dark"><i class="bi bi-gear-fill me-1"></i> 작업 설정</span>
         </div>
         <div class="card-body p-0">
-          <table class="erp-table-full">
+          <table class="erp-table-full border-0">
             <tbody>
               <tr>
                 <th class="required" style="width: 150px;">마감 연월</th>
@@ -53,16 +53,17 @@
       </div>
 
       <!-- ℹ️ 안내 메시지 영역 -->
-      <div class="alert alert-info border-0 shadow-sm mb-0 py-2 px-3">
+      <div class="alert alert-info border-0 shadow-sm mb-0 py-2 px-3 flex-shrink-0">
         <div class="d-flex align-items-start gap-2 small">
           <i class="bi bi-info-circle-fill mt-1"></i>
           <div>
             <p class="mb-1 fw-bold text-dark">주의사항</p>
-            <ul class="mb-0 ps-3">
+            <ul class="mb-1 ps-3">
               <li>월마감 작업을 하시면 해당 월의 입출고, 판매, 입금 자료를 입력/수정할 수 없습니다.</li>
               <li>추가 입력이 필요한 경우 반드시 월마감 취소 작업을 먼저 진행해야 합니다.</li>
               <li>원가마감이 완료된 월은 원가마감 취소 후 작업이 가능합니다.</li>
             </ul>
+            <p class="mb-0 mt-2 text-primary fw-bold">※ 현재 시스템 마감 정보: [회계: {{ closingInfo.CLSYMD }}] [영업: {{ closingInfo.SCLSYM }}] [원가: {{ closingInfo.WCLSYM }}]</p>
           </div>
         </div>
       </div>
@@ -72,17 +73,8 @@
         <div class="card-header bg-danger text-white py-1 px-3 d-flex align-items-center justify-content-between">
           <span class="fw-bold small"><i class="bi bi-exclamation-triangle-fill me-1"></i> 마감 오류 내역 (재고 부족 현황)</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-12 small text-center opacity-75">
-          현재 시스템 마감 정보: [회계: {{ closingInfo.CLSYMD }}] [영업: {{ closingInfo.SCLSYM }}] [원가: {{ closingInfo.WCLSYM }}]
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden" style="position: relative;">
+          <div ref="gridElement" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
         </div>
       </div>
     </div>
@@ -118,7 +110,7 @@ const closingInfo = reactive({
 
 const errorList = ref<any[]>([])
 const gridElement = ref<HTMLElement | null>(null)
-const grid = ref<Tabulator | null>(null)
+let grid: Tabulator | null = null
 
 // 연도/월 옵션
 const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
@@ -127,7 +119,7 @@ const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart
 // 그리드 초기화
 const initGrid = () => {
   if (!gridElement.value) return
-  grid.value = new Tabulator(gridElement.value, {
+  grid = new Tabulator(gridElement.value, {
     layout: "fitColumns",
     height: "100%",
     data: errorList.value,
@@ -168,7 +160,6 @@ async function executeProcess() {
 
     if (resultCode !== '000') {
       vAlertError('마감처리 중 재고가 부족하거나 오류가 발생했습니다. 하단 내역을 확인하십시오.')
-      // 프로시저에서 에러 리스트를 반환하는 경우
       errorList.value = res.data.map((i: any) => ({
         GUBUN: Object.values(i)[0],
         ERR_MSG: Object.values(i)[1],
@@ -212,12 +203,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hscl100u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: auto !important; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 1% !important; white-space: nowrap !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 10px 15px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 8px 12px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-.bg-light-primary { background-color: #f0f7ff !important; }
 </style>

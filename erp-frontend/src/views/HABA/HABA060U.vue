@@ -69,14 +69,15 @@
 								<td>
 									<select v-model="formData.TAXUNIT" class="form-select">
 										<option value="">-- 선택 --</option>
-										<option v-for="opt in saOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+										<option v-for="opt in saOptions" :key="opt.TAXUNIT" :value="opt.TAXUNIT">{{ opt.UNITNM }}</option>
 									</select>
 								</td>
 								<th>비용구분</th>
 								<td>
 									<select v-model="formData.COSTGBN" class="form-select">
 										<option value="">-- 선택 --</option>
-										<option v-for="opt in costOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+										<option value="100">관리비용</option>
+										<option value="110">제조비용</option>
 									</select>
 								</td>
 							</tr>
@@ -140,18 +141,15 @@ let mainGrid: Tabulator | null = null
 async function fetchCodes() {
 	try {
 		// 💡 구형 API 정리 및 표준 프로시저 호출로 변경
-		const [resSa, resCost] = await Promise.all([
-			api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: '030', CMPYCD: authStore.CMPYCD } }),
-			api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: '310', CMPYCD: authStore.CMPYCD } })
+		const [resSa] = await Promise.all([
+			api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'SA', CMPYCD: authStore.CMPYCD } })
 		])
 
 		const normalize = (data: any[]) => (data || []).map(i => ({
-			CODECD: String(i.CODECD || i.UNITCD || Object.values(i)[0]).trim(),
-			CODENM: String(i.CODENM || i.UNITNM || Object.values(i)[1]).trim()
+			TAXUNIT: String(i.TAXUNIT || Object.values(i)[0]).trim(),
+			UNITNM: String(i.UNITNM || Object.values(i)[1]).trim()
 		}))
-
 		saOptions.value = normalize(resSa.data)
-		costOptions.value = normalize(resCost.data)
 	} catch (e) { console.error('코드 로드 실패') }
 }
 

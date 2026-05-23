@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.crmbank.erp.crm.dto.CallMstDto;
 import com.crmbank.erp.crm.dto.TotalCallLogDto;
-import com.crmbank.erp.crm.mapper.inbound.InboundMapper;
+import com.crmbank.erp.comm.dto.UserSession;
 import com.crmbank.erp.crm.service.InboundService;
 import com.crmbank.erp.crm.service.GeminiAiService;
 import org.springframework.core.io.FileSystemResource;
@@ -18,6 +18,7 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,113 +30,151 @@ import java.util.UUID;
 public class InboundController {
 
     private final InboundService inboundService;
-    private final InboundMapper inboundMapper; // 💡 주입 추가
     private final GeminiAiService geminiAiService;
 
     /**
-     * 💡 녹취 파일 스트리밍
+     * 📞 ARS 콜백 요청 로그 기록 (Asterisk System curl 호출용)
+     * payload: {"interaction_id":"CB_${UNIQUEID}", "keyword":"${CALLERID(num)}", "media_type":"callback", "cmpycd":"HAIONNET"}
      */
+    @PostMapping("/log-callback")
+    public ResponseEntity<Map<String, Object>> logCallback(@RequestBody Map<String, Object> params) {
+        try {
+            log.info("📞 [ARS CALLBACK] 요청 수신: {}", params);
+            
+            TotalCallLogDto logDto = TotalCallLogDto.builder()
+                    .uniqueid(String.valueOf(params.get("interaction_id")))
+                    .KEYWORD(String.valueOf(params.get("keyword")))
+                    .MEDIA_TYPE(String.valueOf(params.get("media_type")))
+                    .CMPYCD(String.valueOf(params.get("cmpycd")))
+                    .DIRECTION("in")
+                    .START_TIME(LocalDateTime.now())
+                    .CALLBACK_YN("Y")
+                    .CALLBACK_NO(String.valueOf(params.get("keyword")))
+                    .CALLBACK_REQ_TIME(LocalDateTime.now())
+                    .CALLBACK_RETRY_CNT(0)
+                    .build();
+
+            inboundService.insertTotalInteractionLog(logDto);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            log.error("❌ 콜백 로그 저장 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * 💡 상담 통합 저장 및 자동 STT/요약 (HGIA010U 전용)
+     */
+    @PostMapping("/save")
+    public ResponseEntity<Map<String, Object>> save(@RequestBody SaveRequest request, HttpSession session) {
+        try {
+            UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+            String cmpycd = user != null ? user.getCMPYCD() : "HAIONNET";
+            String userid = user != null ? user.getUSERID() : "SYSTEM";
+            String deptcd = user != null ? user.getDEPTCD() : "";
+            
+            CallMstDto dto = request.getDto();
+            dto.setCMPYCD(cmpycd);
+            dto.setCONSULTID(userid);
+            dto.setUPDEMP(userid);
+            dto.setDEPTCD(deptcd);
+            dto.setHAPPYCALL_YN("N");
+            
+            if (dto.getINTERACTION_ID() == null || dto.getINTERACTION_ID().isEmpty()) {
+                dto.setINTERACTION_ID("IN_" + UUID.randomUUID().toString().substring(0, 8));
+            }
+            
+            dto.setEND_TIME(LocalDateTime.now());
+
+            if (request.getRecordings() != null && !request.getRecordings().isEmpty()) {
+                String lastFile = request.getRecordings().get(request.getRecordings().size() - 1);
+                String fullPath = "/var/spool/asterisk/monitor/" + lastFile;
+                Map<String, String> aiResult = geminiAiService.analyzeAudio(fullPath);
+                dto.setANS_MENT(aiResult.get("stt"));
+                dto.setAI_SUMMARY(aiResult.get("summary"));
+                dto.setREC_FILE(lastFile);
+            }
+
+            String svcymd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String svcno = inboundService.saveCallMst(dto, request.getRecordings(), svcymd, deptcd);
+
+            return ResponseEntity.ok(Map.of("success", true, "svcno", svcno));
+        } catch (Exception e) {
+            log.error("상담 저장 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * 🤖 텍스트 기반 AI 요약 (상담 작성 중 호출)
+     */
+    @PostMapping("/ai-summarize")
+    public Map<String, String> aiSummarize(@RequestBody Map<String, String> params) {
+        String trbMent = params.get("trb_ment");
+        String ansMent = params.get("ans_ment");
+        String chatLog = "문의내용: " + trbMent + "\n답변내용: " + ansMent;
+        
+        log.info("🤖 [AI Summarize] Text analysis requested.");
+        String summary = geminiAiService.summarizeText(chatLog);
+
+        Map<String, String> result = new HashMap<>();
+        result.put("summary", summary);
+        result.put("deptcd", ""); 
+        return result;
+    }
+
     @GetMapping("/play-recording")
     public ResponseEntity<Resource> playRecording(@RequestParam String file) {
         String path = "/var/spool/asterisk/monitor/" + file;
         File audioFile = new File(path);
         if (!audioFile.exists()) return ResponseEntity.notFound().build();
-
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("audio/wav"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file + "\"")
                 .body(new FileSystemResource(audioFile));
     }
 
-    /**
-     * 💡 상담 저장 및 자동 STT/요약 + 통합 이력 연동
-     */
-    @PostMapping("/save")
-    public String save(@RequestBody SaveRequest request, HttpSession session) {
-        String cmpycd = String.valueOf(session.getAttribute("cmpycd"));
-        String userid = String.valueOf(session.getAttribute("userid"));
-        
-        String interactionId = "IN_" + UUID.randomUUID().toString().substring(0, 8);
-        
-        CallMstDto dto = request.getDto();
-        dto.setCmpycd(cmpycd);
-        dto.setConsultid(userid);
-        dto.setUpdemp(userid);
-        dto.setInteraction_id(interactionId);
-        dto.setEnd_time(LocalDateTime.now());
-
-        String lastFile = null;
-        if (request.getRecordings() != null && !request.getRecordings().isEmpty()) {
-            lastFile = request.getRecordings().get(request.getRecordings().size() - 1);
-            String fullPath = "/var/spool/asterisk/monitor/" + lastFile;
-            
-            log.info("🎙 [AI Inbound] 분석 시작: {}", fullPath);
-            Map<String, String> aiResult = geminiAiService.analyzeAudio(fullPath);
-            
-            dto.setAns_ment(aiResult.get("stt"));
-            dto.setAi_summary(aiResult.get("summary"));
-            dto.setRec_file(lastFile);
-        }
-
-        String svcymd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        return inboundService.saveCallMst(dto, request.getRecordings(), svcymd);
-    }
-
-    /**
-     * 💡 인바운드 상담현황 목록 조회
-     */
     @GetMapping("/status-list")
     public List<Map<String, Object>> getStatusList(
             @RequestParam String fromdt,
             @RequestParam String todt,
             @RequestParam(required = false) String custnm,
             HttpSession session) {
-        String cmpycd = (String) session.getAttribute("cmpycd");
-        if (cmpycd == null) cmpycd = "HAIONNET";
+        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        String cmpycd = user != null ? user.getCMPYCD() : "HAIONNET";
         return inboundService.getStatusList(cmpycd, fromdt, todt, custnm);
-    }
-
-    /**
-     * 💡 [IVR 연동] 콜백 접수 기록
-     */
-    @PostMapping("/log-callback")
-    public void logCallback(@RequestBody Map<String, Object> params) {
-        log.info("📞 [IVR] 콜백 접수 요청: {}", params);
-        
-        String interactionId = (String) params.get("interaction_id"); // 💡 변수 추출
-        String cmpycd = (String) params.get("cmpycd");
-        String keyword = (String) params.get("keyword");
-
-        // 💡 total_interaction_log 테이블에 media_type='callback'으로 저장
-        inboundMapper.insertTotalInteractionLog(
-                TotalCallLogDto.builder()
-                        .uniqueid(interactionId)
-                        .cmpycd(cmpycd != null ? cmpycd : "HAIONNET")
-                        .direction("in")
-                        .media_type("callback") // ✅ 필드명 보정됨
-                        .dst_no(keyword)
-                        .start_time(LocalDateTime.now())
-                        .build()
-        );
-        log.info("✅ [IVR] 콜백 저장 완료: {}", interactionId);
     }
 
     @GetMapping("/customer-detail")
     public Map<String, Object> getCustomerDetail(@RequestParam String custcd, HttpSession session) {
-        String cmpycd = String.valueOf(session.getAttribute("cmpycd"));
-        return inboundService.getCustomerByCustCd(cmpycd, custcd);
+        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        return inboundService.getCustomerByCustCd(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
     }
 
     @GetMapping("/item-list")
     public List<Map<String, Object>> getItemList(@RequestParam String custcd, HttpSession session) {
-        String cmpycd = String.valueOf(session.getAttribute("cmpycd"));
-        return inboundService.getItemList(cmpycd, custcd);
+        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        return inboundService.getItemList(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
     }
 
     @GetMapping("/call-history")
     public List<Map<String, Object>> getCallHistory(@RequestParam String custcd, HttpSession session) {
-        String cmpycd = String.valueOf(session.getAttribute("cmpycd"));
-        return inboundService.getCallHistory(cmpycd, custcd);
+        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        return inboundService.getCallHistory(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
+    }
+
+    @GetMapping("/service-history")
+    public List<Map<String, Object>> getServiceHistory(@RequestParam String custcd, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        return inboundService.getServiceHistory(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
+    }
+
+    @GetMapping("/settle-history")
+    public List<Map<String, Object>> getSettleHistory(@RequestParam String custcd, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        return inboundService.getSettleHistory(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
     }
 
     @Data public static class SaveRequest { private CallMstDto dto; private List<String> recordings; }
