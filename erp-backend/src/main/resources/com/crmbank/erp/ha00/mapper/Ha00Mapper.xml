@@ -3,11 +3,11 @@
 <mapper namespace="com.crmbank.erp.ha00.mapper.Ha00Mapper">
 
     <select id="HA00_00P_STR" resultType="map">
-        EXEC HA00_00P_STR #{GUBUN}, #{CMPYCD}, #{GBNCD}, #{CODE}, #{REMARK}
+        exec ha00_00p_str #{gubun}, #{cmpycd}, #{gbncd}, #{code}, #{remark}
     </select>
 
     <select id="HA00_010S_STR" resultType="map">
-        EXEC HA00_010S_STR #{CMPYCD}, #{CDKIND}, #{CDGBN}, #{CODE}, #{CODE_1}
+        exec ha00_010s_str #{cmpycd}, #{cdkind}, #{cdgbn}, #{code}, #{code_1}
     </select>
 
 </mapper>

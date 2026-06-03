@@ -1,48 +1,63 @@
+<!--
+	=============================================================
+	프로그램명	: 작업지시 (HPIO210U)
+	작성일자	: 2025.02.24
+	설명        : 생산 공정별 작업지시 등록 및 관리 (HSOD100U 표준 패턴 적용)
+	=============================================================
+-->
+
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-  <div class="hpio210u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-list-task me-2 text-primary" style="font-size: 18px;"></i>
-        생산정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        생산정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">작업지시 (HPIO210U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
+      <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchProcesses">조회</button>
-        <button class="btn-erp btn-save" @click="saveData" :disabled="!selectedProg.PROGCD">저장</button>
+        <button class="btn-erp btn-save" @click="saveData">저장</button>
       </div>
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
-      <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
-        <div class="card-body p-0">
-          <table class="erp-table-full">
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 23%" />
+                <col style="width: 10%" /><col style="width: 23%" />
+                <col style="width: 10%" /><col style="width: 24%" />
+            </colgroup>
             <tbody>
               <tr>
-                <th class="required">생산라인</th>
+                <th class="text-center bg-light">생산라인</th>
                 <td>
-                  <select v-model="searchData.LINECD" class="form-select form-select-sm" style="width: 200px;" @change="onLineChange">
+                  <select v-model="searchForm.linecd" class="form-select form-select-sm" @change="onLineChange">
                     <option value="">라인 선택</option>
-                    <option v-for="opt in lineOptions" :key="opt.LINECD" :value="opt.LINECD">
-                      [{{ opt.LINECD }}] {{ opt.LINENM }}
+                    <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">
+                      [{{ opt.linecd }}] {{ opt.linenm }}
                     </option>
                   </select>
                 </td>
-                <th class="required">생산일자</th>
+                <th class="text-center bg-light">생산일자</th>
                 <td>
-                  <input v-model="uiPRODYMD" type="date" class="form-control form-control-sm" style="width: 150px;" @change="onDateChange" />
+                  <input v-model="prodymd_f" type="date" class="form-control form-control-sm" @change="onDateChange" />
                 </td>
-                <th>주문번호</th>
+                <th class="text-center bg-light">주문번호</th>
                 <td>
-                  <div class="input-group input-group-sm" style="width: 200px;">
-                    <input v-model="uiORDYM" type="month" class="form-control" />
-                    <input v-model="searchData.ORDNO" type="text" class="form-control text-center" placeholder="번호" maxlength="4" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('ORDER')"><i class="bi bi-search"></i></button>
+                  <div class="input-group input-group-sm">
+                    <input v-model="ordym_f" type="month" class="form-control" style="max-width: 100px;" />
+                    <input v-model="searchForm.ordno" type="text" class="form-control text-center" placeholder="번호" maxlength="4" />
+                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('ORDER')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
               </tr>
@@ -51,299 +66,237 @@
         </div>
       </div>
 
-      <!-- 🅱️ 데이터 작업 영역 (좌: 공정목록, 우: 지시내역) -->
-      <div class="d-flex flex-grow-1 gap-2 overflow-hidden">
-        <!-- 좌측: 공정 목록 -->
-        <div class="card border shadow-sm d-flex flex-column" style="width: 250px;">
-          <div class="card-header bg-light py-1 px-3 border-bottom fw-bold small text-dark">
-            <i class="bi bi-gear-wide-connected me-1"></i> 공정 목록
-          </div>
-          <div class="card-body p-0 flex-grow-1 bg-white overflow-auto">
-            <ul class="list-group list-group-flush process-list">
-              <li v-if="processList.length === 0" class="list-group-item text-center py-4 text-muted small">라인을 먼저 선택하세요.</li>
-              <li
-                v-for="prog in processList"
-                :key="prog.PROGCD"
-                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                :class="{ active: selectedProg.PROGCD === prog.PROGCD }"
-                @click="onProcessSelect(prog)"
-              >
-                <span>{{ prog.PROGNM }}</span>
-                <span class="badge rounded-pill bg-secondary small">{{ prog.PROGCD }}</span>
-              </li>
-            </ul>
+      <!-- [하단] 투-그리드 레이아웃 영역 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
+
+        <!-- ⬅️ 좌측: 공정 목록 (grid1) -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 300px; min-width: 300px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">공정 목록</div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
           </div>
         </div>
 
-        <!-- 우측: 작업지시 그리드 -->
+        <!-- ➡️ 우측: 지시 상세 그리드 (grid2) -->
         <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
-          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-            <div class="card-header bg-white py-1 px-3 border-bottom d-flex justify-content-between align-items-center">
+          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
               <span class="fw-bold small text-dark">
-                <i class="bi bi-grid-3x3-gap-fill me-1"></i> 지시 상세
-                <span v-if="selectedProg.PROGNM" class="text-primary ms-2">[{{ selectedProg.PROGNM }}]</span>
+                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>지시 상세 내역
+                <span v-if="selectedProg.prognm" class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ selectedProg.prognm }}</span>
               </span>
-              <div class="small text-muted">※ 항목 선택 후 지시량을 수정하세요.</div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" style="font-size: 11px;">+ 행추가</button>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" style="font-size: 11px;">- 행삭제</button>
+              </div>
             </div>
-            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-              <div ref="gridElement" style="height: 100%;"></div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="tableRef2" class="tabulator-instance flex-grow-1"></div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-3 small">건수: <span class="fw-bold text-info">{{ itemCount }}</span> 건</div>
-        <div class="col-md-9 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 공정을 클릭하면 해당 공정의 작업지시 내역이 조회됩니다.
-        </div>
-      </div>
-    </div>
-
-    <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick, watch } from 'vue'
+import { reactive, ref, onMounted, computed, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import AppAlert from '@/components/AppAlert.vue'
-import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
 
 const authStore = useAuthStore()
+const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
-const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initYM = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
-
-// 1. 상태 관리
-const searchData = reactive({
-  LINECD: '',
-  PRODYMD: initYMD,
-  ORDYM: initYM,
-  ORDNO: ''
+// [1] 데이터 모델링
+const searchForm = reactive({
+  linecd: '',
+  prodymd: today.replace(/-/g, ''),
+  ordym: today.replace(/-/g, '').substring(0, 6),
+  ordno: ''
 })
 
 const lineOptions = ref<any[]>([])
-const processList = ref<any[]>([])
-const selectedProg = reactive({ PROGCD: '', PROGNM: '' })
+const selectedProg = reactive({ progcd: '', prognm: '' })
 
-const uiPRODYMD = computed({
-  get: () => formatDateString(searchData.PRODYMD, '-'),
-  set: (v) => { if (v) searchData.PRODYMD = v.replace(/-/g, '') }
+// 날짜/년월 포맷팅 헬퍼 (ui 접두어 제거)
+const prodymd_f = computed({
+  get: () => searchForm.prodymd && searchForm.prodymd.length === 8 ? `${searchForm.prodymd.substring(0, 4)}-${searchForm.prodymd.substring(4, 6)}-${searchForm.prodymd.substring(6, 8)}` : '',
+  set: (v) => { if (v) searchForm.prodymd = v.replace(/-/g, '') }
+})
+const ordym_f = computed({
+  get: () => searchForm.ordym && searchForm.ordym.length === 6 ? `${searchForm.ordym.substring(0, 4)}-${searchForm.ordym.substring(4, 6)}` : '',
+  set: (v) => { if (v) searchForm.ordym = v.replace(/-/g, '') }
 })
 
-const uiORDYM = computed({
-  get: () => searchData.ORDYM ? `${searchData.ORDYM.substring(0, 4)}-${searchData.ORDYM.substring(4, 6)}` : '',
-  set: (v) => { if (v) searchData.ORDYM = v.replace(/-/g, '') }
-})
+const tableRef1 = ref<HTMLDivElement | null>(null)
+const tableRef2 = ref<HTMLDivElement | null>(null)
+let grid1: Tabulator | null = null
+let grid2: Tabulator | null = null
 
-const gridElement = ref<HTMLElement | null>(null)
-let grid: Tabulator | null = null
-const itemCount = ref(0)
+// [2] 그리드 초기화 (HSOD100U 패턴 적용)
+const initGrids = () => {
+  // 좌측: 공정 목록
+  grid1 = new Tabulator(tableRef1.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "라인을 선택하세요", selectable: 1,
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
+      { title: "공정명", field: "cdnm", hozAlign: "left", headerSort: false },
+      { title: "코드", field: "code", hozAlign: "center", width: 80, cssClass: "fw-bold text-primary", headerSort: false }
+    ],
+  });
+  grid1.on("rowClick", (e, row) => onProcessSelect(row.getData()));
 
-// 🏭 라인 목록 로드 (L0 규칙)
+  // 우측: 지시 상세
+  grid2 = new Tabulator(tableRef2.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "공정을 선택해 주세요.", selectable: true,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection" },
+      { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+          const v = c.getValue();
+          if (v === '입력') return '<span class="badge bg-primary">신규</span>';
+          if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+          if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+          return '';
+      }},
+      { title: "제품명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary',
+        cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow())
+      },
+      { title: "규격", field: "itsize", width: 150 },
+      { title: "단위", field: "unit", width: 70, hozAlign: "center" },
+      { title: "지시량", field: "ordqty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => {
+          const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' });
+      }},
+      { title: "비고", field: "bigo", minWidth: 150, editor: "input", cellEdited: (cell) => {
+          const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' });
+      }},
+      { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>",
+        cellClick: (e, cell) => handleRowAction(cell.getRow())
+      }
+    ]
+  });
+}
+
+// [3] 비즈니스 로직
 const fetchLineOptions = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', {
-      params: { GUBUN: 'L0', CMPYCD: authStore.CMPYCD, GBNCD: 'Y', CODE: '' }
-    })
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
     lineOptions.value = res.data
   } catch (e) { console.error(e) }
 }
 
-// ⚙️ 공정 목록 로드 (G0 규칙)
 const fetchProcesses = async () => {
-  if (!searchData.LINECD) {
-    vAlertError('생산라인을 먼저 선택하세요.')
-    return
-  }
+  if (!searchForm.linecd) { vAlertError('생산라인을 먼저 선택하세요.'); return; }
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', {
-      params: { GUBUN: 'G0', CMPYCD: authStore.CMPYCD, GBNCD: searchData.LINECD, CODE: '' }
-    })
-    processList.value = res.data
-    itemCount.value = 0
-    grid?.clearData()
-    selectedProg.PROGCD = ''
-    selectedProg.PROGNM = ''
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: searchForm.linecd, code: '' } })
+    grid1?.setData(res.data)
+    grid2?.clearData()
+    selectedProg.progcd = ''; selectedProg.prognm = '';
   } catch (e) { console.error(e) }
 }
 
-const onLineChange = () => {
-  fetchProcesses()
-}
-
-const onDateChange = () => {
-  if (selectedProg.PROGCD) fetchGridData()
-}
-
-// 공정 선택 시 그리드 조회
 const onProcessSelect = async (prog: any) => {
-  selectedProg.PROGCD = prog.PROGCD
-  selectedProg.PROGNM = prog.PROGNM
+  selectedProg.progcd = prog.code
+  selectedProg.prognm = prog.cdnm
 
-  // 1. 해당 공정의 주문번호 정보 먼저 조회 (S1)
   try {
-    const resS1 = await api.post('/api/hpio/HPIO_210U_STR', {
-      ACTKIND: 'S1', CMPYCD: authStore.CMPYCD,
-      PRODYMD: searchData.PRODYMD, LINECD: searchData.LINECD, PROGCD: prog.PROGCD
-    })
+    // 주문 정보 동기화 로직 (필요 시)
+    const resS1 = await api.post('/api/hpio/HPIO_210U_STR', { actkind: 's1', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: prog.code })
     if (resS1.data && resS1.data.length > 0) {
-      searchData.ORDYM = resS1.data[0].ORDYM || searchData.ORDYM
-      searchData.ORDNO = resS1.data[0].ORDNO || ''
+      const d = resS1.data[0]
+      searchForm.ordym = d.ordym || searchForm.ordym
+      searchForm.ordno = d.ordno || ''
     }
   } catch (e) {}
-
   fetchGridData()
 }
 
-// 그리드 데이터 조회 (S0)
 const fetchGridData = async () => {
+  if (!selectedProg.progcd) return
   try {
     const res = await api.post('/api/hpio/HPIO_210U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
-      PRODYMD: searchData.PRODYMD,
-      LINECD: searchData.LINECD,
-      PROGCD: selectedProg.PROGCD
+      actkind: 's0', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd
     })
-    grid?.setData(res.data)
-    itemCount.value = res.data.length
+    grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })))
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
 }
 
-// 2. 그리드 초기화
-const initGrid = () => {
-  if (gridElement.value) {
-    grid = new Tabulator(gridElement.value, {
-      layout: "fitData",
-      height: "100%",
-      placeholder: "공정을 선택해 주세요.",
-      selectable: true,
-      headerSort: false,
-      headerHeight: 60,
-      columns: [
-          { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 50, hozAlign: "center", headerSort: false },
-          {
-            title: "제품명", field: "ITEMNM", minWidth: 350,
-            cellClick: (e, cell) => {
-              if (!searchData.LINECD) return vAlertError('생산라인을 먼저 선택하세요.')
-              openHelp('ITEM', cell)
-            }
-          },
-          { title: "규격", field: "ITSIZE", width: 150, hozAlign: "center" },
-          { title: "단위", field: "UNIT", width: 80, hozAlign: "center" },
-          { title: "LOTSIZE", field: "LOTSIZE", width: 150, hozAlign: "right", editor: "number" },
-          { title: "지시량", field: "ORDQTY", width: 150, hozAlign: "right", editor: "number" },
-          { title: "비고", field: "BIGO", minWidth: 200, editor: "input" },
-          { title: "삭제", field: "USEYN", width: 100, hozAlign: "center", formatter: "tickCross", editor: true, formatterParams: { crossElement: true } }
-      ]
-    })
-  }
-}
-
 const saveData = async () => {
-  const selectedData = grid?.getSelectedData() || []
-  if (selectedData.length === 0) return vAlertError('저장할 항목을 선택하세요.')
-
+  const details = grid2?.getData().filter((r: any) => r._status) || []
+  if (details.length === 0) return vAlertError('저장할 변경 항목이 없습니다.')
   if (!confirm('작업지시 내역을 저장하시겠습니까?')) return
 
   try {
-    for (const item of selectedData) {
-      const actkind = item.EXITYN === 'A' ? 'A0' : 'U0' // 기존 ASP 로직 반영
-      const res = await api.post('/api/hpio/HPIO_210U_STR', {
-        ACTKIND: actkind,
-        CMPYCD: authStore.CMPYCD,
-        USERID: authStore.USERID,
-        PRODYMD: searchData.PRODYMD,
-        LINECD: searchData.LINECD,
-        PROGCD: selectedProg.PROGCD,
-        LOTYMD: item.LOTYMD,
-        LOTNO: item.LOTNO,
-        ITEMCD: item.ITEMCD,
-        ITSIZE: item.ITSIZE,
-        UNIT: item.UNIT,
-        ORDQTY: item.ORDQTY,
-        BIGO: item.BIGO,
-        USEYN: item.USEYN || 'Y',
-        ORDYM: searchData.ORDYM,
-        ORDNO: searchData.ORDNO
+    for (const item of details) {
+      const actkind = item._status === '입력' ? 'a0' : (item._status === '삭제' ? 'd0' : 'u0')
+      await api.post('/api/hpio/HPIO_210U_STR', {
+        actkind, cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd,
+        lotymd: (item.lotymd || searchForm.prodymd), lotno: item.lotno || '', itemcd: item.itemcd, itsize: item.itsize || '', unit: item.unit || '',
+        ordqty: String(item.ordqty || '0').replace(/,/g, ''), bigo: item.bigo || '', useyn: item._status === '삭제' ? 'N' : 'Y',
+        ordym: searchForm.ordym, ordno: searchForm.ordno, userid: authStore.userid
       })
-
-      if (res.data?.[0]?.RTN_CD === 'Y' || res.data?.[0]?.ERRYN === 'Y') {
-        vAlertError(res.data[0].RTN_MSG || '처리 중 오류 발생')
-        return
-      }
     }
-    vAlert('정상적으로 저장되었습니다.')
-    fetchGridData()
-  } catch (e) { vAlertError('서버 통신 오류') }
+    vAlert('정상적으로 저장되었습니다.'); fetchGridData()
+  } catch (e) { vAlertError('저장 처리 중 오류 발생') }
 }
 
-const initialize = () => {
-  resetForm(searchData)
-  Object.assign(searchData, { LINECD: '', PRODYMD: initYMD, ORDYM: initYM, ORDNO: '' })
-  processList.value = []
-  grid?.clearData()
-  selectedProg.PROGCD = ''
-  selectedProg.PROGNM = ''
-}
+const onLineChange = () => fetchProcesses()
+const onDateChange = () => { if (selectedProg.progcd) fetchGridData() }
 
-const openHelp = (type: string) => {
+const handleOpenHelp = (type: string, target?: any) => {
   if (type === 'ORDER') {
-    Object.assign(modalProps, {
-      title: '주문번호 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'ORDNO',
-      data: { GUBUN: 'ORDER', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: '주문연월', field: 'ORDYM', width: 100 }, { title: '순번', field: 'ORDNO', width: 80 }, { title: '거래처', field: 'CUSTNM', width: 200 }],
-      onConfirm: (data: any) => { searchData.ORDYM = data.ORDYM; searchData.ORDNO = data.ORDNO }
+    openHelp('ORDER', (d) => { searchForm.ordym = d.ordym; searchForm.ordno = d.ordno; })
+  } else if (type === 'ITEM') {
+    openHelp('ITEM', (d) => {
+      target.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unitnm || 'EA', ordqty: 0, _status: '입력', _state: 'NEW' });
     })
-    modalVisible.value = true
   }
 }
 
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
+const handleRowAction = (row: any) => {
+  const d = row.getData();
+  if (d._state === 'NEW') row.delete();
+  else row.update({ _status: d._status === '삭제' ? '' : '삭제' });
+}
 
-const formatDateString = (v: any, sep: string) => v && v.length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : v
+const addRow = () => {
+  if (!selectedProg.progcd) return vAlertError('공정을 먼저 선택하세요.');
+  grid2?.addRow({ ordqty: 0, _status: '입력', _state: 'NEW' }, true);
+}
 
-onMounted(() => {
-  fetchLineOptions()
-  nextTick(() => { initGrid() })
+const deleteSelectedRows = () => {
+  const sel = grid2?.getSelectedRows();
+  if (sel?.length) sel.forEach(row => handleRowAction(row));
+}
+
+const initialize = () => {
+  resetForm(searchForm);
+  Object.assign(searchForm, { linecd: '', prodymd: today.replace(/-/g, ''), ordym: today.replace(/-/g, '').substring(0, 6), ordno: '' });
+  grid1?.clearData(); grid2?.clearData();
+  selectedProg.progcd = ''; selectedProg.prognm = '';
+}
+
+onMounted(async () => {
+  nextTick(initGrids);
+  fetchLineOptions();
 })
 </script>
 
 <style scoped>
-.hpio210u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #0056b3 !important; color: #fff !important; border: none !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-
-/* 공정 목록 스타일 */
-.process-list .list-group-item { cursor: pointer; font-size: 13px; border-left: 4px solid transparent; transition: all 0.2s; }
-.process-list .list-group-item:hover { background-color: #f8f9fa; }
-.process-list .list-group-item.active { background-color: #e7f1ff; color: #0056b3; border-left-color: #0056b3; font-weight: bold; }
-
-/* Tabulator 체크박스 정중앙 */
-:deep(.tabulator) { border: none; font-size: 12.5px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+.grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
 </style>

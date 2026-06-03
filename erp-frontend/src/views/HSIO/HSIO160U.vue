@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio160u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -28,19 +28,19 @@
               <tr>
                 <th class="required">정산연월</th>
                 <td>
-                  <input v-model="uiJSANYM" type="month" class="form-control form-control-sm" style="width: 150px;" />
+                  <input v-model="uijsanym" type="month" class="form-control form-control-sm" style="width: 150px;" />
                 </td>
                 <th class="required">매&nbsp;&nbsp;입&nbsp;&nbsp;처</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 250px;">
-                    <input v-model="searchData.CUSTCD" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="searchData.CUSTNM" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="openHelp('CUST')" />
+                    <input v-model="searchData.custcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="searchData.custnm" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="openHelp('CUST')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">정산일자</th>
                 <td>
-                  <input v-model="uiJSANYMD" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                  <input v-model="uijsanymD" type="date" class="form-control form-control-sm" style="width: 150px;" />
                 </td>
               </tr>
               <tr>
@@ -52,11 +52,11 @@
                 <td colspan="3">
                   <div class="d-flex gap-3 align-items-center mt-1">
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" v-model="inputData.DIVGBN" value="AMT" id="gbnAmt" @change="applyAllocation">
+                      <input class="form-check-input" type="radio" v-model="inputData.divgbn" value="AMT" id="gbnAmt" @change="applyAllocation">
                       <label class="form-check-label small fw-bold" for="gbnAmt">금액기준</label>
                     </div>
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" v-model="inputData.DIVGBN" value="QTY" id="gbnQty" @change="applyAllocation">
+                      <input class="form-check-input" type="radio" v-model="inputData.divgbn" value="QTY" id="gbnQty" @change="applyAllocation">
                       <label class="form-check-label small fw-bold" for="gbnQty">수량기준</label>
                     </div>
                     <span class="text-muted small ms-3"><i class="bi bi-info-circle me-1"></i> 할인금액 입력 시 선택된 항목들에 자동 배부됩니다.</span>
@@ -74,8 +74,8 @@
           <span class="fw-bold small text-dark"><i class="bi bi-list-check me-1"></i> 매입 내역</span>
           <div class="small text-muted">전표 발행된 자료는 수정/삭제가 불가능합니다.</div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
@@ -100,29 +100,29 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initYM = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
+const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+const initym = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
 
 // 1. 상태 관리
 const searchData = reactive({
-  JSANYM: initYM,
-  CUSTCD: '',
-  CUSTNM: '',
-  JSANYMD: initYMD
+  jsanym: initym,
+  custcd: '',
+  custnm: '',
+  jsanymD: initymd
 })
 
 const inputData = reactive({
   DIVSUM: 0,
-  DIVGBN: 'AMT'
+  divgbn: 'AMT'
 })
 
-const uiJSANYM = computed({
-  get: () => searchData.JSANYM ? `${searchData.JSANYM.substring(0, 4)}-${searchData.JSANYM.substring(4, 6)}` : '',
-  set: (v) => searchData.JSANYM = v.replace(/-/g, '')
+const uijsanym = computed({
+  get: () => searchData.jsanym ? `${searchData.jsanym.substring(0, 4)}-${searchData.jsanym.substring(4, 6)}` : '',
+  set: (v) => searchData.jsanym = v.replace(/-/g, '')
 })
-const uiJSANYMD = computed({
-  get: () => formatDateString(searchData.JSANYMD, '-'),
-  set: (v) => searchData.JSANYMD = v.replace(/-/g, '')
+const uijsanymD = computed({
+  get: () => formatDateString(searchData.jsanymD, '-'),
+  set: (v) => searchData.jsanymD = v.replace(/-/g, '')
 })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -140,13 +140,13 @@ const initGrid = () => {
       selectable: true,
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 80, hozAlign: "center", headerSort: false },
-        { title: "품목명", field: "ITEMNM", minWidth: 100, widthGrow: 1 },
-        { title: "규격", field: "ITEMSIZE", width: 200 },
-        { title: "수량", field: "IOQTY", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "공급가", field: "IOAMT", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "품목명", field: "itemnm", minWidth: 100, widthGrow: 1 },
+        { title: "규격", field: "itemsIZE", width: 200 },
+        { title: "수량", field: "ioqty", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "공급가", field: "ioamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         { title: "할인금액", field: "HALAMT", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
-        { title: "입고부서", field: "DEPTNM", width: 250 },
-        { title: "전표발행", field: "SLIPYMD", width: 150, hozAlign: "center", formatter: (c) => c.getValue() > "00000000" ? "발행" : "" },
+        { title: "입고부서", field: "deptnm", width: 250 },
+        { title: "전표발행", field: "slipymd", width: 150, hozAlign: "center", formatter: (c) => c.getValue() > "00000000" ? "발행" : "" },
       ],
     })
 
@@ -161,8 +161,8 @@ const initGrid = () => {
 const calculateTotals = () => {
   const selectedRows = grid?.getSelectedData() || []
   selectedCount.value = selectedRows.length
-  totals.qty = selectedRows.reduce((acc, row) => acc + Number(row.IOQTY || 0), 0)
-  totals.amt = selectedRows.reduce((acc, row) => acc + Number(row.IOAMT || 0), 0)
+  totals.qty = selectedRows.reduce((acc, row) => acc + Number(row.ioqty || 0), 0)
+  totals.amt = selectedRows.reduce((acc, row) => acc + Number(row.ioamt || 0), 0)
 }
 
 // ASP의 Div_Total_Calc 구현
@@ -175,7 +175,7 @@ const applyAllocation = () => {
   }
 
   const divSum = inputData.DIVSUM
-  const isAmtBasis = inputData.DIVGBN === 'AMT'
+  const isAmtBasis = inputData.divgbn === 'AMT'
   const totalBasis = isAmtBasis ? totals.amt : totals.qty
 
   if (totalBasis === 0) return
@@ -185,7 +185,7 @@ const applyAllocation = () => {
 
   selectedRows.forEach((row, idx) => {
     const data = row.getData()
-    const basisValue = isAmtBasis ? Number(data.IOAMT) : Number(data.IOQTY)
+    const basisValue = isAmtBasis ? Number(data.ioamt) : Number(data.ioqty)
 
     // 비례 배분 계산
     let halAmt = Math.round(divSum * (basisValue / totalBasis))
@@ -201,7 +201,7 @@ const applyAllocation = () => {
 
   // 선택되지 않은 행들은 0으로 초기화
   grid?.getData().forEach(row => {
-    if (!selectedRows.find(r => r.getData().IOROWNO === row.IOROWNO)) {
+    if (!selectedRows.find(r => r.getData().iorowno === row.iorowno)) {
       updates.push({ ...row, HALAMT: 0 })
     }
   })
@@ -211,16 +211,16 @@ const applyAllocation = () => {
 }
 
 const fetchList = async () => {
-  if (!searchData.CUSTCD) return vAlertError('매입처를 선택하세요.')
+  if (!searchData.custcd) return vAlertError('매입처를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_160U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
-      JSANYM: searchData.JSANYM,
-      CUSTCD: searchData.CUSTCD
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
+      jsanym: searchData.jsanym,
+      custcd: searchData.custcd
     })
 
-    // Tabulator는 고유 ID가 필요하므로 IOROWNO 등을 활용하거나 인덱스 부여
+    // Tabulator는 고유 ID가 필요하므로 iorowno 등을 활용하거나 인덱스 부여
     const dataWithId = res.data.map((item: any, idx: number) => ({ ...item, id: idx }))
     grid?.setData(dataWithId)
 
@@ -245,7 +245,7 @@ const saveData = async () => {
   if (totals.hal !== inputData.DIVSUM) return vAlertError('배부된 할인금액 합계가 입력한 할인금액과 일치하지 않습니다.')
 
   // 전표 발행 체크
-  if (selectedData.some(item => item.SLIPYMD > "00000000")) {
+  if (selectedData.some(item => item.slipymd > "00000000")) {
     return vAlertError('전표가 발행된 자료는 수정할 수 없습니다.')
   }
 
@@ -254,29 +254,29 @@ const saveData = async () => {
   try {
     // ASP 로직처럼 루프를 돌며 개별 저장하거나, 백엔드에서 리스트 처리가 가능하면 일괄 전송
     for (const item of selectedData) {
-      const halRate = inputData.DIVGBN === 'AMT'
-                      ? (Number(item.IOAMT) / totals.amt)
-                      : (Number(item.IOQTY) / totals.qty)
+      const halRate = inputData.divgbn === 'AMT'
+                      ? (Number(item.ioamt) / totals.amt)
+                      : (Number(item.ioqty) / totals.qty)
 
       await api.post('/api/hsio/HSIO_160U_STR', {
-        ACTKIND: 'A0',
-        CMPYCD: authStore.CMPYCD,
-        USERID: authStore.USERID,
-        JSANYM: searchData.JSANYM,
-        JSANYMD: searchData.JSANYMD,
-        CUSTCD: searchData.CUSTCD,
-        DIVGBN: inputData.DIVGBN,
+        actkind: 'A0',
+        cmpycd: authStore.cmpycd,
+        userid: authStore.userid,
+        jsanym: searchData.jsanym,
+        jsanymD: searchData.jsanymD,
+        custcd: searchData.custcd,
+        divgbn: inputData.divgbn,
         // 개별 아이템 정보
-        JSANNO: item.JSANNO,
-        IOYM: item.IOYM,
-        IONO: item.IONO,
-        IOROWNO: item.IOROWNO,
-        DEPTCD: item.DEPTCD,
-        ITEMCD: item.ITEMCD,
-        IOQTY: item.IOQTY,
-        IOAMT: item.IOAMT,
+        jsanno: item.jsanno,
+        ioym: item.ioym,
+        iono: item.iono,
+        iorowno: item.iorowno,
+        deptcd: item.deptcd,
+        itemcd: item.itemcd,
+        ioqty: item.ioqty,
+        ioamt: item.ioamt,
         HALAMT: item.HALAMT,
-        HALRATE: halRate.toFixed(8)
+        HALrate: halRate.toFixed(8)
       })
     }
     vAlert('정상적으로 저장되었습니다.')
@@ -289,20 +289,20 @@ const saveData = async () => {
 const deleteData = async () => {
   const selectedData = grid?.getSelectedData() || []
   if (selectedData.length === 0) return vAlertError('삭제할 항목을 선택하세요.')
-  if (selectedData.some(item => item.SLIPYMD > "00000000")) return vAlertError('전표가 발행된 자료는 삭제할 수 없습니다.')
+  if (selectedData.some(item => item.slipymd > "00000000")) return vAlertError('전표가 발행된 자료는 삭제할 수 없습니다.')
 
   if (!confirm('선택한 항목의 할인 정보를 삭제하시겠습니까?')) return
 
   try {
     for (const item of selectedData) {
       await api.post('/api/hsio/HSIO_160U_STR', {
-        ACTKIND: 'D0',
-        CMPYCD: authStore.CMPYCD,
-        JSANYM: item.JSANYM,
-        JSANNO: item.JSANNO,
-        IOYM: item.IOYM,
-        IONO: item.IONO,
-        IOROWNO: item.IOROWNO
+        actkind: 'D0',
+        cmpycd: authStore.cmpycd,
+        jsanym: item.jsanym,
+        jsanno: item.jsanno,
+        ioym: item.ioym,
+        iono: item.iono,
+        iorowno: item.iorowno
       })
     }
     vAlert('삭제되었습니다.')
@@ -313,10 +313,10 @@ const deleteData = async () => {
 }
 
 const initialize = () => {
-  searchData.JSANYM = initYM
-  searchData.CUSTCD = ''
-  searchData.CUSTNM = ''
-  searchData.JSANYMD = initYMD
+  searchData.jsanym = initym
+  searchData.custcd = ''
+  searchData.custnm = ''
+  searchData.jsanymD = initymd
   inputData.DIVSUM = 0
   grid?.clearData()
   calculateTotals()
@@ -328,12 +328,12 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 
 function openHelp(type: string) {
   Object.assign(modalProps, {
-    title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'CUSTNM',
-    data: { GUBUN: 'C4', CMPYCD: authStore.CMPYCD, LIMITOFFSET: 0, LIMITROWS: 20 },
-    columns: [{ title: '코드', field: 'CUSTCD', width: 80 }, { title: '거래처명', field: 'CUSTNM', width: 200 }],
+    title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'custnm',
+    data: { gubun: 'C4', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+    columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 200 }],
     onConfirm: (data: any) => {
-      searchData.CUSTCD = data.CUSTCD
-      searchData.CUSTNM = data.CUSTNM
+      searchData.custcd = data.custcd
+      searchData.custnm = data.custnm
       fetchList()
     }
   })
@@ -347,30 +347,3 @@ onMounted(() => {
   nextTick(() => initGrid())
 })
 </script>
-
-<style scoped>
-.hsio160u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
-  white-space: nowrap;
-}
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-</style>

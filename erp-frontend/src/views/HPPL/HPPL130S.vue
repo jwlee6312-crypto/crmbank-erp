@@ -28,7 +28,7 @@
                 <th class="required">기준일자</th>
                 <td>
                   <div class="d-flex align-items-center gap-2">
-                    <input v-model="uiYMD" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                    <input v-model="uiymD" type="date" class="form-control form-control-sm" style="width: 150px;" />
                     <span class="small text-muted">현재</span>
                   </div>
                 </td>
@@ -49,22 +49,11 @@
         <div class="card-header bg-light py-1 px-3 border-bottom fw-bold small text-dark">
           <i class="bi bi-list-columns-reverse me-1"></i> 자재 소요 상세 내역
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-4 small">조회건수: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-8 text-end text-muted small">
-          <i class="bi bi-check-circle me-1"></i> 소요량 산출 버튼을 눌러야 최신 데이터가 계산됩니다.
-        </div>
-      </div>
-    </div>
-
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
@@ -86,16 +75,16 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
 
 // 1. 상태 관리
 const searchData = reactive({
-  YMD: initYMD
+  ymD: initymd
 })
 
-const uiYMD = computed({
-  get: () => formatDateString(searchData.YMD, '-'),
-  set: (v) => searchData.YMD = v.replace(/-/g, '')
+const uiymD = computed({
+  get: () => formatDateString(searchData.ymD, '-'),
+  set: (v) => searchData.ymD = v.replace(/-/g, '')
 })
 
 const activeItemCount = ref(0)
@@ -112,36 +101,36 @@ const initGrid = () => {
       pagination: "remote",
       paginationSize: 20,
       columns: [
-        { title: "품목코드", field: "ITEMCD", width: 100, hozAlign: "center" },
-        { title: "품목명", field: "ITEMNM", minWidth: 200, cssClass: "fw-bold" },
-        { title: "규격", field: "ITSIZE", width: 120 },
-        { title: "단위", field: "UNIT", width: 60, hozAlign: "center" },
-        { title: "주문소요량", field: "REQQTY", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "주문투입량", field: "TUQTY", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "현재고", field: "STOCK", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "안전재고", field: "STKQTY", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "미입고수량", field: "NONQTY", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "품목코드", field: "itemcd", width: 100, hozAlign: "center" },
+        { title: "품목명", field: "itemnm", minWidth: 200, cssClass: "fw-bold" },
+        { title: "규격", field: "itsize", width: 120 },
+        { title: "단위", field: "unit", width: 60, hozAlign: "center" },
+        { title: "주문소요량", field: "reqqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "주문투입량", field: "tuqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "현재고", field: "stkqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "안전재고", field: "stock", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "미입고수량", field: "nonqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         {
-          title: "예상부족재고", field: "FORE_STOCK", width: 110, hozAlign: "right",
+          title: "예상부족재고", field: "fore_stock", width: 110, hozAlign: "right",
           formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger fw-bold"
         },
-        { title: "비고", field: "REMARK", width: 150 }
+        { title: "비고", field: "remark", width: 150 }
       ],
       ajaxURL: "/api/hsio/HSIO_020S_STR", // 백엔드 매핑된 경로 사용
       ajaxConfig: "POST",
       ajaxParams: () => ({
-        ACTKIND: 'S',
-        CMPYCD: authStore.CMPYCD,
-        YMD: searchData.YMD,
-        USERID: authStore.USERID
+        actkind: 'S',
+        cmpycd: authStore.cmpycd,
+        ymD: searchData.ymD,
+        userid: authStore.userid
       }),
       ajaxResponse: (url, params, response) => {
-        // 예상 부족 재고 계산 로직 반영: ((REQQTY - TUQTY) + (STOCK - STKQTY) - NONQTY)
+        // 예상 부족 재고 계산 로직 반영: ((reqqty - tuqty) + (stock - stkqty) - nonqty)
         const mapped = response.map((item: any) => ({
           ...item,
-          FORE_STOCK: (Number(item.REQQTY || 0) - Number(item.TUQTY || 0)) +
-                      (Number(item.STOCK || 0) - Number(item.STKQTY || 0)) -
-                      Number(item.NONQTY || 0)
+          fore_stock: (Number(item.reqqty || 0) - Number(item.tuqty || 0)) +
+                      (Number(item.stock || 0) - Number(item.stkqty || 0)) -
+                      Number(item.nonqty || 0)
         }))
         activeItemCount.value = mapped.length
         return mapped
@@ -160,10 +149,10 @@ async function generateRequirement() {
 
   try {
     const res = await api.post('/api/hsio/HSIO_020S_STR', {
-      ACTKIND: 'B',
-      CMPYCD: authStore.CMPYCD,
-      YMD: searchData.YMD,
-      USERID: authStore.USERID
+      actkind: 'B',
+      cmpycd: authStore.cmpycd,
+      ymD: searchData.ymD,
+      userid: authStore.userid
     })
 
     if (res.data?.[0]?.ERRYN === 'Y') {
@@ -176,13 +165,13 @@ async function generateRequirement() {
 }
 
 function initialize() {
-  searchData.YMD = initYMD
+  searchData.ymD = initymd
   grid?.clearData()
   activeItemCount.value = 0
 }
 
 const exportExcel = () => {
-  grid?.download("xlsx", `자재소요량_${searchData.YMD}.xlsx`, { title: "자재소요량 현황" })
+  grid?.download("xlsx", `자재소요량_${searchData.ymD}.xlsx`, { title: "자재소요량 현황" })
 }
 
 const formatDateString = (v: any, sep: string) => v && v.length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : v

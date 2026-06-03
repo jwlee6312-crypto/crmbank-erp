@@ -2,7 +2,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hsio400s-wrapper d-flex flex-column h-100 bg-light p-0">
+	<div class="erp-container">
 		<!-- 🚀 1. 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 shadow-sm sticky-top">
 			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -35,24 +35,24 @@
 								<th class="required">입금부서</th>
 								<td>
 									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="searchForm.DEPTCD" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
+										<input v-model="searchForm.deptcd" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
 								<th class="required">입금일자</th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.FRYMD" type="date" class="form-control" />
+										<input v-model="searchForm.frymd" type="date" class="form-control" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.TOYMD" type="date" class="form-control" />
+										<input v-model="searchForm.toymd" type="date" class="form-control" />
 									</div>
 								</td>
 								<th>영업사원</th>
 								<td>
-									<select v-model="searchForm.SALSEMP" class="form-select">
+									<select v-model="searchForm.salsemp" class="form-select">
 										<option value="000">전체 사원</option>
-										<option v-for="item in empOptions" :key="item.USERID" :value="item.USERID">{{ item.USERNM }}</option>
+										<option v-for="item in empOptions" :key="item.userid" :value="item.userid">{{ item.usernm }}</option>
 									</select>
 								</td>
 							</tr>
@@ -61,14 +61,14 @@
 								<td colspan="3" class="border-bottom-0">
 									<div class="d-flex align-items-center gap-1">
 										<div class="input-group input-group-sm flex-nowrap" style="width: 250px;">
-											<input v-model="searchForm.CUSTCDFR" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-											<input v-model="searchForm.CUSTNMFR" type="text" class="form-control" placeholder="거래처(시작)" @keyup.enter="openHelp('CUSTFR')" />
+											<input v-model="searchForm.custcdFR" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+											<input v-model="searchForm.custnmFR" type="text" class="form-control" placeholder="거래처(시작)" @keyup.enter="openHelp('CUSTFR')" />
 											<button class="btn btn-outline-secondary px-2" @click="openHelp('CUSTFR')"><i class="bi bi-search"></i></button>
 										</div>
 										<span class="text-muted mx-1">~</span>
 										<div class="input-group input-group-sm flex-nowrap" style="width: 250px;">
-											<input v-model="searchForm.CUSTCDTO" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-											<input v-model="searchForm.CUSTNMTO" type="text" class="form-control" placeholder="거래처(종료)" @keyup.enter="openHelp('CUSTTO')" />
+											<input v-model="searchForm.custcdTO" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+											<input v-model="searchForm.custnmTO" type="text" class="form-control" placeholder="거래처(종료)" @keyup.enter="openHelp('CUSTTO')" />
 											<button class="btn btn-outline-secondary px-2" @click="openHelp('CUSTTO')"><i class="bi bi-search"></i></button>
 										</div>
 									</div>
@@ -92,7 +92,9 @@
 					</div>
 				</div>
 				<div class="card-body p-0 flex-grow-1 overflow-hidden bg-white">
-					<div ref="mainGridRef" class="tabulator-full-height"></div>
+                    <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                        <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                    </div>
 				</div>
 			</div>
 		</div>
@@ -120,9 +122,9 @@ const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().su
 const lastDay = now.toISOString().substring(0, 10)
 
 const searchForm = reactive({
-	DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-	FRYMD: firstDay, TOYMD: lastDay, SALSEMP: '000',
-	CUSTCDFR: '', CUSTNMFR: '', CUSTCDTO: '', CUSTNMTO: ''
+	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+	frymd: firstDay, toymd: lastDay, salsemp: '000',
+	custcdFR: '', custnmFR: '', custcdTO: '', custnmTO: ''
 })
 
 const empOptions = ref<any[]>([])
@@ -135,13 +137,13 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 async function fetchList() {
 	try {
 		const res = await api.post('/api/comm/executeHS00_000S_STR', {
-			CMPYCD: authStore.CMPYCD,
-			DEPTCD: searchForm.DEPTCD,
-			FRYMD: searchForm.FRYMD.replace(/-/g, ''),
-			TOYMD: searchForm.TOYMD.replace(/-/g, ''),
-			CUSTCDFR: searchForm.CUSTCDFR,
-			CUSTCDTO: searchForm.CUSTCDTO,
-			SALSEMP: searchForm.SALSEMP
+			cmpycd: authStore.cmpycd,
+			deptcd: searchForm.deptcd,
+			frymd: searchForm.frymd.replace(/-/g, ''),
+			toymd: searchForm.toymd.replace(/-/g, ''),
+			custcdFR: searchForm.custcdFR,
+			custcdTO: searchForm.custcdTO,
+			salsemp: searchForm.salsemp
 		})
 		mainGrid?.setData(res.data || [])
 		listCount.value = res.data?.length || 0
@@ -152,27 +154,27 @@ async function fetchList() {
 
 function initialize() {
 	resetForm(searchForm)
-	searchForm.FRYMD = firstDay; searchForm.TOYMD = lastDay; searchForm.SALSEMP = '000'
-	searchForm.DEPTCD = authStore.DEPTCD; searchForm.DEPTNM = authStore.DEPTNM
+	searchForm.frymd = firstDay; searchForm.toymd = lastDay; searchForm.salsemp = '000'
+	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm
 	mainGrid?.clearData(); listCount.value = 0; totalSum.value = 0
 }
 
 function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
-			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM',
-			data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }],
-			onConfirm: (data: any) => { searchForm.DEPTCD = data.DEPTCD; searchForm.DEPTNM = data.DEPTNM }
+			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+			onConfirm: (data: any) => { searchForm.deptcd = data.deptcd; searchForm.deptnm = data.deptnm }
 		})
 	} else if (type.startsWith('CUST')) {
 		Object.assign(modalProps, {
-			title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'CUSTNM',
-			data: { GUBUN: 'C4', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'CUSTCD', width: 80 }, { title: '거래처명', field: 'CUSTNM', width: 200 }],
+			title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'custnm',
+			data: { gubun: 'C4', cmpycd: authStore.cmpycd },
+			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 200 }],
 			onConfirm: (data: any) => {
-				if (type === 'CUSTFR') { searchForm.CUSTCDFR = data.CUSTCD; searchForm.CUSTNMFR = data.CUSTNM }
-				else { searchForm.CUSTCDTO = data.CUSTCD; searchForm.CUSTNMTO = data.CUSTNM }
+				if (type === 'CUSTFR') { searchForm.custcdFR = data.custcd; searchForm.custnmFR = data.custnm }
+				else { searchForm.custcdTO = data.custcd; searchForm.custnmTO = data.custnm }
 			}
 		})
 	}
@@ -189,49 +191,19 @@ onMounted(async () => {
 			placeholder: '조회된 데이터가 없습니다.',
 			columnDefaults: { headerHozAlign: 'center', headerSort: false },
 			columns: [
-				{ title: '거래처 명칭', field: 'CUSTNM', minWidth: 200, widthGrow: 2, cssClass: 'fw-bold' },
+				{ title: '거래처 명칭', field: 'custnm', minWidth: 200, widthGrow: 2, cssClass: 'fw-bold' },
 				{ title: '현금', field: 'CASHAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
 				{ title: '예금', field: 'BANKAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
 				{ title: '카드', field: 'CARDAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: '어음', field: 'BILLAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: '어음', field: 'billamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
 				{ title: '대체', field: 'SANGAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: '기타', field: 'ETCAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: '기타', field: 'ETcamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
 				{ title: '합계', field: 'AMTTOT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 130, cssClass: 'fw-bold text-primary bg-light-subtle' }
 			]
 		})
 	}
-	api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'SD', CMPYCD: authStore.CMPYCD } }).then(r => {
-		if (r.data) empOptions.value = r.data.map((i: any) => ({ USERID: String(i.USERID || i.userid || Object.values(i)[0]).trim(), USERNM: String(i.USERNM || i.usernm || Object.values(i)[1]).trim() }))
+	api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd } }).then(r => {
+		if (r.data) empOptions.value = r.data.map((i: any) => ({ userid: String(i.userid || i.userid || Object.values(i)[0]).trim(), usernm: String(i.usernm || i.usernm || Object.values(i)[1]).trim() }))
 	})
 })
 </script>
-
-<style scoped>
-.hsio400s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
-</style>

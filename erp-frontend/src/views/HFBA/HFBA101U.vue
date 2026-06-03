@@ -1,321 +1,275 @@
 <!--
 	=============================================================
-	프로그램명	  : 코드관리
-    프로그램 ID	: HFBA101U
-	작성일자	    : 25.02.24
-	작성자	      : AI Assistant
-    설명         : 공통 코드 및 원가 기준 코드 관리
+	프로그램명	: 코드관리 (HFBA101U)
+	작성일자	: 2025.02.24
+	설명        : 공통 코드 및 원가 기준 코드 관리 (HSOD100U 표준 패턴 적용)
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
-	<Modal v-model:visible="showModal" :modalProps="modalProps" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-	<div class="hfba101u-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1. 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-gear-fill me-2 text-primary" style="font-size: 18px;"></i>
-				기본정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">코드관리</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="handleResetForm">초기화</button>
-				<button class="btn-erp btn-search" @click="fetchGroups">조회</button>
-				<button class="btn-erp btn-save" @click="handleSave">저장</button>
-				<button class="btn-erp btn-danger" @click="handleDelete" :disabled="detailForm.mode === 'N'">삭제</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-gear-fill me-2 text-primary" style="font-size: 18px;"></i>
+        기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">코드관리 (HFBA101U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="fetchGroups">조회</button>
+        <button class="btn-erp btn-save" @click="save">저장</button>
+        <button class="btn-erp btn-delete" @click="deleteData" :disabled="formData.mode === 'n'">삭제</button>
+      </div>
+    </div>
 
-		<!-- 💡 2. 메인 컨텐츠 영역 -->
-		<div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
-			<div class="card border shadow-sm overflow-hidden">
-				<div class="card-body p-0">
-					<table class="erp-table-full">
-						<colgroup>
-							<col style="width: 10%"><col style="width: 23%">
-							<col style="width: 10%"><col style="width: 23%">
-							<col style="width: 10%"><col style="width: 24%">
-						</colgroup>
-						<tbody>
-							<tr>
-								<th>코드구분</th>
-								<td>
-									<select v-model="detailForm.CDKD" class="form-select form-select-sm" @change="onCdkdComboChange">
-										<option v-for="opt in cdkdOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
-									</select>
-								</td>
-								<th class="required">코드</th>
-								<td><input v-model="detailForm.CODE" class="form-control form-control-sm" maxlength="10" :readonly="detailForm.mode === 'U'" /></td>
-								<th class="required">코드명</th>
-								<td><input v-model="detailForm.CDNM" class="form-control form-control-sm" maxlength="30" /></td>
-							</tr>
-							<tr>
-								<th>비고</th>
-								<td><input v-model="detailForm.REMARK" class="form-control form-control-sm" maxlength="50" /></td>
-								<th>출현순서</th>
-								<td><input v-model="detailForm.DISPORD" type="number" class="form-control form-control-sm" /></td>
-								<th>사용여부</th>
-								<td>
-									<div class="form-check form-switch mt-1">
-										<input v-model="detailForm.USEYN" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="useynSwitch">
-										<label class="form-check-label small" for="useynSwitch">{{ detailForm.USEYN === 'Y' ? '사용' : '미사용' }}</label>
-									</div>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-			<div class="row g-2 flex-grow-1 overflow-hidden">
-				<!-- 좌측 그리드: 코드 그룹 -->
-				<div class="col-md-3 d-flex flex-column">
-					<div class="card border shadow-sm h-100 overflow-hidden">
-						<div class="card-header bg-light py-1 px-3 border-bottom fw-bold small text-dark">코드 그룹</div>
-						<div class="card-body p-0 flex-grow-1 bg-white">
-							<div ref="leftGridRef" style="height: 100%;"></div>
-						</div>
-					</div>
-				</div>
-				<!-- 우측 그리드: 상세 코드 목록 -->
-				<div class="col-md-9 d-flex flex-column">
-					<div class="card border shadow-sm h-100 overflow-hidden border-top border-3 border-primary">
-						<div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">상세 코드 목록</div>
-						<div class="card-body p-0 flex-grow-1 bg-white">
-							<div ref="mainGridRef" style="height: 100%;"></div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+      <!-- [상단] 입력 및 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 23%" />
+                <col style="width: 10%" /><col style="width: 23%" />
+                <col style="width: 10%" /><col style="width: 24%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">코드구분</th>
+                <td>
+                  <select v-model="formData.cdkd" class="form-select" @change="onCdkdChange">
+                    <option v-for="opt in cdkdOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+                  </select>
+                </td>
+                <th class="text-center bg-light required">코 드</th>
+                <td>
+                  <input v-model="formData.code" class="form-control fw-bold text-primary" maxlength="10" :readonly="formData.mode === 'u'" placeholder="코드 입력" />
+                </td>
+                <th class="text-center bg-light required">코드명</th>
+                <td>
+                  <input v-model="formData.cdnm" class="form-control" maxlength="30" placeholder="코드명 입력" />
+                </td>
+              </tr>
+              <tr>
+                <th class="text-center bg-light">비 고</th>
+                <td>
+                  <input v-model="formData.remark" class="form-control" maxlength="50" />
+                </td>
+                <th class="text-center bg-light">출현순서</th>
+                <td>
+                  <input v-model="formData.dispord" type="number" class="form-control text-end" />
+                </td>
+                <th class="text-center bg-light">사용여부</th>
+                <td>
+                  <div class="form-check form-switch d-flex justify-content-center mt-1">
+                    <input v-model="formData.useyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N">
+                    <label class="form-check-label small ms-2">{{ formData.useyn === 'Y' ? '사용' : '미사용' }}</label>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- [하단] 투-그리드 레이아웃 영역 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
+
+        <!-- ⬅️ 좌측: 코드 그룹 (grid1) -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 300px; min-width: 300px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark text-center">코드 그룹</div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
+          </div>
+        </div>
+
+        <!-- ➡️ 우측: 상세 코드 목록 (grid2) -->
+        <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
+          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+              <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>상세 코드 목록</span>
+            </div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="tableRef2" class="tabulator-instance flex-grow-1"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { reactive, ref, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
+import { useAuthStore } from '@/stores/authStore'
+import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
-import { useAuthStore } from '@/stores/authStore'
 
 const authStore = useAuthStore()
+const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
+const { resetForm } = useFormReset()
+const { modalVisible, modalProps } = useCommonHelp()
 
-const cdkdOptions = ref<any[]>([])
-const detailForm = reactive({
-	CDKD: '0000',
-    CODE: '',
-    CDNM: '',
-    REMARK: '',
-    DISPORD: 0,
-    USEYN: 'Y',
-    mode: 'N'
+// [1] 데이터 모델링 (소문자 원칙)
+const formData = reactive<any>({
+  cdkd: '0000', code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'n'
 })
 
-const leftGridRef = ref<HTMLElement | null>(null)
-const mainGridRef = ref<HTMLElement | null>(null)
-let leftGrid: Tabulator | null = null
-let mainGrid: Tabulator | null = null
+const cdkdOptions = ref<any[]>([])
+const tableRef1 = ref<HTMLDivElement | null>(null)
+const tableRef2 = ref<HTMLDivElement | null>(null)
+let grid1: Tabulator | null = null
+let grid2: Tabulator | null = null
 
-const showModal = ref(false)
-const modalProps = ref<any>({})
+// [2] 그리드 초기화
+const initGrids = () => {
+  // Left: 그룹 그리드
+  grid1 = new Tabulator(tableRef1.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "데이터 없음", selectable: 1,
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
+      { title: "코드", field: "code", width: 80, hozAlign: "center", headerSort: false },
+      { title: "코드그룹명", field: "cdnm", hozAlign: "left", headerSort: false, cssClass: "fw-bold text-primary" }
+    ],
+  });
+  grid1.on("rowClick", (e, row) => {
+    const data = row.getData();
+    formData.cdkd = data.code;
+    fetchDetails(data.code);
+    resetInputOnly();
+  });
 
-// 상단 폼 초기화 (현재 CDKD는 유지)
-const handleResetForm = () => {
-	const currentCdkd = detailForm.CDKD
-	Object.assign(detailForm, {
-		CDKD: currentCdkd,
-		CODE: '',
-		CDNM: '',
-		REMARK: '',
-		DISPORD: 0,
-		USEYN: 'Y',
-		mode: 'N'
-	})
-	mainGrid?.deselectRow()
+  // Right: 상세 그리드
+  grid2 = new Tabulator(tableRef2.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "데이터 없음", selectable: 1,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "코드", field: "code", width: 100, hozAlign: "center", cssClass: "fw-bold text-primary" },
+      { title: "코드명", field: "cdnm", minWidth: 200, widthGrow: 1 },
+      { title: "순서", field: "dispord", width: 80, hozAlign: "center" },
+      { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" },
+      { title: "비고", field: "remark", minWidth: 150 }
+    ],
+  });
+  grid2.on("rowClick", (e, row) => fetchDetailRow(row.getData()));
 }
 
+// [3] 비즈니스 로직
 const loadOptions = async () => {
-	try {
-		const { data } = await api.get('/api/hp00/HP00_000S_STR', {
-            params: { GUBUN: 'E2', CMPYCD: authStore.CMPYCD, GBNCD: '0000', CODE: '' }
-        })
-		cdkdOptions.value = data
-	} catch (e) {
-        vAlertError('코드그룹 옵션 로드 실패')
-    }
+  try {
+    const res = await api.get('/api/hp00/HP00_000S_STR', {
+      params: { gubun: 'E2', cmpycd: authStore.cmpycd, gbncd: '0000', code: '' }
+    })
+    cdkdOptions.value = res.data;
+  } catch (e) { console.error(e) }
 }
 
-// 1. 좌측 그리드 조회 (cdkd='0000')
 const fetchGroups = async () => {
-	try {
-		const { data } = await api.post('/api/hfba/FBA1010U_STR', {
-            ACTKIND: 'S0',
-            CMPYCD: authStore.CMPYCD,
-            CDKD: '0000',
-            CODE: '', CDNM: '', REMARK: '', DISPORD: '0', USEYN: 'Y', USERID: authStore.USERID
-        })
-		leftGrid?.setData(data)
-		if (data?.length > 0) {
-            nextTick(() => {
-                leftGrid?.selectRow(leftGrid.getRows()[0])
-            })
+  try {
+    const res = await api.post('/api/hfba/FBA1010U_STR', {
+      actkind: 'S0', cmpycd: authStore.cmpycd, cdkd: '0000', code: '', cdnm: '', remark: '', dispord: '0', useyn: 'Y', userid: authStore.userid
+    })
+    grid1?.setData(res.data)
+    if (res.data?.length > 0) {
+      nextTick(() => {
+        const firstRow = grid1?.getRows()[0];
+        if (firstRow) {
+            grid1?.selectRow(firstRow);
+            onProcessSelect(firstRow.getData());
         }
-	} catch (e) {
-        vAlertError('그룹 조회 실패')
+      })
     }
+  } catch (e) { vAlertError('그룹 조회 실패') }
 }
 
-// 3. 우측 그리드 조회 (Step 3)
 const fetchDetails = async (cdkd: string) => {
-    if (!cdkd) return
-	try {
-		const { data } = await api.post('/api/hfba/FBA1010U_STR', {
-            ACTKIND: 'S0',
-            CMPYCD: authStore.CMPYCD,
-            CDKD: String(cdkd || ''),
-            CODE: '', CDNM: '', REMARK: '', DISPORD: '0', USEYN: 'Y', USERID: authStore.USERID
-        })
-		mainGrid?.setData(data)
-	} catch (e) {
-        vAlertError('상세 조회 실패')
-    }
+  if (!cdkd) return
+  try {
+    const res = await api.post('/api/hfba/FBA1010U_STR', {
+      actkind: 'S0', cmpycd: authStore.cmpycd, cdkd: cdkd, code: '', cdnm: '', remark: '', dispord: '0', useyn: 'Y', userid: authStore.userid
+    })
+    grid2?.setData(res.data)
+  } catch (e) { vAlertError('상세 조회 실패') }
 }
 
-const onCdkdComboChange = () => {
-    handleResetForm()
-    fetchDetails(detailForm.CDKD)
+const onProcessSelect = (data: any) => {
+    formData.cdkd = data.code;
+    fetchDetails(data.code);
 }
 
-const handleSave = async () => {
-	if (!detailForm.CODE || !detailForm.CDNM) return vAlertError('필수 항목을 입력하세요.')
-	if (!confirm('저장하시겠습니까?')) return
-	try {
-        const act = detailForm.mode === 'U' ? 'U0' : 'A0'
-		await api.post('/api/hfba/FBA1010U_STR', {
-            ACTKIND: act,
-            CMPYCD: authStore.CMPYCD,
-            CDKD: String(detailForm.CDKD || ''),
-            CODE: String(detailForm.CODE || ''),
-            CDNM: String(detailForm.CDNM || ''),
-            REMARK: String(detailForm.REMARK || ''),
-            DISPORD: String(detailForm.DISPORD || '0'),
-            USEYN: String(detailForm.USEYN || 'Y'),
-            USERID: authStore.USERID
-        })
-		vAlert('저장되었습니다.')
-        await fetchDetails(detailForm.CDKD)
-	} catch (e) {
-        vAlertError('저장 실패')
-    }
+const fetchDetailRow = (row: any) => {
+  Object.assign(formData, { ...row, mode: 'u' });
 }
 
-const handleDelete = async () => {
-	if (detailForm.mode === 'N') return
-	if (!confirm('정말 삭제하시겠습니까?')) return
-	try {
-		await api.post('/api/hfba/FBA1010U_STR', {
-            ACTKIND: 'D0',
-            CMPYCD: authStore.CMPYCD,
-            CDKD: String(detailForm.CDKD || ''),
-            CODE: String(detailForm.CODE || ''),
-            CDNM: '', REMARK: '', DISPORD: '0', USEYN: 'Y', USERID: authStore.USERID
-        })
-        vAlert('삭제되었습니다.')
-        handleResetForm()
-        await fetchDetails(detailForm.CDKD)
-	} catch (e) {
-        vAlertError('삭제 실패')
-    }
+const onCdkdChange = () => {
+    resetInputOnly();
+    fetchDetails(formData.cdkd);
 }
 
-onMounted(async () => {
-	await loadOptions()
+const save = async () => {
+  if (!formData.code || !formData.cdnm) return vAlertError('코드와 코드명은 필수 입력 사항입니다.');
+  if (!confirm('저장하시겠습니까?')) return
 
-	// 좌측 그리드 설정
-	if (leftGridRef.value) {
-		leftGrid = new Tabulator(leftGridRef.value, {
-			layout: 'fitColumns',
-			height: '100%',
-			selectable: 1,
-            columnDefaults: { headerSort: false },
-			columns: [
-                { title: '코드', field: 'CODE', hozAlign: 'center', width: 80 },
-                { title: '코드그룹명', field: 'CDNM', hozAlign: 'left' }
-            ]
-		})
+  try {
+    const actkind = formData.mode === 'u' ? 'U0' : 'A0'
+    await api.post('/api/hfba/FBA1010U_STR', {
+      ...formData, actkind: actkind, cmpycd: authStore.cmpycd, userid: authStore.userid
+    })
+    vAlert('저장되었습니다.');
+    fetchDetails(formData.cdkd);
+    if (formData.cdkd === '0000') fetchGroups();
+  } catch (e) { vAlertError('저장 실패') }
+}
 
-		// 2. 좌측 그리드 클릭/선택 -> 우측 상세 조회 (Step 2)
-		leftGrid.on('rowClick', (e, row) => {
-            const data = row.getData()
-            if (data.CODE) {
-                detailForm.CDKD = data.CODE
-                handleResetForm()
-                fetchDetails(data.CODE)
-            }
-        })
+const deleteData = async () => {
+  if (formData.mode === 'n') return
+  if (!confirm('정말 삭제하시겠습니까?')) return
+  try {
+    await api.post('/api/hfba/FBA1010U_STR', {
+      actkind: 'D0', cmpycd: authStore.cmpycd, cdkd: formData.cdkd, code: formData.code, userid: authStore.userid
+    })
+    vAlert('삭제되었습니다.');
+    fetchDetails(formData.cdkd);
+    if (formData.cdkd === '0000') fetchGroups();
+    resetInputOnly();
+  } catch (e) { vAlertError('삭제 실패') }
+}
 
-        leftGrid.on('rowSelected', (row) => {
-            const data = row.getData()
-            if (data.CODE) {
-                detailForm.CDKD = data.CODE
-                fetchDetails(data.CODE)
-            }
-        })
-	}
+const resetInputOnly = () => {
+    const currentCdkd = formData.cdkd;
+    Object.assign(formData, { cdkd: currentCdkd, code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'n' });
+    grid2?.deselectRow();
+}
 
-	// 우측 그리드 설정
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns',
-			height: '100%',
-			selectable: 1,
-            columnDefaults: { headerSort: false },
-			columns: [
-				{ title: '코드', field: 'CODE', width: 100, hozAlign: 'center' },
-				{ title: '코드명', field: 'CDNM', width: 250, hozAlign: 'left' },
-				{ title: '순서', field: 'DISPORD', width: 80, hozAlign: 'center' },
-				{
-					title: '사용', field: 'USEYN', width: 80, hozAlign: 'center',
-					formatter: (cell) => cell.getValue() === 'Y' ? '사용' : '미사용'
-				},
-				{ title: '비고', field: 'REMARK', widthGrow: 2, hozAlign: 'left' }
-			]
-		})
+const initialize = () => {
+  resetForm(formData);
+  Object.assign(formData, { cdkd: '0000', code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'n' });
+  grid1?.clearData(); grid2?.clearData();
+  fetchGroups();
+}
 
-		// 4. 우측 그리드 클릭 -> 상단 입력 폼 세팅 (Step 4)
-		mainGrid.on('rowClick', (e, row) => {
-			const data = row.getData()
-			Object.assign(detailForm, {
-                CDKD: detailForm.CDKD,
-                CODE: data.CODE,
-                CDNM: data.CDNM,
-                REMARK: data.REMARK,
-                DISPORD: data.DISPORD,
-                USEYN: data.USEYN,
-                mode: 'U'
-            })
-		})
-	}
-
-	// 초기 실행: 좌측 그리드 그룹 목록 로드
-	fetchGroups()
+onMounted(() => {
+  loadOptions();
+  nextTick(initGrids);
+  fetchGroups();
 })
 </script>
 
 <style scoped>
-.hfba101u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; border: none; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; }
-.btn-danger { background-color: #d32f2f !important; color: #fff !important; }
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 6px 12px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; background-color: #fff; vertical-align: middle; font-size: 12.5px; }
-.required::after { content: ' *'; color: #dc3545; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+.grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
 </style>

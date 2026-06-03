@@ -11,12 +11,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
+import com.crmbank.global.handler.MapKeyLowerWrapperFactory;
 
-import com.crmbank.global.handler.MapKeyUpperWrapperFactory;
 import javax.sql.DataSource;
 
 @Slf4j
@@ -57,16 +56,14 @@ public class AsteriskDataSourceConfig {
         sessionFactory.setDataSource(dataSource);
         
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        
-        // 💡 [최종] 계층형 구조(com/crmbank/asterisk)의 XML만 로드하도록 설정 통합
         sessionFactory.setMapperLocations(resolver.getResources("classpath*:/com/crmbank/asterisk/**/*.xml"));
         
         org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
         configuration.setCallSettersOnNulls(true);
         configuration.setMapUnderscoreToCamelCase(false); 
         
-        // 💡 모든 결과 Map의 Key를 대문자로 강제 변환
-        configuration.setObjectWrapperFactory(new MapKeyUpperWrapperFactory());
+        // 💡 [소문자 표준화] 모든 Map 결과의 Key를 강제로 소문자로 변환하는 Factory 등록
+        configuration.setObjectWrapperFactory(new MapKeyLowerWrapperFactory());
 
         sessionFactory.setConfiguration(configuration);
 

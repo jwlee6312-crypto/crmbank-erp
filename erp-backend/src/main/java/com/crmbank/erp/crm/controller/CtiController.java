@@ -56,13 +56,14 @@ public class CtiController {
             @RequestParam Map<String, Object> params,
             HttpSession session) {
 
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        String cmpycd = user != null ? user.getCMPYCD() : "HAIONNET";
+        // 💡 [소문자 표준화] session key: "user_session"
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
 
         log.info("📥 [API] 돌려주기 요청 -> {} to {} (Company: {})", exten, target, cmpycd);
 
-        String linkedId = asteriskService.getEXTEN_LINKED_ID().get(exten);
-        String myChannel = asteriskService.getEXTEN_CHANNEL_MAP().get(exten);
+        String linkedId = asteriskService.getExtenLinkedId().get(exten);
+        String myChannel = asteriskService.getExtenChannelMap().get(exten);
 
         ctiInboundService.transferCall(
                 exten,
@@ -70,7 +71,7 @@ public class CtiController {
                 params,
                 linkedId,
                 myChannel,
-                linkedId != null ? asteriskService.getSESSION_CHANNELS().get(linkedId) : null,
+                linkedId != null ? asteriskService.getSessionChannels().get(linkedId) : null,
                 cmpycd
         );
 
@@ -95,7 +96,7 @@ public class CtiController {
         String recFile = ctiOutboundService.makeCall(exten, dest, "haion-outbound");
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
-        result.put("recFile", recFile); // 💡 생성될 파일명을 응답에 포함
+        result.put("recFile", recFile);
         return result;
     }
 

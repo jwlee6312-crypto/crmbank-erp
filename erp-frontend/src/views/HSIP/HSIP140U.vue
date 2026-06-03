@@ -1,269 +1,325 @@
 <!--
 	=============================================================
-	프로그램명	: 수입전표발행 [디자인 원칙 13가지 완벽 준수]
-	작성일자	: 25.02.24
-	작성자	    : AI Assistant
-	설명        : 전표 발행 기능 및 표준 UI 디자인 적용
+	프로그램명	: 수입전표발행 [디자인 표준 통합]
+	작성일자	: 2025.02.24
+	설명        : HSOD100U 디자인 패턴 이식 및 ASP 패턴 기반 순차 저장 로직 적용 (소문자 표준 통일)
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-	<div class="hsip140u-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1, 12. 상단 액션 바: 버튼 그룹 우측 상단 정렬 및 표준 색상 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-file-earmark-post-fill me-2 text-primary" style="font-size: 18px;"></i>
-				수입관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">수입전표발행 (HSIP140U)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기화
-				</button>
-				<button class="btn-erp btn-search" @click="fetchUnissuedList">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-save" @click="handleGenerateSlip">
-					<i class="bi bi-file-earmark-check"></i> 전표 발행
-				</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-file-earmark-post-fill me-2 text-primary" style="font-size: 18px;"></i>
+        수입관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">수입전표발행 (HSIP140U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-2">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="fetchUnissuedList">조회</button>
+        <button class="btn-erp btn-save" @click="handleGenerateSlip">전표 발행</button>
+      </div>
+    </div>
 
-		<!-- 🔍 9. 최상단 검색 항목 영역 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm bg-light bg-opacity-50">
-				<div class="card-body py-2 px-3">
-					<div class="d-flex align-items-center gap-4">
-						<div class="d-flex align-items-center gap-2">
-							<span class="erp-label">발생부서</span>
-							<div class="input-group input-group-sm" style="width: 250px;">
-								<input v-model="searchForm.DEPTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-								<input v-model="searchForm.DEPTNM" type="text" class="form-control" placeholder="부서 선택" />
-								<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-							</div>
-						</div>
-						<div class="d-flex align-items-center gap-2">
-							<span class="erp-label">발생일자</span>
-							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchForm.IOYMDFR" type="date" class="form-control form-control-sm" style="width: 140px;" />
-								<span class="text-muted mx-1">~</span>
-								<input v-model="searchForm.IOYMDTO" type="date" class="form-control form-control-sm" style="width: 140px;" />
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-		<!-- 📊 3. 중앙: 발행 대상 그리드 (상하좌우 중앙 정렬 표준) -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
-					<span class="fw-bold small text-dark d-flex align-items-center">
-						<i class="bi bi-list-check me-2 text-primary"></i> 전표 발행 대기 목록
-					</span>
-				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
-			</div>
+      <!-- 🔍 [상단] 조회 필터 영역 (HSOD100U 디자인 패턴) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 10%" />
+              <col style="width: 40%" />
+              <col style="width: 10%" />
+              <col style="width: 40%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">발생부서</th>
+                <td>
+                  <div class="input-group input-group-sm w-75">
+                    <input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="text-center bg-light">발생일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="searchForm.ioymdfr" v-model:todt="searchForm.ioymdto" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-			<!-- 💰 10. 하단: 발행 정보 입력 영역 (표준 폼 적용) -->
-			<div class="card border shadow-sm overflow-hidden flex-shrink-0">
-				<div class="card-header bg-light py-1 px-3 border-bottom fw-bold small text-secondary">
-					<i class="bi bi-pencil-square me-1"></i> 전표 발행 설정
-				</div>
-				<div class="card-body p-0">
-					<table class="erp-table-full">
-						<colgroup>
-							<col style="width: 10%"><col style="width: 15%">
-							<col style="width: 10%"><col style="width: 15%">
-							<col style="width: 10%"><col style="width: 15%">
-							<col style="width: 10%"><col style="width: 15%">
-						</colgroup>
-						<tbody>
-							<tr>
-								<th>대상합계</th>
-								<td><input :value="formatNumber(targetTotalAmt)" class="form-control form-control-sm text-end bg-light fw-bold text-primary" readonly /></td>
-								<th>부가세유형</th>
-								<td>
-									<select v-model="slipForm.VATTYPE" class="form-select form-select-sm">
-										<option v-for="opt in vatOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
-									</select>
-								</td>
-								<th>부가세금액</th>
-								<td><input v-model="slipForm.VATAMT" type="number" class="form-control form-control-sm text-end" /></td>
-								<th class="required">지불일자</th>
-								<td><input v-model="slipForm.PAYYMD" type="date" class="form-control form-control-sm" /></td>
-							</tr>
-							<tr>
-								<th class="required">지불계정</th>
-								<td>
-									<div class="input-group input-group-sm">
-										<input v-model="payment.ACCTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-										<input v-model="payment.ACCTNM" type="text" class="form-control" placeholder="계정 선택" />
-										<button class="btn btn-outline-secondary px-2" @click="openHelp('ACCT')"><i class="bi bi-search"></i></button>
-									</div>
-								</td>
-								<th>지불금액</th>
-								<td colspan="5"><input v-model="payment.AMT" type="number" class="form-control form-control-sm text-end fw-bold text-danger" style="width: 200px;" /></td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
+      <!-- 📊 3. 중앙: 발행 대상 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+          <span class="fw-bold small text-dark d-flex align-items-center">
+            <i class="bi bi-list-check me-2 text-primary"></i> 전표 발행 대기 목록
+          </span>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
 
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+      <!-- 💰 4. 하단: 발행 정보 입력 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-header bg-light py-1 px-3 border-bottom fw-bold small text-secondary">
+          <i class="bi bi-pencil-square me-1"></i> 전표 발행 설정
+        </div>
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense w-100">
+            <colgroup>
+              <col style="width: 100px;" /><col />
+              <col style="width: 100px;" /><col />
+              <col style="width: 100px;" /><col />
+              <col style="width: 100px;" /><col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="bg-light text-center">대상합계</th>
+                <td><input :value="formatNumber(targetTotalAmt)" class="form-control bg-light fw-bold text-primary" readonly /></td>
+                <th class="bg-light text-center">부가세유형</th>
+                <td>
+                  <select v-model="slipForm.vattype" class="form-select">
+                    <option v-for="opt in vatOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+                  </select>
+                </td>
+                <th class="bg-light text-center">부가세금액</th>
+                <td><input v-model.number="slipForm.vatamt" type="number" class="form-control text-end" /></td>
+                <th class="required bg-light text-center">지불일자</th>
+                <td><input v-model="slipForm.payymd" type="date" class="form-control" /></td>
+              </tr>
+              <tr>
+                <th class="required bg-light text-center">지불계정</th>
+                <td>
+                  <div class="input-group input-group-sm">
+                    <input v-model="payment.acctcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="payment.acctnm" type="text" class="form-control" placeholder="계정 선택" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('ACCT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="bg-light text-center">지불금액</th>
+                <td colspan="5"><input :value="formatNumber(payment.amt)" class="form-control bg-light text-end fw-bold text-danger" style="width: 200px;" readonly /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="bottom-spacer"></div>
+    </div>
+  </div>
+
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
+import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-// 13. 모든 변수명 대문자 고수
 const searchForm = reactive({
-	DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-	IOYMDFR: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-	IOYMDTO: new Date().toISOString().substring(0, 10)
+  deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+  ioymdfr: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
+  ioymdto: new Date().toISOString().substring(0, 10)
 })
 
-const slipForm = reactive({ VATTYPE: '000', VATAMT: 0, PAYYMD: new Date().toISOString().substring(0, 10) })
-const payment = reactive({ ACCTCD: '', ACCTNM: '', AMT: 0 })
-const vatOptions = ref<any[]>([{ CODE: '000', CDNM: '해당없음' }])
+const slipForm = reactive({ vattype: '10', vatamt: 0, payymd: new Date().toISOString().substring(0, 10) })
+const payment = reactive({ acctcd: '', acctnm: '', amt: 0 })
+const vatOptions = ref<any[]>([])
 const targetTotalAmt = ref(0)
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const fetchUnissuedList = async () => {
-	try {
-		const res = await api.post('/api/hsip/HSIP_140U_STR', { ...searchForm, ACTKIND: 'S0', CMPYCD: authStore.CMPYCD })
-		mainGrid?.setData(res.data || [])
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 실패') }
+  try {
+    const params = {
+      actkind: 's0', cmpycd: authStore.cmpycd,
+      deptcd: searchForm.deptcd,
+      ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
+      ioymdto: searchForm.ioymdto.replace(/-/g, '')
+    }
+    const res = await api.post('/api/hsip/HSIP_140U_STR', params)
+    mainGrid?.setData(res.data || [])
+    vAlert('조회되었습니다.')
+  } catch (e) { vAlertError('조회 실패') }
 }
 
+/**
+ * 🚀 전표 발행 (ASP 로직 완벽 이식 및 소문자 통일)
+ */
 const handleGenerateSlip = async () => {
-	const selected = mainGrid?.getSelectedData()
-	if (!selected || selected.length === 0) return vAlertError('발행할 항목을 선택하세요.')
-	if (!payment.ACCTCD) return vAlertError('지불계정을 선택하세요.')
+  const selected = mainGrid?.getSelectedData() || []
+  if (selected.length === 0) return vAlertError('발행할 항목을 선택하세요.')
+  if (!payment.acctcd) return vAlertError('지불계정을 선택하세요.')
 
-	if (!confirm('전표를 발행하시겠습니까?')) return
-	try {
-		await api.post('/api/hsip/HSIP_140U_STR', {
-			...searchForm, ...slipForm, ...payment,
-			ACTKIND: 'A0', ITEMS: selected, UPDEMP: authStore.USERID
-		})
-		vAlert('전표가 발행되었습니다.')
-		fetchUnissuedList()
-	} catch (e) { vAlertError('발행 실패') }
-}
+  const slipymd = slipForm.payymd.replace(/-/g, '')
 
-const toggleAllRows = () => {
-	if (!mainGrid) return
-	const rows = mainGrid.getRows()
-	const allSelected = mainGrid.getSelectedRows().length === rows.length
-	if (allSelected) mainGrid.deselectRow()
-	else mainGrid.selectRow()
+  try {
+    // 🚀 1. 마감 체크
+    const rescl = await api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } })
+    if (rescl.data?.length > 0) {
+      const cl = rescl.data[0];
+      if (slipymd <= (cl.clsymd || '')) throw new Error(`회계시스템이 마감되었습니다(${cl.clsymd}).`);
+      if (slipymd.substring(0, 6) <= (cl.sclsym || '')) throw new Error(`수불이 마감되었습니다(${cl.sclsym}).`);
+    }
+
+    // 🚀 2. 자동 전표 설정 체크
+    let autoslip = 'n'
+    const resset = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
+    if (resset.data?.length > 0) autoslip = resset.data[0].slipyn || 'n'
+    const acctymd = autoslip === 'y' ? slipymd : ''
+
+    if (!confirm('선택한 항목들에 대해 전표를 발행하시겠습니까?')) return
+
+    // 🚀 3. 전표 MASTER 생성
+    const business = `${slipymd.substring(0, 4)}년 ${slipymd.substring(4, 6)}월 수입비용 미착품 대체건`
+    const resmst = await api.post('/api/hasl/HASL_010U_STR', {
+      actkind: 'a', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: '',
+      acctymd: acctymd, deptcd: searchForm.deptcd, empnm: authStore.usernm,
+      slipkind: '031', business: business, updemp: authStore.userid
+    })
+    const slipno = resmst.data?.[0]?.slipno
+    if (!slipno || slipno === '000000') throw new Error('전표 마스터 생성 실패');
+
+    // 🚀 4. 차변(Debit) 루프: 전표 상세 생성 및 수입 데이터 업데이트
+    let kk = 0; let descnm = ''
+    for (const item of selected) {
+      const costnm = item.costnm; const fileno = item.fileno;
+      const bigo = (item.bigo || costnm) + "(" + fileno + ")"
+      if (kk === 0) descnm = costnm
+
+      // 4-1. 전표 상세(차변) 생성
+      await api.post('/api/hasl/HASL_011U_STR', {
+        actkind: 'a', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: slipno,
+        srowno: '', acctymd: acctymd, acctcd: '1365', sdeptcd: item.deptcd || searchForm.deptcd,
+        custcd: '', fileno: fileno, costamt: item.costamt, bigo: bigo, updemp: authStore.userid
+      })
+
+      // 4-2. 수입 데이터 업데이트 (연결)
+      await api.post('/api/hsip/HSIP_140U_STR', {
+        actkind: 'u0', cmpycd: authStore.cmpycd, qdeptcd: searchForm.deptcd,
+        ioymdfr: searchForm.ioymdfr.replace(/-/g, ''), ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+        fileno: fileno, docno: item.docno, crowno: item.rowno,
+        slipymd: slipymd, slipno: slipno, updemp: authStore.userid
+      })
+      kk++
+    }
+
+    // 🚀 5. 부가세 전표 생성
+    if (slipForm.vattype !== '000') {
+      const vatdesc = descnm + (kk > 1 ? ` 외 ${kk - 1}건` : '') + ' 부가세'
+      await api.post('/api/hasl/HASL_011U_STR', {
+        actkind: 'a', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: slipno, srowno: '',
+        acctymd: '', acctcd: '1275', deptcd: searchForm.deptcd, custcd: selected[0].custcd,
+        fileno: selected[0].fileno, costamt: slipForm.vatamt, bigo: vatdesc,
+        taxunit: '10', taxtype: slipForm.vattype, supyamt: targetTotalAmt.value, updemp: authStore.userid
+      })
+    }
+
+    // 🚀 6. 대변(Credit) 처리
+    await api.post('/api/hasl/HASL_011U_STR', {
+      actkind: 'a', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: slipno, srowno: '',
+      acctymd: acctymd, acctcd: payment.acctcd, deptcd: searchForm.deptcd,
+      custcd: selected[0].custcd, costamt: payment.amt, bigo: business, updemp: authStore.userid
+    })
+
+    // 🚀 7. 자동 승인 처리
+    if (autoslip === 'y' || autoslip === 'Y') {
+      await api.post('/api/hasl/HASL_020U_STR', {
+        actkind: 'a0', cmpycd: authStore.cmpycd, slipymd: slipymd, acctymd: acctymd,
+        slipno: slipno, deptcd: searchForm.deptcd, slipkind: '031',
+        slipyn: 'n', cofmyn: 'y', updemp: authStore.userid
+      })
+    }
+
+    vAlert('정상적으로 전표가 발행되었습니다.')
+    fetchUnissuedList(); initialize();
+  } catch (e: any) {
+    vAlertError(e.message || '전표 발행 실패')
+  }
 }
 
 const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 
 const initialize = () => {
-	resetForm(searchForm);
-	resetForm(slipForm);
-	payment.ACCTCD = ''; payment.ACCTNM = ''; payment.AMT = 0;
-	mainGrid?.clearData(); targetTotalAmt.value = 0;
+  resetForm(searchForm);
+  Object.assign(slipForm, { vattype: '10', vatamt: 0, payymd: new Date().toISOString().substring(0, 10) });
+  payment.acctcd = ''; payment.acctnm = ''; payment.amt = 0;
+  mainGrid?.clearData(); targetTotalAmt.value = 0;
 }
-
-const modalVisible = ref(false);
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 function openHelp(type: string) {
-	if (type === 'DEPT') {
-		Object.assign(modalProps, {
-			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM',
-			data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }],
-			onConfirm: (d: any) => { searchForm.DEPTCD = d.DEPTCD; searchForm.DEPTNM = d.DEPTNM }
-		})
-	} else if (type === 'ACCT') {
-		Object.assign(modalProps, {
-			title: '계정 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'CDNM',
-			data: { GUBUN: 'A0', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'CODE', width: 100 }, { title: '계정명', field: 'CDNM', width: 200 }],
-			onConfirm: (d: any) => { payment.ACCTCD = d.CODE; payment.ACCTNM = d.CDNM }
-		})
-	}
-	modalVisible.value = true
+  if (type === 'DEPT') {
+    openCommonHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm })
+  } else if (type === 'ACCT') {
+    openCommonHelp('ACCT', (d) => { payment.acctcd = d.code; payment.acctnm = d.cdnm })
+  }
 }
 
-onMounted(() => {
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns', height: '100%', selectable: true,
-			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
-			columns: [
-				{
-					title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 100, hozAlign: "center",
-					headerClick: () => toggleAllRows() // 💎 헤더 클릭 시 전체 토글
-				},
-				{ title: "PO No.", field: "FILENO", width: 250, cssClass: "fw-bold" },
-				{ title: "비용종류", field: "COSTNM", width: 250 },
-				{ title: "발생일", field: "PUBYMD", width: 200 },
-				{ title: "상세 적요", field: "BIGO", minWidth: 250, widthGrow: 1, hozAlign: "left" },
-				{ title: "비용(원화)", field: "COSTAMT", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } }
-			]
-		})
-		mainGrid.on('rowSelectionChanged', (data) => {
-			targetTotalAmt.value = data.reduce((acc, cur: any) => acc + (Number(cur.COSTAMT) || 0), 0)
-			payment.AMT = targetTotalAmt.value + (Number(slipForm.VATAMT) || 0)
-		})
-	}
+watch(() => [targetTotalAmt.value, slipForm.vatamt], () => {
+  payment.amt = targetTotalAmt.value + (Number(slipForm.vatamt) || 0)
+})
+
+onMounted(async () => {
+  try {
+    const resvat = await api.get('/api/comm/HS00_000S_STR', { params: { gubun: 'e2', cmpycd: authStore.cmpycd, gbncd: '021' } })
+    vatOptions.value = resvat.data
+  } catch (e) {}
+
+  if (mainGridRef.value) {
+    mainGrid = new Tabulator(mainGridRef.value, {
+      layout: 'fitColumns', height: '100%', selectable: true,
+      columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
+      columns: [
+        { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 60, hozAlign: "center" },
+        { title: "PO No.", field: "fileno", width: 180, cssClass: "fw-bold text-primary" },
+        { title: "비용종류", field: "costnm", width: 150 },
+        { title: "발생일", field: "pubymd", width: 100, formatter: (c) => {
+            const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
+        }},
+        { title: "상세 적요", field: "bigo", minWidth: 200, widthGrow: 1, hozAlign: "left" },
+        { title: "비용(원화)", field: "costamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } }
+      ]
+    })
+    mainGrid.on('rowSelectionChanged', (data) => {
+      targetTotalAmt.value = data.reduce((acc, cur: any) => acc + (Number(cur.costamt) || 0), 0)
+    })
+  }
+  fetchUnissuedList()
 })
 </script>
 
 <style scoped>
-.hsip140u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
+.main-content-wrapper { padding-bottom: 0vh !important; }
+.grid-container-right { border-bottom: 3px solid #005a9f !important; }
+.erp-table-dense th, .erp-table-dense td {
+  height: 32px !important; padding: 0 8px !important; font-size: 12px; vertical-align: middle; border: 1px solid #dee2e6;
 }
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
+.erp-table-dense .form-control, .erp-table-dense .form-select, .erp-table-dense .btn {
+  height: 26px !important; font-size: 12px !important; border-radius: 2px;
+}
+.erp-table-dense th { font-weight: 600; color: #495057; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
 </style>

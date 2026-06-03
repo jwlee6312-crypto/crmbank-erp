@@ -1,69 +1,83 @@
 <!--
 	=============================================================
-	프로그램명	  : 공정별제조비용 조정
-    프로그램 ID	: HFMF207U
-	작성일자	    : 25.02.24
-	작성자	      : AI Assistant
-    설명         : 공정별제조비용 조정 (FMF2070U_STR 연결 - 전수조사 규격 반영)
+	프로그램명	: 공정별제조비용 조정 (HFMF207U)
+	작성일자	: 2025.02.24
+	설명        : 공정별 제조비용 조정 관리 (HSOD100U 표준 그리드 적용)
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
-	<Modal v-model:visible="showModal" :modalProps="modalProps" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="showModal" :modalProps="modalProps" />
 
-	<div class="hfmf207u-wrapper bg-light text-start p-2 h-100 d-flex flex-column gap-1">
-		<!-- 1. 상단 버튼 라인 -->
-		<div class="d-flex justify-content-between align-items-center mb-1 bg-white p-2 rounded shadow-sm border border-secondary-subtle">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-sliders me-2 text-primary" style="font-size: 18px;"></i>
-				원가관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">공정제조비용관리 (HFMF207U)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="handleResetForm">초기화</button>
-				<button class="btn-erp btn-search" @click="handleSearch">조회</button>
-				<button class="btn-erp btn-danger" @click="handleDelete" :disabled="!selectedRowCount">삭제</button>
-				<button class="btn-erp btn-save" @click="handleSave">저장</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-sliders me-2 text-primary" style="font-size: 18px;"></i>
+        원가관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        원가결산 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">공정제조비용관리 (HFMF207U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-2">
+        <button class="btn-erp btn-init" @click="handleResetForm">초기화</button>
+        <button class="btn-erp btn-search" @click="handleSearch">조회</button>
+        <button class="btn-erp btn-save" @click="save">저장</button>
+        <button class="btn-erp btn-delete" @click="deleteData" :disabled="!selectedRowCount">삭제</button>
+      </div>
+    </div>
 
-		<!-- 2. 검색 조건 영역 -->
-		<div class="card shadow-sm border-0 mb-1 flex-shrink-0">
-			<div class="card-body p-2 px-3">
-				<div class="row g-3 align-items-center">
-					<div class="col-auto">
-						<label class="small fw-bold me-2 required-label">년월:</label>
-						<input v-model="searchForm.YM" type="month" class="form-control form-control-sm d-inline-block w-auto" @change="handleSearch" />
-					</div>
-					<div class="col-auto ms-3 border-start ps-3">
-						<label class="small fw-bold me-2 required-label">계정과목:</label>
-						<select v-model="searchForm.ACCT" class="form-select form-select-sm d-inline-block w-auto" style="min-width: 200px;" @change="handleSearch">
-							<option v-for="opt in acctOptions" :key="opt.ACCT" :value="opt.ACCT">{{ opt.ACCTNM }}</option>
-						</select>
-					</div>
-					<div class="col-auto ms-auto">
-						<div v-if="clsInfo.WCLSYM" class="badge bg-danger p-2">마감월: {{ clsInfo.WCLSYM }}</div>
-					</div>
-				</div>
-			</div>
-		</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-		<!-- 3. 메인 그리드 -->
-		<div class="card shadow-sm border-0 flex-grow-1 overflow-hidden border-top border-3 border-primary">
-			<div class="card-header bg-white py-1 px-2 fw-bold small border-bottom">
-				<span>공정별 비용 조정 목록</span>
-			</div>
-			<div class="card-body p-0 flex-grow-1 bg-white">
-				<div ref="mainGridRef" class="tabulator-full-height" />
-			</div>
-		</div>
-	</div>
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 30%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light required">년 월</th>
+                <td>
+                  <input v-model="searchForm.ym" type="month" class="form-control form-control-sm" style="max-width: 150px;" @change="handleSearch" />
+                </td>
+                <th class="text-center bg-light required">계정과목</th>
+                <td>
+                  <select v-model="searchForm.acct" class="form-select form-select-sm" @change="handleSearch">
+                    <option v-for="opt in acctOptions" :key="opt.acct" :value="opt.acct">{{ opt.acctnm }}</option>
+                  </select>
+                </td>
+                <td class="text-end pe-3 border-start-0">
+                  <span v-if="clsInfo.wclsym" class="badge bg-danger-subtle text-danger border border-danger-subtle">마감월: {{ clsInfo.wclsym }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- [하단] 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>공정별 비용 조정 목록</span>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import AppAlert from '@/components/AppAlert.vue'
@@ -73,11 +87,11 @@ import { useAuthStore } from '@/stores/authStore'
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
-const clsInfo = reactive({ WCLSYM: '' })
+const clsInfo = reactive({ wclsym: '' })
 const acctOptions = ref<any[]>([])
 const searchForm = reactive({
-	YM: new Date().toISOString().substring(0, 7),
-	ACCT: ''
+	ym: new Date().toISOString().substring(0, 7),
+	acct: ''
 })
 
 const mainGridRef = ref<HTMLElement | null>(null)
@@ -86,28 +100,21 @@ const selectedRowCount = ref(0)
 const showModal = ref(false)
 const modalProps = ref<any>({})
 
-const logSsms = (act: string, row: any = {}) => {
-    const ym = searchForm.YM.replace('-', '')
-    console.log(`📋 [SSMS Query] EXEC FMF2070U_STR '${authStore.CMPYCD}', '${act}', '${ym}', '10000', '${searchForm.ACCT}', '${row.LINECD || ''}', '${row.ADSTAMT || '0'}', '${authStore.USERID}'`)
-}
-
 const loadInitData = async () => {
 	try {
 		const [cls, accts] = await Promise.all([
-			api.get('/api/comm/HP00_000S_STR', { params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD } }),
-			api.post('/api/hfba/SELECT_ACCT_LIST', { CMPYCD: authStore.CMPYCD })
+			api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }),
+			api.post('/api/hfba/SELECT_ACCT_LIST', { cmpycd: authStore.cmpycd })
 		])
         if (cls.data?.length > 0) {
-            clsInfo.WCLSYM = cls.data[0].WCLSYM || cls.data[0].CODECD || ''
+            clsInfo.wclsym = cls.data[0].wclsym || cls.data[0].codecd || ''
         }
 		acctOptions.value = (accts.data || []).map((item: any) => ({
-			ACCT: String(item.ACCT || item.acct || '').trim(),
-			ACCTNM: String(item.ACCTNM || item.acctnm || '').trim()
+			acct: String(item.acct || item.acct || '').trim(),
+			acctnm: String(item.acctnm || item.acctnm || '').trim()
 		}))
-		if (acctOptions.value.length > 0) searchForm.ACCT = acctOptions.value[0].ACCT
-	} catch (e) {
-        vAlertError('기초 데이터 로드 실패')
-    }
+		if (acctOptions.value.length > 0) searchForm.acct = acctOptions.value[0].acct
+	} catch (e) { vAlertError('기초 데이터 로드 실패') }
 }
 
 const handleResetForm = () => {
@@ -116,30 +123,22 @@ const handleResetForm = () => {
 }
 
 const handleSearch = async () => {
-	if (!searchForm.ACCT) return
+	if (!searchForm.acct) return
 	try {
-		const ym = searchForm.YM.replace('-', '')
-        logSsms('S0')
+		const ym = searchForm.ym.replace('-', '')
 		const { data } = await api.post('/api/hfmf/FMF2070U_STR', {
-			CMPYCD: String(authStore.CMPYCD),
-            ACTKIND: 'S0',
-            YM: String(ym),
-			COSTCD: '10000',
-            ACCT: String(searchForm.ACCT),
-			LINECD: '',
-            ADSTAMT: '0',
-            USERID: String(authStore.USERID)
+			cmpycd: String(authStore.cmpycd), actkind: 'S0', ym: String(ym), costcd: '10000',
+            acct: String(searchForm.acct), linecd: '', adstamt: '0', userid: String(authStore.userid)
 		})
-		mainGrid?.setData(data)
+		mainGrid?.setData(data.map((i: any) => ({ ...i, _status: '' })))
         selectedRowCount.value = 0
-	} catch (e) {
-        vAlertError('조회 실패')
-    }
+        vAlert('조회되었습니다.')
+	} catch (e) { vAlertError('조회 실패') }
 }
 
-const handleSave = async () => {
-	const ym = searchForm.YM.replace('-', '')
-	if (clsInfo.WCLSYM && clsInfo.WCLSYM >= ym) return vAlertError('원가마감 되었습니다. 마감 취소 후 작업하세요.')
+const save = async () => {
+	const ym = searchForm.ym.replace('-', '')
+	if (clsInfo.wclsym && clsInfo.wclsym >= ym) return vAlertError('원가마감 되었습니다.')
 
 	const selectedData = mainGrid?.getSelectedData() || []
 	if (selectedData.length === 0) return vAlertError('저장할 행을 선택하세요.')
@@ -148,85 +147,68 @@ const handleSave = async () => {
 
 	try {
 		for (const row of selectedData) {
-            logSsms('A0', row)
 			await api.post('/api/hfmf/FMF2070U_STR', {
-				CMPYCD: String(authStore.CMPYCD),
-				ACTKIND: 'A0',
-                YM: String(ym),
-				COSTCD: '10000',
-				ACCT: String(searchForm.ACCT),
-				LINECD: String(row.LINECD || ''),
-				ADSTAMT: String(row.ADSTAMT || '0'),
-                USERID: String(authStore.USERID)
+				cmpycd: String(authStore.cmpycd), actkind: 'A0', ym: String(ym), costcd: '10000',
+				acct: String(searchForm.acct), linecd: String(row.linecd || ''),
+				adstamt: String(row.adstamt || '0'), userid: String(authStore.userid)
 			})
 		}
-		vAlert('저장되었습니다.')
-		handleSearch()
-	} catch (e) {
-        vAlertError('저장 실패')
-    }
+		vAlert('저장되었습니다.'); handleSearch();
+	} catch (e) { vAlertError('저장 실패') }
 }
 
-const handleDelete = async () => {
-    const ym = searchForm.YM.replace('-', '')
-	if (clsInfo.WCLSYM && clsInfo.WCLSYM >= ym) return vAlertError('원가마감 되었습니다. 마감 취소 후 작업하세요.')
+const deleteData = async () => {
+    const ym = searchForm.ym.replace('-', '')
+	if (clsInfo.wclsym && clsInfo.wclsym >= ym) return vAlertError('원가마감 되었습니다.')
 
 	const selectedData = mainGrid?.getSelectedData() || []
 	if (!confirm('선택한 조정 정보를 삭제하시겠습니까?')) return
 
 	try {
 		for (const row of selectedData) {
-            logSsms('D0', row)
 			await api.post('/api/hfmf/FMF2070U_STR', {
-				CMPYCD: String(authStore.CMPYCD),
-				ACTKIND: 'D0',
-                YM: String(ym),
-				COSTCD: '10000',
-				ACCT: String(searchForm.ACCT),
-				LINECD: String(row.LINECD || ''),
-				ADSTAMT: '0',
-                USERID: String(authStore.USERID)
+				cmpycd: String(authStore.cmpycd), actkind: 'D0', ym: String(ym), costcd: '10000',
+				acct: String(searchForm.acct), linecd: String(row.linecd || ''),
+				adstamt: '0', userid: String(authStore.userid)
 			})
 		}
-		vAlert('삭제되었습니다.')
-		handleSearch()
-	} catch (e) {
-        vAlertError('삭제 실패')
-    }
+		vAlert('삭제되었습니다.'); handleSearch();
+	} catch (e) { vAlertError('삭제 실패') }
 }
 
 onMounted(async () => {
 	await loadInitData()
-
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns',
-			height: '100%',
-			selectable: true,
-			columnDefaults: { minWidth: 100, headerSort: false },
+			layout: 'fitColumns', height: '100%', selectable: true,
+			columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
 			columns: [
 				{ title: '', field: '_sel', width: 40, formatter: 'rowSelection', titleFormatter: 'rowSelection' },
-				{ title: '공정코드', field: 'LINECD', hozAlign: 'center', width: 120 },
-				{ title: '공정명', field: 'LINENM', widthGrow: 2, hozAlign: 'left' },
+                { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+                    const v = c.getValue();
+                    if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+                    return '';
+                }},
+				{ title: '공정코드', field: 'linecd', hozAlign: 'center', width: 120 },
+				{ title: '공정명', field: 'linenm', widthGrow: 2, hozAlign: 'left', cssClass: 'fw-bold text-primary' },
 				{
-					title: '금액', field: 'DIRCAMT_SUM',
+					title: '금액', field: 'dircamt_sum',
 					hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 },
-                    mutatorData: (value, data) => (Number(data.DIRCAMT || data.dircamt || 0) + Number(data.IDIRCAMT || data.idircamt || 0))
+                    mutatorData: (value, data) => (Number(data.DIRcamt || data.dircamt || 0) + Number(data.IDIRcamt || data.idircamt || 0))
 				},
 				{
-					title: '조정액 <i class="bi bi-pencil"></i>', field: 'ADSTAMT',
-					hozAlign: 'right', editor: 'number', formatter: 'money', formatterParams: { precision: 0 }
+					title: '조정액', field: 'adstamt',
+					hozAlign: 'right', editor: 'number', formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-light-yellow',
+                    cellEdited: (cell) => cell.getRow().update({ _status: '수정' }).then(() => cell.getRow().select())
 				},
 				{
-					title: '합계', field: 'TOT_AMT',
+					title: '합계', field: 'tot_amt',
 					hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 },
-                    cssClass: 'fw-bold text-primary',
-                    mutatorData: (value, data) => (Number(data.DIRCAMT || data.dircamt || 0) + Number(data.IDIRCAMT || data.idircamt || 0) + Number(data.ADSTAMT || data.adstamt || 0))
+                    cssClass: 'fw-bold text-primary bg-light',
+                    mutatorData: (value, data) => (Number(data.DIRcamt || data.dircamt || 0) + Number(data.IDIRcamt || data.idircamt || 0) + Number(data.adstamt || 0))
 				}
 			]
 		})
-
-		mainGrid.on('cellEdited', (cell) => cell.getRow().select())
         mainGrid.on('rowSelectionChanged', (data) => selectedRowCount.value = data.length)
 	}
 	handleSearch()
@@ -234,15 +216,5 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.hfmf207u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; }
-.btn-danger { background-color: #d32f2f !important; color: #fff !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px 12px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; background-color: #fff; vertical-align: middle; }
-.required-label::before { content: '* '; color: red; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
 </style>

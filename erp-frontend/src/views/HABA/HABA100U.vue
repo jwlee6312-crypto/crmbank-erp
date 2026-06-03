@@ -2,7 +2,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="haba100u-wrapper d-flex flex-column h-100 bg-light p-0">
+	<div class="erp-container">
 		<!-- 📢 시스템 공지 바 (작업 중 안내) -->
 		<div class="alert alert-warning m-0 py-1 px-3 border-0 border-bottom rounded-0 d-flex align-items-center shadow-sm" style="font-size: 12px; background-color: #fff9db;">
 			<i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
@@ -45,26 +45,26 @@
 								<th class="required">마감 기준일</th>
 								<td>
 									<div class="d-flex align-items-center gap-1 flex-nowrap">
-										<input v-model="uiDate.YY" type="text" class="form-control text-center fw-bold" style="width: 70px;" maxlength="4" />
+										<input v-model="uiDate.yy" type="text" class="form-control text-center fw-bold" style="width: 70px;" maxlength="4" />
 										<span class="small">년</span>
-										<input v-model="uiDate.MM" type="text" class="form-control text-center fw-bold" style="width: 50px;" maxlength="2" />
+										<input v-model="uiDate.mm" type="text" class="form-control text-center fw-bold" style="width: 50px;" maxlength="2" />
 										<span class="small">월</span>
-										<input v-model="uiDate.DD" type="text" class="form-control text-center fw-bold" style="width: 50px;" maxlength="2" />
+										<input v-model="uiDate.dd" type="text" class="form-control text-center fw-bold" style="width: 50px;" maxlength="2" />
 										<span class="small">일</span>
 									</div>
 								</td>
 								<th>장부 반영</th>
 								<td>
-									<select v-model="formData.SLIPYN" class="form-select">
+									<select v-model="formData.slipyn" class="form-select">
 										<option value="N">미사용 (승인 후 반영)</option>
 										<option value="Y">즉시반영 (자동 발행 시)</option>
 									</select>
 								</td>
 								<th>비용예산 통제</th>
 								<td>
-									<select v-model="formData.BGTYPE" class="form-select">
+									<select v-model="formData.bgtype" class="form-select">
 										<option value="000">관리안함</option>
-										<option v-for="opt in bgOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+										<option v-for="opt in bgOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
 									</select>
 								</td>
 							</tr>
@@ -74,7 +74,7 @@
 									<div class="d-flex gap-2 flex-nowrap">
 										<div class="input-group input-group-sm flex-nowrap" v-for="n in 5" :key="n">
 											<span class="input-group-text bg-light">{{ n }}차</span>
-											<input v-model="formData['GLINE'+n]" type="text" class="form-control" placeholder="명칭" />
+											<input v-model="formData['gline'+n]" type="text" class="form-control" placeholder="명칭" />
 										</div>
 									</div>
 								</td>
@@ -101,7 +101,7 @@
 							<tr>
 								<th>재고 평가방법</th>
 								<td>
-									<select v-model="formData.STKGBN" class="form-select">
+									<select v-model="formData.stkgbn" class="form-select">
 										<option value="100">총평균법</option>
 										<option value="200">이동평균법</option>
 										<option value="300">선입선출법</option>
@@ -109,14 +109,14 @@
 								</td>
 								<th>매출 단가기준</th>
 								<td>
-									<select v-model="formData.PRICEGBN" class="form-select">
+									<select v-model="formData.pricegbn" class="form-select">
 										<option value="1">공급가액 기준</option>
 										<option value="2">공급가+부가세 합산</option>
 									</select>
 								</td>
 								<th>재고부족 통제</th>
 								<td>
-									<select v-model="formData.STOKYN" class="form-select">
+									<select v-model="formData.stokyn" class="form-select">
 										<option value="Y">부족시 차단</option>
 										<option value="N">마이너스 허용</option>
 									</select>
@@ -125,14 +125,14 @@
 							<tr>
 								<th>생산 연동</th>
 								<td>
-									<select v-model="formData.MNFYN" class="form-select">
+									<select v-model="formData.mnfyn" class="form-select">
 										<option value="N">제조안함</option>
 										<option value="Y">제조업체</option>
 									</select>
 								</td>
 								<th>회계 연동</th>
 								<td>
-									<select v-model="formData.OUTACCTYN" class="form-select">
+									<select v-model="formData.outacctyn" class="form-select">
 										<option value="N">자체회계</option>
 										<option value="Y">외부연동</option>
 									</select>
@@ -140,7 +140,7 @@
 								<th>여신 확인</th>
 								<td>
 									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
-										<input v-model="formData.YEOSINYN" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="yeosinSwitch">
+										<input v-model="formData.yeosinyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="yeosinSwitch">
 										<label class="form-check-label ms-2 small fw-bold" for="yeosinSwitch">사용</label>
 									</div>
 								</td>
@@ -150,11 +150,11 @@
 								<td colspan="5">
 									<div class="d-flex gap-4 px-2 h-100 align-items-center">
 										<div class="form-check">
-											<input v-model="formData.IOCNFMYN" type="checkbox" class="form-check-input" true-value="Y" false-value="N" id="ioCheck" />
+											<input v-model="formData.iocnfmyn" type="checkbox" class="form-check-input" true-value="Y" false-value="N" id="ioCheck" />
 											<label for="ioCheck" class="small fw-bold">출고확정 단계 필수</label>
 										</div>
 										<div class="form-check">
-											<input v-model="formData.BALCNFMYN" type="checkbox" class="form-check-input" true-value="Y" false-value="N" id="balCheck" />
+											<input v-model="formData.balcnfmyn" type="checkbox" class="form-check-input" true-value="Y" false-value="N" id="balCheck" />
 											<label for="balCheck" class="small fw-bold">발주승인 절차 사용</label>
 										</div>
 									</div>
@@ -182,18 +182,18 @@
 								<th>회사 로고</th>
 								<td>
 									<div class="d-flex align-items-center gap-2 flex-nowrap">
-										<input type="file" class="form-control" style="max-width: 300px;" @change="e => onFileChange(e, 'LOGOIMG')" />
-										<div v-if="formData.LOGOIMG" class="border rounded p-1 bg-white">
-											<img :src="'/Upload_Images/'+authStore.CMPYCD+'/LOGOIMG/'+formData.LOGOIMG" height="25" />
+										<input type="file" class="form-control" style="max-width: 300px;" @change="e => onFileChange(e, 'logoimg')" />
+										<div v-if="formData.logoimg" class="border rounded p-1 bg-white">
+											<img :src="'/Upload_Images/'+authStore.cmpycd+'/logoimg/'+formData.logoimg" height="25" />
 										</div>
 									</div>
 								</td>
 								<th>공인 직인</th>
 								<td>
 									<div class="d-flex align-items-center gap-2 flex-nowrap">
-										<input type="file" class="form-control" style="max-width: 300px;" @change="e => onFileChange(e, 'STAMPIMG')" />
-										<div v-if="formData.STAMPIMG" class="border rounded p-1 bg-white">
-											<img :src="'/Upload_Images/'+authStore.CMPYCD+'/LOGOIMG/'+formData.STAMPIMG" height="50" />
+										<input type="file" class="form-control" style="max-width: 300px;" @change="e => onFileChange(e, 'stampimg')" />
+										<div v-if="formData.stampimg" class="border rounded p-1 bg-white">
+											<img :src="'/Upload_Images/'+authStore.cmpycd+'/logoimg/'+formData.stampimg" height="50" />
 										</div>
 									</div>
 								</td>
@@ -218,13 +218,13 @@ const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
-const uiDate = reactive({ YY: '', MM: '', DD: '' })
+const uiDate = reactive({ yy: '',mm: '', dd: '' })
 const formData = reactive<any>({
-	ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, USERID: authStore.USERID,
-	GLINE1: '', GLINE2: '', GLINE3: '', GLINE4: '', GLINE5: '',
-	BGTYPE: '000', CARDCUST: '', MNFYN: 'N', STKGBN: '100',
-	STOKYN: 'Y', PRICEGBN: '1', SLIPYN: 'N', YEOSINYN: 'N', IOCNFMYN: 'N',
-	BALCNFMYN: 'N', OUTACCTYN: 'N', LOGOIMG: '', STAMPIMG: ''
+	actkind: 'S0', cmpycd: authStore.cmpycd, userid: authStore.userid,
+	gline1: '', gline2: '', gline3: '', gline4: '', gline5: '',
+	bgtype: '000', cardcust: '', mnfyn: 'N', stkgbn: '100',
+	stokyn: 'Y', pricegbn: '1', SLIPYN: 'N', yeosinyn: 'N', iocnfmyn: 'N',
+	balcnfmyn: 'n', outacctyn: 'n', logoimg: '', stampimg: ''
 })
 
 const bgOptions = ref<any[]>([])
@@ -233,16 +233,16 @@ async function fetchConfig() {
 	try {
 		// 💡 API 경로 보정: /api/haba/HABA_100U_STR
 		const res = await api.post('/api/haba/HABA_100U_STR', {
-			ACTKIND: 'S0',
-			CMPYCD: authStore.CMPYCD
+			actkind: 'S0',
+			cmpycd: authStore.cmpycd
 		})
 		if (res.data && res.data.length > 0) {
 			const d = res.data[0]
 			Object.assign(formData, d)
-			if (d.CLSYMD && d.CLSYMD.length === 8) {
-				uiDate.YY = d.CLSYMD.substring(0, 4)
-				uiDate.MM = d.CLSYMD.substring(4, 6)
-				uiDate.DD = d.CLSYMD.substring(6, 8)
+			if (d.clsymd && d.clsymd.length === 8) {
+				uiDate.yy = d.clsymd.substring(0, 4)
+				uiDate.mm = d.clsymd.substring(4, 6)
+				uiDate.dd = d.clsymd.substring(6, 8)
 			}
 		}
 		vAlert('환경설정 정보를 성공적으로 로드했습니다.')
@@ -250,13 +250,13 @@ async function fetchConfig() {
 }
 
 async function save() {
-	if (!uiDate.YY || !uiDate.MM || !uiDate.DD) return vAlertError('마감 기준일을 입력하십시오.')
+	if (!uiDate.yy || !uiDate.mm || !uiDate.dd) return vAlertError('마감 기준일을 입력하십시오.')
 	try {
 		const param = {
 			...formData,
-			ACTKIND: 'U0',
-			CLSYMD: `${uiDate.YY}${uiDate.MM}${uiDate.DD}`,
-			UPDEMP: authStore.USERID
+			actkind: 'U0',
+			clsymd: `${uiDate.yy}${uiDate.mm}${uiDate.dd}`,
+			updemp: authStore.userid
 		}
 		// 💡 저장 경로 보정
 		await api.post('/api/haba/HABA_100U_STR', param)
@@ -266,7 +266,7 @@ async function save() {
 }
 
 function initialize() {
-	resetForm(formData); formData.ACTKIND = 'S0'; formData.CMPYCD = authStore.CMPYCD;
+	resetForm(formData); formData.actkind = 'S0'; formData.cmpycd = authStore.cmpycd;
 }
 
 const onFileChange = (e: any, target: string) => { vAlert(target + ' 업로드는 준비 중입니다.') }
@@ -274,25 +274,9 @@ const onFileChange = (e: any, target: string) => { vAlert(target + ' 업로드�
 onMounted(async () => {
 	try {
 		// 💡 403 Forbidden 방지를 위해 POST로 변경
-		const res = await api.post('/api/ha00/HA00_00P_STR', { GUBUN: 'E0', GBNCD: '320', CMPYCD: authStore.CMPYCD })
-		bgOptions.value = res.data.map((i: any) => ({ CODECD: String(i.CODECD || i.codecd).trim(), CODENM: String(i.CODENM || i.codenm).trim() }))
+		const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '320', cmpycd: authStore.cmpycd })
+		bgOptions.value = res.data.map((i: any) => ({ codecd: String(i.codecd || i.codecd).trim(), codenm: String(i.codenm || i.codenm).trim() }))
 	} catch (e) { console.error('코드 로드 실패') }
 	fetchConfig()
 })
 </script>
-
-<style scoped>
-.haba100u-wrapper { height: 100%; overflow: hidden; }
-.btn-group-erp { display: flex; gap: 6px; }
-.btn-erp { padding: 5px 20px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff; color: #6c757d; border: 1px solid #6c757d; }
-.btn-init:hover { background-color: #f8f9fa; }
-.btn-search { background-color: #2d3748; color: #fff; border: none; }
-.btn-save { background-color: #005a9f; color: #fff; border: none; }
-.erp-table-full { table-layout: fixed !important; border-collapse: collapse !important; width: 100%; border-style: hidden; }
-.erp-table-full th { background-color: #f8fafc; border: 1px solid #e2e8f0 !important; text-align: center; font-weight: 800; font-size: 12.5px; color: #475569; vertical-align: middle; padding: 10px 15px !important; white-space: nowrap !important; }
-.erp-table-full td { vertical-align: middle; padding: 8px 12px !important; border: 1px solid #e2e8f0 !important; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-.form-control, .form-select { border-radius: 4px; border: 1px solid #cbd5e1; font-size: 13px; height: 32px; width: 100%; font-weight: 500; }
-.form-control:focus, .form-select:focus { border-color: #005a9f; box-shadow: 0 0 0 2px rgba(0, 90, 159, 0.1); }
-</style>

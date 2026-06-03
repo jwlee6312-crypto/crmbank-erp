@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hpba830u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -39,7 +39,7 @@
                 <th class="required">연&nbsp;&nbsp;&nbsp;&nbsp;월</th>
                 <td>
                   <div class="d-flex align-items-center gap-2" style="width: 200px;">
-                    <select v-model="formData.YY" class="form-select form-select-sm">
+                    <select v-model="formData.yy" class="form-select form-select-sm">
                       <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
                     </select>
                     <select v-model="monthStr" class="form-select form-select-sm">
@@ -49,19 +49,19 @@
                 </td>
                 <th class="required">생산라인</th>
                 <td>
-                  <select v-model="formData.LINECD" class="form-select form-select-sm" style="width: 150px;" @change="onLineChange">
+                  <select v-model="formData.linecd" class="form-select form-select-sm" style="width: 150px;" @change="onLineChange">
                     <option value="">라인 선택</option>
-                    <option v-for="opt in lineOptions" :key="opt.LINECD" :value="opt.LINECD">
-                      [{{ opt.LINECD }}] {{ opt.LINENM }}
+                    <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">
+                      [{{ opt.linecd }}] {{ opt.linenm }}
                     </option>
                   </select>
                 </td>
                 <th class="required">생산공정</th>
                 <td>
-                   <select v-model="formData.PROGCD" class="form-select form-select-sm" style="width: 180px;">
+                   <select v-model="formData.progcd" class="form-select form-select-sm" style="width: 180px;">
                     <option value="">공정 선택</option>
-                    <option v-for="opt in progOptions" :key="opt.PROGCD" :value="opt.PROGCD">
-                      [{{ opt.PROGCD }}] {{ opt.PROGNM }}
+                    <option v-for="opt in progOptions" :key="opt.progcd" :value="opt.progcd">
+                      [{{ opt.progcd }}] {{ opt.prognm }}
                     </option>
                   </select>
                 </td>
@@ -70,10 +70,10 @@
                 <th class="required">품&nbsp;&nbsp;&nbsp;&nbsp;목</th>
                 <td colspan="3">
                   <div class="input-group input-group-sm" style="width: 480px;">
-                    <input v-model="formData.ITEMCD" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.ITEMNM" type="text" class="form-control" placeholder="품목 선택" @keyup.enter="openHelp('ITEM')" />
-                    <input v-model="formData.ITSIZE" type="text" class="form-control bg-light" style="max-width: 120px;" readonly />
-                    <input v-model="formData.UNIT" type="text" class="form-control bg-light text-center" style="max-width: 50px;" readonly />
+                    <input v-model="formData.itemcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.itemnm" type="text" class="form-control" placeholder="품목 선택" @keyup.enter="openHelp('ITEM')" />
+                    <input v-model="formData.itsize" type="text" class="form-control bg-light" style="max-width: 120px;" readonly />
+                    <input v-model="formData.unit" type="text" class="form-control bg-light text-center" style="max-width: 50px;" readonly />
                     <button class="btn btn-outline-secondary" @click="openHelp('ITEM')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -96,22 +96,11 @@
           <span class="fw-bold small text-dark"><i class="bi bi-table me-1 text-primary"></i> 재공 기초 재고 등록 내역</span>
           <span class="text-muted small">목록을 클릭하면 수정 모드로 전환됩니다.</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-4 small">등록건수: <span class="fw-bold text-info">{{ itemCount }}</span> 건</div>
-        <div class="col-md-8 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 연월, 라인, 공정, 품목별로 하나의 기초 재고 정보만 존재할 수 있습니다.
-        </div>
-      </div>
-    </div>
-
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
@@ -136,17 +125,17 @@ const now = new Date()
 
 // 1. 상태 관리
 const formData = reactive({
-  ACTKIND: 'A0',
-  YY: String(now.getFullYear()),
-  MM: now.getMonth() + 1,
-  LINECD: '010',
-  LINENM: '통합라인',
-  PROGCD: '',
-  PROGNM: '',
-  ITEMCD: '',
-  ITEMNM: '',
-  ITSIZE: '',
-  UNIT: '',
+  actkind: 'A0',
+  yy: String(now.getFullYear()),
+  mm: now.getMonth() + 1,
+  linecd: '010',
+  linenm: '통합라인',
+  progcd: '',
+  prognm: '',
+  itemcd: '',
+  itemnm: '',
+  itsize: '',
+  unit: '',
   QTY: 0
 })
 
@@ -154,8 +143,8 @@ const lineOptions = ref<any[]>([])
 const progOptions = ref<any[]>([])
 
 const monthStr = computed({
-    get: () => String(formData.MM).padStart(2, '0'),
-    set: (v) => { formData.MM = Number(v) }
+    get: () => String(formData.mm).padStart(2, '0'),
+    set: (v) => { formData.mm = Number(v) }
 })
 
 const yearOptions = ref<string[]>([])
@@ -172,7 +161,7 @@ const generateYearOptions = () => {
 
 const fetchLineOptions = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'L0', CMPYCD: authStore.CMPYCD, GBNCD: 'Y' } })
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y' } })
     lineOptions.value = res.data
   } catch (e) {}
 }
@@ -180,14 +169,14 @@ const fetchLineOptions = async () => {
 const fetchProgOptions = async (lineCd: string) => {
   if (!lineCd) { progOptions.value = []; return; }
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'G0', CMPYCD: authStore.CMPYCD, LINECD: lineCd } })
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, linecd: lineCd } })
     progOptions.value = res.data
   } catch (e) {}
 }
 
 const onLineChange = () => {
-    formData.PROGCD = ''
-    fetchProgOptions(formData.LINECD)
+    formData.progcd = ''
+    fetchProgOptions(formData.linecd)
 }
 
 const initGrid = () => {
@@ -197,12 +186,12 @@ const initGrid = () => {
       height: "100%",
       placeholder: "조회된 데이터가 없습니다.",
       columns: [
-        { title: "품목코드", field: "ITEMCD", width: 100, hozAlign: "center" },
-        { title: "품 목", field: "ITEMNM", minWidth: 200, cssClass: "fw-bold" },
-        { title: "규격", field: "ITSIZE", width: 150 },
-        { title: "단위", field: "UNIT", width: 70, hozAlign: "center" },
-        { title: "기초재고수량", field: "STKQTY", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().QTYPNT||0 }, cssClass: "text-primary fw-bold" },
-        { title: "단가", field: "PRICE", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
+        { title: "품목코드", field: "itemcd", width: 100, hozAlign: "center" },
+        { title: "품 목", field: "itemnm", minWidth: 200, cssClass: "fw-bold" },
+        { title: "규격", field: "itsize", width: 150 },
+        { title: "단위", field: "unit", width: 70, hozAlign: "center" },
+        { title: "기초재고수량", field: "stkqty", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().QTYPNT||0 }, cssClass: "text-primary fw-bold" },
+        { title: "단가", field: "price", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
         { title: "기초재고금액", field: "STKAMT", width: 120, hozAlign: "right", formatter: "money" }
       ],
     })
@@ -211,52 +200,52 @@ const initGrid = () => {
         const data = row.getData()
         Object.assign(formData, {
             ...data,
-            ACTKIND: 'U0',
-            YY: data.YM.substring(0, 4),
-            MM: Number(data.YM.substring(4, 6)),
-            QTY: data.STKQTY
+            actkind: 'U0',
+            yy: data.ym.substring(0, 4),
+            mm: Number(data.ym.substring(4, 6)),
+            QTY: data.stkqty
         })
-        fetchProgOptions(formData.LINECD)
+        fetchProgOptions(formData.linecd)
     })
   }
 }
 
 const fetchList = async () => {
-  if (!formData.LINECD || !formData.PROGCD) return vAlertError('라인과 공정을 선택하세요.')
+  if (!formData.linecd || !formData.progcd) return vAlertError('라인과 공정을 선택하세요.')
   try {
     const res = await api.post('/api/hpba/HPBA_830U_STR', {
-      ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, YY: formData.YY, MM: monthStr.value,
-      LINECD: formData.LINECD, PROGCD: formData.PROGCD, ITEMCD: formData.ITEMCD
+      actkind: 'S0', cmpycd: authStore.cmpycd, yy: formData.yy, mm: monthStr.value,
+      linecd: formData.linecd, progcd: formData.progcd, itemcd: formData.itemcd
     })
     const mapped = res.data.map((i: any) => ({
         ...i,
-        YM: i.YM || (formData.YY + monthStr.value),
-        PRICE: Number(i.STKQTY) !== 0 ? Number((Number(i.STKAMT) / Number(i.STKQTY)).toFixed(2)) : 0
+        ym: i.ym || (formData.yy + monthStr.value),
+        price: Number(i.stkqty) !== 0 ? Number((Number(i.STKAMT) / Number(i.stkqty)).toFixed(2)) : 0
     }))
     grid?.setData(mapped); itemCount.value = mapped.length; vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
 }
 
 const saveData = async () => {
-  if (!formData.LINECD || !formData.PROGCD) return vAlertError('라인과 공정을 선택하세요.')
-  if (!formData.ITEMCD) return vAlertError('품목을 선택하세요.')
+  if (!formData.linecd || !formData.progcd) return vAlertError('라인과 공정을 선택하세요.')
+  if (!formData.itemcd) return vAlertError('품목을 선택하세요.')
   if (formData.QTY === 0) return vAlertError('수량을 입력하세요.')
   if (!confirm('재공 기초 재고 정보를 저장하시겠습니까?')) return
   try {
-    await api.post('/api/hpba/HPBA_830U_STR', { ...formData, MM: monthStr.value, CMPYCD: authStore.CMPYCD, USERID: authStore.USERID })
+    await api.post('/api/hpba/HPBA_830U_STR', { ...formData, mm: monthStr.value, cmpycd: authStore.cmpycd, userid: authStore.userid })
     vAlert('정상적으로 저장되었습니다.'); fetchList(); initializeFormOnly()
   } catch (e) { vAlertError('저장 처리 중 오류 발생') }
 }
 
 const initializeFormOnly = () => {
-    formData.ACTKIND = 'A0'; formData.ITEMCD = ''; formData.ITEMNM = ''; formData.ITSIZE = ''; formData.UNIT = ''; formData.QTY = 0
+    formData.actkind = 'A0'; formData.itemcd = ''; formData.itemnm = ''; formData.itsize = ''; formData.unit = ''; formData.QTY = 0
 }
 
 const initialize = () => {
   resetForm(formData)
-  Object.assign(formData, { ACTKIND: 'A0', YY: String(now.getFullYear()), MM: now.getMonth() + 1, LINECD: '010', LINENM: '통합라인', QTY: 0 })
+  Object.assign(formData, { actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, linecd: '010', linenm: '통합라인', QTY: 0 })
   grid?.clearData(); itemCount.value = 0
-  fetchProgOptions(formData.LINECD)
+  fetchProgOptions(formData.linecd)
 }
 
 const modalVisible = ref(false)
@@ -266,14 +255,14 @@ function openHelp(type: string) {
   let config: any = {}
   if (type === 'ITEM') {
     config = {
-      title: '품목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'ITEMNM',
-      data: { GUBUN: 'I0', CMPYCD: authStore.CMPYCD, codegbn: '210' },
-      columns: [{ title: '코드', field: 'ITEMCD', width: 100 }, { title: '품목명', field: 'ITEMNM', width: 250 }, { title: '규격', field: 'ITSIZE', width: 120 }],
+      title: '품목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'itemnm',
+      data: { gubun: 'I0', cmpycd: authStore.cmpycd, codegbn: '210' },
+      columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '품목명', field: 'itemnm', width: 250 }, { title: '규격', field: 'itsize', width: 120 }],
       onConfirm: (data: any) => {
-          formData.ITEMCD = data.ITEMCD;
-          formData.ITEMNM = data.ITEMNM;
-          formData.ITSIZE = data.ITSIZE;
-          formData.UNIT = data.UNIT;
+          formData.itemcd = data.itemcd;
+          formData.itemnm = data.itemnm;
+          formData.itsize = data.itsize;
+          formData.unit = data.unit;
       }
     }
   }
@@ -285,23 +274,7 @@ const formatDateString = (v: any, sep: string) => v && String(v).length >= 6 ? `
 onMounted(() => {
   generateYearOptions()
   fetchLineOptions()
-  fetchProgOptions(formData.LINECD)
+  fetchProgOptions(formData.linecd)
   nextTick(() => { initGrid(); })
 })
 </script>
-
-<style scoped>
-.hpba830u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #f4f7fa !important; }
-.erp-header { background-color: #ffffff !important; }
-.btn-erp { padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; border: none; }
-.btn-init { background-color: #f8f9fa !important; color: #495057 !important; border: 1px solid #ced4da !important; }
-.btn-search { background-color: #4361ee !important; color: #fff !important; }
-.btn-save { background-color: #2ec4b6 !important; color: #fff !important; }
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.erp-table-full th { width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 10px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 6px 12px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator) { border: none; font-size: 12.5px; border-radius: 0 0 8px 8px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; font-weight: 700; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; color: #333; }
-</style>

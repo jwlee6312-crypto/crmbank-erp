@@ -27,7 +27,7 @@
                 <th class="required">기준일자</th>
                 <td>
                   <div class="d-flex align-items-center gap-2">
-                    <input v-model="uiYMD" type="date" class="form-control form-control-sm" style="width: 150px;" @change="fetchList" />
+                    <input v-model="uiymD" type="date" class="form-control form-control-sm" style="width: 150px;" @change="fetchList" />
                     <span class="small text-muted">현재</span>
                   </div>
                 </td>
@@ -69,51 +69,41 @@
                   </td>
                 </tr>
               </template>
-              <template v-for="item in reportData" :key="item.ITEMCD">
+              <template v-for="item in reportData" :key="item.itemcd">
                 <!-- 1. 기초 -->
                 <tr class="row-begin">
-                  <td rowspan="4" class="frozen-col first-col text-start fw-bold">{{ item.ITEMNM }}</td>
-                  <td rowspan="4" class="frozen-col text-center small">{{ item.ITSIZE }}</td>
-                  <td rowspan="4" class="frozen-col text-center small">{{ item.UNIT }}</td>
+                  <td rowspan="4" class="frozen-col first-col text-start fw-bold">{{ item.itemnm }}</td>
+                  <td rowspan="4" class="frozen-col text-center small">{{ item.itsize }}</td>
+                  <td rowspan="4" class="frozen-col text-center small">{{ item.unit }}</td>
                   <td class="frozen-col last-frozen text-center bg-light-blue small">기초</td>
-                  <td v-for="(val, idx) in item.dailyData.BSQTY" :key="idx" class="text-end px-2">
+                  <td v-for="(val, idx) in item.dailyData.Bsqty" :key="idx" class="text-end px-2">
                     {{ formatNumber(val, item.QTYPNT) }}
                   </td>
                 </tr>
                 <!-- 2. 입고 -->
                 <tr class="row-in">
                   <td class="frozen-col last-frozen text-center bg-light-green small">입고</td>
-                  <td v-for="(val, idx) in item.dailyData.INQTY" :key="idx" class="text-end px-2 text-primary">
+                  <td v-for="(val, idx) in item.dailyData.inqty" :key="idx" class="text-end px-2 text-primary">
                     {{ val !== 0 ? formatNumber(val, item.QTYPNT) : '' }}
                   </td>
                 </tr>
                 <!-- 3. 출고 -->
                 <tr class="row-out">
                   <td class="frozen-col last-frozen text-center bg-light-red small">출고</td>
-                  <td v-for="(val, idx) in item.dailyData.OUTQTY" :key="idx" class="text-end px-2 text-danger">
+                  <td v-for="(val, idx) in item.dailyData.OUtqty" :key="idx" class="text-end px-2 text-danger">
                     {{ val !== 0 ? formatNumber(val, item.QTYPNT) : '' }}
                   </td>
                 </tr>
                 <!-- 4. 재고 -->
                 <tr class="row-stock">
                   <td class="frozen-col last-frozen text-center bg-light-yellow small fw-bold">재고</td>
-                  <td v-for="(val, idx) in item.dailyData.STKQTY" :key="idx" class="text-end px-2 fw-bold bg-stock-cell">
+                  <td v-for="(val, idx) in item.dailyData.stkqty" :key="idx" class="text-end px-2 fw-bold bg-stock-cell">
                     {{ formatNumber(val, item.QTYPNT) }}
                   </td>
                 </tr>
               </template>
             </tbody>
           </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-3 small">조회 품목 수: <span class="fw-bold text-info">{{ reportData.length }}</span> 종</div>
-        <div class="col-md-9 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 재고 = 기초 + 입고 - 출고 (익일 기초는 전일 재고와 동일합니다)
         </div>
       </div>
     </div>
@@ -134,16 +124,16 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
 
 // 1. 상태 관리
 const searchData = reactive({
-  YMD: initYMD
+  ymD: initymd
 })
 
-const uiYMD = computed({
-  get: () => formatDateString(searchData.YMD, '-'),
-  set: (v) => { if (v) searchData.YMD = v.replace(/-/g, '') }
+const uiymD = computed({
+  get: () => formatDateString(searchData.ymD, '-'),
+  set: (v) => { if (v) searchData.ymD = v.replace(/-/g, '') }
 })
 
 const daysHeaders = ref<any[]>([])
@@ -154,14 +144,14 @@ const fetchList = async () => {
   try {
     // 1) 헤더 정보(요일) 가져오기
     const headerRes = await api.post('/api/hppl/HPPL_100U_STR', {
-      ACTKIND: 'S1', CMPYCD: authStore.CMPYCD, YYMMDD: searchData.YMD
+      actkind: 'S1', cmpycd: authStore.cmpycd, yymmDD: searchData.ymD
     })
     daysHeaders.value = headerRes.data
     const lastDayCount = daysHeaders.value.length
 
     // 2) 실제 수불 데이터 가져오기
     const dataRes = await api.post('/api/hppl/HPPL_110S_STR', {
-      CMPYCD: authStore.CMPYCD, iYYMMDD: searchData.YMD
+      cmpycd: authStore.cmpycd, iyymmDD: searchData.ymD
     })
 
     // 3) 데이터 그룹화 및 재고 계산 (ASP 로직 이식)
@@ -170,19 +160,19 @@ const fetchList = async () => {
     const itemMap = new Map()
 
     rawList.forEach((row: any) => {
-      const id = row.ITEMCD
+      const id = row.itemcd
       if (!itemMap.has(id)) {
         const itemObj = {
-          ITEMCD: id,
-          ITEMNM: String(row.ITEMNM || '').trim(),
-          ITSIZE: String(row.ITSIZE || '').trim(),
-          UNIT: String(row.UNIT || '').trim(),
+          itemcd: id,
+          itemnm: String(row.itemnm || '').trim(),
+          itsize: String(row.itsize || '').trim(),
+          unit: String(row.unit || '').trim(),
           QTYPNT: Number(row.QTYPNT || 0),
           dailyData: {
-            BSQTY: Array(lastDayCount).fill(0),
-            INQTY: Array(lastDayCount).fill(0),
-            OUTQTY: Array(lastDayCount).fill(0),
-            STKQTY: Array(lastDayCount).fill(0)
+            Bsqty: Array(lastDayCount).fill(0),
+            inqty: Array(lastDayCount).fill(0),
+            OUtqty: Array(lastDayCount).fill(0),
+            stkqty: Array(lastDayCount).fill(0)
           }
         }
         itemMap.set(id, itemObj)
@@ -194,19 +184,19 @@ const fetchList = async () => {
 
       for (let i = 0; i < lastDayCount; i++) {
         const val = Number(row[i + 5] || row[String(i + 1)] || 0)
-        if (gbn === '1') item.dailyData.BSQTY[i] = val
-        else if (gbn === '2') item.dailyData.INQTY[i] = val
-        else if (gbn === '3') item.dailyData.OUTQTY[i] = val
+        if (gbn === '1') item.dailyData.Bsqty[i] = val
+        else if (gbn === '2') item.dailyData.inqty[i] = val
+        else if (gbn === '3') item.dailyData.OUtqty[i] = val
       }
     })
 
     // 4) 수불 로직 계산: 재고 = 기초 + 입고 - 출고 (익일 기초 = 전일 재고)
     groupedItems.forEach(item => {
-      let runningStock = item.dailyData.BSQTY[0]
+      let runningStock = item.dailyData.Bsqty[0]
       for (let i = 0; i < lastDayCount; i++) {
-        item.dailyData.BSQTY[i] = runningStock
-        item.dailyData.STKQTY[i] = runningStock + item.dailyData.INQTY[i] - item.dailyData.OUTQTY[i]
-        runningStock = item.dailyData.STKQTY[i]
+        item.dailyData.Bsqty[i] = runningStock
+        item.dailyData.stkqty[i] = runningStock + item.dailyData.inqty[i] - item.dailyData.OUtqty[i]
+        runningStock = item.dailyData.stkqty[i]
       }
     })
 
@@ -218,7 +208,7 @@ const fetchList = async () => {
 }
 
 const initialize = () => {
-  searchData.YMD = initYMD
+  searchData.ymD = initymd
   reportData.value = []
   fetchList()
 }
@@ -235,16 +225,16 @@ const exportExcel = () => {
   // 데이터 행 생성
   reportData.value.forEach(item => {
     const rowTypes = [
-      { label: '기초', data: item.dailyData.BSQTY },
-      { label: '입고', data: item.dailyData.INQTY },
-      { label: '출고', data: item.dailyData.OUTQTY },
-      { label: '재고', data: item.dailyData.STKQTY }
+      { label: '기초', data: item.dailyData.Bsqty },
+      { label: '입고', data: item.dailyData.inqty },
+      { label: '출고', data: item.dailyData.OUtqty },
+      { label: '재고', data: item.dailyData.stkqty }
     ]
     rowTypes.forEach((t, idx) => {
       const row = [
-        idx === 0 ? item.ITEMNM : '',
-        idx === 0 ? item.ITSIZE : '',
-        idx === 0 ? item.UNIT : '',
+        idx === 0 ? item.itemnm : '',
+        idx === 0 ? item.itsize : '',
+        idx === 0 ? item.unit : '',
         t.label
       ]
       t.data.forEach(val => row.push(val))
@@ -255,7 +245,7 @@ const exportExcel = () => {
   const ws = XLSX.utils.aoa_to_sheet(wsData)
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, "자재소요량")
-  XLSX.writeFile(wb, `자재소요량현황_${searchData.YMD}.xlsx`)
+  XLSX.writeFile(wb, `자재소요량현황_${searchData.ymD}.xlsx`)
 }
 
 const formatDateString = (v: any, sep: string) => v && v.length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : v

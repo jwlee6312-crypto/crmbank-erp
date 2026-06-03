@@ -9,7 +9,7 @@
 				xmlns="http://www.w3.org/2000/svg"
 				role="img"
 				aria-label="Placeholder: 32x32"
-				preserveAspectRatio="xMidYMid slice"
+				preserveAspectRatio="xMidymid slice"
 				focusable="false"
 			>
 				<title>Placeholder</title>
@@ -57,7 +57,7 @@
 				xmlns="http://www.w3.org/2000/svg"
 				role="img"
 				aria-label="Placeholder: 32x32"
-				preserveAspectRatio="xMidYMid slice"
+				preserveAspectRatio="xMidymid slice"
 				focusable="false"
 			>
 				<title>Placeholder</title>
@@ -105,7 +105,7 @@
 				xmlns="http://www.w3.org/2000/svg"
 				role="img"
 				aria-label="Placeholder: 32x32"
-				preserveAspectRatio="xMidYMid slice"
+				preserveAspectRatio="xMidymid slice"
 				focusable="false"
 			>
 				<title>Placeholder</title>
@@ -152,7 +152,7 @@
 				xmlns="http://www.w3.org/2000/svg"
 				role="img"
 				aria-label="Placeholder: 32x32"
-				preserveAspectRatio="xMidYMid slice"
+				preserveAspectRatio="xMidymid slice"
 				focusable="false"
 			>
 				<title>Placeholder</title>
@@ -199,7 +199,7 @@
 				xmlns="http://www.w3.org/2000/svg"
 				role="img"
 				aria-label="Placeholder: 32x32"
-				preserveAspectRatio="xMidYMid slice"
+				preserveAspectRatio="xMidymid slice"
 				focusable="false"
 			>
 				<title>Placeholder</title>

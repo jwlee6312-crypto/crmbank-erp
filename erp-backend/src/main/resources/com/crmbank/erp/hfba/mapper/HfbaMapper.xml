@@ -3,62 +3,61 @@
 <mapper namespace="com.crmbank.erp.hfba.mapper.HfbaMapper">
 
     <select id="FBA1010U_STR" resultType="map">
-        EXEC FBA1010U_STR #{CMPYCD}, #{ACTKIND}, #{CDKD}, #{CODE},
-            #{CDNM}, #{REMARK}, #{DISPORD},  #{USEYN}, #{USERID}
+        exec fba1010u_str #{cmpycd}, #{actkind}, #{cdkd}, #{code},
+            #{cdnm}, #{remark}, #{dispord},  #{useyn}, #{userid}
     </select>
 
     <select id="FBA1040U_STR" resultType="map">
-        EXEC FBA1040U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{ACCT}, #{ACCTNM},
-        #{DIVIDE1}, #{DIVIDE2}, #{DIVIDE3}, #{DIVIDE4}, #{DIVIDE5}, #{DIVIDE6}, #{DIVIDE7},
-        #{BIGO}, #{USERID}
+        exec fba1040u_str #{cmpycd}, #{actkind}, #{ym}, #{acct}, #{acctnm},
+        #{divide1}, #{divide2}, #{divide3}, #{divide4}, #{divide5}, #{divide6}, #{divide7},
+        #{bigo}, #{userid}
     </select>
 
     <select id="FBA1060U_STR" resultType="map">
-        EXEC FBA1060U_STR #{CMPYCD}, #{ACTKIND}, #{YM}, #{COSTCD}, #{DIVSTD}, #{JSANGBN},
-        #{ITEMCD}, #{UNIT}, #{ITEMNM}, #{UNITAMT}, #{BIGO}, #{USERID}
+        exec fba1060u_str #{cmpycd}, #{actkind}, #{ym}, #{costcd}, #{divstd}, #{jsangbn},
+        #{itemcd}, #{unit}, #{itemnm}, #{unitamt}, #{bigo}, #{userid}
     </select>
 
     <select id="FBA2010U_STR" resultType="map">
-        EXEC FBA2010U_STR #{CMPYCD}, #{ACTKIND}, #{ACCT}, #{ACCT_O}, #{ACCTNM}, #{BIGO}, #{USEYN}, #{ACNTGBN}, #{USERID}
-
+        exec fba2010u_str #{cmpycd}, #{actkind}, #{acct}, #{acct_o}, #{acctnm}, #{bigo}, #{useyn}, #{acntgbn}, #{userid}
     </select>
 
     <select id="FBA3010U_STR" resultType="map">
-        EXEC FBA3010U_STR #{CMPYCD},#{ACTKIND},#{YYMM}, #{YN}, #{REMARK}, #{USERID}
+        exec fba3010u_str #{cmpycd}, #{actkind}, #{yymm}, #{yn}, #{remark}, #{userid}
     </select>
 
     <!-- 💡 계정과목 직접 조회 -->
     <select id="selectAcctList" resultType="map">
-        SELECT ACCT, ACCTNM
-        FROM FBA2020T_TBL
-        WHERE CMPYCD = #{CMPYCD} AND USEYN = 'Y'
-        ORDER BY ACCT
+        select acct, acctnm
+        from fba2020t_tbl
+        where cmpycd = #{cmpycd} and useyn = 'y'
+        order by acct
     </select>
 
     <!-- 💡 공정배부/품목배부 기준 직접 조회 -->
     <select id="selectDivideList" resultType="map">
-        SELECT CODE, CDNM
-        FROM FBA1010T_TBL
-        WHERE CMPYCD = #{CMPYCD}
-        AND CDKD = #{CDKD}
-        AND USEYN = 'Y'
-        ORDER BY DISPORD
+        select code, cdnm
+        from fba1010t_tbl
+        where cmpycd = #{cmpycd}
+        and cdkd = #{cdkd}
+        and useyn = 'y'
+        order by dispord
     </select>
 
     <!-- 💡 배부적수 목록 직접 조회 -->
     <select id="selectDivideJuksuList" resultType="map">
-        SELECT A.ITEMCD,
-               B.ITEMNM,
-               B.UNIT,
-               A.UNITAMT,
-               A.BIGO
-        FROM FBA1060T_TBL A
-        INNER JOIN P_ITEM_TBL B ON A.CMPYCD = B.CMPYCD AND A.ITEMCD = B.ITEMCD
-        WHERE A.CMPYCD = #{CMPYCD}
-          AND A.YYMM   = #{YM}
-          AND A.DIVSTD = #{DIVSTD}
-          AND A.JSANGBN = #{JSANGBN}
-        ORDER BY A.ITEMCD
+        select a.itemcd,
+               b.itemnm,
+               b.unit,
+               a.unitamt,
+               a.bigo
+        from fba1060t_tbl a
+        inner join p_item_tbl b on a.cmpycd = b.cmpycd and a.itemcd = b.itemcd
+        where a.cmpycd = #{cmpycd}
+          and a.yymm   = #{ym}
+          and a.divstd = #{divstd}
+          and a.jsangbn = #{jsangbn}
+        order by a.itemcd
     </select>
 
 </mapper>

@@ -23,13 +23,13 @@
 				<button class="btn-erp btn-init" @click="initialize">
 					<i class="bi bi-arrow-clockwise"></i> 초기화
 				</button>
-				<button class="btn-erp btn-search" @click="fetchData">
+				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
-				<button class="btn-erp btn-outline-success border" @click="handleExcel">
+				<button class="btn-erp btn-outline-success border" @click="excel">
 					<i class="bi bi-file-earmark-excel"></i> 엑셀
 				</button>
-				<button class="btn-erp btn-outline-secondary border" @click="handlePrint">
+				<button class="btn-erp btn-outline-secondary border" @click="print">
 					<i class="bi bi-printer"></i> 인쇄
 				</button>
 			</div>
@@ -50,9 +50,9 @@
 							<td>
 								<div class="d-flex align-items-center px-2 text-nowrap">
 									<span class="erp-label me-2" style="width: 80px; flex-shrink: 0;">출고창고</span>
-									<select v-model="searchForm.WHCD" class="form-select form-select-sm" style="flex-grow: 1;">
+									<select v-model="searchForm.whcd" class="form-select form-select-sm" style="flex-grow: 1;">
 										<option value="000">전체</option>
-										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
+										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
 									</select>
 								</div>
 							</td>
@@ -60,9 +60,9 @@
 								<div class="d-flex align-items-center px-2 text-nowrap">
 									<span class="erp-label me-2" style="width: 80px; flex-shrink: 0;">출고일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
-										<input v-model="searchForm.FRYMD" type="date" class="form-control form-control-sm" style="flex-grow: 1;" />
+										<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="flex-grow: 1;" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.TOYMD" type="date" class="form-control form-control-sm" style="flex-grow: 1;" />
+										<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="flex-grow: 1;" />
 									</div>
 								</div>
 							</td>
@@ -71,7 +71,7 @@
 									<span class="erp-label me-2" style="width: 80px; flex-shrink: 0;">출고유형</span>
 									<select v-model="searchForm.IOTYPE" class="form-select form-select-sm" style="flex-grow: 1;">
 										<option value="000">전체</option>
-										<option v-for="opt in ioTypeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
+										<option v-for="opt in ioTypeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
 									</select>
 								</div>
 							</td>
@@ -79,7 +79,7 @@
 								<div class="d-flex align-items-center px-2 text-nowrap">
 									<span class="erp-label me-2" style="width: 80px; flex-shrink: 0;">거 래 처</span>
 									<div class="input-group input-group-sm flex-nowrap flex-grow-1">
-										<input v-model="searchForm.CUSTNM" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="handleOpenHelp('CUST')" />
+										<input v-model="searchForm.custnm" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="handleOpenHelp('CUST')" />
 										<button class="btn btn-erp btn-outline-secondary px-2" @click="handleOpenHelp('CUST')">
 											<i class="bi bi-search"></i>
 										</button>
@@ -95,9 +95,9 @@
 		<!-- 📊 3. 중앙 그리드 영역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden" style="position: relative;">
-					<div ref="mainGridRef" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
-				</div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+            </div>
 			</div>
 		</div>
 	</div>
@@ -130,12 +130,12 @@ const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().su
 const today = now.toISOString().substring(0, 10);
 
 const searchForm = reactive({
-	WHCD: '000',
-	FRYMD: firstDay,
-	TOYMD: today,
+	whcd: '000',
+	frymd: firstDay,
+	toymd: today,
 	IOTYPE: '000',
-	CUSTCD: '',
-	CUSTNM: ''
+	custcd: '',
+	custnm: ''
 })
 
 const whOptions = ref<any[]>([])
@@ -143,45 +143,45 @@ const ioTypeOptions = ref<any[]>([])
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
-const fetchData = async () => {
+const search = async () => {
 	try {
 		const res = await api.post('/api/hsio/HSIO_600S_STR', {
 			...searchForm,
-			CMPYCD: authStore.CMPYCD,
-			FRYMD: searchForm.FRYMD.replace(/-/g, ''),
-			TOYMD: searchForm.TOYMD.replace(/-/g, '')
+			cmpycd: authStore.cmpycd,
+			frymd: searchForm.frymd.replace(/-/g, ''),
+			toymd: searchForm.toymd.replace(/-/g, '')
 		})
 		mainGrid?.setData(res.data || [])
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
 
-const handleExcel = () => mainGrid?.download("xlsx", "기간별출고현황.xlsx")
-const handlePrint = () => vAlert('인쇄 기능을 준비 중입니다.')
+const excel = () => mainGrid?.download("xlsx", "기간별출고현황.xlsx")
+const print = () => vAlert('인쇄 기능을 준비 중입니다.')
 
 const initialize = () => {
 	resetForm(searchForm);
-	searchForm.WHCD = '000'; searchForm.IOTYPE = '000';
-	searchForm.FRYMD = firstDay; searchForm.TOYMD = today;
+	searchForm.whcd = '000'; searchForm.IOTYPE = '000';
+	searchForm.frymd = firstDay; searchForm.toymd = today;
 	mainGrid?.clearData();
 }
 
 function handleOpenHelp(type: string) {
 	if (type === 'CUST') {
 		openHelp('CUST', (d: any) => {
-			searchForm.CUSTCD = d.CUSTCD;
-			searchForm.CUSTNM = d.CUSTNM;
+			searchForm.custcd = d.custcd;
+			searchForm.custnm = d.custnm;
 		});
 	}
 }
 
 onMounted(async () => {
 	try {
-		const resWh = await api.post('/api/hs00/HS00_000S_STR', { GUBUN: 'W0', CMPYCD: authStore.CMPYCD })
-		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.WHCD, CDNM: i.CDNM || i.WHNM }))
+		const resWh = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'W0', cmpycd: authStore.cmpycd })
+		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.whcd, cdnm: i.cdnm || i.whnm }))
 
-		const resType = await api.post('/api/hs00/HS00_000S_STR', { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '130' })
-		ioTypeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE || i.CODECD, CDNM: i.CDNM || i.CODENM }))
+		const resType = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '130' })
+		ioTypeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE || i.codecd, cdnm: i.cdnm || i.codenm }))
 	} catch (e) {}
 
 	if (mainGridRef.value) {
@@ -190,27 +190,27 @@ onMounted(async () => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
 			columns: [
 				{
-					title: "출고번호", field: "IONO_FULL", width: 140, cssClass: "fw-bold text-primary cursor-pointer",
-					formatter: (cell) => `${cell.getData().IOYM}-${cell.getData().IONO}`,
+					title: "출고번호", field: "iono_FULL", width: 140, cssClass: "fw-bold text-primary cursor-pointer",
+					formatter: (cell) => `${cell.getData().ioym}-${cell.getData().iono}`,
 					cellClick: (e, cell) => {
 						const d = cell.getData();
-						if (d.GIOTYPE === "100" && d.GUBUN === "1" && d.SPYAMT >= 0) router.push({ path: '/HSIO/HSIO500U', query: { IOYM: d.IOYM, IONO: d.IONO, DEPTCD: d.DEPTCD } });
-						else if (d.GIOTYPE === "100" && d.GUBUN === "1" && d.SPYAMT < 0) router.push({ path: '/HSIO/HSIO490U', query: { IOYM: d.IOYM, IONO: d.IONO, DEPTCD: d.DEPTCD } });
-						else if (d.GIOTYPE === "100" && d.GUBUN === "2") router.push({ path: '/HSOD/HSOD200S', query: { IOYM: d.IOYM, IONO: d.IONO, DEPTCD: d.DEPTCD } });
-						else if (d.GIOTYPE === "200") router.push({ path: '/HSIO/HSIO580U', query: { IOYM: d.IOYM, IONO: d.IONO, DEPTCD: d.DEPTCD } });
-						else if (d.GIOTYPE === "390") router.push({ path: d.INGBN === "100" ? '/HSIO/HSIO720U' : '/HSIO/HSIO730U', query: { IOYM: d.IOYM, IONO: d.IONO, DEPTCD: d.DEPTCD } });
-						else if (d.GIOTYPE >= "300") router.push({ path: '/HSIO/HSIO570U', query: { IOYM: d.IOYM, IONO: d.IONO, DEPTCD: d.DEPTCD } });
+						if (d.GIOTYPE === "100" && d.gubun === "1" && d.spyamt >= 0) router.push({ path: '/HSIO/HSIO500U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.GIOTYPE === "100" && d.gubun === "1" && d.spyamt < 0) router.push({ path: '/HSIO/HSIO490U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.GIOTYPE === "100" && d.gubun === "2") router.push({ path: '/HSOD/HSOD200S', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.GIOTYPE === "200") router.push({ path: '/HSIO/HSIO580U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.GIOTYPE === "390") router.push({ path: d.INGBN === "100" ? '/HSIO/HSIO720U' : '/HSIO/HSIO730U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.GIOTYPE >= "300") router.push({ path: '/HSIO/HSIO570U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
 					}
 				},
-				{ title: "출고유형", field: "IOTYPENM", width: 120 },
-				{ title: "출고일자", field: "IOYMD", width: 110, formatter: (c) => { const v = c.getValue(); return v ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : '' } },
-				{ title: "품목명", field: "ITEMNM", minWidth: 200, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold" },
+				{ title: "출고유형", field: "IOtypenm", width: 120 },
+				{ title: "출고일자", field: "ioymd", width: 110, formatter: (c) => { const v = c.getValue(); return v ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : '' } },
+				{ title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold" },
 				{ title: "수량", field: "QTY", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "단가", field: "PRICE", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "공급가", field: "SPYAMT", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "부가세", field: "VATAMT", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "합계액", field: "AMTSUM", hozAlign: "right", width: 130, formatter: "money", cssClass: "text-primary fw-bold", mutatorData: (v,d) => Number(d.SPYAMT||0) + Number(d.VATAMT||0) },
-				{ title: "특기사항", field: "REMARK", minWidth: 200, hozAlign: "left" }
+				{ title: "단가", field: "price", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "공급가", field: "spyamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "부가세", field: "vatamt", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "합계액", field: "amtsum", hozAlign: "right", width: 130, formatter: "money", cssClass: "text-primary fw-bold", mutatorData: (v,d) => Number(d.spyamt||0) + Number(d.vatamt||0) },
+				{ title: "특기사항", field: "remark", minWidth: 200, hozAlign: "left" }
 			]
 		})
 	}

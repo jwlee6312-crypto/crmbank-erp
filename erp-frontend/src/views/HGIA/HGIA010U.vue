@@ -208,17 +208,17 @@ const consultData = ref({
 const handleOpenHelp = (type: string) => {
 	if (type === 'CUST') {
 		openHelp('CUST', (modalData) => {
-			customerInfo.value.custcd = modalData.CUSTCD;
-			customerInfo.value.custnm = modalData.CUSTNM;
-			customerInfo.value.usernm = modalData.BOSSNM || modalData.NAME || '';
-			customerInfo.value.hpno = modalData.TELNO || modalData.PHONENO || '';
-			customerInfo.value.email = modalData.EMAIL || '';
-			loadCustomerDetails(modalData.CUSTCD);
+			customerInfo.value.custcd = modalData.custcd;
+			customerInfo.value.custnm = modalData.custnm;
+			customerInfo.value.usernm = modalData.bossnm || modalData.name || '';
+			customerInfo.value.hpno = modalData.telno || modalData.PHONENO || '';
+			customerInfo.value.email = modalData.email || '';
+			loadCustomerDetails(modalData.custcd);
 		});
 	} else if (type === 'ITEM') {
 		openHelp('ITEM', (modalData) => {
-			consultData.value.itemcd = modalData.ITEMCD;
-			consultData.value.itemnm = modalData.ITEMNM;
+			consultData.value.itemcd = modalData.itemcd;
+			consultData.value.itemnm = modalData.itemnm;
 			consultData.value.iono = '';
 		});
 	}
@@ -254,7 +254,7 @@ const handleSave = async () => {
 			dto: {
 				...consultData.value,
 				custcd: customerInfo.value.custcd,
-				cmpycd: authStore.CMPYCD,
+				cmpycd: authStore.cmpycd,
 				svcymd: consultData.value.date.replaceAll('-', ''),
 				linkedid: ctiStore.incomingCall?.linkedid,
 				interaction_id: ctiStore.incomingCall?.uniqueid || 'MANUAL_' + new Date().getTime(),

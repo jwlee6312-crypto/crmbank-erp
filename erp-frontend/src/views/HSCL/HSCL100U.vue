@@ -29,10 +29,10 @@
                 <th class="required" style="width: 150px;">마감 연월</th>
                 <td>
                   <div class="d-flex align-items-center gap-2">
-                    <select v-model="formData.YY" class="form-select form-select-sm" style="width: 100px;">
+                    <select v-model="formData.yy" class="form-select form-select-sm" style="width: 100px;">
                       <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
                     </select>
-                    <select v-model="formData.MM" class="form-select form-select-sm" style="width: 80px;">
+                    <select v-model="formData.mm" class="form-select form-select-sm" style="width: 80px;">
                       <option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
                     </select>
                   </div>
@@ -41,7 +41,7 @@
               <tr>
                 <th class="required">작업 방법</th>
                 <td>
-                  <select v-model="formData.WKGBN" class="form-select form-select-sm" style="width: 250px;">
+                  <select v-model="formData.wkgbn" class="form-select form-select-sm" style="width: 250px;">
                     <option value="Y">월마감 작업을 합니다.</option>
                     <option value="N">월마감 취소작업을 합니다.</option>
                   </select>
@@ -63,7 +63,7 @@
               <li>추가 입력이 필요한 경우 반드시 월마감 취소 작업을 먼저 진행해야 합니다.</li>
               <li>원가마감이 완료된 월은 원가마감 취소 후 작업이 가능합니다.</li>
             </ul>
-            <p class="mb-0 mt-2 text-primary fw-bold">※ 현재 시스템 마감 정보: [회계: {{ closingInfo.CLSYMD }}] [영업: {{ closingInfo.SCLSYM }}] [원가: {{ closingInfo.WCLSYM }}]</p>
+            <p class="mb-0 mt-2 text-primary fw-bold">※ 현재 시스템 마감 정보: [회계: {{ closingInfo.clsymd }}] [영업: {{ closingInfo.sclsym }}] [원가: {{ closingInfo.wclsym }}]</p>
           </div>
         </div>
       </div>
@@ -73,8 +73,8 @@
         <div class="card-header bg-danger text-white py-1 px-3 d-flex align-items-center justify-content-between">
           <span class="fw-bold small"><i class="bi bi-exclamation-triangle-fill me-1"></i> 마감 오류 내역 (재고 부족 현황)</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden" style="position: relative;">
-          <div ref="gridElement" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
@@ -99,13 +99,13 @@ const currentMonth = String(now.getMonth() + 1).padStart(2, '0')
 
 // 상태 관리
 const formData = reactive({
-  YY: String(currentYear),
-  MM: currentMonth,
-  WKGBN: 'Y'
+  yy: String(currentYear),
+  mm: currentMonth,
+  wkgbn: 'Y'
 })
 
 const closingInfo = reactive({
-  CLSYMD: '', SCLSYM: '', WCLSYM: ''
+  clsymd: '', sclsym: '', wclsym: ''
 })
 
 const errorList = ref<any[]>([])
@@ -125,34 +125,34 @@ const initGrid = () => {
     data: errorList.value,
     columnDefaults: { headerSort: false },
     columns: [
-      { title: "구분", field: "GUBUN", width: 120, hozAlign: "center" },
-      { title: "에러메세지", field: "ERR_MSG", minWidth: 300 },
-      { title: "품목코드", field: "ITEMCD", width: 150, hozAlign: "center" }
+      { title: "구분", field: "gubun", width: 120, hozAlign: "center" },
+      { title: "에러메세지", field: "err_msg", minWidth: 300 },
+      { title: "품목코드", field: "itemcd", width: 150, hozAlign: "center" }
     ]
   })
 }
 
 // 작업 실행
 async function executeProcess() {
-  const ym = `${formData.YY}${formData.MM}`
+  const ym = `${formData.yy}${formData.mm}`
 
   // 1. 원가마감 체크
-  if (closingInfo.WCLSYM >= ym) {
+  if (closingInfo.wclsym >= ym) {
     return vAlertError('해당 월은 이미 원가마감이 완료되었습니다. 원가마감 취소 후 작업하십시오.')
   }
 
-  const actionText = formData.WKGBN === 'Y' ? '월마감' : '월마감 취소'
-  if (!confirm(`${formData.YY}년 ${formData.MM}월 ${actionText} 작업을 진행하시겠습니까?`)) return
+  const actionText = formData.wkgbn === 'Y' ? '월마감' : '월마감 취소'
+  if (!confirm(`${formData.yy}년 ${formData.mm}월 ${actionText} 작업을 진행하시겠습니까?`)) return
 
   try {
     errorList.value = []
-    const actKind = formData.WKGBN === 'Y' ? 'A0' : 'D0'
+    const actKind = formData.wkgbn === 'Y' ? 'A0' : 'D0'
 
     const res = await api.post('/api/hscl/HSCL_100U_STR', {
-      ACTKIND: actKind,
-      CMPYCD: authStore.CMPYCD,
-      YM: ym,
-      USERID: authStore.USERID
+      actkind: actKind,
+      cmpycd: authStore.cmpycd,
+      ym: ym,
+      userid: authStore.userid
     })
 
     const result = res.data?.[0]
@@ -161,9 +161,9 @@ async function executeProcess() {
     if (resultCode !== '000') {
       vAlertError('마감처리 중 재고가 부족하거나 오류가 발생했습니다. 하단 내역을 확인하십시오.')
       errorList.value = res.data.map((i: any) => ({
-        GUBUN: Object.values(i)[0],
-        ERR_MSG: Object.values(i)[1],
-        ITEMCD: Object.values(i)[2]
+        gubun: Object.values(i)[0],
+        err_msg: Object.values(i)[1],
+        itemcd: Object.values(i)[2]
       }))
       await nextTick()
       initGrid()
@@ -180,18 +180,18 @@ async function executeProcess() {
 async function fetchClosingInfo() {
   try {
     const res = await api.get('/api/hs00/HS00_000S_STR', {
-      params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD }
+      params: { gubun: 'CL', cmpycd: authStore.cmpycd }
     })
     if (res.data?.length) {
       const data = res.data[0]
-      closingInfo.CLSYMD = String(data.CLSYMD || '').trim()
-      closingInfo.SCLSYM = String(data.SCLSYM || '').trim()
-      closingInfo.WCLSYM = String(data.WCLSYM || '').trim()
+      closingInfo.clsymd = String(data.clsymd || '').trim()
+      closingInfo.sclsym = String(data.sclsym || '').trim()
+      closingInfo.wclsym = String(data.wclsym || '').trim()
 
       // 초기 연월 설정 (영업마감월 기준)
-      if (closingInfo.SCLSYM) {
-        formData.YY = closingInfo.SCLSYM.substring(0, 4)
-        formData.MM = closingInfo.SCLSYM.substring(4, 6)
+      if (closingInfo.sclsym) {
+        formData.yy = closingInfo.sclsym.substring(0, 4)
+        formData.mm = closingInfo.sclsym.substring(4, 6)
       }
     }
   } catch (e) { console.error('마감 정보 로드 실패') }

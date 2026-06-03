@@ -3,32 +3,32 @@
 <mapper namespace="com.crmbank.erp.hspl.mapper.HsplMapper">
     <!-- 개인별 품목별 판매계획 -->
     <select id="HSPL_100U_STR" resultType="map">
-        EXEC HSPL_100U_STR #{ACTKIND}, #{CMPYCD}, #{YYYY}, #{DEPTCD}, #{USERID}, #{AGRPCD}, #{ITEMCD},
-        #{ITSIZE}, #{UNIT}, #{PLANAMT01}, #{PLANAMT02}, #{PLANAMT03}, #{PLANAMT04}, #{PLANAMT05},
-        #{PLANAMT06}, #{PLANAMT07}, #{PLANAMT08}, #{PLANAMT09}, #{PLANAMT10}, #{PLANAMT11}, #{PLANAMT12},
-        #{USEYN}, #{UPDEMP}
+        exec hspl_100u_str #{actkind}, #{cmpycd}, #{yyyy}, #{deptcd}, #{userid}, #{agrpcd}, #{itemcd},
+        #{itsize}, #{unit}, #{planamt01}, #{planamt02}, #{planamt03}, #{planamt04}, #{planamt05},
+        #{planamt06}, #{planamt07}, #{planamt08}, #{planamt09}, #{planamt10}, #{planamt11}, #{planamt12},
+        #{useyn}, #{updemp}
     </select>
 
     <!-- 개인별 품목그룹별 판매계획 -->
     <select id="HSPL_110U_STR" resultType="map">
-        EXEC HSPL_110U_STR #{ACTKIND}, #{CMPYCD}, #{YYYY}, #{DEPTCD}, #{USERID}, #{ASTKIND}, #{AGRPCD},
-        #{BGRPCD}, #{PLANAMT01}, #{PLANAMT02}, #{PLANAMT03}, #{PLANAMT04}, #{PLANAMT05}, #{PLANAMT06},
-        #{PLANAMT07}, #{PLANAMT08}, #{PLANAMT09}, #{PLANAMT10}, #{PLANAMT11}, #{PLANAMT12}, #{USEYN}, #{UPDEMP}
+        exec hspl_110u_str #{actkind}, #{cmpycd}, #{yyyy}, #{deptcd}, #{userid}, #{astkind}, #{agrpcd},
+        #{bgrpcd}, #{planamt01}, #{planamt02}, #{planamt03}, #{planamt04}, #{planamt05}, #{planamt06},
+        #{planamt07}, #{planamt08}, #{planamt09}, #{planamt10}, #{planamt11}, #{planamt12}, #{useyn}, #{updemp}
     </select>
 
     <!-- 개인별 품목별 판매계획/실적 -->
     <select id="HSPL_200S_STR" resultType="map">
-        EXEC HSPL_200S_STR #{ACTKIND}, #{CMPYCD}, #{YYYY}, #{DEPTCD}, #{USERID}
+        exec hspl_200s_str #{actkind}, #{cmpycd}, #{yyyy}, #{deptcd}, #{userid}
     </select>
 
     <!-- 개인별 품목그룹별 판매계획/실적 -->
     <select id="HSPL_210S_STR" resultType="map">
-        EXEC HSPL_210S_STR #{ACTKIND}, #{CMPYCD}, #{YYYY}, #{DEPTCD}, #{USERID}
+        exec hspl_210s_str #{actkind}, #{cmpycd}, #{yyyy}, #{deptcd}, #{userid}
     </select>
 
     <!-- 개인별 판매계획/실적 -->
     <select id="HSPL_220S_STR" resultType="map">
-        EXEC HSPL_220S_STR #{ACTKIND}, #{CMPYCD}, #{YYYY}, #{DEPTCD}
+        exec hspl_220s_str #{actkind}, #{cmpycd}, #{yyyy}, #{deptcd}
     </select>
 
 </mapper>

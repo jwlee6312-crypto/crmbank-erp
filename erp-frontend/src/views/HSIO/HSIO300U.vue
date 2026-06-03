@@ -1,104 +1,52 @@
+<!--
+	=============================================================
+	프로그램명	: 입금입력 (HSIO300U)
+	작성일자	: 2025.02.24
+	설명        : 영업 입금 마스터/상세 관리 (HSOD100U 디자인 UI 표준 이식)
+	=============================================================
+-->
+
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-  <div class="hsio300u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-        <i class="bi bi-cash-coin me-2 text-primary" style="font-size: 18px;"></i>
-        영업정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        입금관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        <span class="text-primary fw-bolder">입금등록 (HSIO300U)</span>
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-cash-stack me-2 text-primary" style="font-size: 18px;"></i>
+        영업관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        입금관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">입금입력 (HSIO300U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
-        <button class="btn-erp btn-init" @click="initialize">
-          <i class="bi bi-arrow-clockwise"></i> 초기화
-        </button>
-        <button class="btn-erp btn-search" @click="fetchOrder">
-          <i class="bi bi-search"></i> 조회
-        </button>
-        <button class="btn-erp btn-save" @click="save">
-          <i class="bi bi-save"></i> 저장
-        </button>
-        <button class="btn-erp btn-delete" @click="deleteOrder" :disabled="!masterData.IMNO || masterData.IMNO === '0000'">
-          <i class="bi bi-trash"></i> 삭제
-        </button>
+      <div class="btn-group-erp d-flex gap-1 pe-2">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-save" @click="save" :disabled="isClosed">저장</button>
+        <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!form_02.imno || isClosed">전체삭제</button>
       </div>
     </div>
 
-    <!-- 🔍 2. 최상단 검색 조건 영역 -->
-    <div class="p-2 pb-0 flex-shrink-0">
-      <div class="card border shadow-sm overflow-hidden">
-        <table class="erp-table-full" style="table-layout: fixed;">
-          <colgroup>
-            <col style="width: 50%;" />
-            <col style="width: 50%;" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td>
-                <div class="d-flex align-items-center px-2">
-                  <span class="erp-label me-2">입금부서</span>
-                  <div class="input-group input-group-sm flex-nowrap" style="max-width: 300px;">
-                    <input v-model="masterData.DEPTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-                    <input v-model="masterData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" />
-                    <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div class="d-flex align-items-center px-2">
-                  <span class="erp-label me-2">입금번호</span>
-                  <div class="d-flex align-items-center gap-1">
-                    <input v-model="uiIMYM" type="month" class="form-control form-control-sm text-center fw-bold" style="width: 130px;" :readonly="masterData.IMNO !== '0000'" />
-                    <input v-model="masterData.IMNO" type="text" class="form-control form-control-sm text-center fw-bold text-primary bg-light" placeholder="0000" style="width: 70px;" readonly />
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-    <!-- 💡 3. 입력 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
-      <!-- 🅰️ 마스터 정보 -->
-      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
-        <div class="card-body p-0">
-          <table class="erp-table-full">
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
             <colgroup>
-              <col style="width: 100px;" />
-              <col style="width: 25%" />
-              <col style="width: 100px;" />
-              <col style="width: 20%" />
-              <col style="width: 100px;" />
-              <col style="width: auto;" />
+                <col style="width: 10%" /><col style="width: 40%" />
+                <col style="width: 10%" /><col style="width: 40%" />
             </colgroup>
             <tbody>
               <tr>
-                <th class="required">입금일자</th>
-                <td><input v-model="uiIMYMD" type="date" class="form-control form-control-sm" @change="onImymdChange" /></td>
-                <th class="required">거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
-                <td>
-                  <div class="input-group input-group-sm flex-nowrap">
-                    <input v-model="masterData.CUSTCD" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 70px;" readonly />
-                    <input v-model="masterData.CUSTNM" type="text" class="form-control form-control-sm bg-light" readonly />
-                    <button class="btn btn-outline-secondary px-2" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
-                  </div>
+                <th class="text-center bg-light">입금일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="form_01.fromdt" v-model:todt="form_01.todt" />
                 </td>
-                <th>여신잔액/기한</th>
+                <th class="text-center bg-light">거래처명</th>
                 <td>
-                  <div class="d-flex gap-1">
-                    <input :value="formatNumber(masterData.JANAMT)" class="form-control form-control-sm text-end bg-light fw-bold text-primary" readonly style="width: 120px;" />
-                    <input v-model="masterData.RCVDD" class="form-control form-control-sm text-center bg-light" readonly style="max-width: 100px;" />
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <th>적&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;요</th>
-                <td colspan="5">
-                  <input v-model="masterData.REMARK" type="text" class="form-control form-control-sm" placeholder="입금 관련 특기사항 입력" />
+                  <input v-model="form_01.schcustnm" class="form-control form-control-sm" placeholder="거래처 검색" @keyup.enter="search" />
                 </td>
               </tr>
             </tbody>
@@ -106,31 +54,80 @@
         </div>
       </div>
 
-      <!-- 🅱️ 디테일 그리드 -->
-      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="height: 40px;">
-          <span class="fw-bold small text-dark d-flex align-items-center">
-            <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 입금 상세 내역
-          </span>
-          <button class="btn btn-sm btn-outline-primary px-3" style="height: 28px; font-size: 12px; font-weight: 600;" @click="addRow">
-            <i class="bi bi-plus-circle me-1"></i> 행추가
-          </button>
-        </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%; width: 100%;"></div>
-        </div>
-      </div>
-    </div>
+      <!-- [하단] 투-그리드 레이아웃 영역 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
 
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-      <div class="row align-items-center w-100">
-        <div class="col-md-3 small">조회 건수: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="me-4 small opacity-75">어음 합계: <span class="fw-bold text-warning ms-1">{{ formatNumber(billTotal) }}</span></span>
-          <span class="fs-5 ms-2 fw-light">총 입금액: <span class="fw-bold text-white ms-2">{{ formatNumber(amtTotal) }}</span> 원</span>
+        <!-- ⬅️ 좌측: 입금 목록 -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 350px; min-width: 350px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">입금 목록</div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
+          </div>
+        </div>
+
+        <!-- ➡️ 우측: 마스터 상세 폼 + 품목 상세 그리드 -->
+        <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
+
+          <!-- 상세 마스터 정보 폼 -->
+          <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+            <div class="card-body p-0 bg-white">
+              <table class="erp-table-dense w-100">
+                <colgroup>
+                  <col style="width: 120px;" /><col />
+                  <col style="width: 120px;" /><col />
+                  <col style="width: 120px;" /><col />
+                  <col style="width: 120px;" /><col />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <th class="required bg-light">입금부서</th>
+                    <td>
+                      <div class="input-group input-group-sm">
+                        <input v-model="form_02.deptnm" class="form-control" readonly />
+                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('DEPT')" :disabled="isClosed"><i class="bi bi-search"></i></button>
+                      </div>
+                    </td>
+                    <th class="bg-light text-center">입금번호</th>
+                    <td><input v-model="form_02.imno" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
+                    <th class="required bg-light text-center">입금일자</th>
+                    <td><input v-model="form_02.imymd" type="date" class="form-control" :readonly="isClosed" /></td>
+                    <th class="bg-light text-center">여신잔액</th>
+                    <td><input :value="form_02.janamt?.toLocaleString()" class="form-control bg-light text-end" readonly /></td>
+                  </tr>
+                  <tr>
+                    <th class="required bg-light">거래처</th>
+                    <td>
+                      <div class="input-group input-group-sm">
+                        <input v-model="form_02.custnm" class="form-control" readonly />
+                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('CUST')" :disabled="isClosed"><i class="bi bi-search"></i></button>
+                      </div>
+                    </td>
+                    <th class="bg-light text-center">여신기한</th>
+                    <td><input v-model="form_02.revdd" class="form-control bg-light text-center" readonly /></td>
+                    <th class="bg-light text-center">특이사항</th>
+                    <td colspan="3"><input v-model="form_02.remark" class="form-control" :readonly="isClosed" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 상세 품목 그리드 영역 -->
+          <div class="card border shadow-sm flex-grow-1 d-flex flex-column overflow-hidden grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+              <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>입금 상세 리스트</span>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" :disabled="isClosed" style="font-size: 12px;">+ 행추가</button>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" :disabled="isClosed" style="font-size: 12px;">- 행삭제</button>
+              </div>
+            </div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="tableRef2" class="tabulator-instance flex-grow-1"></div>
+            </div>
+          </div>
         </div>
       </div>
+      <div class="bottom-spacer"></div>
     </div>
   </div>
 
@@ -138,263 +135,216 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
+import DateForm from '@/components/DateForm.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
-const now = new Date()
-const initYM = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
-const initYMD = `${initYM}${String(now.getDate()).padStart(2, '0')}`
-
-const masterData = reactive<any>({
-  ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, IMYM: initYM, IMNO: '0000',
-  DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, CUSTCD: '', CUSTNM: '',
-  IMYMD: initYMD, REMARK: '', JANAMT: 0, RCVDD: '', CLSYMD: '', SCLSYM: ''
+// [1] 데이터 모델링
+const form_01 = reactive({ fromdt: firstDay, todt: today, schcustnm: '' })
+const form_02 = reactive<any>({
+  deptcd: authStore.deptCode, deptnm: authStore.deptName,
+  imno: '', imymd: today,
+  custcd: '', custnm: '', janamt: 0, revdd: '', remark: ''
 })
 
-const uiIMYM = computed({ get: () => masterData.IMYM ? `${masterData.IMYM.substring(0, 4)}-${masterData.IMYM.substring(4, 6)}` : '', set: (v) => masterData.IMYM = v.replace('-', '') })
-const uiIMYMD = computed({ get: () => masterData.IMYMD ? `${masterData.IMYMD.substring(0, 4)}-${masterData.IMYMD.substring(4, 6)}-${masterData.IMYMD.substring(6, 8)}` : '', set: (v) => masterData.IMYMD = v.replace(/-/g, '') })
+const closingInfo = reactive({ sclsym: '' })
+const imtypeData = ref<any[]>([])
 
-const onImymdChange = () => { if (masterData.IMYMD) masterData.IMYM = masterData.IMYMD.substring(0, 6) }
+// [2] 그리드 관리
+const tableRef1 = ref<HTMLDivElement | null>(null)
+const tableRef2 = ref<HTMLDivElement | null>(null)
+let grid1: Tabulator | null = null
+let grid2: Tabulator | null = null
+const MIN_ROWS = 12;
 
-const gridElement = ref<HTMLElement | null>(null)
-const grid = ref<Tabulator | null>(null)
-const activeItemCount = ref(0)
-const amtTotal = ref(0)
-const billTotal = ref(0)
+const isClosed = computed(() => {
+  if (!closingInfo.sclsym || !form_02.imymd) return false
+  return form_02.imymd.replace(/-/g, '').substring(0, 6) <= closingInfo.sclsym
+})
 
-const imTypeOptions = ref<any[]>([])
-const billGbnOptions = ref<any[]>([])
+const initGrids = () => {
+  if (!tableRef1.value || !tableRef2.value) return
 
-const initGrid = () => {
-  if (!gridElement.value) return
-  grid.value = new Tabulator(gridElement.value, {
-    layout: "fitColumns",
-    height: "100%",
-    placeholder: "등록된 입금 내역이 없습니다.",
-    columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
+  // 좌측 입금 목록 그리드
+  grid1 = new Tabulator(tableRef1.value, {
+    layout: "fitColumns", height: "100%", placeholder: "데이터 없음",
     columns: [
-      { title: "No", formatter: "rownum", width: 40 },
-      {
-        title: "상태", field: "UPKIND", width: 60,
-        formatter: (cell) => {
-          const v = cell.getValue();
-          if (v === 'A') return '<i class="bi bi-plus-circle-fill text-primary"></i>';
-          if (v === 'U') return '<i class="bi bi-pencil-square text-warning"></i>';
-          if (v === 'D') return '<i class="bi bi-dash-circle-fill text-danger"></i>';
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
+      { title: "거래처명", field: "custnm", hozAlign: "left", headerSort: false },
+      { title: "입금일자", field: "imymd", hozAlign: "center", width: 100, headerSort: false },
+      { title: "입금번호", field: "imno", hozAlign: "center", width: 110, cssClass: "fw-bold text-primary", headerSort: false }
+    ],
+  });
+  grid1.on("rowClick", (e, row) => fetchDetail(row.getData()));
+
+  // 우측 상세 그리드
+  grid2 = new Tabulator(tableRef2.value, {
+    layout: "fitColumns", height: "100%", placeholder: "상세 내역 없음",
+    columnCalcs: "table", selectable: true,
+    selectableCheck: (row) => row.getData()._STATE !== 'EMPTY',
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection", headerSort: false, cellClick: (e) => e.stopPropagation() },
+      { title: "상태", field: "state", width: 50, hozAlign: "center",
+        formatter: (c) => {
+          const v = c.getValue();
+          if (v === 'C') return '<span class="badge bg-primary" style="font-size:10px;">신규</span>';
+          if (v === 'U') return '<span class="badge bg-warning text-dark" style="font-size:10px;">수정</span>';
+          if (v === 'D') return '<span class="badge bg-danger" style="font-size:10px;">삭제</span>';
           return '';
         }
       },
-      {
-        title: "입금유형", field: "IMTYPE", widthGrow: 3, minWidth: 150, editor: "list",
-        editorParams: { values: () => imTypeOptions.value.reduce((acc, opt) => ({ ...acc, [opt.CODECD]: opt.CODENM }), {}) },
-        formatter: (cell) => {
-          const val = cell.getValue();
-          const opt = imTypeOptions.value.find(o => String(o.CODECD).trim() === String(val || '').trim());
-          return opt ? opt.CODENM : val;
+      { title: "입금유형", field: "imtype", width: 100, editor: "list",
+        editorParams: { values: () => imtypeData.value.reduce((acc, cur) => ({ ...acc, [cur.CODE]: cur.cdnm }), {}) },
+        formatter: (c) => imtypeData.value.find(i => i.CODE === c.getValue())?.cdnm || c.getValue(),
+        cellEdited: (cell) => {
+          const row = cell.getRow();
+          row.update({ imamt: 0, mgtno: '', billamt: 0, pubymd: '', endymd: '', pubbank: '' });
+          if(row.getData().imrowno) row.update({ state: 'U' });
         }
       },
-      { title: "입금액", field: "IMAMT", width: 120, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-yellow fw-bold" },
-      {
-        title: "관리번호", field: "MGTNO", widthGrow: 2, minWidth: 150, editor: "input",
-        formatter: (cell) => {
-            const val = cell.getValue() || '';
-            return `<div class='d-flex align-items-center justify-content-between w-100 px-1 flex-nowrap'><span>${val}</span><i class='bi bi-search text-primary cursor-pointer'></i></div>`;
-        },
-        cellClick: (e, cell) => { if ((e.target as HTMLElement).classList.contains('bi-search')) openHelp('MGT', cell.getRow()) }
+      { title: "입금액", field: "imamt", width: 110, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+      { title: "관리번호", field: "mgtno", width: 130,
+        cellClick: (e, cell) => { if(cell.getData().imtype === '200') handleOpenHelp('BANK', cell.getRow()) },
+        editable: (cell) => cell.getData().imtype === '200'
       },
-      { title: "어음액면가", field: "BILLAMT", width: 120, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } },
-      {
-        title: "어음종류", field: "BILLGBN", widthGrow: 1, minWidth: 100, editor: "list",
-        editorParams: { values: () => billGbnOptions.value.reduce((acc, opt) => ({ ...acc, [opt.CODECD]: opt.CODENM }), {}) },
-        formatter: (cell) => {
-          const val = cell.getValue();
-          const opt = billGbnOptions.value.find(o => String(o.CODECD).trim() === String(val || '').trim());
-          return opt ? opt.CODENM : val;
-        }
-      },
-      { title: "발행인", field: "PUBMAN", widthGrow: 1, minWidth: 100, editor: "input" },
-      { title: "만기일", field: "ENDYMD", width: 110, editor: "input" },
-      { title: "발행은행", field: "PUBBANK", widthGrow: 1, minWidth: 120, editor: "input" },
-      {
-        title: "삭제", width: 60,
-        formatter: () => "<i class='bi bi-trash text-danger cursor-pointer' style='font-size:16px;'></i>",
-        cellClick: (e, c) => {
-          const row = c.getRow();
-          if (row.getData().UPKIND === 'A') row.delete();
-          else {
-            const cur = row.getData().UPKIND;
-            row.update({ UPKIND: cur === 'D' ? 'U' : 'D' });
-            row.getElement().style.opacity = row.getData().UPKIND === 'D' ? '0.5' : '1';
-          }
-          updateTotals();
-        }
+      { title: "어음액면가", field: "billamt", width: 110, hozAlign: "right", editor: "number", formatter: "money", editable: (cell) => cell.getData().imtype === '300' },
+      { title: "어음발행일", field: "pubymd", width: 110, hozAlign: "center", editor: "date", editable: (cell) => cell.getData().imtype === '300' },
+      { title: "어음만기일", field: "endymd", width: 110, hozAlign: "center", editor: "date", editable: (cell) => cell.getData().imtype === '300' },
+      { title: "발행은행", field: "pubbank", width: 120, editor: "input", editable: (cell) => cell.getData().imtype === '300' },
+      { title: "삭제", width: 40, hozAlign: "center",
+        formatter: (cell) => cell.getData()._STATE === 'EMPTY' ? "" : "<i class='bi bi-trash text-danger cursor-pointer'></i>",
+        cellClick: (e, cell) => handleRowAction(cell.getRow())
       }
-    ]
-  });
-
-  grid.value.on("cellEdited", (cell: any) => {
-    const row = cell.getRow();
-    if (row.getData().UPKIND !== 'A') row.update({ UPKIND: 'U' });
-    updateTotals();
+    ],
+    rowFormatter: (row) => { if (row.getData()._STATE === 'EMPTY') row.getElement().classList.add("empty-row-style"); }
   });
 }
 
-const updateTotals = () => {
-  if (!grid.value) return;
-  const data = grid.value.getData();
-  const activeData = data.filter((i: any) => i.UPKIND !== 'D');
-  activeItemCount.value = activeData.length;
-  amtTotal.value = activeData.reduce((acc, cur) => acc + (Number(cur.IMAMT) || 0), 0);
-  billTotal.value = activeData.reduce((acc, cur) => acc + (Number(cur.BILLAMT) || 0), 0);
+// [3] 로직 처리
+const setGridDataWithPadding = (data: any[]) => {
+  const displayData = data.map(i => ({ ...i, _STATE: 'EXIST' }));
+  while (displayData.length < MIN_ROWS) {
+    displayData.push({ _STATE: 'EMPTY', imamt: 0, billamt: 0 });
+  }
+  grid2?.setData(displayData);
 }
 
-const modalVisible = ref(false);
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-async function fetchOrder() {
-  if (!masterData.IMYM || !masterData.IMNO) return vAlertError('입금번호 입력 필수');
-  try {
-    const res = await api.post('/api/hsio/HSIO_300U_STR', { ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, IMYM: masterData.IMYM, IMNO: masterData.IMNO, DEPTCD: masterData.DEPTCD });
-    if (res.data?.length) {
-      Object.assign(masterData, res.data[0]);
-      fetchDetail();
-      vAlert('조회되었습니다.');
-    } else {
-      vAlert('조회된 데이터가 없습니다.');
-    }
-  } catch (e) { vAlertError('조회 실패') }
+const handleOpenHelp = (type: string, target?: any) => {
+  if (isClosed.value) return;
+  if (type === 'DEPT') openHelp('DEPT', (d) => { form_02.deptcd = d.deptcd; form_02.deptnm = d.deptnm });
+  else if (type === 'CUST') openHelp('CUST', (d) => { form_02.custcd = d.custcd; form_02.custnm = d.custnm });
+  else if (type === 'BANK') {
+    openHelp('BANK', (d) => {
+      target.update({ mgtno: d.acct_no, state: target.getData().imrowno ? 'U' : 'C' });
+    });
+  }
 }
 
-async function fetchDetail() {
+const handleRowAction = (row: any) => {
+  const data = row.getData();
+  if (data._STATE === 'EMPTY') return;
+  if (!data.imrowno) row.delete();
+  else row.update({ state: data.state === 'D' ? 'U' : 'D' });
+}
+
+async function search() {
   try {
-    const res = await api.post('/api/hsio/HSIO_300U_STR', { ACTKIND: 'S1', CMPYCD: authStore.CMPYCD, IMYM: masterData.IMYM, IMNO: masterData.IMNO, DEPTCD: masterData.DEPTCD });
-    if (grid.value) {
-      grid.value.setData(res.data.map((i: any) => ({ ...i, UPKIND: 'U' })));
-      setTimeout(updateTotals, 100);
-    }
-  } catch (e) { vAlertError('상세 로드 실패') }
+    const params = { fromdt: form_01.fromdt.replace(/-/g, ''), todt: form_01.todt.replace(/-/g, ''), custnm: form_01.schcustnm }
+    const res = await api.post('/api/hsio/HSIO_300U_STR', params);
+    grid1?.setData(res.data);
+    vAlert('조회되었습니다.');
+  } catch (e) { vAlertError('조회 실패'); }
+}
+
+async function fetchDetail(row: any) {
+  Object.assign(form_02, row);
+  try {
+    const res = await api.post('/api/hsio/HSIO_301U_STR', { imno: row.imno });
+    setGridDataWithPadding(res.data);
+  } catch (e) { vAlertError('상세 로드 실패'); }
 }
 
 async function save() {
-  if (!masterData.CUSTCD) return vAlertError('거래처를 선택하세요.');
-  if (amtTotal.value <= 0) return vAlertError('입금액을 입력하세요.');
-  try {
-    const masterKind = (masterData.IMNO === '0000' || !masterData.IMNO) ? 'A0' : 'U0';
-    const mRes = await api.post('/api/hsio/HSIO_300U_STR', { ...masterData, ACTKIND: masterKind });
-    if (mRes.data?.length) {
-      const newImNo = mRes.data[0].IMNO || masterData.IMNO;
-      const details = grid.value!.getData();
-      for (const item of details) {
-        if (!item.IMTYPE) continue;
-        await api.post('/api/hsio/HSIO_300U_STR', { ...item, ACTKIND: item.UPKIND + '1', CMPYCD: authStore.CMPYCD, IMYM: masterData.IMYM, IMNO: newImNo, DEPTCD: masterData.DEPTCD, CUSTCD: masterData.CUSTCD, IMYMD: masterData.IMYMD, REMARK: masterData.REMARK });
-      }
-      vAlert('저장완료'); masterData.IMNO = newImNo; fetchOrder();
-    }
-  } catch (e) { vAlertError('저장 실패') }
-}
+  const details = grid2?.getData().filter(r => r._STATE !== 'EMPTY' && r.state) || [];
+  if (!details.length) return vAlertError('저장할 내역이 없습니다.');
 
-async function deleteOrder() {
-  if (!confirm('정말로 삭제하시겠습니까?')) return;
-  try {
-    await api.post('/api/hsio/HSIO_300U_STR', { ACTKIND: 'D0', CMPYCD: authStore.CMPYCD, IMYM: masterData.IMYM, IMNO: masterData.IMNO, DEPTCD: masterData.DEPTCD });
-    vAlert('삭제되었습니다.'); initialize();
-  } catch (e) { vAlertError('삭제 실패') }
-}
+  const payload = {
+    depo_MstDto: { ...form_02, imymd: form_02.imymd.replace(/-/g, '') },
+    depo_DtlDto: details.map(d => ({ ...d, pubymd: d.pubymd?.replace(/-/g, ''), endymd: d.endymd?.replace(/-/g, '') }))
+  };
 
-function initialize() {
-  resetForm(masterData);
-  Object.assign(masterData, { ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, IMYM: initYM, IMNO: '0000', DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, IMYMD: initYMD, JANAMT: 0 });
-  if (grid.value) grid.value.clearData();
-  updateTotals();
+  try {
+    await api.post('/api/hsio/HSIO_300U_SAVE', payload);
+    vAlert('저장되었습니다.'); search();
+  } catch (e) { vAlertError('저장 실패'); }
 }
 
 function addRow() {
-  if (grid.value) {
-    grid.value.addRow({ UPKIND: 'A', IMTYPE: '', IMAMT: 0, MGTNO: '', BILLAMT: 0, BILLGBN: '000', PUBYMD: '', PUBMAN: '', ENDYMD: '', PUBBANK: '' });
-    updateTotals();
-  }
+  if (isClosed.value) return;
+  grid2?.addRow({ state: 'C', imamt: 0, _STATE: 'NEW' }, true);
 }
 
-function openHelp(type: string, target?: any) {
-  if (type === 'CUST') {
-    Object.assign(modalProps, { title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'CUSTNM', large: true, data: { GUBUN: 'C4', CMPYCD: authStore.CMPYCD, LIMITOFFSET: 0, LIMITROWS: 20 }, columns: [{ title: '코드', field: 'CUSTCD', width: 70 }, { title: '거래처명', field: 'CUSTNM', width: 180 }, { title: '사업자번호', field: 'CUSTNO', width: 110 }], onConfirm: (data: any) => { masterData.CUSTCD = data.CUSTCD; masterData.CUSTNM = data.CUSTNM; api.post('/api/ha00/HA00_010S_STR', { GUBUN: 'C1', CMPYCD: authStore.CMPYCD, CODE: data.CUSTCD }).then(r => { if (r.data?.length) { masterData.JANAMT = r.data[0].JANAMT; masterData.RCVDD = r.data[0].RCVDD; } }) } }); modalVisible.value = true;
-  } else if (type === 'DEPT') {
-    Object.assign(modalProps, { title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM', data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD }, columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }], onConfirm: (data: any) => { masterData.DEPTCD = data.DEPTCD; masterData.DEPTNM = data.DEPTNM } }); modalVisible.value = true;
-  } else if (type === 'MGT' && target) {
-    const rowData = target.getData();
-    const imType = String(rowData.IMTYPE || '').trim();
-    let title = '관리번호 선택'; let gubun = 'M0'; let gbncd = ''; let code = ''; let columns: any[] = []; let onConfirm = (data: any) => {};
-    if (imType === '300') {
-        title = '카드번호 선택'; gbncd = '040'; code = '1110';
-        columns = [{ title: '카드번호', field: 'MGTNO', width: 150 }, { title: '카드명', field: 'MGTNM', width: 200 }];
-        onConfirm = (d: any) => target.update({ MGTNO: d.MGTNO, MGTNM: d.MGTNM });
-    } else if (imType === '200' || imType === '600') {
-        title = '계좌번호 선택'; gbncd = '010'; code = '1120';
-        columns = [{ title: '계좌번호', field: 'GUJANO', width: 150 }, { title: '은행명', field: 'BANKNM', width: 200 }];
-        onConfirm = (d: any) => target.update({ MGTNO: d.GUJANO, MGTNM: d.BANKNM });
-    } else if (imType === '210') {
-        title = '계좌번호 선택'; gbncd = '010'; code = '1145';
-        columns = [{ title: '계좌번호', field: 'GUJANO', width: 150 }, { title: '은행명', field: 'BANKNM', width: 200 }];
-        onConfirm = (d: any) => target.update({ MGTNO: d.GUJANO, MGTNM: d.BANKNM });
-    } else if (imType === '500' || imType === '510') {
-        title = '전표 선택'; gubun = 'P1'; gbncd = (imType === '500' ? '2110' : '2125'); code = masterData.CUSTCD;
-        columns = [{ title: '전표번호', field: 'slipno', width: 150 }];
-        onConfirm = (d: any) => target.update({ MGTNO: d.slipno, MGTNM: d.slipno });
-    } else { return vAlertError('관리번호를 입력하는 유형이 아닙니다.'); }
-    Object.assign(modalProps, { title, path: '/api/ha00/HA00_00P_STR', defaultField: columns[0].field, large: true, data: { GUBUN: gubun, CMPYCD: authStore.CMPYCD, GBNCD: gbncd, CODE: code }, columns, onConfirm: (d: any) => onConfirm(d) });
-    modalVisible.value = true;
-  }
+function deleteSelectedRows() {
+  const selected = grid2?.getSelectedRows();
+  if (!selected?.length) return vAlertError('삭제할 행을 선택하십시오.');
+  selected.forEach(row => handleRowAction(row));
 }
 
-async function loadComboCodes(gbn: string, gbnCd: string) { try { const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: gbn, CMPYCD: authStore.CMPYCD, GBNCD: gbnCd } }); return res.data.map((item: any) => ({ CODECD: String(item.CODE || item.CODECD || Object.values(item)[0]).trim(), CODENM: String(item.CDNM || item.CODENM || Object.values(item)[1]).trim() })) } catch (e) { return [] } }
-async function loadComboImgbn(gbn: string, gbnCd: string) { try { const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: gbn, CMPYCD: authStore.CMPYCD, GBNCD: gbnCd } }); return res.data.map((item: any) => ({ CODECD: String(item.IMGBN || item.imgbn || '').trim(), CODENM: String(item.IMGBNNM || item.imgbnnm || '').trim() })) } catch (e) { return [] } }
+function initialize() {
+  resetForm(form_02);
+  form_02.deptcd = authStore.deptCode; form_02.deptnm = authStore.deptName;
+  form_02.imymd = today;
+  grid1?.clearData(); setGridDataWithPadding([]);
+}
 
-const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0)
+async function handleFullDelete() {
+  if (!form_02.imno) return;
+  if (!confirm(`입금번호 ${form_02.imno}를 삭제하시겠습니까?`)) return;
+  try {
+    await api.post('/api/hsio/HSIO_300U_DELETE', { imno: form_02.imno });
+    vAlert('삭제되었습니다.'); initialize(); search();
+  } catch (e) { vAlertError('삭제 실패'); }
+}
 
 onMounted(async () => {
-  imTypeOptions.value = await loadComboImgbn('I2', '');
-  billGbnOptions.value = await loadComboCodes('E0', '150');
-  nextTick(() => { initGrid(); updateTotals(); });
+  api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '130', CODE: '', codenm: '' }).then(r => {
+    imtypeData.value = r.data.status === 200 ? r.data.data : r.data;
+  });
+  initGrids(); initialize();
 })
 </script>
+
 <style scoped>
-.hsio300u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
+.main-content-wrapper { padding-bottom: 0px !important; }
+.grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
+.erp-table-dense th, .erp-table-dense td {
+  height: 32px !important;
+  padding: 0 8px !important;
+  font-size: 12px;
+  vertical-align: middle;
+  border: 1px solid #dee2e6;
 }
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
+.erp-table-dense .form-control, .erp-table-dense .form-select, .erp-table-dense .btn {
+  height: 26px !important;
+  font-size: 12px !important;
+  border-radius: 2px;
+}
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+:deep(.empty-row-style) { opacity: 0.6; }
 </style>

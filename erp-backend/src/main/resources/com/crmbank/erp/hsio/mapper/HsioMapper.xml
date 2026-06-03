@@ -2,218 +2,225 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.crmbank.erp.hsio.mapper.HsioMapper">
 
+    <!-- 매입 마스터 저장 -->
+    <select id="HSIO_500U_STR" resultType="map">
+        exec hsio_500u_str
+            #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype},
+            #{custcd}, #{deptcd}, #{whcd}, #{area}, #{userid}, #{trnemp}, #{trancd},
+            #{addres}, #{remark}, #{cfmyn}, #{totsum}, #{ordym}, #{ordno}, #{updemp}
+    </select>
+
+    <!-- 매입 상세 저장 -->
+    <select id="HSIO_501U_STR" resultType="map">
+        exec hsio_501u_str
+            #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd},
+            #{custcd}, #{whcd}, #{area}, #{userid}, #{ioymd}, #{iotype}, #{itemcd},
+            #{itsize}, #{unit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{updemp}
+    </select>
+
     <!-- 구매/입고 관련 -->
     <select id="HSIO_010U_STR" resultType="map">
-        EXEC HSIO_010U_STR #{ACTKIND}, #{CMPYCD}, #{REQYM}, #{REQNO}, #{ASGBN}, #{REQYMD}, #{INYMD}, #{WHCD}, #{DEPTCD}, #{REMARK}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+        exec hsio_010u_str #{actkind}, #{cmpycd}, #{reqym}, #{reqno}, #{asgbn}, #{reqymd}, #{inymd}, #{whcd}, #{deptcd}, #{remark}, #{ordym}, #{ordno}, #{updemp}
     </select>
     <select id="HSIO_011U_STR" resultType="map">
-        EXEC HSIO_011U_STR #{ACTKIND}, #{CMPYCD}, #{REQYM}, #{REQNO}, #{RROWNO}, #{DEPTCD}, #{WHCD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{REQYMD}, #{REQQTY}, #{IMPRICE}, #{REQAMT}, #{CUSTCD}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+        exec hsio_011u_str #{actkind}, #{cmpycd}, #{reqym}, #{reqno}, #{rrowno}, #{deptcd}, #{whcd}, #{itemcd}, #{itsize}, #{unit}, #{reqymd}, #{reqqty}, #{imprice}, #{reqamt}, #{custcd}, #{ordym}, #{ordno}, #{updemp}
     </select>
     <select id="HSIO_020U_STR" resultType="map">
-        EXEC HSIO_020U_STR #{ACTKIND}, #{CMPYCD}, #{REQYM}, #{REQNO}, #{ASGBN}, #{REQYMD}, #{INYMD}, #{WHCD}, #{DEPTCD}, #{REMARK}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+        exec hsio_020u_str #{actkind}, #{cmpycd}, #{reqym}, #{reqno}, #{asgbn}, #{reqymd}, #{inymd}, #{whcd}, #{deptcd}, #{remark}, #{ordym}, #{ordno}, #{updemp}
     </select>
     <select id="HSIO_021U_STR" resultType="map">
-        EXEC HSIO_021U_STR #{ACTKIND}, #{CMPYCD}, #{REQYM}, #{REQNO}, #{RROWNO}, #{DEPTCD}, #{WHCD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{REQYMD}, #{REQQTY}, #{IMPRICE}, #{REQAMT}, #{CUSTCD}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
+        exec hsio_021u_str #{actkind}, #{cmpycd}, #{reqym}, #{reqno}, #{rrowno}, #{deptcd}, #{whcd}, #{itemcd}, #{itsize}, #{unit}, #{reqymd}, #{reqqty}, #{imprice}, #{reqamt}, #{custcd}, #{ordym}, #{ordno}, #{updemp}
     </select>
+
+    <!-- 발주 관련 -->
+    <select id="HSIO_050U_STR" resultType="map">
+        exec hsio_050u_str #{actkind}, #{cmpycd}, #{balym}, #{balno}, #{gubun}, #{balymd}, #{reqymd}, #{custcd}, #{deptcd}, #{remark}, #{ordym}, #{ordno}, #{updemp}
+    </select>
+    <select id="HSIO_051U_STR" resultType="map">
+        exec hsio_051u_str #{actkind}, #{cmpycd}, #{balym}, #{balno}, #{browno}, #{deptcd}, #{custcd}, #{itemcd}, #{itsize}, #{unit}, #{pkunit}, #{balymd}, #{balqty}, #{balamt}, #{balvat}, #{scustcd}, #{scustnm}, #{reqym}, #{reqno}, #{rrowno}, #{updemp}, #{ordym}, #{ordno}
+    </select>
+    <select id="HSIO_052U_STR" resultType="map">
+        exec hsio_052u_str #{actkind}, #{cmpycd}, #{balym}, #{balno}, #{balymd}, #{reqymd}, #{custcd}, #{deptcd}, #{remark}, #{updemp}
+    </select>
+
     <select id="HSIO_060U_STR" resultType="map">
-        EXEC HSIO_060U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{CUSTCD}, #{IOYM}, #{IONO}, #{IOYMD}, #{IOTYPE}, #{WHCD}, #{ADDRES}, #{REMARK}, #{CFMYN}, #{UPDEMP}
+        exec hsio_060u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{custcd}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{whcd}, #{addres}, #{remark}, #{cfmyn}, #{updemp}
     </select>
     <select id="HSIO_061U_STR" resultType="map">
-        EXEC HSIO_061U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{DEPTCD}, #{CUSTCD}, #{WHCD}, #{IOYMD}, #{IOTYPE}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{IOQTY}, #{IOAMT}, #{IOVAT}, #{BALYM}, #{BALNO}, #{BROWNO}, #{CFMYN}, #{SCUSTCD}, #{SCUSTNM}, #{UPDEMP}, #{ORDYM}, #{ORDNO}
+        exec hsio_061u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ioqty}, #{ioamt}, #{iovat}, #{balym}, #{balno}, #{browno}, #{cfmyn}, #{scustcd}, #{scustnm}, #{updemp}, #{ordym}, #{ordno}
     </select>
     <select id="HSIO_070U_STR" resultType="map">
-        EXEC HSIO_070U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{CUSTCD}, #{IOYM}, #{IONO}, #{UPDEMP}
+        exec hsio_070u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{custcd}, #{ioym}, #{iono}, #{updemp}
     </select>
     <select id="HSIO_080S_STR" resultType="map">
-        EXEC HSIO_085S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCD}, #{CUSTNM}, #{YMDFR}, #{YMDTO}
+        exec hsio_085s_str #{cmpycd}, #{deptcd}, #{custcd}, #{custnm}, #{ymdfr}, #{ymdto}
     </select>
-
     <select id="HSIO_082S_STR" resultType="map">
-        EXEC HSIO_082S_STR #{CMPYCD}, #{YMDFR}, #{YMDTO}, #{ORDYM}, #{ORDNO}, #{CUSTCD}, #{USERID}, #{IPGOYN}, #{REMARK}
+        exec hsio_082s_str #{cmpycd}, #{ymdfr}, #{ymdto}, #{ordym}, #{ordno}, #{custcd}, #{userid}, #{ipgoyn}, #{remark}
     </select>
-
     <select id="HSIO_085S_STR" resultType="map">
-        EXEC HSIO_085S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCD}, #{CUSTNM}, #{YMDFR}, #{YMDTO}
+        exec hsio_085s_str #{cmpycd}, #{deptcd}, #{custcd}, #{custnm}, #{ymdfr}, #{ymdto}
     </select>
-
     <select id="HSIO_110U_STR" resultType="map">
-        EXEC HSIO_110U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{CUSTCD},
-        #{DEPTCD}, #{IOYM}, #{IONO}, #{IOROWNO}, #{TAXUNIT}, #{VATTYPE}, #{JSANYM}, #{JSANNO},
-        #{JSANYMD}, #{JSANAMT}, #{JSANVAT}, #{UPDEMP}
+        exec hsio_110u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{custcd}, #{deptcd}, #{ioym}, #{iono}, #{iorowno}, #{taxunit}, #{vattype}, #{jsanym}, #{jsanno}, #{jsanymd}, #{jsanamt}, #{jsanvat}, #{updemp}
     </select>
-
     <select id="HSIO_120U_STR" resultType="map">
-        EXEC HSIO_120U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{CUSTCD}, #{DEPTCD}, #{JSANYM}, #{JSANNO}, #{UPDEMP}
+        exec hsio_120u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{custcd}, #{deptcd}, #{jsanym}, #{jsanno}, #{updemp}
     </select>
     <select id="HSIO_130U_STR" resultType="map">
-        EXEC HSIO_130U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{JSANYM}, #{JSANNO}, #{JSANYMD}, #{SPYAMT}, #{VATAMT}, #{CUSTCD}, #{TAXUNIT}, #{VATTYPE}, #{SLIPYMD}, #{SLIPNO}, #{CARDYN}, #{CARDNO}, #{UPDEMP}
+        exec hsio_130u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{jsanym}, #{jsanno}, #{jsanymd}, #{spyamt}, #{vatamt}, #{custcd}, #{taxunit}, #{vattype}, #{slipymd}, #{slipno}, #{cardyn}, #{cardno}, #{updemp}
     </select>
     <select id="HSIO_131U_STR" resultType="map">
-        EXEC HSIO_131U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{JSANYM}, #{JSANNO}, #{JSANYMD}, #{SPYAMT}, #{VATAMT}, #{CUSTCD}, #{TAXUNIT}, #{VATTYPE}, #{SLIPYMD}, #{SLIPNO}, #{CARDYN}, #{CARDNO}, #{SLIPKIND}, #{HDEPTCD}, #{BUSINESS}, #{UPDEMP}
+        exec hsio_131u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{jsanym}, #{jsanno}, #{jsanymd}, #{spyamt}, #{vatamt}, #{custcd}, #{taxunit}, #{vattype}, #{slipymd}, #{slipno}, #{cardyn}, #{cardno}, #{slipkind}, #{hdeptcd}, #{business}, #{updemp}
     </select>
     <select id="HSIO_140U_STR" resultType="map">
-        EXEC HSIO_140U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_140u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
     <select id="HSIO_141U_STR" resultType="map">
-        EXEC HSIO_141U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO},
-        #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_141u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
-
     <select id="HSIO_160U_STR" resultType="map">
-        EXEC HSIO_160U_STR #{PROCGBN}, #{CMPYCD}, #{JSANYM}, #{JSANNO}, #{IOYM}, #{IONO}, #{IOROWNO},
-        #{CUSTCD}, #{DEPTCD}, #{ITEMCD}, #{HALYMD}, #{INQTY}, #{INAMT}, #{HALAMT}, #{HALRATE}, #{DIVGBN}, #{UPDEMP}
+        exec hsio_160u_str #{procgbn}, #{cmpycd}, #{jsanym}, #{jsanno}, #{ioym}, #{iono}, #{iorowno}, #{custcd}, #{deptcd}, #{itemcd}, #{halymd}, #{inqty}, #{inamt}, #{halamt}, #{halrate}, #{divgbn}, #{updemp}
     </select>
-
     <select id="HSIO_170U_STR" resultType="map">
-        EXEC HSIO_170U_STR #{ACTKIND}, #{CMPYCD}, #{JSANYM}, #{CUSTCD}, #{HALAMT}, #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_170u_str #{actkind}, #{cmpycd}, #{jsanym}, #{custcd}, #{halamt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
-
-
     <select id="HSIO_171U_STR" resultType="map">
-        EXEC HSIO_171U_STR #{ACTKIND}, #{CMPYCD}, #{JSANYM}, #{CUSTCD}, #{HALAMT}, #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_171u_str #{actkind}, #{cmpycd}, #{jsanym}, #{custcd}, #{halamt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
     <select id="HSIO_180U_STR" resultType="map">
-        EXEC HSIO_180U_STR #{ACTKIND}, #{CMPYCD}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_180u_str #{actkind}, #{cmpycd}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
-
     <select id="HSIO_181U_STR" resultType="map">
-        EXEC HSIO_181U_STR #{ACTKIND}, #{CMPYCD}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_181u_str #{actkind}, #{cmpycd}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
-
     <select id="HSIO_190U_STR" resultType="map">
-        EXEC HSIO_190U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOYMD}, #{IOTYPE}, #{CUSTCD}, #{DEPTCD}, #{WHCD}, #{ADDRES}, #{REMARK}, #{CFMYN}, #{GUBUN}, #{TOTSUM}, #{UPDEMP}
+        exec hsio_190u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{addres}, #{remark}, #{cfmyn}, #{gubun}, #{totsum}, #{updemp}
     </select>
     <select id="HSIO_191U_STR" resultType="map">
-        EXEC HSIO_191U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{DEPTCD}, #{CUSTCD}, #{WHCD}, #{IOYMD}, #{IOTYPE}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{PKUNIT}, #{IOQTY}, #{IOAMT}, #{IOVAT}, #{CFMYN}, #{SCUSTCD}, #{SCUSTNM}, #{OUTNO}, #{UPDEMP}
+        exec hsio_191u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{pkunit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{scustcd}, #{scustnm}, #{outno}, #{updemp}
     </select>
     <select id="HSIO_200S_STR" resultType="map">
-        EXEC HSIO_200S_STR #{CMPYCD}, #{WHCD}, #{YMDFR}, #{YMDTO}, #{IOTYPE}, #{CUSTCD}, #{ORDYM}, #{ORDNO}, #{USERID}
+        exec hsio_200s_str #{cmpycd}, #{whcd}, #{ymdfr}, #{ymdto}, #{iotype}, #{custcd}, #{ordym}, #{ordno}, #{userid}
     </select>
     <select id="HSIO_210S_STR" resultType="map">
-        EXEC HSIO_210S_STR #{CMPYCD}, #{WHCD}, #{IOTYPE}, #{YMDFR}, #{YMDTO}, #{CUSTCD}, #{ITEMCD}
+        exec hsio_210s_str #{cmpycd}, #{whcd}, #{iotype}, #{ymdfr}, #{ymdto}, #{custcd}, #{itemcd}
     </select>
     <select id="HSIO_215S_STR" resultType="map">
-        EXEC HSIO_215S_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{WHCD}, #{YMDFR}, #{YMDTO}, #{CUSTCD}, #{IOYM}, #{IONO}, #{SLIPYN}
+        exec hsio_215s_str #{actkind}, #{cmpycd}, #{iogbn}, #{whcd}, #{ymdfr}, #{ymdto}, #{custcd}, #{ioym}, #{iono}, #{slipyn}
     </select>
     <select id="HSIO_220S_STR" resultType="map">
-        EXEC HSIO_220S_STR #{CMPYCD}, #{YMDFR}, #{YMDTO}
+        exec hsio_220s_str #{cmpycd}, #{ymdfr}, #{ymdto}
     </select>
     <select id="HSIO_250U_STR" resultType="map">
-        EXEC HSIO_250U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOYMD}, #{IOTYPE}, #{CUSTCD}, #{DEPTCD}, #{WHCD}, #{ADDRES}, #{REMARK}, #{CFMYN}, #{GUBUN}, #{TOTSUM}, #{UPDEMP}
+        exec hsio_250u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{addres}, #{remark}, #{cfmyn}, #{gubun}, #{totsum}, #{updemp}
     </select>
     <select id="HSIO_251U_STR" resultType="map">
-        EXEC HSIO_251U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{DEPTCD}, #{CUSTCD}, #{WHCD}, #{IOYMD}, #{IOTYPE}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{PKUNIT}, #{IOQTY}, #{IOAMT}, #{IOVAT}, #{CFMYN}, #{SCUSTCD}, #{SCUSTNM}, #{UPDEMP}
+        exec hsio_251u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{pkunit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{scustcd}, #{scustnm}, #{updemp}
     </select>
 
     <!-- 출고/매출/수금 관련 -->
     <select id="HSIO_300U_STR" resultType="map">
-        EXEC HSIO_300U_STR #{ACTKIND}, #{CMPYCD}, #{IMYM}, #{IMNO}, #{IMROWNO}, #{DEPTCD}, #{CUSTCD}, #{IMYMD}, #{REMARK}, #{IMTYPE}, #{IMAMT}, #{MGTNO}, #{PUBYMD}, #{ENDYMD}, #{BILLGBN}, #{BILLAMT}, #{PUBBANK}, #{PUBMAN}, #{SLIPYN}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_300u_str #{actkind}, #{cmpycd}, #{imym}, #{imno}, #{imrowno}, #{deptcd}, #{custcd}, #{imymd}, #{remark}, #{imtype}, #{imamt}, #{mgtno}, #{pubymd}, #{endymd}, #{billgbn}, #{billamt}, #{pubbank}, #{pubman}, #{slipyn}, #{slipymd}, #{slipno}, #{updemp}
+    </select>
+    <select id="HSIO_301U_STR" resultType="map">
+        exec hsio_301u_str #{actkind}, #{cmpycd}, #{custcd}, #{iogbn}, #{ioym}, #{iono}, #{imym}, #{imno}, #{imrowno}, #{imymd}, #{maeamt}, #{imamt}, #{deptcd}, #{userid}
     </select>
     <select id="HSIO_325U_STR" resultType="map">
-        EXEC HSIO_325U_STR #{ACTKIND}, #{CMPYCD}, #{DEPTCD}, #{IMYMDFR}, #{IMYMDTO}, #{USERID}, #{IOGBN}, #{IMYM}, #{IMNO}, #{SLIPKIND}, #{SLIPYMD}, #{SLIPNO}, #{DACCTCD}, #{DACCTNM}, #{CACCTCD}, #{CACCTNM}, #{IMAMT}, #{REMARK}, #{CUSTCD}, #{CUSTNM}, #{UPDEMP}
+        exec hsio_325u_str #{actkind}, #{cmpycd}, #{deptcd}, #{imymdfr}, #{imymdto}, #{userid}, #{iogbn}, #{imym}, #{imno}, #{slipkind}, #{slipymd}, #{slipno}, #{dacctcd}, #{dacctnm}, #{cacctcd}, #{cacctnm}, #{imamt}, #{remark}, #{custcd}, #{custnm}, #{updemp}
+    </select>
+    <select id="HSIO_410S_STR" resultType="map">
+        exec hsio_410s_str #{cmpycd}, #{deptcd}, #{custcd}, #{frymd}, #{toymd}
     </select>
     <select id="HSIO_470S_STR" resultType="map">
-        EXEC HSIO_470S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCD}, #{YMDFR}, #{YMDTO}, #{ITEMCD}
+        exec hsio_470s_str #{cmpycd}, #{deptcd}, #{custcd}, #{ymdfr}, #{ymdto}, #{itemcd}
     </select>
-
     <select id="HSIO_490U_STR" resultType="map">
-        EXEC HSIO_490U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOYMD}, #{IOTYPE}, #{CUSTCD}, #{DEPTCD}, #{WHCD}, #{AREA}, #{USERID}, #{TRNEMP}, #{TRANCD}, #{ADDRES}, #{REMARK}, #{CFMYN}, #{TOTSUM}, #{UPDEMP}
+        exec hsio_490u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{area}, #{userid}, #{trnemp}, #{trancd}, #{addres}, #{remark}, #{cfmyn}, #{totsum}, #{updemp}
     </select>
     <select id="HSIO_491U_STR" resultType="map">
-        EXEC HSIO_491U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{DEPTCD}, #{CUSTCD}, #{WHCD}, #{AREA}, #{USERID}, #{IOYMD}, #{IOTYPE}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{IOQTY}, #{IOAMT}, #{IOVAT}, #{CFMYN}, #{INO}, #{UPDEMP}
-    </select>
-    <select id="HSIO_500U_STR" resultType="map">
-        EXEC HSIO_500U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOYMD}, #{IOTYPE}, #{CUSTCD}, #{DEPTCD}, #{WHCD}, #{AREA}, #{USERID}, #{TRNEMP}, #{TRANCD}, #{ADDRES}, #{REMARK}, #{CFMYN}, #{TOTSUM}, #{ORDYM}, #{ORDNO}, #{UPDEMP}
-    </select>
-    <select id="HSIO_501U_STR" resultType="map">
-        EXEC HSIO_501U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{DEPTCD}, #{CUSTCD}, #{WHCD}, #{AREA}, #{USERID}, #{IOYMD}, #{IOTYPE}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{IOQTY}, #{IOAMT}, #{IOVAT}, #{CFMYN}, #{UPDEMP}
+        exec hsio_491u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{area}, #{userid}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{ino}, #{updemp}
     </select>
     <select id="HSIO_510U_STR" resultType="map">
-        EXEC HSIO_510U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{CUSTCD}, #{DEPTCD}, #{IOYM}, #{IONO}, #{IOROWNO}, #{TAXUNIT}, #{VATTYPE}, #{JSANYM}, #{JSANNO}, #{JSANYMD}, #{JSANQTY}, #{JSANAMT}, #{JSANVAT}, #{UPDEMP}
+        exec hsio_510u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{custcd}, #{deptcd}, #{ioym}, #{iono}, #{iorowno}, #{taxunit}, #{vattype}, #{jsanym}, #{jsanno}, #{jsanymd}, #{jsanqty}, #{jsanamt}, #{jsanvat}, #{updemp}
     </select>
     <select id="HSIO_511U_STR" resultType="map">
-        EXEC HSIO_511U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{YYMM}, #{SUNGB}, #{CUSTCD}, #{DEPTCD}, #{IOYM}, #{IONO}, #{IOROWNO}, #{TAXUNIT}, #{VATTYPE}, #{JSANYM}, #{JSANNO}, #{JSANYMD}, #{JSANQTY}, #{JSANAMT}, #{JSANVAT}, #{UPDEMP}
+        exec hsio_511u_str #{actkind}, #{cmpycd}, #{iogbn}, #{yymm}, #{sungb}, #{custcd}, #{deptcd}, #{ioym}, #{iono}, #{iorowno}, #{taxunit}, #{vattype}, #{jsanym}, #{jsanno}, #{jsanymd}, #{jsanqty}, #{jsanamt}, #{jsanvat}, #{updemp}
     </select>
     <select id="HSIO_520U_STR" resultType="map">
-        EXEC HSIO_520U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{CUSTCD}, #{JSANYM}, #{JSANNO}, #{UPDEMP}
+        exec hsio_520u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{custcd}, #{jsanym}, #{jsanno}, #{updemp}
     </select>
     <select id="HSIO_521U_STR" resultType="map">
-        EXEC HSIO_521U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{YYMM}, #{SUNGB}, #{DEPTCD}, #{CUSTCD}, #{JSANYM}, #{JSANNO}, #{UPDEMP}
+        exec hsio_521u_str #{actkind}, #{cmpycd}, #{iogbn}, #{yymm}, #{sungb}, #{deptcd}, #{custcd}, #{jsanym}, #{jsanno}, #{updemp}
     </select>
     <select id="HSIO_530U_STR" resultType="map">
-        EXEC HSIO_530U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD},
-        #{JSANYM}, #{JSANNO}, #{JSANYMD}, #{SPYAMT}, #{VATAMT}, #{CUSTCD}, #{TAXUNIT}, #{VATTYPE},
-        #{SLIPYMD}, #{SLIPNO},  #{UPDEMP}
+        exec hsio_530u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{jsanym}, #{jsanno}, #{jsanymd}, #{spyamt}, #{vatamt}, #{custcd}, #{taxunit}, #{vattype}, #{slipymd}, #{slipno},  #{updemp}
     </select>
     <select id="HSIO_531U_STR" resultType="map">
-        EXEC HSIO_531U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{JSANYM}, #{JSANNO}, #{JSANYMD}, #{SPYAMT}, #{VATAMT}, #{CUSTCD}, #{TAXUNIT}, #{VATTYPE}, #{SLIPYMD}, #{SLIPNO}, #{SLIPKIND}, #{HDEPTCD}, #{BUSINESS}, #{UPDEMP}
+        exec hsio_531u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{jsanym}, #{jsanno}, #{jsanymd}, #{spyamt}, #{vatamt}, #{custcd}, #{taxunit}, #{vattype}, #{slipymd}, #{slipno}, #{slipkind}, #{hdeptcd}, #{business}, #{updemp}
     </select>
     <select id="HSIO_540U_STR" resultType="map">
-        EXEC HSIO_540U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO},
-        #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_540u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
-
     <select id="HSIO_541U_STR" resultType="map">
-        EXEC HSIO_541U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{DEPTCD}, #{SLIPYMD}, #{SLIPNO}, #{UPDEMP}
+        exec hsio_541u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
     <select id="HSIO_550U_STR" resultType="map">
-        EXEC HSIO_550U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{CUSTCD}, #{DEPTCD}, #{IOYM}, #{IONO}, #{IOYMD}, #{IOTYPE}, #{WHCD}, #{AREA}, #{USERID}, #{TRNEMP}, #{TRANCD}, #{ADDRES}, #{REMARK}, #{CFMYN}, #{TOTSUM}, #{UPDEMP}
+        exec hsio_550u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{custcd}, #{deptcd}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{whcd}, #{area}, #{userid}, #{trnemp}, #{trancd}, #{addres}, #{remark}, #{cfmyn}, #{totsum}, #{updemp}
     </select>
     <select id="HSIO_551U_STR" resultType="map">
-        EXEC HSIO_551U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{DEPTCD}, #{CUSTCD}, #{WHCD}, #{AREA}, #{USERID}, #{IOYMD}, #{IOTYPE}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{IOQTY}, #{IOAMT}, #{IOVAT}, #{BALYM}, #{BALNO}, #{BROWNO}, #{CFMYN}, #{UPDEMP}
+        exec hsio_551u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{area}, #{userid}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ioqty}, #{ioamt}, #{iovat}, #{balym}, #{balno}, #{browno}, #{cfmyn}, #{updemp}
     </select>
     <select id="HSIO_560U_STR" resultType="map">
-        EXEC HSIO_560U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYMDFR}, #{IOYMDTO}, #{WHCD}, #{CUSTCD}, #{IOYM}, #{IONO}, #{IOROWNO}, #{UPDEMP}
+        exec hsio_560u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioymdfr}, #{ioymdto}, #{whcd}, #{custcd}, #{ioym}, #{iono}, #{iorowno}, #{updemp}
     </select>
     <select id="HSIO_570U_STR" resultType="map">
-        EXEC HSIO_570U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOYMD}, #{IOTYPE}, #{CUSTCD}, #{DEPTCD}, #{WHCD}, #{AREA}, #{USERID}, #{INYN}, #{INO}, #{REMARK}, #{CFMYN}, #{UPDEMP}
+        exec hsio_570u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{area}, #{userid}, #{inyn}, #{ino}, #{remark}, #{cfmyn}, #{updemp}
     </select>
     <select id="HSIO_571U_STR" resultType="map">
-        EXEC HSIO_571U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{DEPTCD}, #{CUSTCD}, #{WHCD}, #{USERID}, #{IOYMD}, #{IOTYPE}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{INO}, #{ITEMCD_T}, #{ITSIZE_T}, #{UNIT_T}, #{IOQTY}, #{IOAMT}, #{IOVAT}, #{USEDEPT}, #{CFMYN}, #{UPDEMP}
+        exec hsio_571u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{userid}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ino}, #{itemcd_t}, #{itsize_t}, #{unit_t}, #{ioqty}, #{ioamt}, #{iovat}, #{usedept}, #{cfmyn}, #{updemp}
     </select>
     <select id="HSIO_580U_STR" resultType="map">
-        EXEC HSIO_580U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOYMD}, #{ODEPTCD}, #{OWHCD}, #{IDEPTCD}, #{IWHCD}, #{REMARK}, #{UPDEMP}
+        exec hsio_580u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{odeptcd}, #{owhcd}, #{ideptcd}, #{iwhcd}, #{remark}, #{updemp}
     </select>
     <select id="HSIO_581U_STR" resultType="map">
-        EXEC HSIO_581U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{ONO}, #{IOROWNO}, #{INO}, #{ODEPTCD}, #{OWHCD}, #{IOYMD}, #{IDEPTCD}, #{IWHCD}, #{ITEMCD}, #{UNIT}, #{IOQTY}, #{UPDEMP}
+        exec hsio_581u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{ono}, #{iorowno}, #{ino}, #{odeptcd}, #{owhcd}, #{ioymd}, #{ideptcd}, #{iwhcd}, #{itemcd}, #{unit}, #{ioqty}, #{updemp}
     </select>
     <select id="HSIO_600S_STR" resultType="map">
-        EXEC HSIO_600S_STR #{CMPYCD}, #{WHCD}, #{YMDFR}, #{YMDTO}, #{IOTYPE}, #{CUSTCD}
+        exec hsio_600s_str #{cmpycd}, #{whcd}, #{ymdfr}, #{ymdto}, #{iotype}, #{custcd}
     </select>
     <select id="HSIO_610S_STR" resultType="map">
-        EXEC HSIO_610S_STR #{ACTKIND}, #{CMPYCD}, #{WHCD}, #{IOTYPE}, #{YMDFR}, #{YMDTO}, #{CUSTCD}, #{ITEMCD}
+        exec hsio_610s_str #{actkind}, #{cmpycd}, #{whcd}, #{iotype}, #{ymdfr}, #{ymdto}, #{custcd}, #{itemcd}
     </select>
-
     <select id="HSIO_620S_STR" resultType="map">
-        EXEC HSIO_620S_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{WHCD}, #{YMDFR}, #{YMDTO}, #{CUSTCD}, #{IOYM}, #{IONO}, #{SLIPYN}
+        exec hsio_620s_str #{actkind}, #{cmpycd}, #{iogbn}, #{whcd}, #{ymdfr}, #{ymdto}, #{custcd}, #{ioym}, #{iono}, #{slipyn}
     </select>
     <select id="HSIO_640S_STR" resultType="map">
-        EXEC HSIO_640S_STR #{CMPYCD}, #{WHCD}, #{FYMD}, #{TYMD}, #{ASTKIND}
+        exec hsio_640s_str #{cmpycd}, #{whcd}, #{fymd}, #{tymd}, #{astkind}
     </select>
     <select id="HSIO_650S_STR" resultType="map">
-        EXEC HSIO_650S_STR #{CMPYCD}, #{WHCD}, #{FYMD}, #{TYMD}, #{ASTKIND}, #{ITEMCD}
+        exec hsio_650s_str #{cmpycd}, #{whcd}, #{fymd}, #{tymd}, #{astkind}, #{itemcd}
     </select>
     <select id="HSIO_660S_STR" resultType="map">
-        EXEC HSIO_660S_STR #{CMPYCD}, #{TRNEMP}, #{OUTYMD}
+        exec hsio_660s_str #{cmpycd}, #{trnemp}, #{outymd}
     </select>
-
     <select id="HSIO_680S_STR" resultType="map">
-        EXEC HSIO_680S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+        exec hsio_680s_str #{cmpycd}, #{deptcd}, #{fymd}, #{tymd}
     </select>
     <select id="HSIO_690S_STR" resultType="map">
-        EXEC HSIO_690S_STR #{CMPYCD}, #{DEPTCD}, #{YMDFR}, #{YMDTO}
+        exec hsio_690s_str #{cmpycd}, #{deptcd}, #{ymdfr}, #{ymdto}
     </select>
     <select id="HSIO_720U_STR" resultType="map">
-        EXEC HSIO_720U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{DEPTCD}, #{WHCD}, #{IOYMD}, #{REMARK}, #{LOTNO}, #{UPDEMP}
+        exec hsio_720u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{deptcd}, #{whcd}, #{ioymd}, #{remark}, #{lotno}, #{updemp}
     </select>
     <select id="HSIO_721U_STR" resultType="map">
-        EXEC HSIO_721U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{IOROWNO}, #{ONO}, #{DEPTCD}, #{WHCD}, #{IOYMD}, #{ITEMCD}, #{UNIT}, #{IOQTY}, #{IOAMT}, #{UPDEMP}
+        exec hsio_721u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{ino}, #{iorowno}, #{ono}, #{deptcd}, #{whcd}, #{ioymd}, #{itemcd}, #{unit}, #{ioqty}, #{ioamt}, #{updemp}
     </select>
     <select id="HSIO_730U_STR" resultType="map">
-        EXEC HSIO_730U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{IONO}, #{DEPTCD}, #{WHCD}, #{IOYMD}, #{REMARK}, #{UPDEMP}
+        exec hsio_730u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{deptcd}, #{whcd}, #{ioymd}, #{remark}, #{updemp}
     </select>
     <select id="HSIO_731U_STR" resultType="map">
-        EXEC HSIO_731U_STR #{ACTKIND}, #{CMPYCD}, #{IOGBN}, #{IOYM}, #{INO}, #{IOROWNO}, #{ONO}, #{DEPTCD}, #{WHCD}, #{IOYMD}, #{ITEMCD}, #{UNIT}, #{IOQTY}, #{IOAMT}, #{UPDEMP}
+        exec hsio_731u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{ino}, #{iorowno}, #{ono}, #{deptcd}, #{whcd}, #{ioymd}, #{itemcd}, #{unit}, #{ioqty}, #{ioamt}, #{updemp}
     </select>
 
 </mapper>

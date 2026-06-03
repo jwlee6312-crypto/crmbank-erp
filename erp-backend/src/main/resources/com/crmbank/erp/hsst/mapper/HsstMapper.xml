@@ -3,51 +3,51 @@
 <mapper namespace="com.crmbank.erp.hsst.mapper.HsstMapper">
 
     <select id="HSST_100S_STR" resultType="map">
-        EXEC HSST_100S_STR #{CMPYCD}, #{SELGBN}, #{DEPTCD}, #{CUSTFR}, #{CUSTTO}, #{YMDFR}, #{YMDTO}
+        exec hsst_100s_str #{cmpycd}, #{selgbn}, #{deptcd}, #{custfr}, #{custto}, #{ymdfr}, #{ymdto}
     </select>
     <select id="HSST_120S_STR" resultType="map">
-        EXEC HSST_120S_STR #{CMPYCD}, #{DEPTCD}, #{YMD}
+        exec hsst_120s_str #{cmpycd}, #{deptcd}, #{ymd}
     </select>
     <select id="HSST_130S_STR" resultType="map">
-        EXEC HSST_130S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+        exec hsst_130s_str #{cmpycd}, #{deptcd}, #{fymd}, #{tymd}
     </select>
     <select id="HSST_150S_STR" resultType="map">
-        EXEC HSST_150S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+        exec hsst_150s_str #{cmpycd}, #{deptcd}, #{fymd}, #{tymd}
     </select>
     <select id="HSST_180S_STR" resultType="map">
-        EXEC HSST_180S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+        exec hsst_180s_str #{cmpycd}, #{deptcd}, #{fymd}, #{tymd}
     </select>
     <select id="HSST_200S_STR" resultType="map">
-        EXEC HSST_200S_STR #{CMPYCD}, #{YMD}, #{WHCD}, #{ASTKIND}, #{ITEMNM}, #{PageNo}, #{MaxCnt}
+        exec hsst_200s_str #{cmpycd}, #{ymd}, #{whcd}, #{astkind}, #{itemnm}, #{pageno}, #{maxcnt}
     </select>
     <select id="HSST_210S_STR" resultType="map">
-        EXEC HSST_210S_STR #{CMPYCD}, #{YMD}, #{DEPTCD}, #{CUSTCDFR}, #{CUSTCDTO}
+        exec hsst_210s_str #{cmpycd}, #{ymd}, #{deptcd}, #{custcdfr}, #{custcdto}
     </select>
     <select id="HSST_300S_STR" resultType="map">
-        EXEC HSST_300S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+        exec hsst_300s_str #{cmpycd}, #{deptcd}, #{fymd}, #{tymd}
     </select>
     <select id="HSST_320S_STR" resultType="map">
-        EXEC HSST_320S_STR #{CMPYCD}, #{DEPTCD}, #{FYMD}, #{TYMD}
+        exec hsst_320s_str #{cmpycd}, #{deptcd}, #{fymd}, #{tymd}
     </select>
     <select id="HSST_340S_STR" resultType="map">
-        EXEC HSST_340S_STR #{CMPYCD}, #{DEPTCD}, #{YM}
+        exec hsst_340s_str #{cmpycd}, #{deptcd}, #{ym}
     </select>
     <select id="HSST_360S_STR" resultType="map">
-        EXEC HSST_360S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCD}, #{YM}
+        exec hsst_360s_str #{cmpycd}, #{deptcd}, #{custcd}, #{ym}
     </select>
     <select id="HSST_510S_STR" resultType="map">
-        EXEC HSST_510S_STR #{CMPYCD}, #{DEPTCD}, #{ITEMCD}, #{FYMD}, #{TYMD}
+        exec hsst_510s_str #{cmpycd}, #{deptcd}, #{itemcd}, #{fymd}, #{tymd}
     </select>
     <select id="HSST_520S_STR" resultType="map">
-        EXEC HSST_520S_STR #{CMPYCD}, #{DEPTCD}, #{YYMM}
+        exec hsst_520s_str #{cmpycd}, #{deptcd}, #{yymm}
     </select>
     <select id="HSST_570S_STR" resultType="map">
-        EXEC HSST_570S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCD}, #{YMDFR}, #{YMDTO}, #{ITEMCD}
+        exec hsst_570s_str #{cmpycd}, #{deptcd}, #{custcd}, #{ymdfr}, #{ymdto}, #{itemcd}
     </select>
     <select id="HSST_600S_STR" resultType="map">
-        EXEC HSST_600S_STR #{CMPYCD}, #{YY}, #{DEPTCD}
+        exec hsst_600s_str #{cmpycd}, #{yy}, #{deptcd}
     </select>
     <select id="HSST_610S_STR" resultType="map">
-        EXEC HSST_610S_STR #{CMPYCD}, #{YY}, #{DEPTCD}
+        exec hsst_610s_str #{cmpycd}, #{yy}, #{deptcd}
     </select>
 </mapper>

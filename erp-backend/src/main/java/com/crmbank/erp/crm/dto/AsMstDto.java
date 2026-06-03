@@ -15,22 +15,22 @@ import lombok.Builder;
 @Builder
 public class AsMstDto {
 
-    private String CMPYCD;           // 회사코드
-    private String SVCNO;            // 접수번호
-    private String ACCEPT_USERID;    // 접수자
-    private String ACCEPTYMD;        // 접수일
-    private String CUSTCD;           // 거래처
-    private String IONO;             // 출고번호
-    private String ITEMCD;           // 품목코드
-    private String FIXED_USERID;     // 수리기사
-    private String FIXEDYMD;         // 수리일자
-    private String FIXED_MENT;       // 수리결과
-    private String COMPLETEYMD;      // 완료일
-    private String EXPIREYMD;        // AS만료일
-    private String CHARGEYN;         // 유상여부
-    private Long FIXAMT;             // 수리비용
-    private Long FIXVAT;             // 부가세
-    private LocalDateTime ADDTIME;   // 등록일시
-    private LocalDateTime UPDTIME;   // 수정일시
-    private String UPDEMP;           // 수정자
+    private String cmpycd;           // 회사코드
+    private String svcno;            // 접수번호
+    private String accept_userid;    // 접수자
+    private String acceptymd;        // 접수일
+    private String custcd;           // 거래처
+    private String iono;             // 출고번호
+    private String itemcd;           // 품목코드
+    private String fixed_userid;     // 수리기사
+    private String fixedymd;         // 수리일자
+    private String fixed_ment;       // 수리결과
+    private String completeymd;      // 완료일
+    private String expireymd;        // AS만료일
+    private String chargeyn;         // 유상여부
+    private Long fixamt;             // 수리비용
+    private Long fixvat;             // 부가세
+    private LocalDateTime addtime;   // 등록일시
+    private LocalDateTime updtime;   // 수정일시
+    private String updemp;           // 수정자
 }

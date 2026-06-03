@@ -20,9 +20,9 @@ public class HpplController {
     private final HpplMapper hpplMapper;
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            params.put("CMPYCD", user.getCMPYCD());
+            params.put("cmpycd", user.getCmpycd());
         }
     }
 

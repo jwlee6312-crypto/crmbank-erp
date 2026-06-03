@@ -43,9 +43,9 @@
 				<span><i class="bi bi-list-columns-reverse me-2 text-primary"></i>상담 내역 리스트</span>
 				<span class="text-muted extra-small">※ 행을 선택하면 상세 메모를 확인할 수 있습니다.</span>
 			</div>
-			<div class="card-body p-0 bg-white position-relative">
-				<div ref="mainGridRef" class="tabulator-full-height" />
-			</div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+            </div>
 		</div>
 
 		<!-- 4. 녹취 플레이어 모달 -->

@@ -1,5 +1,6 @@
 package com.crmbank.erp.ha00.controller;
 
+import com.crmbank.erp.comm.dto.ApiResponse;
 import com.crmbank.erp.comm.dto.UserSession;
 import com.crmbank.erp.ha00.mapper.Ha00Mapper;
 import jakarta.servlet.http.HttpSession;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -21,48 +21,45 @@ public class Ha00Controller {
 
     private final Ha00Mapper ha00Mapper;
 
-    private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        if (user != null) {
-            params.putIfAbsent("CMPYCD", user.getCMPYCD());
+    @PostMapping("/{procedure}")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> executePost(
+            @PathVariable String procedure, @RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        log.info("📋 [HA00] EXEC: {}", procedure);
+        
+        try {
+            List<Map<String, Object>> result;
+            if ("HA00_00P_STR".equalsIgnoreCase(procedure)) {
+                result = ha00Mapper.HA00_00P_STR(params);
+            } else if ("HA00_010S_STR".equalsIgnoreCase(procedure)) {
+                result = ha00Mapper.HA00_010S_STR(params);
+            } else {
+                return ResponseEntity.status(404).body(ApiResponse.notFound("기초 정보 서비스를 찾을 수 없습니다."));
+            }
+            return ResponseEntity.ok(ApiResponse.success(result, "조회 성공"));
+        } catch (Exception e) {
+            log.error("❌ [HA00] 에러: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
         }
-        // 파라미터 기본값 보정
-        params.putIfAbsent("GBNCD", "");
-        params.putIfAbsent("SEARCH", "");
-        params.putIfAbsent("CODE", "");
     }
 
     @GetMapping("/{procedure}")
-    public ResponseEntity<List<Map<String, Object>>> executeGet(
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> executeGet(
             @PathVariable String procedure, @RequestParam Map<String, Object> params, HttpSession session) {
-        return execute(procedure, new HashMap<>(params), session);
+        return executePost(procedure, new HashMap<>(params), session);
     }
 
-    @PostMapping("/{procedure}")
-    public ResponseEntity<List<Map<String, Object>>> executePost(
-            @PathVariable String procedure, @RequestBody Map<String, Object> params, HttpSession session) {
-        return execute(procedure, params, session);
-    }
-
-    private ResponseEntity<List<Map<String, Object>>> execute(String procedure, Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        log.info("📋 [HA00] SSMS 실행용: {}", buildSsmsLog(procedure, params));
-        if ("HA00_00P_STR".equalsIgnoreCase(procedure)) {
-            return ResponseEntity.ok(ha00Mapper.HA00_00P_STR(params));
-        } else if ("HA00_010S_STR".equalsIgnoreCase(procedure)) {
-            return ResponseEntity.ok(ha00Mapper.HA00_010S_STR(params));
+    private void injectSession(Map<String, Object> params, HttpSession session) {
+        // 💡 [소문자 표준화] session key: "user_session"
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user != null) {
+            params.putIfAbsent("cmpycd", user.getCmpycd());
+            params.putIfAbsent("userid", user.getUserid());
         }
-        return ResponseEntity.notFound().build();
-    }
-
-    private String buildSsmsLog(String procedure, Map<String, Object> params) {
-        String[] keys = {"GUBUN", "CMPYCD", "GBNCD", "SEARCH", "ETC"};
-        String values = java.util.Arrays.stream(keys)
-                .map(key -> {
-                    Object val = params.get(key);
-                    return val == null ? "''" : "'" + val.toString().trim() + "'";
-                })
-                .collect(Collectors.joining(", "));
-        return String.format("EXEC %s %s", procedure.toUpperCase(), values);
+        params.putIfAbsent("gubun", "");
+        params.putIfAbsent("gbncd", "");
+        params.putIfAbsent("code", "");
+        params.putIfAbsent("search", "");
+        params.putIfAbsent("remark", "");
     }
 }

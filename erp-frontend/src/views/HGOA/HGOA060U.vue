@@ -90,15 +90,15 @@ const init_grids = () => {
         selectable: 1,
         placeholder: "데이터 없음",
         columns: [
-            { title: "코드", field: "CODECD", width: 80, hozAlign: "center" },
-            { title: "유형명", field: "CODENM", hozAlign: "left" }
+            { title: "코드", field: "codecd", width: 80, hozAlign: "center" },
+            { title: "유형명", field: "codenm", hozAlign: "left" }
         ],
     })
 
     type_grid_instance.on("rowClick", (e, row) => {
         const data = row.getData()
-        SELECTED_SURV_GB.value = data.CODECD
-        SELECTED_SURV_GB_NM.value = data.CODENM
+        SELECTED_SURV_GB.value = data.codecd
+        SELECTED_SURV_GB_NM.value = data.codenm
         search()
     })
 
@@ -130,7 +130,7 @@ const search = async () => {
     try {
         // 💡 대문자 파라미터 적용
         const { data } = await api.get('/crm/outbound/attr-mapper/list', {
-            params: { CMPYCD: authStore.CMPYCD },
+            params: { cmpycd: authStore.cmpycd },
             params: { SURV_GB: SELECTED_SURV_GB.value },
         })
         console.log(data)

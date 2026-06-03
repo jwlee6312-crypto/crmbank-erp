@@ -57,11 +57,11 @@ public class OmniChatController {
         Map<String, Object> result = new HashMap<>();
         try {
             // 💡 세션에서 사용자 정보 추출하여 강제 설정 (보안 및 정확성)
-            UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+            UserSession user = (UserSession) session.getAttribute("user_session");
             if (user != null) {
-                request.setUserid(user.getUSERID());
-                request.setLineNum(user.getINNER_NO());
-                request.setCmpycd(user.getCMPYCD());
+                request.setUserid(user.getUserid());
+                request.setLine_num(user.getInner_no());
+                request.setCmpycd(user.getCmpycd());
             }
             
             consultSaveService.saveOmniConsultation(request);

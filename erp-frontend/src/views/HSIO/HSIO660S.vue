@@ -10,7 +10,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hsio660s-wrapper d-flex flex-column h-100 bg-white p-0">
+	<div class="erp-container">
 		<!-- 🚀 1, 11, 12. 상단 액션 바: 버튼 그룹 우측 상단 정렬 및 표준 색상 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -23,13 +23,13 @@
 				<button class="btn-erp btn-init" @click="initialize">
 					<i class="bi bi-arrow-clockwise"></i> 초기화
 				</button>
-				<button class="btn-erp btn-search" @click="fetchData">
+				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
-				<button class="btn-erp btn-excel" @click="handleExcel">
+				<button class="btn-erp btn-excel" @click="excel">
 					<i class="bi bi-file-earmark-excel"></i> 엑셀
 				</button>
-				<button class="btn-erp btn-print" @click="handlePrint">
+				<button class="btn-erp btn-print" @click="print">
 					<i class="bi bi-printer"></i> 인쇄
 				</button>
 			</div>
@@ -59,7 +59,7 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">출고일자</span>
 									<div class="d-flex align-items-center gap-1" style="max-width: 200px;">
-										<input v-model="searchForm.OUTYMD" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.OUtymd" type="date" class="form-control form-control-sm" />
 									</div>
 								</div>
 							</td>
@@ -77,21 +77,12 @@
 						<i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 상차 명세 리스트
 					</span>
 				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                </div>
 			</div>
 		</div>
 
-		<!-- 📊 4. 하단 요약 바 -->
-		<div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-			<div class="row align-items-center w-100">
-				<div class="col-md-3 small">조회 품목: <span class="fw-bold text-info">{{ rowCount }}</span> 건</div>
-				<div class="col-md-9 text-end">
-					<span class="fs-5 ms-2 fw-light">총 상차수량: <span class="fw-bold text-warning ms-2">{{ formatNumber(totalQty) }}</span></span>
-				</div>
-			</div>
-		</div>
 	</div>
 
 	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
@@ -115,21 +106,21 @@ const { resetForm } = useFormReset()
 
 // 13. 모든 변수명 대문자 고수
 const searchForm = reactive({
-	TRNEMP: authStore.USERID,
-	TRNEMPNM: authStore.USERNM,
-	OUTYMD: new Date().toISOString().substring(0, 10)
+	TRNEMP: authStore.userid,
+	TRNEMPNM: authStore.usernm,
+	OUtymd: new Date().toISOString().substring(0, 10)
 })
 
 const rowCount = ref(0)
 const totalQty = ref(0)
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
-const fetchData = async () => {
+const search = async () => {
 	try {
 		const res = await api.post('/api/hsio/HSIO_660S_STR', {
 			...searchForm,
-			CMPYCD: authStore.CMPYCD,
-			OUTYMD: searchForm.OUTYMD.replace(/-/g, '')
+			cmpycd: authStore.cmpycd,
+			OUtymd: searchForm.OUtymd.replace(/-/g, '')
 		})
 		const data = res.data || []
 		mainGrid?.setData(data)
@@ -141,14 +132,14 @@ const fetchData = async () => {
 
 const initialize = () => {
 	resetForm(searchForm);
-	searchForm.TRNEMP = authStore.USERID;
-	searchForm.TRNEMPNM = authStore.USERNM;
-	searchForm.OUTYMD = new Date().toISOString().substring(0, 10);
+	searchForm.TRNEMP = authStore.userid;
+	searchForm.TRNEMPNM = authStore.usernm;
+	searchForm.OUtymd = new Date().toISOString().substring(0, 10);
 	mainGrid?.clearData(); rowCount.value = 0; totalQty.value = 0;
 }
 
-const handleExcel = () => mainGrid?.download("xlsx", "배송자별상차현황.xlsx")
-const handlePrint = () => vAlert('인쇄 기능을 준비 중입니다.')
+const excel = () => mainGrid?.download("xlsx", "배송자별상차현황.xlsx")
+const print = () => vAlert('인쇄 기능을 준비 중입니다.')
 
 const modalVisible = ref(false);
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
@@ -156,10 +147,10 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
 	if (type === 'TRNEMP') {
 		Object.assign(modalProps, {
-			title: '배송담당자 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'CDNM',
-			data: { GUBUN: 'U1', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'CODE', width: 100 }, { title: '성명', field: 'CDNM', width: 200 }],
-			onConfirm: (d: any) => { searchForm.TRNEMP = d.CODE; searchForm.TRNEMPNM = d.CDNM }
+			title: '배송담당자 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'cdnm',
+			data: { gubun: 'U1', cmpycd: authStore.cmpycd },
+			columns: [{ title: '코드', field: 'CODE', width: 100 }, { title: '성명', field: 'cdnm', width: 200 }],
+			onConfirm: (d: any) => { searchForm.TRNEMP = d.CODE; searchForm.TRNEMPNM = d.cdnm }
 		})
 	}
 	modalVisible.value = true
@@ -173,14 +164,14 @@ onMounted(() => {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
 			columns: [
-				{ title: "품목명", field: "ITEMNM", minWidth: 250, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold" },
-				{ title: "규격", field: "ITSIZE", width: 150, hozAlign: "left" },
-				{ title: "단위", field: "UNIT", width: 80 },
-				{ title: "배송지역", field: "AREANM", width: 180 },
+				{ title: "품목명", field: "itemnm", minWidth: 250, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold" },
+				{ title: "규격", field: "itsize", width: 150, hozAlign: "left" },
+				{ title: "단위", field: "unit", width: 80 },
+				{ title: "배송지역", field: "areaNM", width: 180 },
 				{ title: "수량", field: "QTY", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: (c:any)=>c.getData().QTYPNT || 0 } },
-				{ title: "비고", field: "REMARK", minWidth: 200, hozAlign: "left" }
+				{ title: "비고", field: "remark", minWidth: 200, hozAlign: "left" }
 			],
-			groupBy: "ITEMNM", // ASP의 소계 로직을 위해 품목별 그룹화 적용
+			groupBy: "itemnm", // ASP의 소계 로직을 위해 품목별 그룹화 적용
 			groupHeader: function(value, count, data, group){
 				return value + " (합계: " + data.reduce((a, b) => a + Number(b.QTY), 0).toLocaleString() + " 건)";
 			},
@@ -188,31 +179,3 @@ onMounted(() => {
 	}
 })
 </script>
-
-<style scoped>
-.hsio660s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
-  white-space: nowrap;
-}
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-</style>
-

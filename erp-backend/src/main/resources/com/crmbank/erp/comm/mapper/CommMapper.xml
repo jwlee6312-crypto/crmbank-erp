@@ -3,69 +3,69 @@
 <mapper namespace="com.crmbank.erp.comm.mapper.CommMapper">
 
     <select id="HABA_935U_STR" resultType="map">
-        EXEC HABA_935U_STR #{ACTKIND}, #{CMPYCD}, #{USERGRP}, #{UPMUCD}, #{GRPCD}, #{PGMID}, #{USEYN}, #{MYPGM}, #{USERID}
+        exec haba_935u_str #{actkind}, #{cmpycd}, #{usergrp}, #{upmucd}, #{grpcd}, #{pgmid}, #{useyn}, #{mypgm}, #{userid}
     </select>
 
     <select id="HABA_100U_STR" resultType="map">
-        EXEC HABA_100U_STR #{ACTKIND}, #{CMPYCD}, #{USERID}, #{CONFIG_JSON}
+        exec haba_100u_str #{actkind}, #{cmpycd}, #{userid}, #{config_json}
     </select>
 
     <select id="HABA_030U_STR" resultType="map">
-        EXEC HABA_030U_STR
-            #{ACTKIND}, #{CMPYCD}, #{UNITCD}, #{UNITNM}, #{SAUPNO}, #{BOSSNM},
-            #{LEGALNO}, #{POSTNO}, #{ADDRESS}, #{UPTAE}, #{UPJONG}, #{TELNO},
-            #{FAXNO}, #{DSPORD}, #{USEYN}, #{USERID}
+        exec haba_030u_str
+            #{actkind}, #{cmpycd}, #{unitcd}, #{unitnm}, #{saupno}, #{bossnm},
+            #{legalno}, #{postno}, #{address}, #{uptae}, #{upjong}, #{telno},
+            #{faxno}, #{dspord}, #{useyn}, #{userid}
     </select>
 
     <select id="HAAA_800U_STR" resultType="map">
-        EXEC HAAA_800U_STR #{ACTKIND}, #{PGMID}, #{PGMNM}, #{UPMUCD}, #{GRPCD}, #{GRPNM}, #{DSPORD}, #{USEYN}, #{USERID}
+        exec haaa_800u_str #{actkind}, #{pgmid}, #{pgmnm}, #{upmucd}, #{grpcd}, #{grpnm}, #{dspord}, #{useyn}, #{userid}
     </select>
     <select id="HAAA_810U_STR" resultType="map">
-        EXEC HAAA_810U_STR #{ACTKIND}, #{UPMUCD}, #{GRPCD}, #{GRPNM}, #{DSPORD}, #{USEYN}, #{USERID}
+        exec haaa_810u_str #{actkind}, #{upmucd}, #{grpcd}, #{grpnm}, #{dspord}, #{useyn}, #{userid}
     </select>
     <select id="HABA_920U_STR" resultType="map">
-        EXEC HABA_920U_STR #{ACTKIND}, #{CMPYCD}, #{USERID}, #{PW}, #{USERNM}, #{TELNO}, #{INNER_NO}, #{HPNO}, #{DEPTCD}, #{EMPNO}, #{SDEPTCD}, #{POSITIONOFF}, #{USERGRP}, #{EMAIL}, #{PRICEGBN}, #{USEYN}, #{SALSYN}, #{USERID}
+        exec haba_920u_str #{actkind}, #{cmpycd}, #{userid}, #{pw}, #{usernm}, #{telno}, #{inner_no}, #{hpno}, #{deptcd}, #{empno}, #{sdeptcd}, #{positionoff}, #{usergrp}, #{email}, #{pricegbn}, #{useyn}, #{salsyn}, #{userid}
     </select>
     <select id="HABA_900U_STR" resultType="map">
-        EXEC HABA_900U_STR #{ACTKIND}, #{CMPYCD}, #{LTDNM}, #{LTDENM}, #{SAUPNO}, #{BOSSNM}, #{LEGALNO}, #{POSTNO}, #{ADDRESS}, #{UPTAE}, #{UPJONG}, #{TELNO}, #{FONDYMD}, #{CLSMM}, #{DOMAIN}, #{USEYN}, #{USERID}
+        exec haba_900u_str #{actkind}, #{cmpycd}, #{ltdnm}, #{ltdenm}, #{saupno}, #{bossnm}, #{legalno}, #{postno}, #{address}, #{uptae}, #{upjong}, #{telno}, #{fondymd}, #{clsmm}, #{domain}, #{useyn}, #{userid}
     </select>
     <select id="HABA_910U_STR" resultType="map">
-        EXEC HABA_910U_STR #{ACTKIND}, #{CMPYCD}, #{USERID}, #{USERNM}, #{DEPTCD}, #{DEPTNM}, #{PW}, #{TELNO}, #{HPNO}, #{EMAIL}, #{USEYN}, #{USERID}, #{PRICEGBN}
+        exec haba_910u_str #{actkind}, #{cmpycd}, #{userid}, #{usernm}, #{deptcd}, #{deptnm}, #{pw}, #{telno}, #{hpno}, #{email}, #{useyn}, #{userid}, #{pricegbn}
     </select>
     <select id="HABA_060U_STR" resultType="map">
-        EXEC HABA_060U_STR #{ACTKIND}, #{CMPYCD}, #{DEPTCD}, #{DEPTNM}, #{DEPTSNM}, #{DEPTENM}, #{UPDEPT}, #{DEPTDUM}, #{DEPTEMP}, #{DEPTOPN}, #{DEPTCLD}, #{TAXUNIT}, #{COSTGBN}, #{DSPORD}, #{USEYN}, #{USERID}
+        exec haba_060u_str #{actkind}, #{cmpycd}, #{deptcd}, #{deptnm}, #{deptsnm}, #{deptenm}, #{updept}, #{deptdum}, #{deptemp}, #{deptopn}, #{deptcld}, #{taxunit}, #{costgbn}, #{dspord}, #{useyn}, #{userid}
     </select>
     <select id="HAAA_010U_STR" resultType="map">
-        EXEC HAAA_010U_STR #{ACTKIND}, #{CDTYPE}, #{CODECD}, #{CODENM}, #{DSPORD}, #{REMARK}, #{USEYN}, #{USERID}
+        exec haaa_010u_str #{actkind}, #{cdtype}, #{codecd}, #{codenm}, #{dspord}, #{remark}, #{useyn}, #{userid}
     </select>
 
     <select id="HS00_000S_STR" resultType="map">
-        EXEC HS00_000S_STR #{GUBUN}, #{CMPYCD}, #{GBNCD}, #{CODE}
+        exec hs00_000s_str #{gubun}, #{cmpycd}, #{gbncd}, #{code}
     </select>
 
     <select id="HP00_000S_STR" resultType="map">
-        EXEC HP00_000S_STR #{GUBUN}, #{CMPYCD}, #{GBNCD}, #{CODE}
+        exec hp00_000s_str #{gubun}, #{cmpycd}, #{gbncd}, #{code}
     </select>
 
     <select id="GET_CODE_LIST" resultType="map">
-        SELECT CDTYPE, CODECD, CODENM, REMARK, DSPORD, USEYN FROM HABA900T_TBL WHERE CDTYPE = #{CDTYPE} AND USEYN = 'Y' ORDER BY DSPORD
+        select cdtype, codecd, codenm, remark, dspord, useyn from haba900t_tbl where cdtype = #{cdtype} and useyn = 'y' order by dspord
     </select>
     <select id="GET_TOP_MENU_LIST" resultType="map">
-        SELECT CODECD, CODENM FROM HABA900T_TBL WHERE CDTYPE = '320' AND USEYN = 'Y' ORDER BY DSPORD
+        select codecd, codenm from haba900t_tbl where cdtype = '320' and useyn = 'y' order by dspord
     </select>
     <select id="GET_LEFT_MENU_LIST" resultType="map">
-        SELECT A.UPMUCD, A.GRPCD, ISNULL(B.GRPNM,'') AS GRPNM, A.PGMID, A.PGMNM FROM HAAA800T_TBL A INNER JOIN HAAA810T_TBL B ON A.UPMUCD = B.UPMUCD AND A.GRPCD = B.GRPCD WHERE A.UPMUCD = #{UPMUCD} AND A.USEYN = 'Y' ORDER BY B.DSPORD, A.DSPORD
+        select a.upmucd, a.grpcd, isnull(b.grpnm,'') as grpnm, a.pgmid, a.pgmnm from haaa800t_tbl a inner join haaa810t_tbl b on a.upmucd = b.upmucd and a.grpcd = b.grpcd where a.upmucd = #{upmucd} and a.useyn = 'y' order by b.dspord, a.dspord
     </select>
     <select id="GET_COMPANY_INFO" resultType="map">
-        EXEC HABA_900U_STR 'S0', #{CMPYCD}
+        exec haba_900u_str 's0', #{cmpycd}
     </select>
     <select id="GET_USER_INFO" resultType="map">
-        EXEC HA00_010S_STR #{CMPYCD}, 'U0', '', #{USERID}
+        exec ha00_010s_str #{cmpycd}, 'u0', '', #{userid}
     </select>
     <insert id="INSERT_LOGIN_HISTORY">
-        INSERT INTO HABA970T_TBL (CMPYCD, USERID, ADDTIME, IOGBN, IP) VALUES (#{CMPYCD}, #{USERID}, GETDATE(), #{IOGBN}, #{IP})
+        insert into haba970t_tbl (cmpycd, userid, addtime, iogbn, ip) values (#{cmpycd}, #{userid}, getdate(), #{iogbn}, #{ip})
     </insert>
     <delete id="DELETE_USER_CONN">
-        DELETE FROM HABA980T_TBL WHERE CMPYCD = #{CMPYCD} AND USERID = #{USERID}
+        delete from haba980t_tbl where cmpycd = #{cmpycd} and userid = #{userid}
     </delete>
 </mapper>

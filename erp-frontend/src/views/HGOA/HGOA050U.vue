@@ -47,7 +47,7 @@
                             </div>
                         </div>
                         <div class="d-flex gap-2 align-items-center" v-if="ACTIVE_TAB === 'CHECK'">
-                            <input type="text" v-model="SEARCH_KEYWORD" class="form-control form-control-sm" style="width: 180px;" placeholder="고객명/연락처/이메일" @keyup.enter="search_target_list" />
+                            <input type="text" v-model="search_KEYWORD" class="form-control form-control-sm" style="width: 180px;" placeholder="고객명/연락처/이메일" @keyup.enter="search_target_list" />
                             <button class="btn btn-xs btn-dark px-3" @click="search_target_list">검색</button>
                         </div>
                     </div>
@@ -92,7 +92,7 @@ const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
 const ACTIVE_TAB = ref('CREATE')
 const SELECTED_CAMP = ref<any>(null)
 const SELECTED_FILE = ref<File | null>(null)
-const SEARCH_KEYWORD = ref('')
+const search_KEYWORD = ref('')
 
 const CAMP_LIST_REF = ref<HTMLDivElement | null>(null)
 const MAIN_GRID_REF = ref<HTMLDivElement | null>(null)
@@ -124,8 +124,8 @@ const init_main_grid = (data: any[]) => {
         { formatter: "rowSelection", titleFormatter: "rowSelection", hozAlign: "center", headerSort: false, width: 40 },
         { title: "고객명", field: "CUST_NM", hozAlign: "center", width: 100 },
         { title: "연락처", field: "TEL_NO", hozAlign: "center", width: 120 },
-        { title: "이메일", field: "EMAIL", hozAlign: "center", width: 180 },
-        { title: "상태", field: "STATUS", hozAlign: "center", width: 80 }
+        { title: "이메일", field: "email", hozAlign: "center", width: 180 },
+        { title: "상태", field: "status", hozAlign: "center", width: 80 }
     ]
 
     // 💡 동적 컬럼 처리 (대문자 필드)
@@ -178,7 +178,7 @@ const search_target_list = async () => {
     if (!SELECTED_CAMP.value) return
     try {
         const { data } = await api.get('/crm/outbound/call-list', {
-            params: { CAMP_NO: SELECTED_CAMP.value.CAMP_NO, KEYWORD: SEARCH_KEYWORD.value }
+            params: { CAMP_NO: SELECTED_CAMP.value.CAMP_NO, KEYWORD: search_KEYWORD.value }
         })
         init_main_grid(data)
     } catch (e) { vAlertError('조회 실패') }
@@ -201,13 +201,13 @@ const handle_upload = async () => {
         const json: any[] = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]])
         const targetList = json.map(row => {
             const item: any = {
-                CMPYCD: SELECTED_CAMP.value.CMPYCD,
+                cmpycd: SELECTED_CAMP.value.cmpycd,
                 CAMP_NO: SELECTED_CAMP.value.CAMP_NO,
                 SURV_GB: SELECTED_CAMP.value.SURV_GB,
                 CUST_NM: row['고객명'],
                 TEL_NO: row['연락처'],
-                EMAIL: row['이메일'] || '',
-                STATUS: '010',
+                email: row['이메일'] || '',
+                status: '010',
                 EXT_DATA: {}
             }
             Object.keys(row).forEach(key => {

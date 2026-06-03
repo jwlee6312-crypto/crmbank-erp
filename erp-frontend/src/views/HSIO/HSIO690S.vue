@@ -1,150 +1,135 @@
 <!--
 	=============================================================
 	프로그램명	: 매입미정산현황 (Purchase Non-Settlement Status)
-	작성일자	: 25.02.24
+	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : [최종완성] 다단 그리드 헤더 + HSOD100U 스타일 표준 적용
+	설명        : HSOD100U 디자인 패턴 이식 및 그리드 스크롤 최적화
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-	<div class="hsio690s-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1. 상단 액션 바 (표준 버튼 배치) -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-calendar-x me-2 text-primary" style="font-size: 18px;"></i>
-				구매정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				매입정산 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">매입미정산현황</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">초기화</button>
-				<button class="btn-erp btn-search" @click="fetchList">조회</button>
-				<button class="btn-erp btn-print" @click="handlePrint">인쇄</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-calendar-x me-2 text-primary" style="font-size: 18px;"></i>
+        구매정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        매입정산 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        <span class="text-primary fw-bolder">매입미정산현황 (HSIO690S)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-2">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="fetchList">조회</button>
+        <button class="btn-erp btn-print" @click="print">인쇄</button>
+      </div>
+    </div>
 
-		<!-- 🔍 2. 검색 조건 영역 (고밀도 표준 적용) -->
-		<div class="p-2 pb-0">
-			<div class="card border shadow-sm bg-light bg-opacity-50">
-				<div class="card-body p-0">
-					<table class="erp-table-full">
-						<colgroup>
-							<col style="width: 1%; white-space: nowrap;"><col style="width: 24%">
-							<col style="width: 1%; white-space: nowrap;"><col style="width: 74%">
-						</colgroup>
-						<tbody>
-							<tr>
-								<th class="required">입고부서</th>
-								<td>
-									<div class="input-group input-group-sm" style="width: 250px;">
-										<input v-model="searchForm.DEPTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.DEPTNM" type="text" class="form-control" />
-										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-									</div>
-								</td>
-								<th class="required">입고일자</th>
-								<td>
-									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.FYMD" type="date" class="form-control form-control-sm" style="width: 140px;" />
-										<span class="text-muted mx-1">~</span>
-										<input v-model="searchForm.TYMD" type="date" class="form-control form-control-sm" style="width: 140px;" />
-									</div>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-		<!-- 📊 3. 그리드 영역 (다단 헤더 표준화) -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="height: 40px; min-height: 40px;">
-					<span class="fw-bold small text-dark d-flex align-items-center">
-						<i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 거래처별 입고/정산/미정산 요약 현황
-					</span>
-				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
-			</div>
-		</div>
+      <!-- 🔍 [상단] 조회 필터 영역 (HSOD100U 디자인 패턴 적용) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 10%" />
+              <col style="width: 40%" />
+              <col style="width: 10%" />
+              <col style="width: 40%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">입고부서</th>
+                <td>
+                  <div class="input-group input-group-sm w-75">
+                    <input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="text-center bg-light">입고일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="searchForm.fymd" v-model:todt="searchForm.tymd" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-		<!-- 📊 4. 하단 요약 바 -->
-		<div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-			<div class="row align-items-center w-100">
-				<div class="col-md-3 small">거래처 수: <span class="fw-bold text-white">{{ activeItemCount }}</span> 개</div>
-				<div class="col-md-9 text-end">
-					<span class="me-4 small opacity-75">미정산 공급가: <span class="fw-bold text-info ms-1">{{ formatNumber(totals.amt) }}</span></span>
-					<span class="fs-5 ms-2 fw-light">총 미정산 합계: <span class="fw-bold text-warning ms-2">{{ formatNumber(totals.sum) }}</span></span>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+      <!-- 📊 3. 그리드 영역 (스크롤 최적화) -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white grid-container-right">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 거래처별 입고/정산/미정산 요약 현황</span>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
+import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const now = new Date()
 const searchForm = reactive({
-  DEPTCD: authStore.DEPTCD,
-  DEPTNM: authStore.DEPTNM,
-  FYMD: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  TYMD: now.toISOString().substring(0, 10)
+  deptcd: authStore.deptcd,
+  deptnm: authStore.deptnm,
+  fymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
+  tymd: now.toISOString().substring(0, 10)
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
-const activeItemCount = ref(0)
-const totals = reactive({ amt: 0, sum: 0 })
 
 async function fetchList() {
   try {
     const res = await api.post('/api/hsio/HSIO_690S_STR', {
       ...searchForm,
-      CMPYCD: authStore.CMPYCD,
-      FYMD: searchForm.FYMD.replace(/-/g, ''),
-      TYMD: searchForm.TYMD.replace(/-/g, '')
+      cmpycd: authStore.cmpycd,
+      fymd: searchForm.fymd.replace(/-/g, ''),
+      tymd: searchForm.tymd.replace(/-/g, '')
     })
     const data = res.data.data || []
     mainGrid?.setData(data)
-    activeItemCount.value = data.length
-    totals.amt = data.reduce((acc: number, cur: any) => acc + (Number(cur.NAMT) || 0), 0)
-    totals.sum = data.reduce((acc: number, cur: any) => acc + (Number(cur.NAMT) + Number(cur.NVAT) || 0), 0)
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
 }
 
 function initialize() {
   resetForm(searchForm);
-  searchForm.DEPTCD = authStore.DEPTCD; searchForm.DEPTNM = authStore.DEPTNM;
-  searchForm.FYMD = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
-  searchForm.TYMD = now.toISOString().substring(0, 10);
-  mainGrid?.clearData(); totals.amt = 0; totals.sum = 0;
+  searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
+  searchForm.fymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
+  searchForm.tymd = now.toISOString().substring(0, 10);
+  mainGrid?.clearData();
 }
 
-const handlePrint = () => { vAlert('인쇄 기능을 준비 중입니다.') }
-const formatNumber = (val: any) => Number(val || 0).toLocaleString()
-const openHelp = (type: string) => { /* 팝업 구현 */ }
-const modalVisible = ref(false); const modalProps = reactive<any>({ title: '', path: '', onConfirm: () => {} })
+function openHelp(type: string) {
+  if (type === 'DEPT') {
+    openCommonHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
+  }
+}
+
+const print = () => { vAlert('인쇄 기능을 준비 중입니다.') }
 
 onMounted(() => {
 	if (mainGridRef.value) {
@@ -152,33 +137,33 @@ onMounted(() => {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 80 },
 			columns: [
-				{ title: '거래처 명', field: 'CUSTNM', minWidth: 180, widthGrow: 1.5, cssClass: 'fw-bold text-dark', frozen: true },
+				{ title: '거래처 명', field: 'custnm', minWidth: 180, widthGrow: 1.5, cssClass: 'fw-bold text-dark', frozen: true },
 				{
 					title: '입고 정보',
 					columns: [
-						{ title: '수량', field: 'OQTY', hozAlign: 'right', width: 100, formatter: 'money' },
-						{ title: '공급가', field: 'OAMT', hozAlign: 'right', width: 120, formatter: 'money' },
-						{ title: '부가세', field: 'OVAT', hozAlign: 'right', width: 120, formatter: 'money' },
-						{ title: '합계', field: 'OSUM', hozAlign: 'right', width: 120, formatter: 'money', mutatorData: (v, d) => Number(d.OAMT || 0) + Number(d.OVAT || 0) }
+						{ title: '수량', field: 'oqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
+						{ title: '공급가', field: 'oamt', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 } },
+						{ title: '부가세', field: 'ovat', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+						{ title: '합계', field: 'osum', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 }, mutatorData: (v, d) => Number(d.oamt || 0) + Number(d.ovat || 0) }
 					]
 				},
 				{
 					title: '정산 내역',
 					columns: [
-						{ title: '수량', field: 'JQTY', hozAlign: 'right', width: 100, formatter: 'money' },
-						{ title: '공급가', field: 'JAMT', hozAlign: 'right', width: 120, formatter: 'money' },
-						{ title: '부가세', field: 'JVAT', hozAlign: 'right', width: 120, formatter: 'money' },
-						{ title: '합계', field: 'JSUM', hozAlign: 'right', width: 120, formatter: 'money', mutatorData: (v, d) => Number(d.JAMT || 0) + Number(d.JVAT || 0) }
+						{ title: '수량', field: 'jqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
+						{ title: '공급가', field: 'jamt', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 } },
+						{ title: '부가세', field: 'jvat', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+						{ title: '합계', field: 'jsum', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 }, mutatorData: (v, d) => Number(d.jamt || 0) + Number(d.jvat || 0) }
 					]
 				},
 				{
 					title: '미정산 잔액',
 					columns: [
-						{ title: '수량', field: 'NQTY', hozAlign: 'right', width: 100, formatter: 'money', cssClass: 'text-danger' },
-						{ title: '공급가', field: 'NAMT', hozAlign: 'right', width: 120, formatter: 'money', cssClass: 'text-danger' },
-						{ title: '부가세', field: 'NVAT', hozAlign: 'right', width: 120, formatter: 'money', cssClass: 'text-danger' },
-						{ title: '합계', field: 'NSUM', hozAlign: 'right', width: 120, formatter: 'money', cssClass: 'fw-bold text-danger bg-light',
-						  mutatorData: (v, d) => Number(d.NAMT || 0) + Number(d.NVAT || 0) }
+						{ title: '수량', field: 'nqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-danger' },
+						{ title: '공급가', field: 'namt', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-danger' },
+						{ title: '부가세', field: 'nvat', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-danger' },
+						{ title: '합계', field: 'nsum', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'fw-bold text-danger bg-light',
+						  mutatorData: (v, d) => Number(d.namt || 0) + Number(d.nvat || 0) }
 					]
 				}
 			]
@@ -189,29 +174,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hsio690s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
+.main-content-wrapper { padding-bottom: 0vh !important; }
+.erp-table-dense th, .erp-table-dense td {
+  height: 32px !important; padding: 0 8px !important; font-size: 12px; vertical-align: middle; border: 1px solid #dee2e6;
 }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
-  white-space: nowrap;
+.erp-table-dense .form-control, .erp-table-dense .form-select, .erp-table-dense .btn {
+  height: 26px !important; font-size: 12px !important; border-radius: 2px;
 }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
+.erp-table-dense th { font-weight: 600; color: #495057; }
+.grid-container-right { border-bottom: 3px solid #005a9f !important; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
 </style>
-

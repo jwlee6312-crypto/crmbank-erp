@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio171u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -27,17 +27,17 @@
               <tr>
                 <th class="required">정산연월</th>
                 <td>
-                  <input v-model="uiJSANYM" type="month" class="form-control form-control-sm" style="width: 150px;" @change="fetchList" />
+                  <input v-model="uijsanym" type="month" class="form-control form-control-sm" style="width: 150px;" @change="fetchList" />
                 </td>
                 <th class="required">전표일자</th>
                 <td>
-                  <input v-model="uiSLIPYMD" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                  <input v-model="uislipymd" type="date" class="form-control form-control-sm" style="width: 150px;" />
                 </td>
                 <th class="required">발행부서</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 250px;">
-                    <input v-model="formData.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
+                    <input v-model="formData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -53,20 +53,11 @@
           <span class="fw-bold small text-dark"><i class="bi bi-list-check me-1"></i> 매입할인 내역</span>
           <div class="small text-muted">발행할 항목을 선택한 후 [전표발행] 버튼을 클릭하세요.</div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 합계 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="d-flex justify-content-between align-items-center w-100">
-        <div class="small">선택건수: <span class="fw-bold text-info">{{ selectedCount }}</span> 건</div>
-        <div class="small">매입할인액 합계: <span class="fw-bold text-warning" style="font-size: 16px;">{{ formatNumber(totalHalAmt) }}</span> 원</div>
-      </div>
-    </div>
-
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
@@ -88,25 +79,25 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initYM = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
+const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+const initym = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
 
 // 1. 상태 관리
-const searchData = reactive({ JSANYM: initYM })
+const searchData = reactive({ jsanym: initym })
 const formData = reactive({
-  SLIPYMD: initYMD,
-  DEPTCD: authStore.DEPTCD,
-  DEPTNM: authStore.DEPTNM
+  slipymd: initymd,
+  deptcd: authStore.deptcd,
+  deptnm: authStore.deptnm
 })
-const closingInfo = reactive({ CLSYMD: '', SCLSYM: '' })
+const closingInfo = reactive({ clsymd: '', sclsym: '' })
 
-const uiJSANYM = computed({
-  get: () => searchData.JSANYM ? `${searchData.JSANYM.substring(0, 4)}-${searchData.JSANYM.substring(4, 6)}` : '',
-  set: (v) => searchData.JSANYM = v.replace(/-/g, '')
+const uijsanym = computed({
+  get: () => searchData.jsanym ? `${searchData.jsanym.substring(0, 4)}-${searchData.jsanym.substring(4, 6)}` : '',
+  set: (v) => searchData.jsanym = v.replace(/-/g, '')
 })
-const uiSLIPYMD = computed({
-  get: () => formatDateString(formData.SLIPYMD, '-'),
-  set: (v) => formData.SLIPYMD = v.replace(/-/g, '')
+const uislipymd = computed({
+  get: () => formatDateString(formData.slipymd, '-'),
+  set: (v) => formData.slipymd = v.replace(/-/g, '')
 })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -124,8 +115,8 @@ const initGrid = () => {
       selectable: true,
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerSort: false },
-        { title: "거래처", field: "CUSTNM", width: 300 },
-        { title: "매입부서", field: "DEPTNM", width: 250 },
+        { title: "거래처", field: "custnm", width: 300 },
+        { title: "매입부서", field: "deptnm", width: 250 },
         { title: "매입할인액", field: "HALAMT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold text-primary" },
       ],
     })
@@ -140,12 +131,12 @@ const initGrid = () => {
 
 // 3. 비즈니스 로직
 const fetchList = async () => {
-  if (!searchData.JSANYM) return vAlertError('정산연월을 선택하세요.')
+  if (!searchData.jsanym) return vAlertError('정산연월을 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_171U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
-      JSANYM: searchData.JSANYM
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
+      jsanym: searchData.jsanym
     })
     grid?.setData(res.data)
     vAlert('조회되었습니다.')
@@ -159,10 +150,10 @@ const saveData = async () => {
   if (selectedData.length === 0) return vAlertError('전표발행 대상을 선택하시기 바랍니다.')
 
   // 마감 체크
-  if (formData.SLIPYMD <= closingInfo.CLSYMD) {
+  if (formData.slipymd <= closingInfo.clsymd) {
     return vAlertError("회계정보가 마감이 되었습니다. 해당 전표일자로 작업할 수 없습니다.")
   }
-  if (formData.SLIPYMD.substring(0, 6) <= closingInfo.SCLSYM) {
+  if (formData.slipymd.substring(0, 6) <= closingInfo.sclsym) {
     return vAlertError("영업정보가 마감이 되었습니다. 해당 전표일자로 작업할 수 없습니다.")
   }
 
@@ -172,28 +163,28 @@ const saveData = async () => {
     for (const item of selectedData) {
       // 1. 전표 생성 (A0)
       const resA0 = await api.post('/api/hsio/HSIO_171U_STR', {
-        ACTKIND: 'A0',
-        CMPYCD: authStore.CMPYCD,
-        USERID: authStore.USERID,
-        JSANYM: searchData.JSANYM,
-        CUSTCD: item.CUSTCD,
+        actkind: 'A0',
+        cmpycd: authStore.cmpycd,
+        userid: authStore.userid,
+        jsanym: searchData.jsanym,
+        custcd: item.custcd,
         HALAMT: item.HALAMT,
-        DEPTCD: formData.DEPTCD,
-        SLIPYMD: formData.SLIPYMD
+        deptcd: formData.deptcd,
+        slipymd: formData.slipymd
       })
 
       const slipNo = resA0.data?.[0]?.SLIPNO || ''
 
       // 2. 전표 정보 업데이트 (U0)
       const resU0 = await api.post('/api/hsio/HSIO_171U_STR', {
-        ACTKIND: 'U0',
-        CMPYCD: authStore.CMPYCD,
-        USERID: authStore.USERID,
-        JSANYM: searchData.JSANYM,
-        CUSTCD: item.CUSTCD,
+        actkind: 'U0',
+        cmpycd: authStore.cmpycd,
+        userid: authStore.userid,
+        jsanym: searchData.jsanym,
+        custcd: item.custcd,
         HALAMT: item.HALAMT,
-        DEPTCD: formData.DEPTCD,
-        SLIPYMD: formData.SLIPYMD,
+        deptcd: formData.deptcd,
+        slipymd: formData.slipymd,
         SLIPNO: slipNo
       })
 
@@ -211,8 +202,8 @@ const saveData = async () => {
 }
 
 const initialize = () => {
-  searchData.JSANYM = initYM
-  formData.SLIPYMD = initYMD
+  searchData.jsanym = initym
+  formData.slipymd = initymd
   grid?.clearData()
   totalHalAmt.value = 0
   selectedCount.value = 0
@@ -224,12 +215,12 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 
 function openHelp(type: string) {
   Object.assign(modalProps, {
-    title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM',
-    data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD, LIMITOFFSET: 0, LIMITROWS: 20 },
-    columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 200 }],
+    title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
+    data: { gubun: 'D0', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+    columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 200 }],
     onConfirm: (data: any) => {
-      formData.DEPTCD = data.DEPTCD
-      formData.DEPTNM = data.DEPTNM
+      formData.deptcd = data.deptcd
+      formData.deptnm = data.deptnm
     }
   })
   modalVisible.value = true
@@ -239,39 +230,12 @@ const formatDateString = (v: any, sep: string) => v && v.length === 8 ? `${v.sub
 const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0)
 
 onMounted(async () => {
-  api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD } }).then(r => {
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) {
-      closingInfo.CLSYMD = String(Object.values(r.data[0])[0]).trim()
-      closingInfo.SCLSYM = String(Object.values(r.data[0])[1]).trim()
+      closingInfo.clsymd = String(Object.values(r.data[0])[0]).trim()
+      closingInfo.sclsym = String(Object.values(r.data[0])[1]).trim()
     }
   })
   nextTick(() => initGrid())
 })
 </script>
-
-<style scoped>
-.hsio171u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
-  white-space: nowrap;
-}
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-</style>

@@ -27,11 +27,11 @@ public class HfmfController {
         params.clear();
         params.putAll(upperMap);
 
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            params.putIfAbsent("CMPYCD", user.getCMPYCD());
-            params.putIfAbsent("USERID", user.getUSERID());
-            params.put("UPDEMP", user.getUSERID());
+            params.putIfAbsent("cmpycd", user.getCmpycd());
+            params.putIfAbsent("userid", user.getUserid());
+            params.put("updemp", user.getUserid());
         }
         
         params.replaceAll((key, value) -> {
@@ -77,21 +77,21 @@ public class HfmfController {
         String[] keys;
         
         if (proc.equals("FMF1040U_STR")) {
-            keys = new String[]{"CMPYCD", "ACTKIND", "YM", "COSTCD", "ACCT", "COSTAMT", "USERID"};
+            keys = new String[]{"cmpycd", "actkind", "ym", "costcd", "acct", "costamt", "userid"};
         } else if (proc.equals("FMF1050U_STR")) {
-            keys = new String[]{"CMPYCD", "ACTKIND", "YM", "COSTCD", "LINECD", "DIVSTD", "RATE", "REMARK", "USERID"};
+            keys = new String[]{"cmpycd", "actkind", "ym", "costcd", "linecd", "divstd", "rate", "remark", "userid"};
         } else if (proc.equals("FMF2010U_STR")) {
-            keys = new String[]{"CMPYCD", "ACTKIND", "YM", "COLGBN", "USERID"};
+            keys = new String[]{"cmpycd", "actkind", "ym", "colgbn", "userid"};
         } else if (proc.equals("FMF2020U_STR")) {
-            keys = new String[]{"CMPYCD", "ACTKIND", "YM", "CHASU", "USERID"};
+            keys = new String[]{"cmpycd", "actkind", "ym", "chasu", "userid"};
         } else if (proc.equals("FMF2060R_STR")) {
-            keys = new String[]{"CMPYCD", "ACTKIND", "YM", "COSTCD"};
+            keys = new String[]{"cmpycd", "actkind", "ym", "costcd"};
         } else if (proc.equals("FMF2070U_STR")) {
-            keys = new String[]{"CMPYCD", "ACTKIND", "YM", "COSTCD", "ACCT", "LINECD", "ADSTAMT", "USERID"};
+            keys = new String[]{"cmpycd", "actkind", "ym", "costcd", "acct", "linecd", "adstamt", "userid"};
         } else if (proc.equals("FMF2110U_STR")) {
-            keys = new String[]{"CMPYCD", "ACTKIND", "YM", "JOBORD", "USERID", "MSGYN", "MSGTEXT"};
+            keys = new String[]{"cmpycd", "actkind", "ym", "jobord", "userid", "msgyn", "msgtext"};
         } else if (proc.equals("FMF3010U_STR")) {
-            keys = new String[]{"CMPYCD", "ACTKIND", "YM", "JAGBN", "USERID"};
+            keys = new String[]{"cmpycd", "actkind", "ym", "jagbn", "userid"};
         } else {
             keys = params.keySet().toArray(new String[0]);
         }

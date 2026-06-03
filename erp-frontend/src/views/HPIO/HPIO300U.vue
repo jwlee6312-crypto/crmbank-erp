@@ -1,128 +1,111 @@
+<!--
+	=============================================================
+	프로그램명	: 생산실적등록 (HPIO300U)
+	작성일자	: 2025.02.24
+	설명        : 생산 공정별 실적 등록 및 투입 자재 상세 관리 (HPIO210U 표준 패턴 적용)
+	=============================================================
+-->
+
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-  <div class="hpio300u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-box-seam-fill me-2 text-primary" style="font-size: 18px;"></i>
-        생산정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        생산정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">생산실적등록 (HPIO300U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-2">
-        <button class="btn-erp btn-init" @click="initialize">
-          <i class="bi bi-arrow-clockwise"></i> 초기화
-        </button>
-        <button class="btn-erp btn-search" @click="fetchProcesses">
-          <i class="bi bi-search"></i> 조회
-        </button>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="fetchProcesses">조회</button>
       </div>
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
-      <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 8px;">
-        <div class="card-body p-0">
-          <table class="erp-table-full">
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 23%" />
+                <col style="width: 10%" /><col style="width: 23%" />
+                <col style="width: 10%" /><col style="width: 24%" />
+            </colgroup>
             <tbody>
               <tr>
-                <th class="required">생산라인</th>
+                <th class="text-center bg-light required">생산라인</th>
                 <td>
-                  <select v-model="searchData.LINECD" class="form-select form-select-sm" style="width: 200px;" @change="onLineChange">
+                  <select v-model="searchForm.linecd" class="form-select form-select-sm" @change="onLineChange">
                     <option value="">라인 선택</option>
-                    <option v-for="opt in lineOptions" :key="opt.LINECD" :value="opt.LINECD">
-                      [{{ opt.LINECD }}] {{ opt.LINENM }}
+                    <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">
+                      [{{ opt.linecd }}] {{ opt.linenm }}
                     </option>
                   </select>
                 </td>
-                <th class="required">지시일자</th>
+                <th class="text-center bg-light required">지시일자</th>
                 <td>
-                  <input v-model="uiORDYMD" type="date" class="form-control form-control-sm" style="width: 150px;" @change="onFilterChange" />
+                  <input v-model="ordymd_f" type="date" class="form-control form-control-sm" @change="onFilterChange" />
                 </td>
+                <th class="bg-light"></th><td></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- 🅱️ 데이터 작업 영역 -->
-      <div class="d-flex flex-grow-1 gap-2 overflow-hidden">
-        <!-- 좌측: 공정 목록 -->
-        <div class="card border-0 shadow-sm d-flex flex-column" style="width: 180px; border-radius: 8px;">
-          <div class="card-header bg-light py-2 px-3 border-bottom fw-bold small text-dark text-center">
-            생산공정
-          </div>
-          <div class="card-body p-0 flex-grow-1 bg-white overflow-auto">
-            <ul class="list-group list-group-flush process-list">
-              <li
-                v-for="prog in processList"
-                :key="prog.PROGCD"
-                class="list-group-item list-group-item-action text-center py-2 px-1 small"
-                :class="{ active: selectedProg.PROGCD === prog.PROGCD }"
-                @click="onProcessSelect(prog)"
-              >
-                {{ prog.PROGNM }}
-              </li>
-            </ul>
+      <!-- [하단] 3단 레이아웃 영역 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
+
+        <!-- ⬅️ 좌측: 공정 목록 (grid1) -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 280px; min-width: 280px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark text-center">생산공정</div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
           </div>
         </div>
 
-        <!-- 우측 영역 -->
+        <!-- ➡️ 우측: 실적 및 자재 (Vertical Split) -->
         <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
-          <!-- 우측 상단: 생산실적 그리드 -->
-          <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column" style="border-radius: 8px;">
-            <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+
+          <!-- 우측 상단: 제품 생산 실적 (grid2) -->
+          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
               <span class="fw-bold small text-dark">
-                <i class="bi bi-list-check me-1 text-primary"></i> 제품 생산 실적
-                <span v-if="selectedProg.PROGNM" class="text-primary ms-2">[{{ selectedProg.PROGNM }}]</span>
+                <i class="bi bi-list-check me-2 text-primary"></i>제품 생산 실적
+                <span v-if="selectedProg.prognm" class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ selectedProg.prognm }}</span>
               </span>
-              <div class="btn-group gap-1">
-                <button class="btn btn-erp btn-save py-0" style="height: 28px;" @click="savePerformance">
-                  <i class="bi bi-save me-1"></i> 실적저장
-                </button>
-              </div>
+              <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="savePerformance" style="font-size: 11px;">실적저장</button>
             </div>
-            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-              <div ref="perfGridElement" style="height: 100%;"></div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="tableRef2" class="tabulator-instance flex-grow-1"></div>
             </div>
           </div>
 
-          <!-- 우측 하단: 투입자재 그리드 -->
-          <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column" style="border-radius: 8px;">
-            <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+          <!-- 우측 하단: 투입 자재 상세 (grid3) -->
+          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
               <span class="fw-bold small text-dark">
-                <i class="bi bi-box-arrow-in-right me-1 text-success"></i> 투입 자재 상세
-                <span v-if="selectedProduct.ITEMNM" class="text-success ms-2">[{{ selectedProduct.ITEMNM }}]</span>
+                <i class="bi bi-box-arrow-in-right me-2 text-success"></i>투입 자재 상세
+                <span v-if="selectedProduct.itemnm" class="badge bg-success-subtle text-success border border-success-subtle ms-2">{{ selectedProduct.itemnm }}</span>
               </span>
-              <div class="btn-group gap-2">
-                <button class="btn btn-sm btn-outline-primary px-3" style="height: 28px; font-size: 12px; font-weight: 600;" @click="addMaterialRow">
-                  <i class="bi bi-plus-circle me-1"></i> 행추가
-                </button>
-                <button class="btn btn-erp btn-save py-0" style="height: 28px; background-color: #2ec4b6 !important;" @click="saveMaterials">
-                  <i class="bi bi-check2-circle me-1"></i> 자재저장
-                </button>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addMaterialRow" :disabled="!selectedProduct.itemcd" style="font-size: 11px;">+ 자재추가</button>
+                <button class="btn btn-sm btn-outline-success py-0 px-2 fw-bold" @click="saveMaterials" :disabled="!selectedProduct.itemcd" style="font-size: 11px;">자재저장</button>
               </div>
             </div>
-            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-              <div ref="matGridElement" style="height: 100%;"></div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="tableRef3" class="tabulator-instance flex-grow-1"></div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-4 small">실적건수: <span class="fw-bold text-info">{{ perfItemCount }}</span> 건</div>
-        <div class="col-md-8 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 제품을 클릭하면 하단에 투입 자재 내역이 표시됩니다.
-        </div>
-      </div>
-    </div>
-
-    <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
 
@@ -130,347 +113,218 @@
 import { reactive, ref, onMounted, computed, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import AppAlert from '@/components/AppAlert.vue'
-import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
 
 const authStore = useAuthStore()
+const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
-const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-
-// 1. 상태 관리
-const searchData = reactive({
-  LINECD: '010',
-  ORDYMD: initYMD
-})
-
+// [1] 데이터 모델링
+const initymd = today.replace(/-/g, '')
+const searchForm = reactive({ linecd: '010', ordymd: initymd })
 const lineOptions = ref<any[]>([])
-const processList = ref<any[]>([])
-const selectedProg = reactive({ PROGCD: '', PROGNM: '' })
-const selectedProduct = reactive<any>({})
-const closingInfo = reactive({ CLSYMD: '', SCLSYM: '', PCLSYM: '', WCLSYM: '' })
+const selectedProg = reactive({ progcd: '', prognm: '' })
+const selectedProduct = reactive<any>({ itemcd: '', itemnm: '' })
+const closingInfo = reactive({ clsymd: '' })
 
-const uiORDYMD = computed({
-  get: () => formatDateString(searchData.ORDYMD, '-'),
-  set: (v) => { if (v) searchData.ORDYMD = v.replace(/-/g, '') }
+const ordymd_f = computed({
+  get: () => searchForm.ordymd && searchForm.ordymd.length === 8 ? `${searchForm.ordymd.substring(0, 4)}-${searchForm.ordymd.substring(4, 6)}-${searchForm.ordymd.substring(6, 8)}` : '',
+  set: (v) => { if (v) searchForm.ordymd = v.replace(/-/g, '') }
 })
 
-const perfGridElement = ref<HTMLElement | null>(null)
-const matGridElement = ref<HTMLElement | null>(null)
-let perfGrid: Tabulator | null = null
-let matGrid: Tabulator | null = null
-const perfItemCount = ref(0)
+const tableRef1 = ref<HTMLDivElement | null>(null)
+const tableRef2 = ref<HTMLDivElement | null>(null)
+const tableRef3 = ref<HTMLDivElement | null>(null)
+let grid1: Tabulator | null = null
+let grid2: Tabulator | null = null
+let grid3: Tabulator | null = null
 
-// 🏭 라인 목록 조회
+// [2] 그리드 초기화
+const initGrids = () => {
+  grid1 = new Tabulator(tableRef1.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "라인 선택", selectable: 1,
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
+      { title: "공정명", field: "cdnm", hozAlign: "left", headerSort: false },
+      { title: "코드", field: "code", hozAlign: "center", width: 80, cssClass: "fw-bold text-primary", headerSort: false }
+    ],
+  });
+  grid1.on("rowClick", (e, row) => onProcessSelect(row.getData()));
+
+  grid2 = new Tabulator(tableRef2.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "공정을 선택하세요.", selectable: true,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", frozen: true },
+      { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+          const v = c.getValue();
+          if (v === '입력') return '<span class="badge bg-primary">신규</span>';
+          if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+          if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+          return '';
+      }, frozen: true },
+      { title: "제품명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary',
+        cellClick: (e, cell) => { if(Number(cell.getData().prdqty) !== 0) fetchMaterialData(cell.getData()) }
+      },
+      { title: "생산일자", field: "proymd", width: 110, editor: "input", formatter: (c) => formatDate(c.getValue()) },
+      { title: "지시량", field: "ordqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "금회생산", field: "prdqty", width: 90, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
+        cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
+      },
+      { title: "불량", field: "errqty", width: 70, hozAlign: "right", editor: "number",
+        cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
+      },
+      { title: "불량원인", field: "woninnm", width: 130, cellClick: (e, cell) => handleOpenHelp('REASON', cell.getRow()) },
+      { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
+    ]
+  });
+
+  grid3 = new Tabulator(tableRef3.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "제품을 선택하세요.", selectable: true,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+          const v = c.getValue();
+          if (v === '입력') return '<span class="badge bg-primary">신규</span>';
+          if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+          return '';
+      }},
+      { title: "투입자재명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-success', cellClick: (e, cell) => handleOpenHelp('MATERIAL', cell.getRow()) },
+      { title: "재고", field: "jaego", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "투입량", field: "inqty", width: 100, hozAlign: "right", editor: "number", cssClass: "bg-light-green fw-bold" },
+      { title: "전공정", field: "prognm", width: 130, cellClick: (e, cell) => handleOpenHelp('BEFPROG', cell.getRow()) },
+      { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
+    ]
+  });
+}
+
+// [3] 비즈니스 로직
 const fetchLineOptions = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', {
-      params: { GUBUN: 'L0', CMPYCD: authStore.CMPYCD, GBNCD: 'Y', CODE: '' }
-    })
-    lineOptions.value = res.data.map((i: any) => ({ LINECD: i.LINECD, LINENM: i.LINENM }))
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
+    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.CODE, linenm: i.cdnm }));
   } catch (e) { console.error(e) }
 }
 
-// ⚙️ 공정 목록 조회
 const fetchProcesses = async () => {
-  if (!searchData.LINECD) return
+  if (!searchForm.linecd) { vAlertError('생산라인을 먼저 선택하세요.'); return; }
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', {
-      params: { GUBUN: 'G0', CMPYCD: authStore.CMPYCD, GBNCD: searchData.LINECD, CODE: '' }
-    })
-    processList.value = res.data.map((i: any) => ({ PROGCD: i.PROGCD, PROGNM: i.PROGNM }))
-    perfGrid?.clearData()
-    matGrid?.clearData()
-    selectedProg.PROGCD = ''; selectedProg.PROGNM = ''
-    selectedProduct.ITEMCD = ''; selectedProduct.ITEMNM = ''
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: searchForm.linecd, code: '' } })
+    grid1?.setData(res.data)
+    grid2?.clearData(); grid3?.clearData()
+    selectedProg.progcd = ''; selectedProg.prognm = '';
+    selectedProduct.itemcd = ''; selectedProduct.itemnm = '';
   } catch (e) { console.error(e) }
 }
 
-const onLineChange = () => {
-  fetchProcesses()
-}
-
-const onFilterChange = () => {
-  if (selectedProg.PROGCD) fetchPerfData()
-}
-
-// 공정 선택
 const onProcessSelect = (prog: any) => {
-  selectedProg.PROGCD = prog.PROGCD
-  selectedProg.PROGNM = prog.PROGNM
+  selectedProg.progcd = prog.code; selectedProg.prognm = prog.cdnm
   fetchPerfData()
 }
 
-// 실적 데이터 조회 (S0)
 const fetchPerfData = async () => {
   try {
     const res = await api.post('/api/hpio/HPIO_300U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
-      LINECD: searchData.LINECD,
-      PROGCD: selectedProg.PROGCD,
-      ORDYMD: searchData.ORDYMD,
-      PROYMD: '', EQUPCD: '000', PRODCD: '', WORKJO: '000', WKGBN: '100'
+      actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, ordymd: searchForm.ordymd
     })
-    perfGrid?.setData(res.data)
-    perfItemCount.value = res.data.length
-    matGrid?.clearData()
-    Object.keys(selectedProduct).forEach(key => delete selectedProduct[key])
+    grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '', prdqty_o: i.prdqty || 0 })))
+    grid3?.clearData(); selectedProduct.itemcd = ''; selectedProduct.itemnm = ''
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('실적 조회 실패') }
 }
 
-// 자재 데이터 조회 (S0)
 const fetchMaterialData = async (product: any) => {
   Object.assign(selectedProduct, product)
   try {
     const res = await api.post('/api/hpio/HPIO_301U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
-      LINECD: searchData.LINECD,
-      PROGCD: selectedProg.PROGCD,
-      PROYMD: product.PROYMD,
-      ORDYMD: product.ORDYMD,
-      ITEMCD: product.ITEMCD,
-      WHCD: product.WHCD || '300',
-      LOTYMD: product.LOTYMD,
-      LOTNO: product.LOTNO,
-      ORDYM: product.ORDYM,
-      ORDNO: product.ORDNO,
-      PRODCD: product.PRODCD,
-      EQUPCD: '000', WORKJO: '000', WKGBN: '100'
+      actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, proymd: product.proymd, itemcd: product.itemcd
     })
-    matGrid?.setData(res.data)
-  } catch (e) { vAlertError('자재 상세 조회 실패') }
+    grid3?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })))
+  } catch (e) { vAlertError('자재 조회 실패') }
 }
 
-// 2. 그리드 초기화
-const initGrids = () => {
-  if (perfGridElement.value) {
-    perfGrid = new Tabulator(perfGridElement.value, {
-      layout: "fitColumns",
-      height: "100%",
-      selectable: true,
-      columns: [
-        { title: "", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", vertAlign: "middle", headerSort: false, frozen: true },
-        {
-          title: "제품명", field: "ITEMNM",  vertAlign: "middle", frozen: true,
-          cellClick: (e, cell) => { if(cell.getData().PRDQTY !== 0) fetchMaterialData(cell.getData()) }
-        },
-        { title: "규격", field: "ITSIZE", width: 150, vertAlign: "middle", frozen: true },
-        { title: "단위", field: "UNIT", width: 70, hozAlign: "center", vertAlign: "middle", frozen: true },
-        { title: "생산일자", field: "PROYMD", width: 110, editor: "input", formatter: (c) => formatDateString(c.getValue() || initYMD, '-'), vertAlign: "middle" },
-        { title: "지시량", field: "ORDQTY", width: 100, hozAlign: "right", vertAlign: "middle", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "총생산", field: "TOTQTY", width: 100, hozAlign: "right", vertAlign: "middle", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "금회생산", field: "PRDQTY", width: 100, hozAlign: "right", editor: "number", vertAlign: "middle", cssClass: "bg-light-yellow fw-bold" },
-        { title: "작업시간", field: "WORKMM", width: 100, hozAlign: "right", editor: "number", vertAlign: "middle" },
-        { title: "불량", field: "ERRQTY", width: 100, hozAlign: "right", editor: "number", vertAlign: "middle" },
-        {
-          title: "불량원인", field: "WONINNM", width: 200, editor: "input", vertAlign: "middle",
-          cellClick: (e, cell) => openHelp('REASON', cell)
-        },
-        { title: "상태", field: "USEYN", width: 100, hozAlign: "center", vertAlign: "middle", formatter: "tickCross", editor: true }
-      ]
-    })
-  }
-
-  if (matGridElement.value) {
-    matGrid = new Tabulator(matGridElement.value, {
-      layout: "fitColumns", height: "100%", selectable: true,
-      columns: [
-        { title: "", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", vertAlign: "middle", headerSort: false, frozen: true },
-        {
-          title: "투입자재명", field: "ITEMNM", vertAlign: "middle",
-          cellClick: (e, cell) => openHelp('MATERIAL', cell)
-        },
-        { title: "규격", field: "MITSIZE", width: 200, vertAlign: "middle" },
-        { title: "단위", field: "MUNIT", width: 70, hozAlign: "center", vertAlign: "middle" },
-        { title: "재고", field: "JAEGO", width: 100, hozAlign: "right", vertAlign: "middle", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "소요량", field: "SOQTY", width: 100, hozAlign: "right", vertAlign: "middle", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "투입량", field: "INQTY", width: 100, hozAlign: "right", editor: "number", vertAlign: "middle", cssClass: "bg-light-green fw-bold" },
-        {
-          title: "전공정", field: "PROGNM", width: 200, vertAlign: "middle",
-          cellClick: (e, cell) => openHelp('BEFPROG', cell)
-        },
-        { title: "상태", field: "USEYN", width: 100, hozAlign: "center", vertAlign: "middle", formatter: "tickCross", editor: true }
-      ]
-    })
-  }
-}
-
-// 실적 저장
 const savePerformance = async () => {
-  const selected = perfGrid?.getSelectedData() || []
-  if (selected.length === 0) return vAlertError('저장할 실적 항목을 선택하세요.')
-
-  // 마감 체크 및 유효성 검사
-  for (const item of selected) {
-      if (!item.PROYMD) item.PROYMD = searchData.ORDYMD
-      const proYmd = item.PROYMD.replace(/-/g, '')
-      if (proYmd <= closingInfo.CLSYMD) return vAlertError(`회계마감일(${closingInfo.CLSYMD}) 이전으로는 저장 불가합니다.`)
-      if (item.PRDQTY <= 0 && item.USEYN !== 'N') return vAlertError('생산량을 입력하세요.')
-  }
-
+  const details = grid2?.getData().filter((r: any) => r._status) || []
+  if (details.length === 0) return vAlertError('저장할 실적 변경 항목이 없습니다.')
   if (!confirm('제품 생산 실적을 저장하시겠습니까?')) return
 
   try {
-    for (const item of selected) {
-      const actkind = !item.PRDQTY_O || item.PRDQTY_O === 0 ? 'A0' : 'U0'
-      const godQty = Number(item.PRDQTY || 0) - Number(item.ERRQTY || 0)
-
+    for (const item of details) {
+      const actkind = !item.prdqty_o || Number(item.prdqty_o) === 0 ? 'a0' : (item._status === '삭제' ? 'd0' : 'u0')
       await api.post('/api/hpio/HPIO_300U_STR', {
-        ACTKIND: actkind, CMPYCD: authStore.CMPYCD, USERID: authStore.USERID,
-        LINECD: searchData.LINECD, PROGCD: selectedProg.PROGCD,
-        PROYMD: item.PROYMD.replace(/-/g, ''), ORDYMD: searchData.ORDYMD,
-        ITEMCD: item.ITEMCD, ITSIZE: item.ITSIZE, UNIT: item.UNIT,
-        PRDQTY: item.PRDQTY, GODQTY: godQty, ERRQTY: item.ERRQTY,
-        WONINCD: item.WONINCD, LOTYMD: item.LOTYMD, LOTNO: item.LOTNO,
-        WORKMM: item.WORKMM, ORDYM: item.ORDYM, ORDNO: item.ORDNO,
-        USEYN: item.USEYN || 'Y', WHCD: item.WHCD || '300',
-        EQUPCD: '000', PRODCD: item.PRODCD || '100', WORKJO: '000', WKGBN: '100'
+        ...item, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, userid: authStore.userid
       })
     }
-    vAlert('실적이 저장되었습니다.')
-    fetchPerfData()
+    vAlert('실적이 저장되었습니다.'); fetchPerfData()
   } catch (e) { vAlertError('실적 저장 실패') }
 }
 
-// 자재 저장
 const saveMaterials = async () => {
-  const selected = matGrid?.getSelectedData() || []
-  if (selected.length === 0) return vAlertError('저장할 자재 항목을 선택하세요.')
-  if (!selectedProduct.ITEMCD) return vAlertError('먼저 상단에서 제품을 선택하세요.')
-
+  const details = grid3?.getData().filter((r: any) => r._status) || []
+  if (details.length === 0) return vAlertError('저장할 자재 변경 항목이 없습니다.')
   if (!confirm('투입 자재 상세 내역을 저장하시겠습니까?')) return
 
   try {
-    for (const item of selected) {
-      const actkind = item.PROCGBN === 'A' ? 'A0' : 'U0'
+    for (const item of details) {
+      const actkind = item._status === '입력' ? 'a' : (item._status === '삭제' ? 'd' : 'u')
       await api.post('/api/hpio/HPIO_301U_STR', {
-        ACTKIND: actkind, CMPYCD: authStore.CMPYCD, USERID: authStore.USERID,
-        LINECD: searchData.LINECD, PROGCD: selectedProg.PROGCD,
-        PROYMD: selectedProduct.PROYMD, ORDYMD: selectedProduct.ORDYMD,
-        ITEMCD: selectedProduct.ITEMCD, MITEMCD: item.MITEMCD,
-        MITSIZE: item.MITSIZE, MUNIT: item.MUNIT,
-        SOQTY: item.SOQTY, INQTY: item.INQTY,
-        BEFPROG: item.BEFPROG, MASTKIND: item.ASTKIND || '210',
-        USEYN: item.USEYN === 'N' ? 'N' : 'Y',
-        LOTYMD: selectedProduct.LOTYMD, LOTNO: selectedProduct.LOTNO,
-        ORDYM: selectedProduct.ORDYM, ORDNO: selectedProduct.ORDNO,
-        WHCD: selectedProduct.WHCD || '300', EQUPCD: '000', PRODCD: selectedProduct.PRODCD || '100', WORKJO: '000', WKGBN: '100'
+        ...item, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, userid: authStore.userid
       })
     }
-    vAlert('자재 정보가 저장되었습니다.')
-    fetchMaterialData(selectedProduct)
+    vAlert('자재 정보가 저장되었습니다.'); fetchMaterialData(selectedProduct)
   } catch (e) { vAlertError('자재 저장 실패') }
 }
 
-const addMaterialRow = () => {
-  if (!selectedProduct.ITEMCD) return vAlertError('먼저 상단에서 제품을 선택하세요.')
-  matGrid?.addRow({ PROCGBN: 'A', MITEMCD: '', ITEMNM: '', SOQTY: 0, INQTY: 0, USEYN: 'Y' }, true)
+const handleOpenHelp = (type: string, row: any) => {
+  if (type === 'REASON') {
+    openHelp('REASON', (d) => row.update({ wonincd: d.code, woninnm: d.cdnm }), { gbncd: '210' })
+  } else if (type === 'MATERIAL') {
+    openHelp('ITEM', (d) => row.update({ mitemcd: d.itemcd, itemnm: d.itemnm, mitsize: d.itsize, munit: d.unit, _status: '입력', _state: 'NEW' }))
+  } else if (type === 'BEFPROG') {
+    openHelp('BEFPROG', (d) => row.update({ befprog: d.progcd, prognm: d.prognm }), { gbncd: searchForm.linecd })
+  }
 }
+
+const handleRowAction = (row: any) => {
+  const d = row.getData();
+  if (d._state === 'NEW') row.delete();
+  else row.update({ _status: d._status === '삭제' ? '' : '삭제' });
+}
+
+const addMaterialRow = () => {
+  if (!selectedProduct.itemcd) return vAlertError('먼저 제품을 선택하세요.');
+  grid3?.addRow({ inqty: 0, _status: '입력', _state: 'NEW', useyn: 'Y' }, true);
+}
+
+const onLineChange = () => fetchProcesses()
+const onFilterChange = () => { if (selectedProg.progcd) fetchPerfData() }
 
 const initialize = () => {
-  searchData.LINECD = '010'
-  searchData.ORDYMD = initYMD
-  processList.value = []
-  perfGrid?.clearData()
-  matGrid?.clearData()
-  selectedProg.PROGCD = ''; selectedProg.PROGNM = ''
-  Object.keys(selectedProduct).forEach(key => delete selectedProduct[key])
-  fetchLineOptions()
+  resetForm(searchForm);
+  Object.assign(searchForm, { linecd: '010', ordymd: initymd });
+  grid1?.clearData(); grid2?.clearData(); grid3?.clearData();
+  selectedProg.progcd = ''; selectedProg.prognm = '';
+  selectedProduct.itemcd = ''; selectedProduct.itemnm = '';
 }
 
-// 4. 도움창 (Modal)
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-function openHelp(type: string, cell: any) {
-  let config: any = {}
-  if (type === 'REASON') {
-    config = {
-      title: '불량원인 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'CDNM',
-      data: { GUBUN: 'E0', GBNCD: '210', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: '코드', field: 'CODE', width: 80 }, { title: '원인명', field: 'CDNM', width: 200 }],
-      onConfirm: (data: any) => { cell.getRow().update({ WONINCD: data.CODE, WONINNM: data.CDNM }) }
-    }
-  } else if (type === 'MATERIAL') {
-    config = {
-      title: '자재 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'ITEMNM',
-      data: { GUBUN: 'I0', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: '코드', field: 'ITEMCD', width: 100 }, { title: '자재명', field: 'ITEMNM', width: 250 }],
-      onConfirm: (data: any) => { cell.getRow().update({ MITEMCD: data.ITEMCD, ITEMNM: data.ITEMNM, MITSIZE: data.ITSIZE, MUNIT: data.UNIT, ASTKIND: data.ASTKIND }) }
-    }
-  } else if (type === 'BEFPROG') {
-    config = {
-        title: '전공정 선택', path: '/api/hp00/HP00_000S_STR', defaultField: 'PROGNM',
-        data: { GUBUN: 'G0', LINECD: searchData.LINECD, CMPYCD: authStore.CMPYCD },
-        columns: [{ title: '코드', field: 'CODE', width: 80 }, { title: '공정명', field: 'CDNM', width: 200 }],
-        onConfirm: (data: any) => { cell.getRow().update({ BEFPROG: data.CODE, PROGNM: data.CDNM }) }
-    }
-  }
-
-  Object.assign(modalProps, config)
-  modalVisible.value = true
-}
-
-const formatDateString = (v: any, sep: string) => v && String(v).length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : (v || '')
-
-onMounted(async () => {
-  // 마감 정보 조회
-  api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD } }).then(r => {
-    if (r.data?.length) {
-      closingInfo.CLSYMD = String(Object.values(r.data[0])[0]).trim()
-      closingInfo.SCLSYM = String(Object.values(r.data[0])[1]).trim()
-      closingInfo.PCLSYM = String(Object.values(r.data[0])[2]).trim()
-      closingInfo.WCLSYM = String(Object.values(r.data[0])[3]).trim()
-    }
-  })
-  fetchLineOptions()
-  nextTick(() => { initGrids() })
+const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
+onMounted(() => {
+  fetchLineOptions();
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => { if(r.data?.length) closingInfo.clsymd = r.data[0].clsymd })
+  nextTick(initGrids);
 })
 </script>
 
 <style scoped>
-.hpio300u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #f4f7fa !important; }
-.erp-header { background-color: #ffffff !important; }
-
-/* 메인 버튼 스타일 통일 */
-.btn-erp { padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; border: none; }
-.btn-init { background-color: #f8f9fa !important; color: #495057 !important; border: 1px solid #ced4da !important; }
-.btn-init:hover { background-color: #e9ecef !important; }
-.btn-search { background-color: #4361ee !important; color: #fff !important; }
-.btn-search:hover { background-color: #374fc7 !important; transform: translateY(-1px); }
-.btn-save { background-color: #2ec4b6 !important; color: #fff !important; }
-.btn-save:hover { background-color: #28afa3 !important; transform: translateY(-1px); }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.erp-table-full th { width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 10px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 6px 12px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-
-/* 공정 목록 스타일 */
-.process-list .list-group-item { cursor: pointer; font-size: 12.5px; border-left: 4px solid transparent; transition: all 0.2s; }
-.process-list .list-group-item:hover { background-color: #f8f9fa; }
-.process-list .list-group-item.active { background-color: #eef2ff; color: #4361ee; border-left-color: #4361ee; font-weight: bold; }
-
-/* Tabulator 스타일 기준 */
-:deep(.tabulator) { border: none; font-size: 12.5px; border-radius: 0 0 8px 8px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; font-weight: 700; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; color: #333; }
-:deep(.tabulator-row.tabulator-selected) { background-color: #eef2ff !important; }
-
-.bg-light-yellow { background-color: #fffde7 !important; }
-.bg-light-green { background-color: #f1f8e9 !important; }
-
-/* 스크롤바 커스텀 */
-.scrollbar-custom::-webkit-scrollbar { width: 8px; height: 8px; }
-.scrollbar-custom::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+.grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
 </style>

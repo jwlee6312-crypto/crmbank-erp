@@ -28,15 +28,17 @@ public class AsteriskService implements ManagerEventListener {
     private final CtiWebSocketHandler webSocketHandler;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final Map<String, String> EXTEN_CHANNEL_MAP = new ConcurrentHashMap<>(); 
-    private final Map<String, String> EXTEN_CALLER_CHANNEL = new ConcurrentHashMap<>(); 
-    private final Map<String, String> EXTEN_LINKED_ID = new ConcurrentHashMap<>(); 
-    private final Map<String, Set<String>> SESSION_CHANNELS = new ConcurrentHashMap<>(); 
-    private final Set<String> ANSWERING_LOCK = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    // 💡 [소문자 표준화] 멤버 변수명 소문자 변경
+    private final Map<String, String> exten_channel_map = new ConcurrentHashMap<>(); 
+    private final Map<String, String> exten_caller_channel = new ConcurrentHashMap<>(); 
+    private final Map<String, String> exten_linked_id = new ConcurrentHashMap<>(); 
+    private final Map<String, Set<String>> session_channels = new ConcurrentHashMap<>(); 
+    private final Set<String> answering_lock = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    public Map<String, String> getEXTEN_CHANNEL_MAP() { return EXTEN_CHANNEL_MAP; }
-    public Map<String, String> getEXTEN_LINKED_ID() { return EXTEN_LINKED_ID; }
-    public Map<String, Set<String>> getSESSION_CHANNELS() { return SESSION_CHANNELS; }
+    // 💡 Getter 메서드 표준 카멜케이스 적용
+    public Map<String, String> getExtenChannelMap() { return exten_channel_map; }
+    public Map<String, String> getExtenLinkedId() { return exten_linked_id; }
+    public Map<String, Set<String>> getSessionChannels() { return session_channels; }
 
     @Override
     public void onManagerEvent(ManagerEvent event) {
@@ -44,8 +46,8 @@ public class AsteriskService implements ManagerEventListener {
             String channel = ((NewChannelEvent) event).getChannel();
             String uniqueId = ((NewChannelEvent) event).getUniqueId();
             String ext = extractNumberOnly(channel);
-            if (isValidExt(ext)) EXTEN_CHANNEL_MAP.put(ext, channel);
-            SESSION_CHANNELS.computeIfAbsent(uniqueId, k -> Collections.synchronizedSet(new HashSet<>())).add(channel);
+            if (isValidExt(ext)) exten_channel_map.put(ext, channel);
+            session_channels.computeIfAbsent(uniqueId, k -> Collections.synchronizedSet(new HashSet<>())).add(channel);
         } else if (event instanceof AgentCalledEvent) {
             handleAgentCalled((AgentCalledEvent) event);
         } else if (event instanceof BridgeEnterEvent) {
@@ -58,11 +60,11 @@ public class AsteriskService implements ManagerEventListener {
     private void handleAgentCalled(AgentCalledEvent e) {
         String agentExt = extractNumberOnly(e.getInterface());
         if (isValidExt(agentExt)) {
-            EXTEN_CALLER_CHANNEL.put(agentExt, e.getChannel());
-            EXTEN_LINKED_ID.put(agentExt, e.getLinkedId());
-            if (e.getDestinationChannel() != null) EXTEN_CHANNEL_MAP.put(agentExt, e.getDestinationChannel());
+            exten_caller_channel.put(agentExt, e.getChannel());
+            exten_linked_id.put(agentExt, e.getLinkedId());
+            if (e.getDestinationChannel() != null) exten_channel_map.put(agentExt, e.getDestinationChannel());
             
-            if (!ANSWERING_LOCK.contains(agentExt)) {
+            if (!answering_lock.contains(agentExt)) {
                 sendInboundPopup(agentExt, e.getCallerIdNum(), e.getChannel(), e.getLinkedId());
             }
         }
@@ -71,7 +73,7 @@ public class AsteriskService implements ManagerEventListener {
     private void handleBridgeEnter(BridgeEnterEvent e) {
         String exten = extractNumberOnly(e.getChannel());
         if (isValidExt(exten)) {
-            ANSWERING_LOCK.remove(exten);
+            answering_lock.remove(exten);
             sendCtiEvent(exten, "CALL_CONNECTED", e.getChannel(), null);
         }
     }
@@ -79,23 +81,23 @@ public class AsteriskService implements ManagerEventListener {
     private void handleHangup(HangupEvent e) {
         String exten = extractNumberOnly(e.getChannel());
         if (isValidExt(exten)) {
-            if (ANSWERING_LOCK.contains(exten)) return;
+            if (answering_lock.contains(exten)) return;
             // 💡 [핵심] 종료 시 녹취 파일명(LinkedID)을 반드시 전송하여 상담원이 볼 수 있게 함
-            String recFile = EXTEN_LINKED_ID.get(exten);
+            String recFile = exten_linked_id.get(exten);
             sendCtiEvent(exten, "CALL_HANGUP", e.getChannel(), recFile);
             
-            EXTEN_CHANNEL_MAP.remove(exten);
-            EXTEN_CALLER_CHANNEL.remove(exten);
-            EXTEN_LINKED_ID.remove(exten);
+            exten_channel_map.remove(exten);
+            exten_caller_channel.remove(exten);
+            exten_linked_id.remove(exten);
         }
     }
 
     public void answerCall(String exten) {
-        String callerChannel = EXTEN_CALLER_CHANNEL.get(exten);
-        String agentChannel = EXTEN_CHANNEL_MAP.get(exten);
+        String callerChannel = exten_caller_channel.get(exten);
+        String agentChannel = exten_channel_map.get(exten);
         if (callerChannel == null) return;
 
-        ANSWERING_LOCK.add(exten);
+        answering_lock.add(exten);
         sendCtiEvent(exten, "STOP_RINGTONE", null, null);
 
         new Thread(() -> {
@@ -107,23 +109,23 @@ public class AsteriskService implements ManagerEventListener {
                 managerConnection.sendAction(new SetVarAction(callerChannel, "AGENT_EXTEN", exten));
                 managerConnection.sendAction(new RedirectAction(callerChannel, "cti-answer-force", "s", 1));
                 Thread.sleep(4000);
-                ANSWERING_LOCK.remove(exten);
-            } catch (Exception ex) { ANSWERING_LOCK.remove(exten); }
+                answering_lock.remove(exten);
+            } catch (Exception ex) { answering_lock.remove(exten); }
         }).start();
     }
 
     public void hangupCall(String exten, String ch) {
         try {
             if (ch != null) managerConnection.sendAction(new HangupAction(ch));
-            String myCh = EXTEN_CHANNEL_MAP.get(exten);
+            String myCh = exten_channel_map.get(exten);
             if (myCh != null) managerConnection.sendAction(new HangupAction(myCh));
-            String callerCh = EXTEN_CALLER_CHANNEL.get(exten);
+            String callerCh = exten_caller_channel.get(exten);
             if (callerCh != null) managerConnection.sendAction(new HangupAction(callerCh));
         } catch (Exception ex) {}
     }
 
     public void transferCall(String exten, String target) {
-        String myChannel = EXTEN_CHANNEL_MAP.get(exten);
+        String myChannel = exten_channel_map.get(exten);
         if (myChannel != null) {
             try { managerConnection.sendAction(new RedirectAction(myChannel, "from-internal", target, 1)); } catch (Exception e) {}
         }

@@ -1,319 +1,364 @@
 <!--
 	=============================================================
-	프로그램명	: 덤입고작업 (Bonus Goods Receipt)
-	작성일자	: 25.02.24
-	작성자	    : AI Assistant
-	설명        : [디자인정상화] 라벨 겹침 및 글자 일그러짐 해결, 고밀도 표준 적용
+	프로그램명	: 덤입고작업 (HSIO250U)
+	작성일자	: 2025.02.24
+	설명        : 덤입고(무상입고) 마스터/상세 관리 (HSOD100U 디자인 UI + HSIO580U 좌측그리드 이식)
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-	<div class="hsio250u-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1. 상단 액션 바 (표준 버튼 배치 및 색상) -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-gift-fill me-2 text-primary" style="font-size: 18px;"></i>
-				구매정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				입고관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">덤입고작업 (HSIO250U)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">초기화</button>
-				<button class="btn-erp btn-search" @click="fetchOrder">조회</button>
-				<button class="btn-erp btn-save" @click="handleSave">저장</button>
-				<button class="btn-erp btn-danger" @click="handleDelete" :disabled="!formData.IONO || formData.IONO === ''">삭제</button>
-				<button class="btn-erp btn-print" @click="handlePrint">인쇄</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-gift-fill me-2 text-primary" style="font-size: 18px;"></i>
+        구매관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        입고관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">덤입고작업 (HSIO250U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-2">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-save" @click="save" :disabled="isClosed">저장</button>
+        <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!formData.iono || formData.iono === '0000' || isClosed">전체삭제</button>
+      </div>
+    </div>
 
-		<!-- 💡 2. 메인 컨텐츠 영역 -->
-		<div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
-			<!-- 🅰️ 마스터 정보 (라벨 폭 고정으로 일그러짐 해결) -->
-			<div class="card border shadow-sm overflow-hidden flex-shrink-0">
-				<div class="card-body p-0">
-					<table class="erp-table-full">
-						<colgroup>
-							<col style="width: 100px;"><col style="width: 23%">
-							<col style="width: 100px;"><col style="width: 23%">
-							<col style="width: 100px;"><col style="width: 24%">
-						</colgroup>
-						<tbody>
-							<tr>
-								<th class="required">입고부서</th>
-								<td>
-									<div class="input-group input-group-sm">
-										<input v-model="formData.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-										<input v-model="formData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="handleOpenHelp('DEPT')" />
-										<button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
-									</div>
-								</td>
-								<th class="required">입고번호</th>
-								<td>
-									<div class="d-flex gap-1">
-										<input v-model="uiIOYM" type="month" class="form-control form-control-sm text-center fw-bold" style="width: 120px;" />
-										<input v-model="formData.IONO" type="text" class="form-control form-control-sm text-center bg-light fw-bold" style="width: 60px;" readonly placeholder="0000" />
-									</div>
-								</td>
-								<th class="required">입고일자</th>
-								<td><input v-model="formData.IOYMD" type="date" class="form-control form-control-sm" /></td>
-							</tr>
-							<tr>
-								<th class="required">매&nbsp;&nbsp;입&nbsp;&nbsp;처</th>
-								<td>
-									<div class="input-group input-group-sm">
-										<input v-model="formData.CUSTCD" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
-										<input v-model="formData.CUSTNM" type="text" class="form-control" placeholder="매입처 선택" @keyup.enter="handleOpenHelp('CUST')" />
-										<button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('CUST')"><i class="bi bi-search"></i></button>
-									</div>
-								</td>
-								<th class="required">입고창고</th>
-								<td>
-									<select v-model="formData.WHCD" class="form-select form-select-sm">
-										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
-									</select>
-								</td>
-								<th>작&nbsp;&nbsp;업&nbsp;&nbsp;자</th>
-								<td><input v-model="formData.USERNM" type="text" class="form-control form-control-sm bg-light text-center" readonly /></td>
-							</tr>
-							<tr>
-								<th>특기사항</th>
-								<td colspan="5"><input v-model="formData.REMARK" type="text" class="form-control form-control-sm" placeholder="덤입고 사유 및 참고사항 입력" /></td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-			<!-- 🅱️ 디테일 품목 그리드 (무한 확장 및 상하중앙 정렬) -->
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="height: 40px;">
-					<span class="fw-bold small text-dark d-flex align-items-center">
-						<i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 덤입고 품목 상세 내역
-					</span>
-					<button class="btn btn-grid-row-add" @click="addGridRow" :disabled="formData.STS === 'Y'">
-                      <i class="bi bi-plus-circle"></i> 행추가
-                    </button>
-				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
-			</div>
-		</div>
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 40%" />
+                <col style="width: 10%" /><col style="width: 40%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">입고일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="searchForm.fromdt" v-model:todt="searchForm.todt" />
+                </td>
+                <th class="text-center bg-light">매입처명</th>
+                <td>
+                  <input v-model="searchForm.schcustnm" class="form-control form-control-sm" placeholder="매입처 검색" @keyup.enter="search" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-		<!-- 📊 4. 하단 요약 바 -->
-		<div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-			<div class="row align-items-center w-100">
-				<div class="col-md-3 small">항목: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건</div>
-				<div class="col-md-9 text-end">
-					<span class="me-4 small opacity-75">총 입고수량: <span class="fw-bold text-info ms-1">{{ formatNumber(totals.qty) }}</span></span>
-					<span class="fs-5 ms-2 fw-light">총 공급가액: <span class="fw-bold text-white ms-2">{{ formatNumber(totals.amt) }}</span></span>
-				</div>
-			</div>
-		</div>
-	</div>
+      <!-- [하단] 투-그리드 레이아웃 영역 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
 
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
-	<ItemHelpModal :visible="itemHelpVisible" :cmpycd="authStore.CMPYCD" :astKind="String(formData.ASTKIND || '2')" @close="itemHelpVisible = false" @confirm="onSelectItem" />
+        <!-- ⬅️ 좌측: 덤입고 목록 (HSIO580U 스타일 이식) -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 350px; min-width: 350px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">입고 목록</div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
+          </div>
+        </div>
+
+        <!-- ➡️ 우측: 마스터 상세 폼 + 품목 상세 그리드 -->
+        <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
+
+          <!-- 상세 마스터 정보 폼 -->
+          <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+            <div class="card-body p-0 bg-white">
+              <table class="erp-table-dense w-100">
+                <colgroup>
+                  <col style="width: 100px;" /><col />
+                  <col style="width: 100px;" /><col />
+                  <col style="width: 100px;" /><col />
+                  <col style="width: 100px;" /><col />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <th class="required bg-light">입고부서</th>
+                    <td>
+                      <div class="input-group input-group-sm">
+                        <input v-model="formData.deptnm" class="form-control" readonly />
+                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('DEPT')" :disabled="isClosed"><i class="bi bi-search"></i></button>
+                      </div>
+                    </td>
+                    <th class="bg-light text-center">입고번호</th>
+                    <td><input v-model="formData.iono" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
+                    <th class="required bg-light text-center">입고일자</th>
+                    <td><input v-model="formData.ioymd" type="date" class="form-control" :readonly="isClosed" /></td>
+                    <th class="required bg-light text-center">입고창고</th>
+                    <td>
+                      <select v-model="formData.whcd" class="form-select" :disabled="isClosed">
+                        <option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th class="required bg-light">매&nbsp;&nbsp;입&nbsp;&nbsp;처</th>
+                    <td>
+                      <div class="input-group input-group-sm">
+                        <input v-model="formData.custnm" class="form-control" readonly />
+                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('CUST')" :disabled="isClosed"><i class="bi bi-search"></i></button>
+                      </div>
+                    </td>
+                    <th class="bg-light text-center">작업자</th>
+                    <td><input v-model="formData.usernm" class="form-control bg-light text-center" readonly /></td>
+                    <th class="bg-light text-center">특기사항</th>
+                    <td colspan="3"><input v-model="formData.remark" class="form-control" :readonly="isClosed" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 상세 품목 그리드 영역 -->
+          <div class="card border shadow-sm flex-grow-1 d-flex flex-column overflow-hidden grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+              <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>덤입고 품목 리스트</span>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" :disabled="isClosed" style="font-size: 12px;">+ 행추가</button>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" :disabled="isClosed" style="font-size: 12px;">- 행삭제</button>
+              </div>
+            </div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="tableRef2" class="tabulator-instance flex-grow-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-spacer"></div>
+    </div>
+  </div>
+
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, computed, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
+import DateForm from '@/components/DateForm.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
-import AppAlert from '@/components/AppAlert.vue'
-import Modal from '@/components/Modal.vue'
-import ItemHelpModal from '@/components/ItemHelpModal.vue'
+import { getDate } from '@/composables/useDate'
+import { useSearchStore } from '@/stores/useSearchStore'
+import { useRoute } from 'vue-router'
 
 const authStore = useAuthStore()
+const searchStore = useSearchStore()
+const route = useRoute()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
-const itemHelpVisible = ref(false)
-const currentTargetRow = ref<any>(null)
-
+// [1] 데이터 모델링
+const searchForm = reactive({ fromdt: firstDay, todt: today, schcustnm: '' })
 const formData = reactive<any>({
-	ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, IOYM: new Date().toISOString().substring(0, 7).replace('-', ''), IONO: '',
-	IOYMD: new Date().toISOString().substring(0, 10), DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-	CUSTCD: '', CUSTNM: '', WHCD: '100', REMARK: '', USERNM: authStore.USERNM, CLSYMD: '', SCLSYM: '', PKUNITYN: 'N', ASTKIND: '2'
+  actkind: 'S0', cmpycd: authStore.cmpycd, ioym: today.substring(0, 7).replace('-', ''), iono: '',
+  ioymd: today, deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+  custcd: '', custnm: '', whcd: '100', remark: '', usernm: authStore.usernm, PKunitYN: 'N', astkind: '2'
 })
 
-const uiIOYM = computed({
-	get: () => formData.IOYM ? `${formData.IOYM.substring(0, 4)}-${formData.IOYM.substring(4, 6)}` : '',
-	set: (v) => formData.IOYM = v.replace('-', '')
+const closingInfo = reactive({ sclsym: '' })
+const whOptions = ref<any[]>([])
+
+// [2] 그리드 관리
+const tableRef1 = ref<HTMLDivElement | null>(null)
+const tableRef2 = ref<HTMLDivElement | null>(null)
+let grid1: Tabulator | null = null
+let grid2: Tabulator | null = null
+const MIN_ROWS = 12;
+
+const isClosed = computed(() => {
+  if (!closingInfo.sclsym || !formData.ioymd) return false
+  return formData.ioymd.replace(/-/g, '').substring(0, 6) <= closingInfo.sclsym
 })
 
-const whOptions = ref<any[]>([]);
-const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
-const activeItemCount = ref(0);
-const totals = reactive({ qty: 0, amt: 0 })
+const initGrids = () => {
+  if (!tableRef1.value || !tableRef2.value) return
 
-const fetchOrder = async () => {
-    if (!formData.IOYM || !formData.IONO) return vAlertError('입고번호를 입력하세요.')
-	try {
-		const res = await api.post('/api/hsio/HSIO_250U_STR', { ...formData, ACTKIND: 'S0' })
-		if (res.data.data?.length > 0) {
-			Object.assign(formData, res.data.data[0])
-            const resItems = await api.post('/api/hsio/HSIO_251U_STR', { ...formData, ACTKIND: 'S0' })
-            mainGrid?.setData(resItems.data.data.map((i: any) => ({ ...i, UPKIND: 'U' })))
-            recalcTotals()
-		}
-	} catch (e) { vAlertError('조회 실패') }
+  // ⬅️ 좌측 그리드 (HSIO580U 스타일)
+  grid1 = new Tabulator(tableRef1.value, {
+    layout: "fitColumns", height: "100%", placeholder: "데이터 없음",
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
+      { title: "입고일자", field: "ioymd", hozAlign: "center", width: 100, headerSort: false, formatter: (c) => {
+          const v = c.getValue();
+          return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
+        }
+      },
+      { title: "입고번호", field: "iono", hozAlign: "center", width: 110, cssClass: "fw-bold text-primary", headerSort: false }
+    ],
+  });
+  grid1.on("rowClick", (e, row) => fetchDetail(row.getData()));
+
+  // ➡️ 우측 상세 그리드
+  grid2 = new Tabulator(tableRef2.value, {
+    layout: "fitColumns", height: "100%", placeholder: "품목 없음",
+    columnCalcs: "table", selectable: true,
+    selectableCheck: (row) => row.getData()._STATE !== 'EMPTY',
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection", headerSort: false, cellClick: (e) => e.stopPropagation() },
+      { title: "상태", field: "upkind", width: 50, hozAlign: "center",
+        formatter: (c) => {
+          const v = c.getValue();
+          if (v === 'A') return '<span class="badge bg-primary" style="font-size:10px;">신규</span>';
+          if (v === 'U') return '<span class="badge bg-warning text-dark" style="font-size:10px;">수정</span>';
+          if (v === 'D') return '<span class="badge bg-danger" style="font-size:10px;">삭제</span>';
+          return '';
+        }
+      },
+      { title: "No", formatter: (cell) => cell.getData()._STATE === 'EMPTY' ? "" : cell.getRow().getPosition(), width: 40, hozAlign: "center" },
+      { title: "품목명", field: "itemnm", minWidth: 180, widthGrow: 1, cssClass: 'fw-bold text-primary',
+        cellClick: (e, cell) => { if(!isClosed.value) handleOpenHelp('ITEM', cell.getRow()) }
+      },
+      { title: "규격", field: "itsize", width: 120 },
+      { title: "단위", field: "unit", width: 60, hozAlign: "center" },
+      { title: "수량", field: "ioqty", width: 90, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
+      { title: "단가", field: "price", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
+      { title: "금액", field: "ioamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+      { title: "포장용기", field: "PKunitnm", width: 100, visible: formData.PKunitYN === 'Y' },
+      { title: "삭제", width: 40, hozAlign: "center",
+        formatter: (cell) => cell.getData()._STATE === 'EMPTY' ? "" : "<i class='bi bi-trash text-danger cursor-pointer'></i>",
+        cellClick: (e, cell) => handleRowAction(cell.getRow())
+      }
+    ],
+    rowFormatter: (row) => { if (row.getData()._STATE === 'EMPTY') row.getElement().classList.add("empty-row-style"); }
+  });
 }
 
-const handleSave = async () => {
-	if (!formData.CUSTCD) return vAlertError('매입처를 선택하세요.')
-	const items = mainGrid?.getData();
-	if (!items || items.length === 0) return vAlertError('입고 품목을 추가하세요.')
-
-	try {
-		const res = await api.post('/api/hsio/HSIO_250U_STR', { ...formData, ACTKIND: formData.IONO ? 'U0' : 'A0', ITEMS: items })
-		vAlert('저장되었습니다.'); fetchOrder()
-	} catch (e) { vAlertError('저장 실패') }
+// [3] 로직 처리
+const setGridDataWithPadding = (data: any[]) => {
+  const displayData = data.map(i => ({ ...i, _STATE: 'EXIST' }));
+  while (displayData.length < MIN_ROWS) {
+    displayData.push({ _STATE: 'EMPTY', ioqty: 0, price: 0, ioamt: 0 });
+  }
+  grid2?.setData(displayData);
 }
 
-const handleDelete = async () => {
-    if (!confirm('해당 자료를 삭제하시겠습니까?')) return
-    try {
-        await api.post('/api/hsio/HSIO_250U_STR', { ...formData, ACTKIND: 'D0' })
-        vAlert('삭제되었습니다.'); initialize()
-    } catch (e) { vAlertError('삭제 실패') }
-}
-const addGridRow = () => { mainGrid?.addRow({ UPKIND: 'A', IOQTY: 0, PRICE: 0, IOAMT: 0 }); recalcTotals();}
-
-const recalcTotals = () => {
-    const data = mainGrid?.getData() || []
-    const active = data.filter((i: any) => i.UPKIND !== 'D')
-    activeItemCount.value = active.length
-    totals.qty = active.reduce((acc, cur: any) => acc + (Number(cur.IOQTY) || 0), 0)
-    totals.amt = active.reduce((acc, cur: any) => acc + (Number(cur.IOAMT) || 0), 0)
+const calcRow = (row: any) => {
+  const data = row.getData();
+  if (data._STATE === 'EMPTY') return;
+  const amt = Math.floor(Number(data.ioqty || 0) * Number(data.price || 0));
+  row.update({ ioamt: amt, upkind: data.iorowno ? 'U' : 'A' });
 }
 
-function initialize() {
-	resetForm(formData);
-    formData.IOYM = new Date().toISOString().substring(0, 7).replace('-', '');
-    formData.IOYMD = new Date().toISOString().substring(0, 10);
-    formData.ASTKIND = '2';
-    mainGrid?.clearData(); recalcTotals();
-}
-
-function handleOpenHelp(type: string, target?: any) {
-  if (type === 'DEPT') {
-    openHelp('DEPT', (d) => { formData.DEPTCD = d.DEPTCD; formData.DEPTNM = d.DEPTNM });
-  } else if (type === 'CUST') {
-    openHelp('CUST', (d) => { formData.CUSTCD = d.CUSTCD; formData.CUSTNM = d.CUSTNM });
-  } else if (type === 'ITEM') {
-    if (!formData.CUSTCD) return vAlertError('매입처를 먼저 선택하세요.');
-    currentTargetRow.value = target;
-    itemHelpVisible.value = true;
+const handleOpenHelp = (type: string, target?: any) => {
+  if (isClosed.value) return;
+  if (type === 'DEPT') openHelp('DEPT', (d) => { formData.deptcd = d.deptcd; formData.deptnm = d.deptnm });
+  else if (type === 'CUST') openHelp('CUST', (d) => { formData.custcd = d.custcd; formData.custnm = d.custnm });
+  else if (type === 'ITEM') {
+    if (!formData.custcd) return vAlertError('매입처를 먼저 선택하세요.');
+    openHelp('ITEM', (d) => {
+      target.update({
+        itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit || d.unitnm,
+        price: d.incost || d.price || 0, ioqty: 1, ioamt: d.incost || 0, upkind: 'A', _STATE: 'NEW'
+      });
+      calcRow(target);
+    });
   }
 }
 
-const onSelectItem = (d: any) => {
-  if (!currentTargetRow.value) return
-  currentTargetRow.value.update({
-    ITEMCD: d.ITEMCD,
-    ITEMNM: d.ITEMNM,
-    ITSIZE: d.ITSIZE,
-    UNIT: d.UNIT || d.UNITNM,
-    PRICE: d.INCOST || d.PRICE || 0,
-    UPKIND: 'A'
-  });
-  itemHelpVisible.value = false; recalcTotals();
+const handleRowAction = (row: any) => {
+  const data = row.getData();
+  if (data._STATE === 'EMPTY') return;
+  if (data._STATE === 'NEW') row.delete();
+  else row.update({ upkind: data.upkind === 'D' ? 'U' : 'D' });
+}
+
+async function search() {
+  try {
+    const params = { actkind: 'S0', cmpycd: authStore.cmpycd, frymd: searchForm.fromdt.replace(/-/g, ''), toymd: searchForm.todt.replace(/-/g, ''), custnm: searchForm.schcustnm };
+    const res = await api.post('/api/hsio/HSIO_250U_STR', params);
+    grid1?.setData(res.data.data || res.data);
+    vAlert('조회되었습니다.');
+  } catch (e) { vAlertError('조회 실패'); }
+}
+
+async function fetchDetail(row: any) {
+  Object.assign(formData, row);
+  try {
+    const res = await api.post('/api/hsio/HSIO_251U_STR', { ...formData, actkind: 'S0' });
+    setGridDataWithPadding((res.data.data || res.data).map((i: any) => ({ ...i, upkind: 'U' })));
+  } catch (e) { vAlertError('상세 로드 실패'); }
+}
+
+async function save() {
+  const details = grid2?.getData().filter(r => r._STATE !== 'EMPTY' && r.upkind) || [];
+  if (!details.length && !formData.iono) return vAlertError('입고 품목을 추가하세요.');
+
+  try {
+    const payload = { ...formData, actkind: formData.iono ? 'U0' : 'A0', items: details };
+    await api.post('/api/hsio/HSIO_250U_STR', payload);
+    vAlert('저장되었습니다.'); search();
+  } catch (e) { vAlertError('저장 실패'); }
+}
+
+function addRow() {
+  if (isClosed.value) return;
+  grid2?.addRow({ upkind: 'A', ioqty: 0, price: 0, ioamt: 0, _STATE: 'NEW' }, true);
+}
+
+function deleteSelectedRows() {
+  const selected = grid2?.getSelectedRows();
+  if (!selected?.length) return vAlertError('삭제할 행을 선택하십시오.');
+  selected.forEach(row => handleRowAction(row));
+}
+
+function initialize() {
+  resetForm(formData);
+  formData.ioym = today.substring(0, 7).replace('-', ''); formData.ioymd = today; formData.whcd = '100';
+  grid1?.clearData(); setGridDataWithPadding([]);
+}
+
+async function handleFullDelete() {
+  if (!formData.iono) return;
+  if (!confirm('정말로 전체 삭제하시겠습니까?')) return;
+  try {
+    await api.post('/api/hsio/HSIO_250U_STR', { ...formData, actkind: 'D0' });
+    vAlert('삭제되었습니다.'); initialize(); search();
+  } catch (e) { vAlertError('삭제 실패'); }
 }
 
 onMounted(async () => {
-    api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'W0', CMPYCD: authStore.CMPYCD } })
-       .then(r => whOptions.value = r.data.map((i: any) => ({ CODE: i.WHCD || Object.values(i)[0], CDNM: i.WHNM || Object.values(i)[1] })));
-
-    api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'U2', CMPYCD: authStore.CMPYCD } })
-       .then(r => formData.PKUNITYN = r.data?.length ? 'Y' : 'N');
-
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 80 },
-			columns: [
-				{ title: "상태", field: "UPKIND", width: 50, hozAlign: "center", formatter: (c) => {
-                    const v = c.getValue();
-                    if (v === 'A') return '<i class="bi bi-plus-circle-fill text-primary"></i>';
-                    if (v === 'U') return '<i class="bi bi-pencil-square text-warning"></i>';
-                    if (v === 'D') return '<i class="bi bi-dash-circle-fill text-danger"></i>';
-                    return '';
-                }},
-                  { title: "품목코드", field: "ITEMCD", width: 150, hozAlign: "center"},
-                  {
-                    title: "품목명",
-                    field: "ITEMNM",
-                    minWidth: 100,
-                    widthGrow: 1,
-                    cssClass: "fw-bold",
-                    formatter: (cell) => `
-                    <div class="d-flex justify-content-between align-items-center w-100">
-                        <span>${cell.getValue() || ''}</span>
-                        <i class="bi bi-search text-primary ms-1 cursor-pointer"></i>
-                    </div>
-                    `,
-                    cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow()) },
-				{ title: '규격', field: 'ITSIZE', width: 200 },
-				{ title: '단위', field: 'UNIT', width: 80, hozAlign: 'center' },
-				{ title: '수량', field: 'IOQTY', hozAlign: 'right', width: 150, editor: 'number' },
-				{ title: '단가', field: 'PRICE', hozAlign: 'right', width: 150, editor: 'number' },
-				{ title: '금액', field: 'IOAMT', hozAlign: 'right', width: 150, formatter: 'money' },
-                { title: '포장용기', field: 'PKUNITNM', width: 120, visible: formData.PKUNITYN === 'Y' },
-                { title: "", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger cursor-pointer'></i>", cellClick: (e, c) => { if (c.getRow().getData().UPKIND === 'A') c.getRow().delete(); else { c.getRow().update({ UPKIND: 'D' }); c.getRow().getElement().style.opacity = '0.5' }; recalcTotals(); } }
-			]
-		})
-        mainGrid.on("cellEdited", (cell) => {
-            const field = cell.getField();
-            if (['IOQTY', 'PRICE'].includes(field)) {
-                const d = cell.getData();
-                const amt = Number(d.IOQTY || 0) * Number(d.PRICE || 0);
-                cell.getRow().update({ IOAMT: amt });
-                if (d.UPKIND !== 'A') cell.getRow().update({ UPKIND: 'U' });
-                recalcTotals();
-            }
-        })
-	}
+  api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
+     .then(r => whOptions.value = r.data.map((i: any) => ({ CODE: i.whcd || Object.values(i)[0], cdnm: i.whnm || Object.values(i)[1] })));
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
+    if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym;
+  });
+  initGrids(); initialize();
 })
 
-const formatNumber = (val: any) => Number(val || 0).toLocaleString()
-const handlePrint = () => { vAlert('인쇄 준비 중') }
+onUnmounted(() => { searchStore.removeTab(route.name as string) });
 </script>
 
 <style scoped>
-.hsio250u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
+.main-content-wrapper { padding-bottom: 0px !important; }
+.grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
+.erp-table-dense th, .erp-table-dense td {
+  height: 32px !important;
+  padding: 0 8px !important;
+  font-size: 12px;
+  vertical-align: middle;
+  border: 1px solid #dee2e6;
 }
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
+.erp-table-dense .form-control, .erp-table-dense .form-select, .erp-table-dense .btn {
+  height: 26px !important;
+  font-size: 12px !important;
+  border-radius: 2px;
+}
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+:deep(.empty-row-style) { opacity: 0.6; }
 </style>

@@ -10,7 +10,7 @@
         from asterisk.ps_endpoints a
         left join asterisk.ps_auths b on a.id = b.id
         left join asterisk.ps_aors c on a.id = c.id
-        WHERE 1=1
+        where 1=1
         <if test="id != null and id != ''"> and a.id like concat('%', #{id}, '%') </if>
     </select>
 
@@ -19,8 +19,8 @@
         select name as name, musiconhold as musiconhold, strategy as strategy,
                timeout as timeout, ringinuse as ringinuse, context as context
         from asterisk.queues
-        WHERE 1=1
-        <if test="name != null and name != ''"> AND name like concat('%', #{name}, '%') </if>
+        where 1=1
+        <if test="name != null and name != ''"> and name like concat('%', #{name}, '%') </if>
     </select>
 
     <!-- 3. 수신그룹 멤버 조회 -->
@@ -40,7 +40,7 @@
         <if test="exten != null and exten != ''"> and exten like concat('%', #{exten}, '%') </if>
     </select>
 
-    <!-- 저장/삭제 (대문자 매핑) -->
+    <!-- 저장/삭제 -->
     <insert id="insertPjsipAuth">
         insert into asterisk.ps_auths (id, auth_type, password, username)
         values (#{id}, 'userpass', #{password}, #{id}) on duplicate key update password = #{password}

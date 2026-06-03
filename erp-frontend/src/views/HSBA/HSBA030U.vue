@@ -2,7 +2,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsba030u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -36,25 +36,25 @@
               <tr>
                 <th class="bg-light-subtle">재고자산</th>
                 <td>
-                  <select v-model="searchForm.ASTKIND" class="form-select form-select-sm" @change="fetchLargeList">
-                    <option v-for="opt in assetOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                  <select v-model="searchForm.astkind" class="form-select form-select-sm" @change="fetchLargeList">
+                    <option v-for="opt in assetOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required">대분류</th>
                 <td>
-                  <select v-model="formData.AGRPCD" class="form-select form-select-sm" @change="fetchMiddleList">
+                  <select v-model="formData.agrpcd" class="form-select form-select-sm" @change="fetchMiddleList">
                     <option value="">-- 대분류 선택 --</option>
-                    <option v-for="opt in largeOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                    <option v-for="opt in largeOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required">중분류코드</th>
-                <td><input v-model="formData.BGRPCD" type="text" class="form-control form-control-sm text-center fw-bold" maxlength="3" :disabled="formData.ACTKIND === 'U0'" placeholder="3자리" /></td>
+                <td><input v-model="formData.bgrpcd" type="text" class="form-control form-control-sm text-center fw-bold" maxlength="3" :disabled="formData.actkind === 'U0'" placeholder="3자리" /></td>
                 <th class="required">중분류명</th>
-                <td><input v-model="formData.BGRPNM" type="text" class="form-control form-control-sm" maxlength="50" placeholder="분류 명칭" /></td>
+                <td><input v-model="formData.Bgrpnm" type="text" class="form-control form-control-sm" maxlength="50" placeholder="분류 명칭" /></td>
                 <th>사용</th>
                 <td>
                   <div class="form-check form-switch m-0 d-flex justify-content-center">
-                    <input v-model="formData.USEYN" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="useYn030">
+                    <input v-model="formData.useyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="useYn030">
                   </div>
                 </td>
               </tr>
@@ -79,20 +79,12 @@
         <div class="card border shadow-sm flex-grow-1 d-flex flex-column">
           <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
             <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 중분류 리스트</span>
-            <span v-if="formData.AGRPCD" class="text-primary small fw-bold">선택된 대분류: {{ selectedLargeNm }}</span>
+            <span v-if="formData.agrpcd" class="text-primary small fw-bold">선택된 대분류: {{ selectedLargeNm }}</span>
           </div>
           <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
             <div ref="middleGridRef"></div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 📊 5. 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-1 px-4 shadow-lg flex-shrink-0">
-      <div class="d-flex justify-content-between align-items-center" style="font-size: 11px;">
-        <div>대분류: <span class="text-warning fw-bold">{{ largeOptions.length }}</span>건 | 중분류: <span class="text-info fw-bold">{{ middleItemCount }}</span>건</div>
-        <div class="text-white-50">※ 좌측 대분류를 클릭하면 우측 중분류 정보가 조회됩니다.</div>
       </div>
     </div>
   </div>
@@ -113,10 +105,10 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 // 1. 상태 관리
-const searchForm = reactive({ ASTKIND: '120' })
+const searchForm = reactive({ astkind: '120' })
 const formData = reactive({
-  ACTKIND: 'A0', CMPYCD: authStore.CMPYCD, USERID: authStore.USER_ID,
-  ASTKIND: '120', AGRPCD: '', BGRPCD: '', AGRPNM: '', BGRPNM: '', USEYN: 'Y'
+  actkind: 'A0', cmpycd: authStore.cmpycd, userid: authStore.user_id,
+  astkind: '120', agrpcd: '', bgrpcd: '', Agrpnm: '', Bgrpnm: '', useyn: 'Y'
 })
 
 const assetOptions = ref<any[]>([])
@@ -135,15 +127,15 @@ const initGrids = () => {
       layout: "fitColumns", height: "100%", placeholder: "데이터 없음",
       columnDefaults: { headerSort: false, headerHozAlign: "center" },
       columns: [
-        { title: "코드", field: "AGRPCD", width: 70, hozAlign: "center", cssClass: "fw-bold text-secondary" },
-        { title: "대분류 명칭", field: "AGRPNM", minWidth: 150 }
+        { title: "코드", field: "agrpcd", width: 70, hozAlign: "center", cssClass: "fw-bold text-secondary" },
+        { title: "대분류 명칭", field: "Agrpnm", minWidth: 150 }
       ]
     })
     largeGrid.on("rowClick", (e, row) => {
       const data = row.getData()
-      formData.AGRPCD = data.AGRPCD
-      selectedLargeNm.value = data.AGRPNM
-      formData.ACTKIND = 'A0' // 대분류 선택 시 중분류는 신규등록 모드로
+      formData.agrpcd = data.agrpcd
+      selectedLargeNm.value = data.Agrpnm
+      formData.actkind = 'A0' // 대분류 선택 시 중분류는 신규등록 모드로
       fetchMiddleList()
     })
   }
@@ -154,15 +146,15 @@ const initGrids = () => {
       layout: "fitColumns", height: "100%", placeholder: "대분류를 선택하세요.",
       columnDefaults: { headerSort: false, headerHozAlign: "center" },
       columns: [
-        { title: "중분류코드", field: "BGRPCD", width: 100, hozAlign: "center", cssClass: "fw-bold text-primary border-end" },
-        { title: "중분류 명칭", field: "BGRPNM", minWidth: 250 },
-        { title: "사용", field: "USEYN", width: 80, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
+        { title: "중분류코드", field: "bgrpcd", width: 100, hozAlign: "center", cssClass: "fw-bold text-primary border-end" },
+        { title: "중분류 명칭", field: "Bgrpnm", minWidth: 250 },
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
       ]
     })
     middleGrid.on("rowClick", (e, row) => {
       const data = row.getData()
       Object.assign(formData, data)
-      formData.ACTKIND = 'U0'
+      formData.actkind = 'U0'
     })
   }
 }
@@ -170,10 +162,10 @@ const initGrids = () => {
 // 3. 데이터 로드
 async function fetchAssetCodes() {
   try {
-    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '100' } })
-    assetOptions.value = res.data.map((i: any) => ({ CODECD: String(i.CODE || '').trim(), CODENM: String(i.CDNM || '').trim() }))
+    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '100' } })
+    assetOptions.value = res.data.map((i: any) => ({ codecd: String(i.CODE || '').trim(), codenm: String(i.cdnm || '').trim() }))
     if (assetOptions.value.length > 0) {
-      searchForm.ASTKIND = assetOptions.value[0].CODECD
+      searchForm.astkind = assetOptions.value[0].codecd
       fetchLargeList()
     }
   } catch (e) { console.error('자산코드 로드 실패') }
@@ -181,22 +173,22 @@ async function fetchAssetCodes() {
 
 async function fetchLargeList() {
   try {
-    formData.ASTKIND = searchForm.ASTKIND
-    const res = await api.post('/api/hsba/HSBA_030U_STR', { ACTKIND: 'S1', CMPYCD: authStore.CMPYCD, ASTKIND: searchForm.ASTKIND })
+    formData.astkind = searchForm.astkind
+    const res = await api.post('/api/hsba/HSBA_030U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, astkind: searchForm.astkind })
     largeGrid?.setData(res.data || [])
-    largeOptions.value = res.data.map((i: any) => ({ CODECD: i.AGRPCD, CODENM: i.AGRPNM }))
+    largeOptions.value = res.data.map((i: any) => ({ codecd: i.agrpcd, codenm: i.Agrpnm }))
 
     // 초기화
     middleGrid?.setData([])
-    formData.AGRPCD = ''; formData.BGRPCD = ''; formData.BGRPNM = ''; selectedLargeNm.value = ''
+    formData.agrpcd = ''; formData.bgrpcd = ''; formData.Bgrpnm = ''; selectedLargeNm.value = ''
   } catch (e) { vAlertError('조회 실패') }
 }
 
 async function fetchMiddleList() {
-  if (!formData.AGRPCD) return
+  if (!formData.agrpcd) return
   try {
     const res = await api.post('/api/hsba/HSBA_030U_STR', {
-      ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, ASTKIND: searchForm.ASTKIND, AGRPCD: formData.AGRPCD
+      actkind: 'S0', cmpycd: authStore.cmpycd, astkind: searchForm.astkind, agrpcd: formData.agrpcd
     })
     middleGrid?.setData(res.data || [])
     middleItemCount.value = res.data.length
@@ -205,11 +197,11 @@ async function fetchMiddleList() {
 
 // 4. 저장
 async function save() {
-  if (!formData.AGRPCD || !formData.BGRPCD || !formData.BGRPNM) return vAlertError('대분류, 중분류 코드 및 명칭은 필수입니다.')
+  if (!formData.agrpcd || !formData.bgrpcd || !formData.Bgrpnm) return vAlertError('대분류, 중분류 코드 및 명칭은 필수입니다.')
   if (!confirm('설정된 정보를 저장하시겠습니까?')) return
 
   try {
-    const res = await api.post('/api/hsba/HSBA_030U_STR', { ...formData, USERID: authStore.USER_ID })
+    const res = await api.post('/api/hsba/HSBA_030U_STR', { ...formData, userid: authStore.user_id })
     vAlert('저장되었습니다.')
     fetchMiddleList()
     initialize()
@@ -217,12 +209,12 @@ async function save() {
 }
 
 function initialize() {
-  const currentLarge = formData.AGRPCD
-  const currentAsset = searchForm.ASTKIND
+  const currentLarge = formData.agrpcd
+  const currentAsset = searchForm.astkind
   resetForm(formData)
   Object.assign(formData, {
-    ACTKIND: 'A0', CMPYCD: authStore.CMPYCD, USERID: authStore.USER_ID,
-    ASTKIND: currentAsset, AGRPCD: currentLarge, USEYN: 'Y'
+    actkind: 'A0', cmpycd: authStore.cmpycd, userid: authStore.user_id,
+    astkind: currentAsset, agrpcd: currentLarge, useyn: 'Y'
   })
 }
 
@@ -231,22 +223,3 @@ onMounted(async () => {
   nextTick(() => { initGrids() })
 })
 </script>
-
-<style scoped>
-.hsba030u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11.5px; padding: 7px 10px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-
-:deep(.tabulator) { border: none !important; font-size: 12.5px; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-:deep(.tabulator-row.tabulator-selected) { background-color: #e0f2fe !important; border-left: 4px solid #005a9f !important; }
-:deep(.tabulator-cell) { padding: 6px 4px !important; }
-</style>

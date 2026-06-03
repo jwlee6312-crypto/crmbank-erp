@@ -10,7 +10,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hsst320s-wrapper d-flex flex-column h-100 bg-white p-0">
+	<div class="erp-container">
 		<!-- 🚀 1, 11, 12. 상단 액션 바: 버튼 그룹 우측 상단 정렬 및 표준 색상 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -22,10 +22,10 @@
 				<button class="btn-erp btn-init" @click="initialize">
 					<i class="bi bi-arrow-clockwise"></i> 초기화
 				</button>
-				<button class="btn-erp btn-search" @click="fetchData">
+				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
-				<button class="btn-erp btn-excel" @click="handleExcel">
+				<button class="btn-erp btn-excel" @click="excel">
 					<i class="bi bi-file-earmark-excel"></i> 엑셀
 				</button>
 			</div>
@@ -47,8 +47,8 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">판매부서</span>
 									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="searchForm.DEPTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.DEPTNM" type="text" class="form-control" placeholder="부서 선택" />
+										<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
 									</div>
 								</div>
@@ -57,9 +57,9 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">판매일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
-										<input v-model="searchForm.FYMD" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.fymd" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.TYMD" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.tymd" type="date" class="form-control form-control-sm" />
 									</div>
 								</div>
 							</td>
@@ -74,22 +74,12 @@
 		<!-- 📊 6, 8. 중앙 그리드 영역 (중앙 정렬 표준 적용) -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                </div>
 			</div>
 		</div>
 
-		<!-- 📊 4. 하단 요약 바 -->
-		<div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-			<div class="row align-items-center w-100">
-				<div class="col-md-2 small">조회 품목: <span class="fw-bold text-info">{{ rowCount }}</span> 건</div>
-				<div class="col-md-10 text-end">
-					<span class="me-4 small opacity-75">당월 매출합계: <span class="fw-bold text-white ms-1">{{ formatNumber(totals.TMSUM) }}</span></span>
-					<span class="fs-5 ms-2 fw-light">누계 매출액: <span class="fw-bold text-warning ms-2">{{ formatNumber(totals.TYSUM) }}</span> 원</span>
-				</div>
-			</div>
-		</div>
 	</div>
 
 	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
@@ -119,23 +109,23 @@ const today = now.toISOString().substring(0, 10);
 
 // 13. 모든 변수명 대문자 고수
 const searchForm = reactive({
-	DEPTCD: authStore.DEPTCD,
-	DEPTNM: authStore.DEPTNM,
-	FYMD: firstDay,
-	TYMD: today
+	deptcd: authStore.deptcd,
+	deptnm: authStore.deptnm,
+	fymd: firstDay,
+	tymd: today
 })
 
 const rowCount = ref(0)
 const totals = reactive({ TMSUM: 0, TYSUM: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
-const fetchData = async () => {
+const search = async () => {
 	try {
 		const res = await api.post('/api/hsst/HSST_320S_STR', {
 			...searchForm,
-			CMPYCD: authStore.CMPYCD,
-			FYMD: searchForm.FYMD.replace(/-/g, ''),
-			TYMD: searchForm.TYMD.replace(/-/g, '')
+			cmpycd: authStore.cmpycd,
+			fymd: searchForm.fymd.replace(/-/g, ''),
+			tymd: searchForm.tymd.replace(/-/g, '')
 		})
 		const data = res.data || []
 		mainGrid?.setData(data)
@@ -150,14 +140,14 @@ const fetchData = async () => {
 
 const initialize = () => {
 	resetForm(searchForm);
-	searchForm.DEPTCD = authStore.DEPTCD; searchForm.DEPTNM = authStore.DEPTNM;
-	searchForm.FYMD = firstDay; searchForm.TYMD = today;
+	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
+	searchForm.fymd = firstDay; searchForm.tymd = today;
 	mainGrid?.clearData(); rowCount.value = 0;
 	totals.TMSUM = 0; totals.TYSUM = 0;
 }
 
-const handleExcel = () => mainGrid?.download("xlsx", "품목별판매현황.xlsx")
-const handlePrint = () => vAlert('인쇄 기능을 준비 중입니다.')
+const excel = () => mainGrid?.download("xlsx", "품목별판매현황.xlsx")
+const print = () => vAlert('인쇄 기능을 준비 중입니다.')
 
 const modalVisible = ref(false);
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
@@ -165,10 +155,10 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
-			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM',
-			data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }],
-			onConfirm: (d: any) => { searchForm.DEPTCD = d.DEPTCD; searchForm.DEPTNM = d.DEPTNM }
+			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
 		})
 	}
 	modalVisible.value = true
@@ -190,11 +180,11 @@ onMounted(() => {
                 },
         		columns: [
 				{
-                    title: "품목명", field: "ITEMNM", minWidth: 200, widthGrow: 2, hozAlign: "left",
+                    title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 2, hozAlign: "left",
                     cssClass: "fw-bold text-primary cursor-pointer", frozen: true,
                     cellClick: (e, cell) => {
                         const d = cell.getData();
-                        router.push({ path: '/HSST/HSST330S', query: { FYMD: searchForm.FYMD, TYMD: searchForm.TYMD, DEPTCD: searchForm.DEPTCD, DEPTNM: searchForm.DEPTNM, ITEMCD: d.ITEMCD } });
+                        router.push({ path: '/HSST/HSST330S', query: { fymd: searchForm.fymd, tymd: searchForm.tymd, deptcd: searchForm.deptcd, deptnm: searchForm.deptnm, itemcd: d.itemcd } });
                     }
                 },
 				{
@@ -221,83 +211,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* 🎨 폰트 선명도 보정 및 전역 스타일 */
-.hsst320s-wrapper {
-  height: 100%;
-  overflow: hidden;
-  font-family: 'Pretendard', sans-serif;
-  background-color: #f4f7fa !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-.erp-header { background-color: #ffffff !important; }
-
-/* 🎨 원칙 1-4: 시스템 공통 버튼 색상 표준 적용 */
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; border: none; }
-.btn-init { background-color: #ffffff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #ffffff !important; }
-.btn-excel { background-color: #1d6f42 !important; color: #ffffff !important; }
-.btn-print { background-color: #6c757d !important; color: #ffffff !important; }
-
-/* 🎨 원칙 10: 폼 레이블 표준 (연한 회색 배경, 검정 글자) */
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f1f3f5; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 8px !important; color: #212529; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 8px 4px !important; background-color: #fff; vertical-align: middle; }
-
-/* 🎨 원칙 9: 폼 라벨 스타일 */
-.erp-label { font-weight: 700; font-size: 12px; color: #212529; min-width: 80px; text-align: right; white-space: nowrap; }
-
-/* 🎨 원칙 5, 6: 그리드 타이틀 색상 및 중앙 정렬 표준 */
-:deep(.tabulator) {
-  border: 1px solid #dee2e6;
-  font-size: 13px;
-  color: #212529 !important;
-  font-family: 'Pretendard', sans-serif !important;
-}
-
-/* 🎨 그리드 헤더 레이블 상하 중앙 정렬 및 높이 균등 배분 보정 */
-:deep(.tabulator-header .tabulator-col) {
-  display: inline-flex !important;
-  flex-direction: column !important;
-  background-color: #f8f9fa !important;
-}
-
-:deep(.tabulator-header .tabulator-col-content) {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex: 1 1 0% !important; /* 💎 상하 층간 높이를 균등하게 배분 */
-  min-height: 32px !important;
-  height: 100% !important;
-  padding: 0 !important;
-}
-
-/* 다단 헤더 하위 컬럼 컨테이너 */
-:deep(.tabulator-header .tabulator-col-group-cols) {
-  display: flex !important;
-  flex: 1 1 0% !important; /* 💎 하위 영역도 상위와 동일한 비율 차지 */
-  border-top: 1px solid #dee2e6 !important;
-}
-
-:deep(.tabulator-col-title) {
-  color: #6c757d !important;
-  font-weight: 800;
-  text-align: center !important;
-  line-height: 1.2 !important;
-  padding: 4px !important;
-}
-
-:deep(.tabulator-cell) {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 4px !important;
-  border-right: 1px solid #eee !important;
-}
-:deep(.tabulator-row.tabulator-selected) { background-color: #eef2ff !important; }
-
-.erp-footer { background-color: #212529 !important; min-height: 50px; }
-</style>

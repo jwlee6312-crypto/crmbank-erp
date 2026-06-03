@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hpcl100u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -28,17 +28,17 @@
             <div class="col-md-6">
               <label class="form-label fw-bold text-secondary small mb-2">마감 연월</label>
               <div class="input-group">
-                <select v-model="closeData.YY" class="form-select border-primary shadow-sm">
+                <select v-model="closeData.yy" class="form-select border-primary shadow-sm">
                   <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
                 </select>
-                <select v-model="closeData.MM" class="form-select border-primary shadow-sm">
+                <select v-model="closeData.mm" class="form-select border-primary shadow-sm">
                   <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}월</option>
                 </select>
               </div>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-bold text-secondary small mb-2">작업 구분</label>
-              <select v-model="closeData.WKGBN" class="form-select border-primary shadow-sm fw-bold" :class="closeData.WKGBN === 'Y' ? 'text-primary' : 'text-danger'">
+              <select v-model="closeData.wkgbn" class="form-select border-primary shadow-sm fw-bold" :class="closeData.wkgbn === 'Y' ? 'text-primary' : 'text-danger'">
                 <option value="Y">마감 실행 (Lock)</option>
                 <option value="N">마감 취소 (Unlock)</option>
               </select>
@@ -52,7 +52,7 @@
               <div>
                 <p class="mb-1 fw-bold">주의사항</p>
                 <ul class="mb-0 small ps-3">
-                  <li v-if="closeData.WKGBN === 'Y'">월마감을 진행하면 해당 월의 자재 입고 및 생산 실적 자료를 <strong>수정하거나 추가할 수 없습니다.</strong></li>
+                  <li v-if="closeData.wkgbn === 'Y'">월마감을 진행하면 해당 월의 자재 입고 및 생산 실적 자료를 <strong>수정하거나 추가할 수 없습니다.</strong></li>
                   <li v-else>마감을 취소하면 해당 월의 생산 데이터를 <strong>다시 편집할 수 있는 상태</strong>가 됩니다.</li>
                   <li>원가 마감이 진행된 경우, 먼저 원가 마감을 취소해야 생산 마감 작업이 가능합니다.</li>
                 </ul>
@@ -85,16 +85,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-6 small">현재 생산마감월: <span class="fw-bold text-info">{{ closingInfo.PCLSYM }}</span></div>
-        <div class="col-md-6 text-end small opacity-75">
-          <i class="bi bi-info-circle me-1"></i> 원가마감월({{ closingInfo.WCLSYM }}) 이전으로는 작업할 수 없습니다.
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -108,8 +98,8 @@ import { useAuthStore } from '@/stores/authStore'
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
-const closeData = reactive({ YY: '', MM: '', WKGBN: 'Y' })
-const closingInfo = reactive({ CLSYMD: '', SCLSYM: '', PCLSYM: '', WCLSYM: '' })
+const closeData = reactive({ yy: '', mm: '', wkgbn: 'Y' })
+const closingInfo = reactive({ clsymd: '', sclsym: '', PCLSym: '', wclsym: '' })
 const yearOptions = ref<string[]>([])
 const monthOptions = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
@@ -120,29 +110,29 @@ const generateYearOptions = () => {
 
 const fetchClosingStatus = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD } })
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } })
     if (res.data?.length) {
-      closingInfo.CLSYMD = String(Object.values(res.data[0])[0]).trim()
-      closingInfo.SCLSYM = String(Object.values(res.data[0])[1]).trim()
-      closingInfo.PCLSYM = String(Object.values(res.data[0])[2]).trim()
-      closingInfo.WCLSYM = String(Object.values(res.data[0])[3]).trim()
-      if (closingInfo.PCLSYM.length === 6) {
-          closeData.YY = closingInfo.PCLSYM.substring(0, 4)
-          closeData.MM = closingInfo.PCLSYM.substring(4, 6)
+      closingInfo.clsymd = String(Object.values(res.data[0])[0]).trim()
+      closingInfo.sclsym = String(Object.values(res.data[0])[1]).trim()
+      closingInfo.PCLSym = String(Object.values(res.data[0])[2]).trim()
+      closingInfo.wclsym = String(Object.values(res.data[0])[3]).trim()
+      if (closingInfo.PCLSym.length === 6) {
+          closeData.yy = closingInfo.PCLSym.substring(0, 4)
+          closeData.mm = closingInfo.PCLSym.substring(4, 6)
       }
     }
   } catch (e) {}
 }
 
 const handleProcess = async () => {
-    const YM = closeData.YY + closeData.MM
-    if (closingInfo.WCLSYM >= YM) return vAlertError(`원가마감(${closingInfo.WCLSYM}) 되었습니다. 원가마감 취소 후 작업 바랍니다.`)
-    const confirmMsg = closeData.WKGBN === 'Y' ? `${closeData.YY}년 ${closeData.MM}월 마감 작업을 하시겠습니까?` : `${closeData.YY}년 ${closeData.MM}월 마감 취소 작업을 하시겠습니까?`
+    const ym = closeData.yy + closeData.mm
+    if (closingInfo.wclsym >= ym) return vAlertError(`원가마감(${closingInfo.wclsym}) 되었습니다. 원가마감 취소 후 작업 바랍니다.`)
+    const confirmMsg = closeData.wkgbn === 'Y' ? `${closeData.yy}년 ${closeData.mm}월 마감 작업을 하시겠습니까?` : `${closeData.yy}년 ${closeData.mm}월 마감 취소 작업을 하시겠습니까?`
     if (!confirm(confirmMsg)) return
 
     try {
-        const actkind = closeData.WKGBN === 'Y' ? 'A0' : 'D0'
-        await api.post('/api/hpcl/HPCL_100U_STR', { ACTKIND: actkind, CMPYCD: authStore.CMPYCD, YM: YM, USERID: authStore.USERID })
+        const actkind = closeData.wkgbn === 'Y' ? 'A0' : 'D0'
+        await api.post('/api/hpcl/HPCL_100U_STR', { actkind: actkind, cmpycd: authStore.cmpycd, ym: ym, userid: authStore.userid })
         vAlert('정상적으로 작업이 완료되었습니다.')
         fetchClosingStatus()
     } catch (e) { vAlertError('처리 중 오류 발생') }
@@ -150,13 +140,3 @@ const handleProcess = async () => {
 
 onMounted(() => { generateYearOptions(); fetchClosingStatus() })
 </script>
-
-<style scoped>
-.hpcl100u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #f8f9fa !important; }
-.erp-header { background-color: #ffffff !important; }
-.btn-erp { padding: 6px 18px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; border: none; }
-.btn-save { background-color: #4361ee !important; color: #fff !important; }
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 13px; padding: 12px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 10px 15px !important; background-color: #fff; vertical-align: middle; }
-</style>

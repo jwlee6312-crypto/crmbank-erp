@@ -12,26 +12,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import com.crmbank.global.handler.MapKeyUpperWrapperFactory;
+import com.crmbank.global.handler.MapKeyLowerWrapperFactory;
 import com.zaxxer.hikari.HikariDataSource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @Slf4j
 @Configuration
 /**
- * 💡 ERP (SQL Server) 데이터 소스 설정
+ * 💡 ERP (SQL Server) Data Source Configuration
+ * Using explicit bean names to prevent dependency injection errors in multi-datasource environments.
  */
 @MapperScan(
-    // 💡 스캔 범위를 .mapper 하위로 좁혀서 빈 주입 충돌 및 기동 에러를 방지합니다.
-    basePackages = { "com.crmbank.erp.**.mapper" }, 
+    basePackages = "com.crmbank.erp", 
     sqlSessionTemplateRef = "erpSqlSessionTemplate"
 )
 public class ErpDataSourceConfig {
@@ -55,15 +50,12 @@ public class ErpDataSourceConfig {
                 "jdbc:sqlserver://%s:%s;databaseName=%s;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=false;loginTimeout=30",
                 host, port, dbName);
         
-        log.info("🔌 [ERP DB 연동] 접속 시도: {}", jdbcUrl);
+        log.info("🔌 [ERP DB] Connecting to: {}", jdbcUrl);
         
         dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
-
         dataSource.setMaximumPoolSize(10);
-        dataSource.setMinimumIdle(2);
-        dataSource.setConnectionTimeout(20000);
         
         return dataSource;
     }
@@ -80,17 +72,15 @@ public class ErpDataSourceConfig {
         sessionFactory.setDataSource(dataSource);
         
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        // 💡 XML 매퍼 위치를 명확히 지정
         sessionFactory.setMapperLocations(resolver.getResources("classpath*:/com/crmbank/erp/**/*.xml"));
         
         org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
         configuration.setCallSettersOnNulls(true);
         configuration.setJdbcTypeForNull(org.apache.ibatis.type.JdbcType.NULL);
-        configuration.setMapUnderscoreToCamelCase(false); 
-        configuration.setObjectWrapperFactory(new MapKeyUpperWrapperFactory());
+        configuration.setMapUnderscoreToCamelCase(false);
+        configuration.setObjectWrapperFactory(new MapKeyLowerWrapperFactory());
 
         sessionFactory.setConfiguration(configuration);
-
         return sessionFactory.getObject();
     }
 

@@ -1,3 +1,11 @@
+<!--
+	=============================================================
+	프로그램명	: 로그인 (LoginPage)
+	작성일자	: 2025.02.24
+	설명        : 시스템 로그인 (소문자 표준화 적용)
+	=============================================================
+-->
+
 <template>
 	<div class="login-page">
 		<form class="login-card" @submit.prevent="login">
@@ -16,7 +24,7 @@
 			<div class="form-item-wrap">
 				<input
 					id="userid"
-					v-model="form.USERID"
+					v-model="form.userid"
 					type="text"
 					class="inp"
 					name="userid"
@@ -28,10 +36,10 @@
 			<div class="form-item-wrap">
 				<input
 					id="pw"
-					v-model="form.PASSWD"
+					v-model="form.passwd"
 					type="password"
 					class="inp"
-					name="pw"
+					name="passwd"
 					placeholder="Enter your password"
 				/>
 			</div>
@@ -56,21 +64,22 @@ import { isServerDown } from '@/utils/isServerDown'
 
 const authStore = useAuthStore()
 
+// 💡 소문자 표준화 적용
 interface FormData {
-	CMPYCD: string
-	USERID: string
-	PASSWD: string
+	cmpycd: string
+	userid: string
+	passwd: string
 }
 
 const form = reactive<FormData>({
-	CMPYCD: 'haionnet',
-	USERID: '',
-	PASSWD: '',
+	cmpycd: 'haionnet',
+	userid: '',
+	passwd: '',
 })
 
 const login = async () => {
 	try {
-		// 💡 대문자 필드 데이터(CMPYCD, USERID, PASSWD) 전달
+		// 💡 소문자 필드 데이터(cmpycd, userid, passwd) 전달
 		await authStore.login(form)
 		await nextTick()
 
@@ -85,8 +94,9 @@ const login = async () => {
 			alert('서버가 꺼져있거나 응답하지 않습니다.')
 			return
 		}
-		// 백엔드에서 보낸 에러 메시지 노출 (예: "비밀번호가 틀립니다.")
-		alert(e.message || '로그인에 실패했습니다.')
+		// 백엔드 응답이 소문자 표준화되었으므로 e.response.data.message 등을 확인
+		const errorMsg = e.response?.data?.message || e.message || '로그인에 실패했습니다.';
+		alert(errorMsg)
 	}
 }
 </script>

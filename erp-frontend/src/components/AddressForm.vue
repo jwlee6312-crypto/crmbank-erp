@@ -5,7 +5,7 @@
 			<input
 				v-model="postnoValue"
 				type="text"
-				class="form-control form-control-sm w-100"
+				class="form-control form-control-sm w-75"
 				placeholder="우편번호"
 				maxlength="6"
 				readonly

@@ -1,0 +1,268 @@
+<!--
+	=============================================================
+	프로그램명	: 품목별 배부적수 등록 (HAPL050U)
+	작성일자	: 2025.02.24
+	설명        : 부서별/품목별 원가 배부 적수 관리 (HSOD100U 표준 UI 적용)
+	=============================================================
+-->
+
+<template>
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-box-seam me-2 text-primary" style="font-size: 18px;"></i>
+        관리손익 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        기준정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">품목별 배부적수 (HAPL050U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="searchDepts">조회</button>
+        <button class="btn-erp btn-save" @click="save">저장</button>
+      </div>
+    </div>
+
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 30%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light required">기준연월</th>
+                <td>
+                  <div class="d-flex align-items-center gap-1 px-1">
+                    <select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;">
+                      <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
+                    </select>
+                    <select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;">
+                      <option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
+                    </select>
+                  </div>
+                </td>
+                <th class="text-center bg-light required">배부기준</th>
+                <td>
+                  <select v-model="searchForm.divcd" class="form-select form-select-sm" @change="searchDepts">
+                    <option v-for="opt in divideOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+                  </select>
+                </td>
+                <td class="text-end pe-3 border-start-0">
+                  <button class="btn btn-sm btn-outline-primary fw-bold" @click="generateWeights" :disabled="!selectedDept.code">
+                    <i class="bi bi-gear-wide-connected me-1"></i>배부적수생성
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- [하단] 투-그리드 레이아웃 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
+
+        <!-- ⬅️ 좌측: 부서 목록 -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 280px; min-width: 280px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">판매부서 목록</div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="deptGridRef" class="tabulator-instance flex-grow-1"></div>
+          </div>
+        </div>
+
+        <!-- ➡️ 우측: 품목 상세 그리드 -->
+        <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
+          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+              <span class="fw-bold small text-dark">
+                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>부서별 품목 상세
+                <span v-if="selectedDept.nm" class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ selectedDept.nm }}</span>
+              </span>
+              <span v-if="updYn === 'N'" class="badge bg-danger">마감됨 (수정불가)</span>
+            </div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted, nextTick } from 'vue'
+import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import { useAlerts } from '@/composables/useAlerts'
+import { api } from '@/utils/axios'
+import { useAuthStore } from '@/stores/authStore'
+import { getDate } from '@/composables/useDate'
+import AppAlert from '@/components/AppAlert.vue'
+
+const authStore = useAuthStore()
+const { today } = getDate()
+const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
+
+// [1] 데이터 모델링
+const currentYear = new Date().getFullYear()
+const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
+const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
+const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
+
+const searchForm = reactive({
+  yy: String(currentYear),
+  mm: currentMonth,
+  divcd: ''
+})
+
+const divideOptions = ref<any[]>([])
+const selectedDept = reactive({ code: '', nm: '' })
+const updYn = ref('Y')
+
+const deptGridRef = ref<HTMLElement | null>(null)
+const mainGridRef = ref<HTMLElement | null>(null)
+let deptGrid: Tabulator | null = null
+let mainGrid: Tabulator | null = null
+
+// [2] 그리드 초기화
+const initGrids = () => {
+  deptGrid = new Tabulator(deptGridRef.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "데이터 없음", selectable: 1,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
+      { title: "부서명", field: "DEPTNM", hozAlign: "left", cssClass: "fw-bold text-primary" }
+    ],
+  });
+  deptGrid.on("rowClick", (e, row) => {
+    const d = row.getData();
+    selectedDept.code = d.DEPTCD;
+    selectedDept.nm = d.DEPTNM;
+    fetchItems();
+  });
+
+  mainGrid = new Tabulator(mainGridRef.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "부서를 선택하세요.",
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
+      { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+          const v = c.getValue();
+          if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+          return '';
+      }},
+      { title: "품목명", field: "ITEMNM", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-dark" },
+      { title: "규격", field: "ITSIZE", width: 120 },
+      { title: "단위", field: "UNIT", width: 60, hozAlign: "center" },
+      { title: "거래처", field: "CUSTNM", width: 180, hozAlign: "left" },
+      { title: "배부적수", field: "DIVRATE1", width: 110, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow",
+        cellEdited: (cell) => {
+            cell.getRow().update({ _status: '수정' });
+            calcRate();
+        }
+      },
+      { title: "배부율 (%)", field: "RATE1", width: 100, hozAlign: "right", formatter: (c) => Number(c.getValue() || 0).toFixed(1) + '%' }
+    ],
+  });
+}
+
+// [3] 비즈니스 로직
+const loadInitData = async () => {
+  try {
+    const res = await api.post('/api/comm/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, col0: '200', col1: '200' });
+    divideOptions.value = (res.data || []).map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm || i.CODENM }));
+    if (divideOptions.value.length > 0) searchForm.divcd = divideOptions.value[0].code;
+  } catch (e) { console.error(e) }
+}
+
+const searchDepts = async () => {
+  try {
+    const ym = searchForm.yy + searchForm.mm;
+    const res = await api.post('/api/hapl/HAPL_050U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, gubun: '200', yymm: ym });
+    deptGrid?.setData(res.data || []);
+    mainGrid?.clearData(); selectedDept.code = ''; selectedDept.nm = '';
+
+    // 마감 여부 체크
+    const clsRes = await api.post('/api/hapl/HAPL_050U_CHECK_CLOSE', { cmpycd: authStore.cmpycd, yymm: ym });
+    updYn.value = clsRes.data?.updyn || 'Y';
+    vAlert('조회되었습니다.');
+  } catch (e) { vAlertError('조회 실패') }
+}
+
+const fetchItems = async () => {
+  try {
+    const ym = searchForm.yy + searchForm.mm;
+    const res = await api.post('/api/hapl/HAPL_050U_STR', {
+      actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '020', yymm: ym, divcd: searchForm.divcd, deptcd: selectedDept.code
+    });
+    mainGrid?.setData((res.data || []).map((i: any) => ({ ...i, _status: '' })));
+  } catch (e) { vAlertError('품목 조회 실패') }
+}
+
+const calcRate = () => {
+    const data = mainGrid?.getData() || [];
+    const totalWeight = data.reduce((acc, cur: any) => acc + Number(cur.DIVRATE1 || 0), 0);
+    data.forEach(row => {
+        const weight = Number(row.DIVRATE1 || 0);
+        const rate = totalWeight > 0 ? (weight / totalWeight) * 100 : 0;
+        mainGrid?.getRow(row).update({ RATE1: rate });
+    });
+}
+
+const generateWeights = async () => {
+    if (updYn.value === 'N') return vAlertError('마감된 자료는 배부적수를 재생성할 수 없습니다.');
+    if (!confirm('배부적수를 생성하시겠습니까?')) return;
+    try {
+        const ym = searchForm.yy + searchForm.mm;
+        await api.post('/api/hapl/HAPL_050U_STR', {
+            actkind: 'DR', cmpycd: authStore.cmpycd, gubun: '020', yymm: ym, divcd: searchForm.divcd, deptcd: selectedDept.code
+        });
+        vAlert('배부적수가 생성되었습니다.'); fetchItems();
+    } catch (e) { vAlertError('생성 실패') }
+}
+
+const save = async () => {
+    if (updYn.value === 'N') return vAlertError('마감된 자료는 재작업할 수 없습니다.');
+    const details = mainGrid?.getData().filter((r: any) => r._status === '수정') || [];
+    if (details.length === 0) return vAlertError('수정된 항목이 없습니다.');
+
+    try {
+        const ym = searchForm.yy + searchForm.mm;
+        for (const row of details) {
+            await api.post('/api/hapl/HAPL_050U_STR', {
+                actkind: 'U0', cmpycd: authStore.cmpycd, gubun: '020', yymm: ym, divcd: searchForm.divcd,
+                deptcd: selectedDept.code, custcd: row.CUSTCD, userid: row.USERID, itemcd: row.ITEMCD,
+                itsize: row.ITSIZE, unit: row.UNIT, itemnm: row.ITEMNM,
+                divrate1: row.DIVRATE1, divrate2: '0', divrate3: '0', upduser: authStore.userid
+            });
+        }
+        vAlert('저장되었습니다.'); fetchItems();
+    } catch (e) { vAlertError('저장 실패') }
+}
+
+const initialize = () => {
+    searchForm.yy = String(currentYear); searchForm.mm = currentMonth;
+    if (divideOptions.value.length > 0) searchForm.divcd = divideOptions.value[0].code;
+    deptGrid?.clearData(); mainGrid?.clearData(); selectedDept.code = ''; selectedDept.nm = '';
+}
+
+onMounted(async () => {
+  await loadInitData()
+  nextTick(initGrids)
+})
+</script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+.bg-light-yellow { background-color: #fffde7 !important; }
+</style>

@@ -2,7 +2,7 @@
 	=============================================================
 	컴포넌트명	: 부서 선택 도움창 (Ultra-Compact ERP Design)
 	작성일자	: 25.02.24
-	설명		: 슬림한 폰트와 최소화된 여백으로 가독성을 극대화한 부서 팝업
+	설명		: 슬림한 폰트와 최소화된 여백으로 가독성을 극대화한 부서 팝업 (소문자 표준화 적용)
 	=============================================================
 -->
 
@@ -56,13 +56,15 @@ const grid = ref<Tabulator | null>(null)
 
 const fetchDepts = async () => {
   try {
-    // 💡 모든 LIMIT 파라미터 삭제 (지시 사항 준수) 및 문자열 처리
-    const res = await api.post('/api/ha00/HA00_00P_STR', {
-      GUBUN: 'D0',
-      CMPYCD: String(props.cmpycd)
+    // 💡 [소문자 표준화] API 파라미터 키를 소문자로 변경
+    const res = await api.post('/api/ha00/ha00_00p_str', {
+      gubun: 'd0',
+      cmpycd: String(props.cmpycd)
     })
     if (grid.value) {
-      await grid.value.setData(res.data || [])
+      // 💡 데이터 셋업 (인터셉터 언랩 로직이 없으므로 res.data 가 배열인지 확인)
+      const list = res.data.data || (Array.isArray(res.data) ? res.data : []);
+      await grid.value.setData(list)
       setTimeout(() => grid.value?.redraw(true), 10)
     }
   } catch (e) { console.error('부서 조회 실패') }
@@ -84,8 +86,9 @@ watch(() => props.visible, async (val) => {
       placeholder: '자료를 불러오는 중...',
       columnDefaults: { headerHozAlign: 'center', headerSort: false },
       columns: [
-        { title: '부서코드', field: 'DEPTCD', width: 100, cssClass: 'compact-cell-bold text-primary border-end' },
-        { title: '부서명칭', field: 'DEPTNM', minWidth: 200, widthGrow: 1, cssClass: 'compact-cell-bold text-dark' }
+        // 💡 필드명 소문자 유지
+        { title: '부서코드', field: 'deptcd', width: 100, cssClass: 'compact-cell-bold text-primary border-end' },
+        { title: '부서명칭', field: 'deptnm', minWidth: 200, widthGrow: 1, cssClass: 'compact-cell-bold text-dark' }
       ]
     })
 
@@ -94,7 +97,6 @@ watch(() => props.visible, async (val) => {
       emit('close')
     })
 
-    // 💡 팝업 오픈 시 자동 데이터 로드
     fetchDepts()
   }, 50)
 })

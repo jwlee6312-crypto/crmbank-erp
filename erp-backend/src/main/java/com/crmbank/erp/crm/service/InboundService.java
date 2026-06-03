@@ -44,41 +44,40 @@ public class InboundService {
 
     public Map<String, Object> getCustomerByCustCd(String cmpycd, String custcd) {
         Map<String, Object> params = new HashMap<>();
-        params.put("CMPYCD", cmpycd);
-        params.put("CUSTCD", custcd);
+        params.put("cmpycd", cmpycd);
+        params.put("custcd", custcd);
         return inboundMapper.findCustomerByCustCd(params);
     }
 
     /**
-     * 💡 인바운드 상담 통합 저장 (MSSQL 대응 및 수동 입력 지원)
-     * @param agentDeptCd 로그인한 상담원의 부서코드
+     * 💡 인바운드 상담 통합 저장 (소문자 표준화 적용)
      */
     @Transactional
     public String saveCallMst(CallMstDto dto, List<String> recordings, String svcymd, String agentDeptCd) {
-        // 💡 대문자 필드 원칙에 따른 메서드 호출
-        dto.setCMPYCD(dto.getCMPYCD() != null ? dto.getCMPYCD() : "HAIONNET");
-        dto.setHAPPYCALL_YN("N"); 
+        // 💡 [교정] 모든 DTO 접근을 소문자 표준 메서드로 변경
+        dto.setCmpycd(dto.getCmpycd() != null ? dto.getCmpycd() : "haionnet");
+        dto.setHappycall_yn("n"); 
         
-        if (dto.getCALL_TELNO() != null) dto.setCALL_TELNO(dto.getCALL_TELNO().trim());
-        if (dto.getCALL_USERNM() != null) dto.setCALL_USERNM(dto.getCALL_USERNM().trim());
-        if (dto.getCALL_EMAIL() != null) dto.setCALL_EMAIL(dto.getCALL_EMAIL().trim());
-        if (dto.getIONO() != null) dto.setIONO(dto.getIONO().trim());
+        if (dto.getCall_telno() != null) dto.setCall_telno(dto.getCall_telno().trim());
+        if (dto.getCall_usernm() != null) dto.setCall_usernm(dto.getCall_usernm().trim());
+        if (dto.getCall_email() != null) dto.setCall_email(dto.getCall_email().trim());
+        if (dto.getIono() != null) dto.setIono(dto.getIono().trim());
 
-        if (dto.getSTART_TIME() == null) dto.setSTART_TIME(LocalDateTime.now().minusMinutes(5));
-        if (dto.getEND_TIME() == null) dto.setEND_TIME(LocalDateTime.now());
+        if (dto.getStart_time() == null) dto.setStart_time(LocalDateTime.now().minusMinutes(5));
+        if (dto.getEnd_time() == null) dto.setEnd_time(LocalDateTime.now());
 
-        String targetDeptCd = dto.getDEPTCD();
-        dto.setDEPTCD(agentDeptCd);
+        String targetDeptCd = dto.getDeptcd();
+        dto.setDeptcd(agentDeptCd);
 
         // 1. 접수번호 채번
         boolean isNew = false;
-        if (dto.getSVCNO() == null || dto.getSVCNO().trim().isEmpty()) {
+        if (dto.getSvcno() == null || dto.getSvcno().trim().isEmpty()) {
             isNew = true;
-            dto.setSVCYMD(svcymd);
+            dto.setSvcymd(svcymd);
             Map<String, Object> params = new HashMap<>();
-            params.put("CMPYCD", dto.getCMPYCD());
-            params.put("SVCYMD", svcymd);
-            dto.setSVCNO(inboundMapper.generateSvcNo(params));
+            params.put("cmpycd", dto.getCmpycd());
+            params.put("svcymd", svcymd);
+            dto.setSvcno(inboundMapper.generateSvcNo(params));
         }
 
         // 2. 상담 마스터 저장
@@ -89,20 +88,20 @@ public class InboundService {
         }
 
         // 3. 타 부서 이관 처리
-        if ("Y".equals(dto.getESCALATION_YN()) && dto.getESC_MEMO() != null && !dto.getESC_MEMO().trim().isEmpty()) {
+        if ("y".equalsIgnoreCase(dto.getEscalation_yn()) && dto.getEsc_memo() != null && !dto.getEsc_memo().trim().isEmpty()) {
             CtiEscalationDto escDto = CtiEscalationDto.builder()
-                    .SVCNO(dto.getSVCNO())
-                    .linkedid(dto.getLINKEDID())
-                    .SENDER_ID(dto.getCONSULTID())
-                    .DEPTCD(targetDeptCd)
-                    .SUMMARY(dto.getAI_SUMMARY())
-                    .ESC_MEMO(dto.getESC_MEMO())
+                    .svcno(dto.getSvcno())
+                    .linkedid(dto.getLinkedid())
+                    .sender_id(dto.getConsultid())
+                    .deptcd(targetDeptCd)
+                    .summary(dto.getAi_summary())
+                    .esc_memo(dto.getEsc_memo())
                     .build();
             
             inboundMapper.insertEscalation(escDto);
 
-            if (escDto.getESCALATION_NO() != null) {
-                dto.setESCALATION_NO(escDto.getESCALATION_NO().toString());
+            if (escDto.getEscalation_no() != null) {
+                dto.setEscalation_no(escDto.getEscalation_no().toString());
                 inboundMapper.updateCallMst(dto);
             }
         }
@@ -110,47 +109,47 @@ public class InboundService {
         // 4. 녹취 파일 정보 저장
         if (recordings != null && !recordings.isEmpty()) {
             Map<String, Object> delParams = new HashMap<>();
-            delParams.put("CMPYCD", dto.getCMPYCD());
-            delParams.put("SVCNO", dto.getSVCNO());
+            delParams.put("cmpycd", dto.getCmpycd());
+            delParams.put("svcno", dto.getSvcno());
             inboundMapper.deleteCallMonitor(delParams);
 
             for (int i = 0; i < recordings.size(); i++) {
                 inboundMapper.insertCallMonitor(CallMonitorDto.builder()
-                        .CMPYCD(dto.getCMPYCD())
-                        .SVCNO(dto.getSVCNO())
-                        .ROW(String.format("%03d", i + 1))
-                        .MONITERNM(recordings.get(i))
-                        .UPDEMP(dto.getCONSULTID())
+                        .cmpycd(dto.getCmpycd())
+                        .svcno(dto.getSvcno())
+                        .row(String.format("%03d", i + 1))
+                        .moniternm(recordings.get(i))
+                        .updemp(dto.getConsultid())
                         .build());
             }
         }
 
         // 5. 통합 인터랙션 로그
-        String interactionId = dto.getINTERACTION_ID();
+        String interactionId = dto.getInteraction_id();
         if (interactionId == null || interactionId.isEmpty()) {
-            interactionId = "MANUAL_" + UUID.randomUUID().toString().substring(0, 8);
-            dto.setINTERACTION_ID(interactionId);
+            interactionId = "manual_" + UUID.randomUUID().toString().substring(0, 8);
+            dto.setInteraction_id(interactionId);
         }
 
-        String srcNo = dto.getCALL_TELNO() != null && !dto.getCALL_TELNO().trim().isEmpty() ? dto.getCALL_TELNO() : dto.getCUSTCD();
+        String srcNo = dto.getCall_telno() != null && !dto.getCall_telno().trim().isEmpty() ? dto.getCall_telno() : dto.getCustcd();
 
         TotalCallLogDto logDto = TotalCallLogDto.builder()
                 .uniqueid(interactionId)
-                .CMPYCD(dto.getCMPYCD())
-                .MEDIA_TYPE("CALL")
-                .linkedid(dto.getLINKEDID())
-                .DIRECTION("in")
-                .SRC_NO(srcNo)
-                .DST_NO(dto.getCONSULTID())
-                .KEYWORD(srcNo)
-                .START_TIME(dto.getSTART_TIME())
-                .RESULT_CD("100")
-                .REC_FILE(dto.getREC_FILE())
+                .cmpycd(dto.getCmpycd())
+                .media_type("call")
+                .linkedid(dto.getLinkedid())
+                .direction("in")
+                .src_no(srcNo)
+                .dst_no(dto.getConsultid())
+                .keyword(srcNo)
+                .start_time(dto.getStart_time())
+                .result_cd("100")
+                .rec_file(dto.getRec_file())
                 .build();
         
         inboundMapper.insertTotalInteractionLog(logDto);
 
-        return dto.getSVCNO();
+        return dto.getSvcno();
     }
 
     /**
@@ -163,38 +162,38 @@ public class InboundService {
 
     public List<Map<String, Object>> getStatusList(String cmpycd, String fromdt, String todt, String custnm) {
         Map<String, Object> params = new HashMap<>();
-        params.put("CMPYCD", cmpycd);
-        params.put("FROMDT", fromdt);
-        params.put("TODT", todt);
+        params.put("cmpycd", cmpycd);
+        params.put("fromdt", fromdt);
+        params.put("todt", todt);
         params.put("custnm", custnm);
         return toLowerCase(inboundMapper.selectStatusList(params));
     }
 
     public List<Map<String, Object>> getItemList(String cmpycd, String custcd) {
         Map<String, Object> params = new HashMap<>();
-        params.put("CMPYCD", cmpycd);
-        params.put("CUSTCD", custcd);
+        params.put("cmpycd", cmpycd);
+        params.put("custcd", custcd);
         return toLowerCase(inboundMapper.selectItemList(params));
     }
 
     public List<Map<String, Object>> getCallHistory(String cmpycd, String custcd) {
         Map<String, Object> params = new HashMap<>();
-        params.put("CMPYCD", cmpycd);
-        params.put("CUSTCD", custcd);
+        params.put("cmpycd", cmpycd);
+        params.put("custcd", custcd);
         return toLowerCase(inboundMapper.selectCallHistory(params));
     }
 
     public List<Map<String, Object>> getServiceHistory(String cmpycd, String custcd) {
         Map<String, Object> params = new HashMap<>();
-        params.put("CMPYCD", cmpycd);
-        params.put("CUSTCD", custcd);
+        params.put("cmpycd", cmpycd);
+        params.put("custcd", custcd);
         return toLowerCase(inboundMapper.selectServiceHistory(params));
     }
 
     public List<Map<String, Object>> getSettleHistory(String cmpycd, String custcd) {
         Map<String, Object> params = new HashMap<>();
-        params.put("CMPYCD", cmpycd);
-        params.put("CUSTCD", custcd);
+        params.put("cmpycd", cmpycd);
+        params.put("custcd", custcd);
         return toLowerCase(inboundMapper.selectSettleHistory(params));
     }
 }

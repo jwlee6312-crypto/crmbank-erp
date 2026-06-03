@@ -1,75 +1,85 @@
 <!--
 	=============================================================
-	프로그램명	: 수입L/C번호 등록
-	작성일자	: 25.02.24
-	작성자	    : AI Assistant
-	설명        : [최종완성] PO 팝업 전용 API 적용 및 백엔드 POST 통신 일치화
+	프로그램명	: 수입전표취소 [디자인 표준 통합]
+	작성일자	: 2025.02.24
+	설명        : HSOD100U 디자인 패턴 이식 및 ASP 패턴 기반 순차 취소 로직 적용
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-	<div class="hsip150u-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1. 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-file-earmark-text me-2 text-primary" style="font-size: 18px;"></i>
-				수입관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">수입L/C번호등록 (HSIP150U)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">초기화</button>
-				<button class="btn-erp btn-search" @click="fetchList">조회</button>
-				<button class="btn-erp btn-save" @click="handleSave">저장</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-file-earmark-x-fill me-2 text-danger" style="font-size: 18px;"></i>
+        수입관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">수입전표취소 (HSIP150U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-2">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="fetchList">조회</button>
+        <button class="btn-erp btn-save" @click="save">전표 취소</button>
+      </div>
+    </div>
 
-		<!-- 💡 2. 메인 컨텐츠 영역 -->
-		<div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
-			<!-- 🅰️ 마스터 정보 -->
-			<div class="card border shadow-sm overflow-hidden">
-				<div class="card-body p-0">
-					<table class="erp-table-full">
-						<colgroup>
-							<col style="width: 100px;"><col style="width: 23%">
-							<col style="width: 100px;"><col style="width: 23%">
-							<col style="width: 100px;"><col style="width: 24%">
-						</colgroup>
-						<tbody>
-							<tr>
-								<th>PO No</th>
-								<td>
-									<div class="input-group input-group-sm">
-										<input v-model="formData.FILENO" type="text" class="form-control fw-bold text-primary" placeholder="PO 번호 입력" @keyup.enter="fetchList" />
-										<button class="btn btn-outline-secondary px-2" @click="openHelp('PO')"><i class="bi bi-search"></i></button>
-									</div>
-								</td>
-								<th>L/C번호</th>
-								<td><input v-model="formData.LCNO" type="text" class="form-control form-control-sm" /></td>
-								<th>비고</th>
-								<td><input v-model="formData.REMARK" type="text" class="form-control form-control-sm" /></td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-			<!-- 🅱️ 디테일 그리드 -->
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="height: 40px;">
-					<span class="fw-bold small text-dark d-flex align-items-center">
-						<i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> L/C 등록 대상 리스트
-					</span>
-				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
-			</div>
-		</div>
-	</div>
+      <!-- 🔍 [상단] 조회 필터 영역 (HSOD100U 디자인 패턴) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 10%" />
+              <col style="width: 40%" />
+              <col style="width: 10%" />
+              <col style="width: 40%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">발생부서</th>
+                <td>
+                  <div class="input-group input-group-sm w-75">
+                    <input v-model="searchForm.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchForm.DEPTNM" type="text" class="form-control" placeholder="부서 선택" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="text-center bg-light">발생일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="searchForm.IOYMDFR" v-model:todt="searchForm.IOYMDTO" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+      <!-- 📊 3. 발행 전표 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white grid-container-right">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+          <span class="fw-bold small text-dark d-flex align-items-center">
+            <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 취소 대상 수입 전표 목록
+          </span>
+          <div class="d-flex align-items-center gap-2">
+            <div class="form-check form-switch m-0 d-flex align-items-center">
+              <input v-model="autoSlip" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="autoSlipSwitch">
+              <label class="form-check-label ms-2 small fw-bold text-secondary" for="autoSlipSwitch">자동 전표 연동</label>
+            </div>
+            <span class="text-muted" style="font-size: 11px;">※ 행 선택 후 '전표 취소' 버튼을 누르세요.</span>
+          </div>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
@@ -80,122 +90,153 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
+import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-const formData = reactive<any>({ FILENO: '', LCNO: '', REMARK: '' })
+const searchForm = reactive({
+  DEPTCD: authStore.deptcd, DEPTNM: authStore.deptnm,
+  IOYMDFR: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
+  IOYMDTO: new Date().toISOString().substring(0, 10)
+})
+
+const autoSlip = ref('N')
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const fetchList = async () => {
-    if (!formData.FILENO) return vAlertError('PO No를 입력하세요.');
-	try {
-		const res = await api.post('/api/hsip/HSIP_150U_STR', {
-            ...formData,
-            ACTKIND: 'S0',
-            CMPYCD: authStore.CMPYCD
-        })
-		if (res.data) {
-            mainGrid?.setData(res.data)
-            if (res.data.length > 0 && !formData.LCNO) {
-                formData.LCNO = res.data[0].LCNO || '';
-                formData.REMARK = res.data[0].REMARK || '';
-            }
-            vAlert('조회되었습니다.')
-        }
-	} catch (e) { vAlertError('조회 실패') }
+  try {
+    const params = {
+      ACTKIND: 'S0',
+      CMPYCD: authStore.CMPYCD,
+      DEPTCD: searchForm.DEPTCD,
+      IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
+      IOYMDTO: searchForm.IOYMDTO.replace(/-/g, '')
+    }
+    const res = await api.post('/api/hsip/HSIP_150U_STR', params)
+    mainGrid?.setData(res.data || [])
+    vAlert('조회되었습니다.')
+  } catch (e) { vAlertError('조회 실패') }
 }
 
-const handleSave = async () => {
-    const selectedData = mainGrid?.getSelectedData();
-    if (!selectedData || selectedData.length === 0) return vAlertError('저장할 항목을 선택하세요.');
+/**
+ * 🚀 전표 취소 로직 (ASP 루프 패턴 완벽 이식)
+ */
+const save = async () => {
+  const selected = mainGrid?.getSelectedData()
+  if (!selected || selected.length === 0) return vAlertError('취소할 항목을 선택하세요.')
 
-    try {
-        await api.post('/api/hsip/HSIP_150U_STR', {
-            ...formData,
-            ACTKIND: 'A0',
-            CMPYCD: authStore.CMPYCD,
-            UPDEMP: authStore.USERID,
-            ITEMS: selectedData
-        });
-        vAlert('저장되었습니다.');
-        fetchList();
-    } catch (e) { vAlertError('저장 실패') }
+  if (!confirm('선택한 항목들의 전표를 취소하시겠습니까?')) return
+
+  try {
+    // 🔄 선택된 각 항목에 대해 순차적으로 프로시저 호출 (ASP 패턴)
+    for (const item of selected) {
+      const slipYmd = item.SLIPYMD || item.slipymd
+      const slipNo = item.SLIPNO || item.slipno
+      const uDeptCd = item.UDEPTCD || item.udeptcd || searchForm.DEPTCD
+
+      // 🚀 Step 1. 자동 전표 승인 취소 (ASP: HASL_020U_STR)
+      if (autoSlip.value === 'Y') {
+        await api.post('/api/hasl/HASL_020U_STR', {
+          ACTKIND: 'A0',
+          CMPYCD: authStore.CMPYCD,
+          SLIPYMD: slipYmd,
+          ACCTYMD: slipYmd,
+          SLIPNO: slipNo,
+          DEPTCD: uDeptCd,
+          SLIPKIND: '031',
+          SLIPYN: 'Y',
+          COFMYN: 'N', // 승인 취소
+          UPDEMP: authStore.USERID
+        })
+      }
+
+      // 🚀 Step 2. 수입전표 취소 처리 (ASP: HSIP_150U_STR 'D0')
+      const params = {
+        ACTKIND: 'D0',
+        CMPYCD: authStore.CMPYCD,
+        IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
+        IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
+        DEPTCD: uDeptCd,
+        SLIPYMD: slipYmd,
+        SLIPNO: slipNo,
+        UPDEMP: authStore.USERID
+      }
+
+      const res = await api.post('/api/hsip/HSIP_150U_STR', params)
+      const resData = res.data?.[0]
+
+      // ASP: if RTRIM(rs(0)) = "Y" then (에러 발생 시 중단)
+      if (resData && (resData.ERRYN === 'Y' || resData.STATUS === 'Y')) {
+        throw new Error(resData.MSG || '취소 처리 중 업무 오류가 발생했습니다.')
+      }
+    }
+
+    vAlert('정상적으로 전표 취소 작업이 완료되었습니다.')
+    fetchList()
+  } catch (e: any) {
+    console.error('Cancellation error:', e)
+    vAlertError(e.message || '취소 실패')
+  }
 }
 
 const initialize = () => {
-    resetForm(formData);
-    mainGrid?.clearData();
+  resetForm(searchForm);
+  mainGrid?.clearData();
 }
-
-const modalVisible = ref(false);
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 function openHelp(type: string) {
-    if (type === 'PO') {
-        Object.assign(modalProps, {
-            title: 'PO 선택', path: '/api/hs00/HS00_000S_STR', defaultField: 'FILENO',
-            data: { GUBUN: 'F0', CMPYCD: authStore.CMPYCD, GBNCD: '1' },
-            columns: [
-                { title: 'PO No', field: 'FILENO', width: 120 },
-                { title: '거래처', field: 'CUSTNM', minWidth: 200, widthGrow: 1 },
-                { title: '발주일자', field: 'ISSYMD', width: 120, formatter: (c:any) => '발주일:' + c.getValue() }
-            ],
-            onConfirm: (d: any) => { formData.FILENO = d.FILENO; fetchList() }
-        })
-    }
-    modalVisible.value = true
+  if (type === 'DEPT') {
+    openCommonHelp('DEPT', (d) => { searchForm.DEPTCD = d.deptcd; searchForm.DEPTNM = d.deptnm })
+  }
 }
 
-onMounted(() => {
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns', height: '100%', selectable: true,
-			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 100 },
-			columns: [
-				{ title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 100, hozAlign: "center" },
-				{ title: 'PO No', field: 'FILENO', width: 250 },
-				{ title: '거래처', field: 'CUSTNM', minWidth: 200, widthGrow: 1 },
-				{ title: '발주일자', field: 'ISSYMD', hozAlign: 'center', width: 200 },
-				{ title: '통화', field: 'CURRNM', hozAlign: 'center', width: 200 },
-				{ title: '발주금액', field: 'BALAMT', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 2 } }
-			]
-		})
-	}
+onMounted(async () => {
+  // 전표 환경 설정 체크 (ASP: HA00_010S_STR 'P1')
+  try {
+    const resSet = await api.post('/api/ha00/HA00_010S_STR', { CMPYCD: authStore.CMPYCD, GBN: 'P1' })
+    if (resSet.data?.length > 0) autoSlip.value = resSet.data[0].SLIPYN || 'N'
+  } catch (e) {}
+
+  if (mainGridRef.value) {
+    mainGrid = new Tabulator(mainGridRef.value, {
+      layout: 'fitColumns', height: '100%', selectable: true,
+      columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
+      columns: [
+        { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 60, hozAlign: "center" },
+        { title: "전표일자", field: "SLIPYMD", width: 110, formatter: (c) => {
+            const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
+        }},
+        { title: "전표번호", field: "SLIPNO", width: 100, cssClass: "fw-bold text-primary" },
+        { title: "부서명", field: "DEPTNM", width: 120 },
+        { title: "비용종류", field: "COSTNM", width: 150 },
+        { title: "PO No.", field: "FILENO", width: 180 },
+        { title: "정산일", field: "JSANYMD", width: 110, formatter: (c) => {
+            const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
+        }},
+        { title: "비용금액", field: "SPYAMT", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
+        { title: "상세 적요", field: "BIGO", minWidth: 200, widthGrow: 1, hozAlign: "left" }
+      ]
+    })
+  }
+  fetchList()
 })
 </script>
 
 <style scoped>
-.hsip15u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
+.main-content-wrapper { padding-bottom: 0vh !important; }
+.grid-container-right { border-bottom: 3px solid #005a9f !important; }
+.erp-table-dense th, .erp-table-dense td {
+  height: 32px !important; padding: 0 8px !important; font-size: 12px; vertical-align: middle; border: 1px solid #dee2e6;
 }
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
+.erp-table-dense .form-control, .erp-table-dense .form-select, .erp-table-dense .btn {
+  height: 26px !important; font-size: 12px !important; border-radius: 2px;
+}
+.erp-table-dense th { font-weight: 600; color: #495057; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
 </style>
-

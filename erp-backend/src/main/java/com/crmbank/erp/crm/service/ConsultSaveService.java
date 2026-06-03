@@ -26,12 +26,12 @@ public class ConsultSaveService {
 
     @Transactional
     public void saveOmniConsultation(ConsultSaveRequest request) {
-        String interactionId = (request.getMediaType() != null && "call".equalsIgnoreCase(request.getMediaType())) 
+        String interactionId = (request.getMedia_type() != null && "call".equalsIgnoreCase(request.getMedia_type()))
                 ? "IN_" + UUID.randomUUID().toString().substring(0, 8)
                 : "CHAT_" + UUID.randomUUID().toString().substring(0, 8);
         
         // 🤖 통합 AI 분석 및 요약 적용
-        Map<String, String> aiResult = geminiAiService.analyze(request.getChatHistory(), request.getRecFile());
+        Map<String, String> aiResult = geminiAiService.analyze(request.getChat_history(), request.getRec_file());
         String chatLog = aiResult.get("stt");
         String aiSummary = aiResult.get("summary");
 
@@ -39,13 +39,13 @@ public class ConsultSaveService {
         LocalDateTime startDtime = null;
         LocalDateTime endDtime = null;
         try {
-            if (request.getStartTime() != null) {
-                String st = request.getStartTime();
+            if (request.getStart_time() != null) {
+                String st = request.getStart_time();
                 if (st.length() == 10) st += " 00:00:00";
                 startDtime = LocalDateTime.parse(st, formatter);
             }
-            if (request.getEndTime() != null) {
-                String et = request.getEndTime();
+            if (request.getEnd_time() != null) {
+                String et = request.getEnd_time();
                 if (et.length() == 10) et += " 23:59:59";
                 endDtime = LocalDateTime.parse(et, formatter);
             }
@@ -57,27 +57,27 @@ public class ConsultSaveService {
         if (endDtime == null) endDtime = LocalDateTime.now();
 
         String cmpycd = (request.getCmpycd() != null && !request.getCmpycd().isEmpty()) ? request.getCmpycd() : "haionnet";
-        String mediaType = (request.getMediaType() != null && !request.getMediaType().isEmpty()) ? request.getMediaType() : "chat";
+        String mediaType = (request.getMedia_type() != null && !request.getMedia_type().isEmpty()) ? request.getMedia_type() : "chat";
 
         CampRsltMstDto mstDto = CampRsltMstDto.builder()
-                .CMPYCD(cmpycd)
-                .CALL_SEQ(request.getCallSeq())
-                .CAMP_NO(request.getCampNo())
-                .RSLT_CD(request.getRsltCd())
-                .REMARK(request.getMemo())
-                .USERID(request.getUserid())
-                .LINE_NUM(request.getLineNum())   // 내선번호
-                .CALL_TELNO(request.getCallTelno()) // 고객연락처
-                .INTERACTION_ID(interactionId)
-                .MEDIA_TYPE(mediaType)
-                .CHAT_LOG(chatLog)
-                .AI_SUMMARY(aiSummary)
-                .REC_FILE(request.getRecFile())
-                .START_DTIME(startDtime)
-                .END_DTIME(endDtime)
-                .UPDEMP(request.getUserid())
-                .ADDTIME(LocalDateTime.now())
-                .UPDTIME(LocalDateTime.now())
+                .cmpycd(cmpycd)
+                .call_seq(request.getCall_seq())
+                .camp_no(request.getCamp_no())
+                .rslt_cd(request.getRslt_cd())
+                .remark(request.getMemo())
+                .userid(request.getUserid())
+                .line_num(request.getLine_num())   // 내선번호
+                .call_telno(request.getCall_telno()) // 고객연락처
+                .interaction_id(interactionId)
+                .media_type(mediaType)
+                .chat_log(chatLog)
+                .ai_summary(aiSummary)
+                .rec_file(request.getRec_file())
+                .start_dtime(startDtime)
+                .end_dtime(endDtime)
+                .updemp(request.getUserid())
+                .addtime(LocalDateTime.now())
+                .updtime(LocalDateTime.now())
                 .build();
         
         outboundMapper.insertCampaignRsltMst(mstDto);
@@ -99,15 +99,15 @@ public class ConsultSaveService {
                 }
 
                 CampRsltDtlDto dtlDto = CampRsltDtlDto.builder()
-                        .CMPYCD(cmpycd)
-                        .RSLT_NO(mstDto.getRSLT_NO())
-                        .SURV_NO(survNo)
-                        .ANS_NO(ansNo)
-                        .POINT(point) // 💡 전달받은 점수 바로 등록
-                        .REMARK((String) survey.get("essay"))
-                        .UPDEMP(request.getUserid())
-                        .ADDTIME(LocalDateTime.now())
-                        .UPDTIME(LocalDateTime.now())
+                        .cmpycd(cmpycd)
+                        .rslt_no(mstDto.getRslt_no())
+                        .surv_no(survNo)
+                        .ans_no(ansNo)
+                        .point(point) // 💡 전달받은 점수 바로 등록
+                        .remark((String) survey.get("essay"))
+                        .updemp(request.getUserid())
+                        .addtime(LocalDateTime.now())
+                        .updtime(LocalDateTime.now())
                         .build();
                 outboundMapper.insertCampaignRsltDtl(dtlDto);
             }
@@ -115,11 +115,11 @@ public class ConsultSaveService {
 
         Map<String, Object> statusParam = new HashMap<>();
         statusParam.put("CMPYCD", cmpycd);
-        statusParam.put("CALL_SEQ", request.getCallSeq());
+        statusParam.put("CALL_SEQ", request.getCall_seq());
         statusParam.put("STATUS", "030");
-        statusParam.put("RSLT_CD", request.getRsltCd());
-        statusParam.put("RESV_DTIME", request.getResvDtime());
-        statusParam.put("RESV_Memo", request.getResvMemo());
+        statusParam.put("RSLT_CD", request.getRslt_cd());
+        statusParam.put("RESV_DTIME", request.getResv_dtime());
+        statusParam.put("RESV_Memo", request.getResv_memo());
         outboundMapper.updateCallListStatus(statusParam);
     }
 }

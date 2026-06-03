@@ -12,7 +12,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hsip200s-wrapper d-flex flex-column h-100 bg-white p-0">
+	<div class="erp-container">
 		<!-- 🚀 1. 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom shadow-sm bg-white py-1">
 			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 13px;">
@@ -39,15 +39,15 @@
 					<th class="required border-end text-nowrap text-center">발주부서</th>
 					<td>
 						<div class="input-group input-group-sm flex-nowrap ms-1">
-							<input v-model="searchForm.DEPTCD" type="text" class="form-control bg-light" style="max-width: 60px;" readonly />
-							<input v-model="searchForm.DEPTNM" type="text" class="form-control" />
+							<input v-model="searchForm.deptcd" type="text" class="form-control bg-light" style="max-width: 60px;" readonly />
+							<input v-model="searchForm.deptnm" type="text" class="form-control" />
 							<button class="btn btn-outline-secondary px-2" @click="openDeptPopup"><i class="bi bi-search"></i></button>
 						</div>
 					</td>
 					<th class="border-end text-nowrap text-center">PO No</th>
 					<td>
 						<div class="input-group input-group-sm flex-nowrap ms-1">
-							<input v-model="searchForm.FILENO" type="text" class="form-control border-primary-subtle" placeholder="PO 번호 입력" @keyup.enter="fetchList" />
+							<input v-model="searchForm.fileno" type="text" class="form-control border-primary-subtle" placeholder="PO 번호 입력" @keyup.enter="fetchList" />
 							<button class="btn btn-outline-secondary px-2" @click="openPoPopup"><i class="bi bi-search"></i></button>
 						</div>
 					</td>
@@ -81,20 +81,20 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const searchForm = reactive({
-	DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-	FILENO: ''
+	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+	fileno: ''
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
 async function fetchList() {
-	if (!searchForm.DEPTCD) return vAlertError('발주부서를 선택하세요.')
+	if (!searchForm.deptcd) return vAlertError('발주부서를 선택하세요.')
 	try {
 		const res = await api.post('/api/hsip/HSIP_200S_STR', {
 			...searchForm,
-			CMPYCD: authStore.CMPYCD,
-            ACTKIND: 'S0'
+			cmpycd: authStore.cmpycd,
+            actkind: 'S0'
 		})
 		mainGrid?.setData(res.data)
 		vAlert('조회되었습니다.')
@@ -103,8 +103,8 @@ async function fetchList() {
 
 function initialize() {
 	resetForm(searchForm)
-	searchForm.DEPTCD = authStore.DEPTCD
-	searchForm.DEPTNM = authStore.DEPTNM
+	searchForm.deptcd = authStore.deptcd
+	searchForm.deptnm = authStore.deptnm
 	mainGrid?.clearData()
 }
 
@@ -120,48 +120,18 @@ onMounted(async () => {
 			placeholder: '표시할 데이터가 없습니다.',
 			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 100 },
 			columns: [
-				{ title: '품목코드', field: 'ITEMCD', hozAlign: 'center', width: 110, cssClass: 'fw-bold text-primary border-end' },
-				{ title: '품목명', field: 'ITEMNM', minWidth: 250, widthGrow: 10, cssClass: 'fw-bold' },
-				{ title: '규격', field: 'ITSIZE', width: 250 },
-				{ title: '단위', field: 'UNIT', hozAlign: 'center', width: 80 },
-				{ title: '발주량', field: 'BALQTY', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '품목코드', field: 'itemcd', hozAlign: 'center', width: 110, cssClass: 'fw-bold text-primary border-end' },
+				{ title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 10, cssClass: 'fw-bold' },
+				{ title: '규격', field: 'itsize', width: 250 },
+				{ title: '단위', field: 'unit', hozAlign: 'center', width: 80 },
+				{ title: '발주량', field: 'balqty', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '선적량', field: 'SHIPQTY', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-success' },
-				{ title: '미선적량', field: 'UNSHIPQTY', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().BALQTY) - Number(c.getData().SHIPQTY)).toLocaleString() },
-				{ title: '통관량', field: 'PASSQTY', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-primary' },
-				{ title: '미입고량', field: 'UNPASSQTY', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().BALQTY) - Number(c.getData().PASSQTY)).toLocaleString(), cssClass: 'text-danger fw-bold' }
+				{ title: '미선적량', field: 'UNSHIPQTY', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().balqty) - Number(c.getData().SHIPQTY)).toLocaleString() },
+				{ title: '통관량', field: 'PASsqty', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-primary' },
+				{ title: '미입고량', field: 'UNPASsqty', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().balqty) - Number(c.getData().PASsqty)).toLocaleString(), cssClass: 'text-danger fw-bold' }
 			]
 		})
 	}
 	fetchList()
 })
 </script>
-
-<style scoped>
-.hsip200s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
-</style>

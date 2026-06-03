@@ -21,11 +21,11 @@ public class HsstController {
     private final HsstMapper hsstMapper;
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (!params.containsKey("CMPYCD")) params.put("CMPYCD", user.getCMPYCD());
-            if (!params.containsKey("USERID")) params.put("USERID", user.getUSERID());
-            params.put("UPDEMP", user.getUSERID());
+            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
+            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
+            params.put("updemp", user.getUserid());
         }
     }
 
@@ -69,13 +69,13 @@ public class HsstController {
         
         switch (proc) {
             case "HSST_100S_STR":
-                keys = new String[]{"CMPYCD", "SELGBN", "DEPTCD", "CUSTFR", "CUSTTO", "YMDFR", "YMDTO"};
+                keys = new String[]{"cmpycd", "selgbn", "deptcd", "custfr", "custto", "ymdfr", "ymdto"};
                 break;
             case "HSST_120S_STR":
-                keys = new String[]{"CMPYCD", "DEPTCD", "YMD"};
+                keys = new String[]{"cmpycd", "deptcd", "ymd"};
                 break;
             case "HSST_200S_STR":
-                keys = new String[]{"CMPYCD", "YMD", "WHCD", "ASTKIND", "ITEMNM", "PageNo", "MaxCnt"};
+                keys = new String[]{"cmpycd", "ymd", "whcd", "astkind", "itemnm", "pageno", "maxcnt"};
                 break;
             default:
                 keys = params.keySet().toArray(new String[0]);

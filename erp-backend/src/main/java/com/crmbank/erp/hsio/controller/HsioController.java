@@ -1,14 +1,16 @@
 package com.crmbank.erp.hsio.controller;
 
+import com.crmbank.erp.comm.dto.ApiResponse;
 import com.crmbank.erp.comm.dto.UserSession;
+import com.crmbank.erp.hsio.dto.*;
 import com.crmbank.erp.hsio.mapper.HsioMapper;
+import com.crmbank.erp.hsio.service.HsioService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -18,97 +20,319 @@ import java.util.Map;
 public class HsioController {
 
     private final HsioMapper hsioMapper;
+    private final HsioService hsioService;
 
-    private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        if (user != null) {
-            if (!params.containsKey("CMPYCD")) params.put("CMPYCD", user.getCMPYCD());
-            if (!params.containsKey("USERID")) params.put("USERID", user.getUSERID());
-            params.put("UPDEMP", user.getUSERID());
+    /**
+     * 🚀 요청등록 통합 저장 (HSIO_010U_SAVE)
+     */
+    @PostMapping("/HSIO_010U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveRequest(@RequestBody Hsio010uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 요청 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getReqym() : "NULL");
+            Map<String, Object> result = hsioService.saveRequest(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 요청 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
         }
     }
 
+    /**
+     * 🚀 발주등록 통합 저장 (HSIO_050U_SAVE)
+     */
+    @PostMapping("/HSIO_050U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveOrder(@RequestBody Hsio050uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 발주 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getBalym() : "NULL");
+            Map<String, Object> result = hsioService.saveOrder(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 발주 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 일반발주 통합 저장 (HSIO_052U_SAVE)
+     */
+    @PostMapping("/HSIO_052U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveGeneralOrder(@RequestBody Hsio052uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 일반발주 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getBalym() : "NULL");
+            Map<String, Object> result = hsioService.saveGeneralOrder(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 일반발주 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 기타입고 통합 저장 (HSIO_190U_SAVE)
+     */
+    @PostMapping("/HSIO_190U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveOtherIn(@RequestBody Hsio190uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 기타입고 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getIoym() : "NULL");
+            Map<String, Object> result = hsioService.saveOtherIn(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 기타입고 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 기타출고 통합 저장 (HSIO_250U_SAVE)
+     */
+    @PostMapping("/HSIO_250U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveOtherOut(@RequestBody Hsio250uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 기타출고 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getIoym() : "NULL");
+            Map<String, Object> result = hsioService.saveOtherOut(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 기타출고 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 매입등록 통합 저장 (HSIO_500U_SAVE)
+     */
+    @PostMapping("/HSIO_500U_SAVE")
+    public ResponseEntity<ApiResponse<?>> savePurchase(@RequestBody Hsio500uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 매입 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getIoym() : "NULL");
+            Map<String, Object> result = hsioService.savePurchase(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 매입 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 전시장 입출고 통합 저장 (HSIO_570U_SAVE)
+     */
+    @PostMapping("/HSIO_570U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveStoreInout(@RequestBody Hsio570uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 전시장 입출고 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getIoym() : "NULL");
+            Map<String, Object> result = hsioService.saveStoreInout(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 전시장 입출고 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 타창고이동 통합 저장 (HSIO_580U_SAVE)
+     */
+    @PostMapping("/HSIO_580U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveWarehouseTransfer(@RequestBody Hsio580uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 타창고이동 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getIoym() : "NULL");
+            Map<String, Object> result = hsioService.saveWarehouseTransfer(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 타창고이동 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 재고실사 통합 저장 (HSIO_720U_SAVE)
+     */
+    @PostMapping("/HSIO_720U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveStockAdjustment(@RequestBody Hsio720uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 재고실사 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getIoym() : "NULL");
+            Map<String, Object> result = hsioService.saveStockAdjustment(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 재고실사 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 재고조정 통합 저장 (HSIO_730U_SAVE)
+     */
+    @PostMapping("/HSIO_730U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveInventoryAdjustment(@RequestBody Hsio730Request request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+        
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            log.info("💾 재고조정 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getIoym() : "NULL");
+            Map<String, Object> result = hsioService.saveInventoryAdjustment(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 재고조정 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 입금입력 통합 저장 (HSIO_300U_SAVE)
+     */
+    @PostMapping("/HSIO_300U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveDeposit(@RequestBody Hsio300uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String userId = (user != null) ? user.getUserid() : "system";
+        String cmpycd = (user != null) ? user.getCmpycd() : "";
+
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+                // 마스터 액션코드 설정 (번호가 없으면 신규 A0, 있으면 수정 U0)
+                if (request.getMst().getImno() == null || request.getMst().getImno().isEmpty()) {
+                    request.getMst().setActkind("A0");
+                } else {
+                    request.getMst().setActkind("U0");
+                }
+            }
+            log.info("💾 입금 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getImym() : "NULL");
+            Map<String, Object> result = hsioService.saveDeposit(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ 입금 저장 오류: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    /**
+     * 🚀 개별 프로시저 호출 (Map 직접 전달 방식)
+     */
     @PostMapping("/{procedure}")
-    public ResponseEntity<List<Map<String, Object>>> executeProcedure(
+    public ResponseEntity<ApiResponse<?>> executeProcedure(
             @PathVariable String procedure,
             @RequestBody Map<String, Object> params,
             HttpSession session) {
         
         injectSession(params, session);
-        log.info("🚀 [HSIO] {} 호출: {}", procedure, params);
         
-        switch (procedure.toUpperCase()) {
-            // 구매/입고/정산
-            case "HSIO_010U_STR": return ResponseEntity.ok(hsioMapper.HSIO_010U_STR(params));
-            case "HSIO_011U_STR": return ResponseEntity.ok(hsioMapper.HSIO_011U_STR(params));
-            case "HSIO_020U_STR": return ResponseEntity.ok(hsioMapper.HSIO_020U_STR(params));
-            case "HSIO_021U_STR": return ResponseEntity.ok(hsioMapper.HSIO_021U_STR(params));
-            case "HSIO_060U_STR": return ResponseEntity.ok(hsioMapper.HSIO_060U_STR(params));
-            case "HSIO_061U_STR": return ResponseEntity.ok(hsioMapper.HSIO_061U_STR(params));
-            case "HSIO_070U_STR": return ResponseEntity.ok(hsioMapper.HSIO_070U_STR(params));
-            case "HSIO_080S_STR": return ResponseEntity.ok(hsioMapper.HSIO_080S_STR(params));
-            case "HSIO_082S_STR": return ResponseEntity.ok(hsioMapper.HSIO_082S_STR(params));
-            case "HSIO_085S_STR": return ResponseEntity.ok(hsioMapper.HSIO_085S_STR(params));
-            case "HSIO_110U_STR": return ResponseEntity.ok(hsioMapper.HSIO_110U_STR(params));
-            case "HSIO_120U_STR": return ResponseEntity.ok(hsioMapper.HSIO_120U_STR(params));
-            case "HSIO_130U_STR": return ResponseEntity.ok(hsioMapper.HSIO_130U_STR(params));
-            case "HSIO_131U_STR": return ResponseEntity.ok(hsioMapper.HSIO_131U_STR(params));
-            case "HSIO_140U_STR": return ResponseEntity.ok(hsioMapper.HSIO_140U_STR(params));
-            case "HSIO_141U_STR": return ResponseEntity.ok(hsioMapper.HSIO_141U_STR(params));
+        try {
+            Object result;
+            switch (procedure.toUpperCase()) {
+                case "HSIO_500U_STR": result = hsioMapper.HSIO_500U_STR(params); break;
+                case "HSIO_501U_STR": result = hsioMapper.HSIO_501U_STR(params); break;
+                case "HSIO_010U_STR": result = hsioMapper.HSIO_010U_STR(params); break;
+                case "HSIO_011U_STR": result = hsioMapper.HSIO_011U_STR(params); break;
+                case "HSIO_050U_STR": result = hsioMapper.HSIO_050U_STR(params); break;
+                case "HSIO_051U_STR": result = hsioMapper.HSIO_051U_STR(params); break;
+                case "HSIO_052U_STR": result = hsioMapper.HSIO_052U_STR(params); break;
+                case "HSIO_060U_STR": result = hsioMapper.HSIO_060U_STR(params); break;
+                case "HSIO_190U_STR": result = hsioMapper.HSIO_190U_STR(params); break;
+                case "HSIO_191U_STR": result = hsioMapper.HSIO_191U_STR(params); break;
+                case "HSIO_250U_STR": result = hsioMapper.HSIO_250U_STR(params); break;
+                case "HSIO_251U_STR": result = hsioMapper.HSIO_251U_STR(params); break;
+                case "HSIO_550U_STR": result = hsioMapper.HSIO_550U_STR(params); break;
+                case "HSIO_570U_STR": result = hsioMapper.HSIO_570U_STR(params); break;
+                case "HSIO_571U_STR": result = hsioMapper.HSIO_571U_STR(params); break;
+                case "HSIO_580U_STR": result = hsioMapper.HSIO_580U_STR(params); break;
+                case "HSIO_581U_STR": result = hsioMapper.HSIO_581U_STR(params); break;
+                case "HSIO_720U_STR": result = hsioMapper.HSIO_720U_STR(params); break;
+                case "HSIO_721U_STR": result = hsioMapper.HSIO_721U_STR(params); break;
+                case "HSIO_730U_STR": result = hsioMapper.HSIO_730U_STR(params); break;
+                case "HSIO_731U_STR": result = hsioMapper.HSIO_731U_STR(params); break;
+                case "HSIO_300U_STR": result = hsioMapper.HSIO_300U_STR(params); break;
+                case "HSIO_301U_STR": result = hsioMapper.HSIO_301U_STR(params); break;
+                default:
+                    return ResponseEntity.status(404).body(ApiResponse.notFound("해당 서비스를 찾을 수 없습니다."));
+            }
+            return ResponseEntity.ok(ApiResponse.success(result, "조회 성공"));
+        } catch (Exception e) {
+            log.error("❌ 프로시저 실행 오류 ({}): {}", procedure, e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
 
-            case "HSIO_160U_STR": return ResponseEntity.ok(hsioMapper.HSIO_160U_STR(params));
-            case "HSIO_170U_STR": return ResponseEntity.ok(hsioMapper.HSIO_170U_STR(params));
-            case "HSIO_171U_STR": return ResponseEntity.ok(hsioMapper.HSIO_171U_STR(params));
-            case "HSIO_180U_STR": return ResponseEntity.ok(hsioMapper.HSIO_180U_STR(params));
-            case "HSIO_181U_STR": return ResponseEntity.ok(hsioMapper.HSIO_181U_STR(params));
-            case "HSIO_190U_STR": return ResponseEntity.ok(hsioMapper.HSIO_190U_STR(params));
-            case "HSIO_191U_STR": return ResponseEntity.ok(hsioMapper.HSIO_191U_STR(params));
-            case "HSIO_200S_STR": return ResponseEntity.ok(hsioMapper.HSIO_200S_STR(params));
-            case "HSIO_210S_STR": return ResponseEntity.ok(hsioMapper.HSIO_210S_STR(params));
-            case "HSIO_215S_STR": return ResponseEntity.ok(hsioMapper.HSIO_215S_STR(params));
-            case "HSIO_220S_STR": return ResponseEntity.ok(hsioMapper.HSIO_220S_STR(params));
-            case "HSIO_250U_STR": return ResponseEntity.ok(hsioMapper.HSIO_250U_STR(params));
-            case "HSIO_251U_STR": return ResponseEntity.ok(hsioMapper.HSIO_251U_STR(params));
-            case "HSIO_690S_STR": return ResponseEntity.ok(hsioMapper.HSIO_690S_STR(params));
-
-            // 출고/매출/입금
-            case "HSIO_300U_STR": return ResponseEntity.ok(hsioMapper.HSIO_300U_STR(params));
-            case "HSIO_325U_STR": return ResponseEntity.ok(hsioMapper.HSIO_325U_STR(params));
-            case "HSIO_470S_STR": return ResponseEntity.ok(hsioMapper.HSIO_470S_STR(params));
-            case "HSIO_490U_STR": return ResponseEntity.ok(hsioMapper.HSIO_490U_STR(params));
-            case "HSIO_491U_STR": return ResponseEntity.ok(hsioMapper.HSIO_491U_STR(params));
-            case "HSIO_500U_STR": return ResponseEntity.ok(hsioMapper.HSIO_500U_STR(params));
-            case "HSIO_501U_STR": return ResponseEntity.ok(hsioMapper.HSIO_501U_STR(params));
-            case "HSIO_510U_STR": return ResponseEntity.ok(hsioMapper.HSIO_510U_STR(params));
-            case "HSIO_511U_STR": return ResponseEntity.ok(hsioMapper.HSIO_511U_STR(params));
-            case "HSIO_520U_STR": return ResponseEntity.ok(hsioMapper.HSIO_520U_STR(params));
-            case "HSIO_521U_STR": return ResponseEntity.ok(hsioMapper.HSIO_521U_STR(params));
-            case "HSIO_530U_STR": return ResponseEntity.ok(hsioMapper.HSIO_530U_STR(params));
-            case "HSIO_531U_STR": return ResponseEntity.ok(hsioMapper.HSIO_531U_STR(params));
-            case "HSIO_540U_STR": return ResponseEntity.ok(hsioMapper.HSIO_540U_STR(params));
-            case "HSIO_541U_STR": return ResponseEntity.ok(hsioMapper.HSIO_541U_STR(params));
-            case "HSIO_550U_STR": return ResponseEntity.ok(hsioMapper.HSIO_550U_STR(params));
-            case "HSIO_551U_STR": return ResponseEntity.ok(hsioMapper.HSIO_551U_STR(params));
-            case "HSIO_560U_STR": return ResponseEntity.ok(hsioMapper.HSIO_560U_STR(params));
-            case "HSIO_570U_STR": return ResponseEntity.ok(hsioMapper.HSIO_570U_STR(params));
-            case "HSIO_571U_STR": return ResponseEntity.ok(hsioMapper.HSIO_571U_STR(params));
-            case "HSIO_580U_STR": return ResponseEntity.ok(hsioMapper.HSIO_580U_STR(params));
-            case "HSIO_581U_STR": return ResponseEntity.ok(hsioMapper.HSIO_581U_STR(params));
-            case "HSIO_600S_STR": return ResponseEntity.ok(hsioMapper.HSIO_600S_STR(params));
-            case "HSIO_610S_STR": return ResponseEntity.ok(hsioMapper.HSIO_610S_STR(params));
-            case "HSIO_620S_STR": return ResponseEntity.ok(hsioMapper.HSIO_620S_STR(params));
-            case "HSIO_640S_STR": return ResponseEntity.ok(hsioMapper.HSIO_640S_STR(params));
-            case "HSIO_650S_STR": return ResponseEntity.ok(hsioMapper.HSIO_650S_STR(params));
-            case "HSIO_660S_STR": return ResponseEntity.ok(hsioMapper.HSIO_660S_STR(params));
-            case "HSIO_680S_STR": return ResponseEntity.ok(hsioMapper.HSIO_680S_STR(params));
-            case "HSIO_720U_STR": return ResponseEntity.ok(hsioMapper.HSIO_720U_STR(params));
-            case "HSIO_721U_STR": return ResponseEntity.ok(hsioMapper.HSIO_721U_STR(params));
-            case "HSIO_730U_STR": return ResponseEntity.ok(hsioMapper.HSIO_730U_STR(params));
-            case "HSIO_731U_STR": return ResponseEntity.ok(hsioMapper.HSIO_731U_STR(params));
-
-            default:
-                log.warn("⚠️ 미등록 HSIO 프로시저: {}", procedure);
-                return ResponseEntity.notFound().build();
+    private void injectSession(Map<String, Object> params, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user != null) {
+            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
+            params.put("updemp", user.getUserid());
         }
     }
 }

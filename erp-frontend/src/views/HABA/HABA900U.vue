@@ -2,7 +2,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="haba900u-wrapper d-flex flex-column h-100 bg-light p-0">
+	<div class="erp-container">
 		<!-- 🚀 1. 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom shadow-sm bg-white py-2 sticky-top">
 			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -13,7 +13,7 @@
 			<div class="btn-group-erp pe-3">
 				<button class="btn-erp btn-init" @click="initialize">초기화</button>
 				<button class="btn-erp btn-search" @click="fetchCompanyInfo">조회</button>
-				<button class="btn-erp btn-save" @click="handleSave">저장</button>
+				<button class="btn-erp btn-save" @click="save">저장</button>
 			</div>
 		</div>
 
@@ -36,54 +36,54 @@
 						<tbody>
 							<tr>
 								<th>회사코드</th>
-								<td><input v-model="formData.CMPYCD" type="text" class="form-control bg-light fw-bold text-primary text-center" readonly /></td>
+								<td><input v-model="formData.cmpycd" type="text" class="form-control bg-light fw-bold text-primary text-center" readonly /></td>
 								<th class="required">회사명(상호)</th>
-								<td><input v-model="formData.LTDNM" type="text" class="form-control" placeholder="상호 입력" /></td>
+								<td><input v-model="formData.ltdnm" type="text" class="form-control" placeholder="상호 입력" /></td>
 								<th>영문상호</th>
-								<td><input v-model="formData.LTDENM" type="text" class="form-control" /></td>
+								<td><input v-model="formData.ltdenm" type="text" class="form-control" /></td>
 							</tr>
 							<tr>
 								<th class="required">사업자번호</th>
-								<td><input v-model="formData.SAUPNO" type="text" class="form-control text-center" maxlength="10" /></td>
+								<td><input v-model="formData.saupno" type="text" class="form-control text-center" maxlength="10" /></td>
 								<th>대표자명</th>
-								<td><input v-model="formData.BOSSNM" type="text" class="form-control" /></td>
+								<td><input v-model="formData.bossnm" type="text" class="form-control" /></td>
 								<th class="required">법인번호</th>
-								<td><input v-model="formData.LEGALNO" type="text" class="form-control text-center" maxlength="13" /></td>
+								<td><input v-model="formData.legalno" type="text" class="form-control text-center" maxlength="13" /></td>
 							</tr>
 							<tr>
 								<th>업태</th>
-								<td><input v-model="formData.UPTAE" type="text" class="form-control" /></td>
+								<td><input v-model="formData.uptae" type="text" class="form-control" /></td>
 								<th>종목</th>
-								<td><input v-model="formData.UPJONG" type="text" class="form-control" /></td>
+								<td><input v-model="formData.upjong" type="text" class="form-control" /></td>
 								<th>연락처</th>
-								<td><input v-model="formData.TELNO" type="text" class="form-control text-center" /></td>
+								<td><input v-model="formData.telno" type="text" class="form-control text-center" /></td>
 							</tr>
 							<tr>
 								<th class="required">본사주소</th>
 								<td colspan="3">
 									<div class="d-flex gap-1 flex-nowrap">
-										<input v-model="formData.POSTNO" type="text" class="form-control bg-light text-center" style="max-width: 80px; flex-shrink: 0;" readonly />
+										<input v-model="formData.postno" type="text" class="form-control bg-light text-center" style="max-width: 80px; flex-shrink: 0;" readonly />
 										<button class="btn btn-sm btn-outline-secondary px-2 flex-nowrap" style="flex-shrink: 0;" @click="execDaumPostcode"><i class="bi bi-search me-1"></i>우편번호</button>
-										<input v-model="formData.ADDRESS" type="text" class="form-control flex-grow-1" placeholder="기본 주소 입력" />
+										<input v-model="formData.address" type="text" class="form-control flex-grow-1" placeholder="기본 주소 입력" />
 									</div>
 								</td>
 								<th>도메인</th>
-								<td><input v-model="formData.DOMAIN" type="text" class="form-control" /></td>
+								<td><input v-model="formData.domain" type="text" class="form-control" /></td>
 							</tr>
 							<tr>
 								<th class="required">결산월</th>
 								<td>
-									<select v-model="formData.CLSMM" class="form-select">
+									<select v-model="formData.clsmm" class="form-select">
 										<option v-for="m in 12" :key="m" :value="String(m).padStart(2, '0')">{{ m }}월</option>
 									</select>
 								</td>
 								<th>설립일자</th>
-								<td><input v-model="formData.FONDYMD" type="date" class="form-control" /></td>
+								<td><input v-model="formData.fondymd" type="date" class="form-control" /></td>
 								<th>사용여부</th>
 								<td class="bg-light-subtle">
 									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
-										<input v-model="formData.USEYN" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useYnSwitch900">
-										<label class="form-check-label ms-2 small fw-bold" for="useYnSwitch900">{{ formData.USEYN === 'Y' ? '사용 중' : '중지' }}</label>
+										<input v-model="formData.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useYnSwitch900">
+										<label class="form-check-label ms-2 small fw-bold" for="useYnSwitch900">{{ formData.useyn === 'Y' ? '사용 중' : '중지' }}</label>
 									</div>
 								</td>
 							</tr>
@@ -110,39 +110,39 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const formData = reactive({
-	ACTKIND: 'S0',
-	CMPYCD: authStore.CMPYCD,
-	LTDNM: '', LTDENM: '', SAUPNO: '', BOSSNM: '', LEGALNO: '',
-	POSTNO: '', ADDRESS: '', UPTAE: '', UPJONG: '', TELNO: '',
-	FONDYMD: '', CLSMM: '12', DOMAIN: '', USEYN: 'Y'
+	actkind: 'S0',
+	cmpycd: authStore.cmpycd,
+	ltdnm: '', ltdenm: '', saupno: '', bossnm: '', legalno: '',
+	postno: '', address: '', uptae: '', upjong: '', telno: '',
+	fondymd: '', clsmm: '12', domain: '', useyn: 'Y'
 })
 
 async function fetchCompanyInfo() {
 	try {
 		// 💡 신규 API 경로 및 프로시저 호출 (/api/haba/HABA_900U_STR)
 		const res = await api.post('/api/haba/HABA_900U_STR', {
-			ACTKIND: 'S0',
-			CMPYCD: authStore.CMPYCD
+			actkind: 'S0',
+			cmpycd: authStore.cmpycd
 		})
 		if (res.data && res.data.length > 0) {
 			Object.assign(formData, res.data[0])
-			if (formData.FONDYMD && formData.FONDYMD.length === 8) {
-				formData.FONDYMD = `${formData.FONDYMD.substring(0, 4)}-${formData.FONDYMD.substring(4, 6)}-${formData.FONDYMD.substring(6, 8)}`
+			if (formData.fondymd && formData.fondymd.length === 8) {
+				formData.fondymd = `${formData.fondymd.substring(0, 4)}-${formData.fondymd.substring(4, 6)}-${formData.fondymd.substring(6, 8)}`
 			}
 		}
 	} catch (e) { vAlertError('회사 정보 로드 실패') }
 }
 
-async function handleSave() {
-	if (!formData.LTDNM || !formData.SAUPNO) return vAlertError('상호와 사업자번호는 필수입니다.')
+async function save() {
+	if (!formData.ltdnm || !formData.saupno) return vAlertError('상호와 사업자번호는 필수입니다.')
 	try {
 		const param = {
 			...formData,
-			ACTKIND: 'U0',
-			SAUPNO: formData.SAUPNO.replace(/-/g, ''),
-			LEGALNO: formData.LEGALNO.replace(/-/g, ''),
-			FONDYMD: formData.FONDYMD ? formData.FONDYMD.replace(/-/g, '') : '',
-			USERID: authStore.USERID
+			actkind: 'U0',
+			saupno: formData.saupno.replace(/-/g, ''),
+			legalno: formData.legalno.replace(/-/g, ''),
+			fondymd: formData.fondymd ? formData.fondymd.replace(/-/g, '') : '',
+			userid: authStore.userid
 		}
 		await api.post('/api/haba/HABA_900U_STR', param)
 		vAlert('저장되었습니다.')
@@ -152,14 +152,14 @@ async function handleSave() {
 
 function initialize() {
 	resetForm(formData)
-	formData.ACTKIND = 'S0'; formData.CMPYCD = authStore.CMPYCD; formData.CLSMM = '12';
+	formData.actkind = 'S0'; formData.cmpycd = authStore.cmpycd; formData.clsmm = '12';
 }
 
 const execDaumPostcode = () => {
 	new (window as any).daum.Postcode({
 		oncomplete: (data: any) => {
-			formData.POSTNO = data.zonecode
-			formData.ADDRESS = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress
+			formData.postno = data.zonecode
+			formData.address = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress
 		}
 	}).open()
 }
@@ -173,29 +173,3 @@ onMounted(() => {
 	fetchCompanyInfo()
 })
 </script>
-
-<style scoped>
-.haba900u-wrapper { height: 100%; overflow: hidden; }
-
-/* 💎 표준 버튼 시스템 */
-.btn-group-erp { display: flex; gap: 4px; }
-.btn-erp { padding: 4px 18px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff; color: #6c757d; border: 1px solid #6c757d; }
-.btn-init:hover { background-color: #f8f9fa; }
-.btn-search { background-color: #2d3748; color: #fff; border: none; }
-.btn-save { background-color: #005a9f; color: #fff; border: none; }
-
-/* 💎 프리미엄 테이블 스타일 (줄바꿈 방지) */
-.erp-table-full { table-layout: fixed; border-collapse: collapse !important; width: 100%; border-style: hidden; }
-.erp-table-full th {
-	background-color: #f8fafc; border: 1px solid #e2e8f0 !important;
-	text-align: center; font-weight: 800; font-size: 12.5px; color: #475569;
-	vertical-align: middle; padding: 10px 15px !important;
-	white-space: nowrap; overflow: hidden;
-}
-.erp-table-full td { vertical-align: middle; padding: 8px 12px !important; border: 1px solid #e2e8f0 !important; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-
-.form-control, .form-select { border-radius: 4px; border: 1px solid #cbd5e1; font-size: 13px; height: 32px; width: 100%; font-weight: 500; }
-.form-control:focus, .form-select:focus { border-color: #005a9f; box-shadow: 0 0 0 2px rgba(0, 90, 159, 0.1); }
-</style>

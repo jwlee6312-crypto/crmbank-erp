@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsba810u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -30,18 +30,18 @@
                 <th style="width: 100px;">연 월</th>
                 <td style="width: 250px;">
                   <div class="d-flex align-items-center gap-2">
-                    <select v-model="searchData.YY" class="form-select form-select-sm" style="width: 100px;">
+                    <select v-model="searchData.yy" class="form-select form-select-sm" style="width: 100px;">
                       <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
                     </select>
-                    <select v-model="searchData.MM" class="form-select form-select-sm" style="width: 80px;">
+                    <select v-model="searchData.mm" class="form-select form-select-sm" style="width: 80px;">
                       <option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
                     </select>
                   </div>
                 </td>
                 <th style="width: 100px;">창 고</th>
                 <td>
-                  <select v-model="searchData.WHCD" class="form-select form-select-sm" style="width: 150px;">
-                    <option v-for="opt in whOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                  <select v-model="searchData.whcd" class="form-select form-select-sm" style="width: 150px;">
+                    <option v-for="opt in whOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
               </tr>
@@ -54,7 +54,7 @@
       <div class="card border shadow-sm overflow-hidden">
         <div class="card-header py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #f0f7ff !important;">
           <span class="fw-bold small text-primary"><i class="bi bi-pencil-square me-1"></i> 창고 기초재고 정보 입력</span>
-          <span v-if="masterData.ACTKIND === 'U0'" class="badge bg-warning text-dark ms-2">수정 모드</span>
+          <span v-if="masterData.actkind === 'U0'" class="badge bg-warning text-dark ms-2">수정 모드</span>
           <span v-else class="badge bg-primary ms-2">신규 등록</span>
         </div>
         <div class="card-body p-0">
@@ -64,28 +64,28 @@
                 <th class="required" style="width: 100px;">연 월</th>
                 <td style="width: 200px;">
                   <div class="d-flex align-items-center gap-1">
-                    <select v-model="masterData.YY" class="form-select form-select-sm" style="width: 90px;" :disabled="masterData.ACTKIND === 'U0'">
+                    <select v-model="masterData.yy" class="form-select form-select-sm" style="width: 90px;" :disabled="masterData.actkind === 'U0'">
                       <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
                     </select>
-                    <select v-model="masterData.MM" class="form-select form-select-sm" style="width: 70px;" :disabled="masterData.ACTKIND === 'U0'">
+                    <select v-model="masterData.mm" class="form-select form-select-sm" style="width: 70px;" :disabled="masterData.actkind === 'U0'">
                       <option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
                     </select>
                   </div>
                 </td>
                 <th class="required" style="width: 100px;">창 고</th>
                 <td style="width: 180px;">
-                  <select v-model="masterData.WHCD" class="form-select form-select-sm" :disabled="masterData.ACTKIND === 'U0'">
-                    <option v-for="opt in whOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                  <select v-model="masterData.whcd" class="form-select form-select-sm" :disabled="masterData.actkind === 'U0'">
+                    <option v-for="opt in whOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required" style="width: 100px;">품 목</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 400px;">
-                    <input v-model="masterData.ITEMCD" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="masterData.ITEMNM" type="text" class="form-control" placeholder="품목 선택" @keyup.enter="openHelp('ITEM')" />
-                    <input v-model="masterData.ITSIZE" type="text" class="form-control bg-light text-center" style="max-width: 120px;" readonly />
-                    <input v-model="masterData.UNIT" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-                    <button class="btn btn-outline-secondary" @click="openHelp('ITEM')" :disabled="masterData.ACTKIND === 'U0'"><i class="bi bi-search"></i></button>
+                    <input v-model="masterData.itemcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="masterData.itemnm" type="text" class="form-control" placeholder="품목 선택" @keyup.enter="openHelp('ITEM')" />
+                    <input v-model="masterData.itsize" type="text" class="form-control bg-light text-center" style="max-width: 120px;" readonly />
+                    <input v-model="masterData.unit" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+                    <button class="btn btn-outline-secondary" @click="openHelp('ITEM')" :disabled="masterData.actkind === 'U0'"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">기초재고수량</th>
@@ -108,17 +108,8 @@
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 창고별 기초재고 목록</span>
           <div class="small text-muted">행 클릭 시 상세 정보를 수정할 수 있습니다.</div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-12 small">
-          조회 건수: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
@@ -149,21 +140,21 @@ const currentMonth = String(now.getMonth() + 1).padStart(2, '0')
 
 // 1. 상태 관리
 const searchData = reactive({
-  YY: String(currentYear),
-  MM: currentMonth,
-  WHCD: ''
+  yy: String(currentYear),
+  mm: currentMonth,
+  whcd: ''
 })
 
 const masterData = reactive<any>({
-  ACTKIND: 'A0',
-  CMPYCD: authStore.CMPYCD,
-  YY: String(currentYear),
-  MM: currentMonth,
-  WHCD: '',
-  ITEMCD: '',
-  ITEMNM: '',
-  ITSIZE: '',
-  UNIT: '',
+  actkind: 'A0',
+  cmpycd: authStore.cmpycd,
+  yy: String(currentYear),
+  mm: currentMonth,
+  whcd: '',
+  itemcd: '',
+  itemnm: '',
+  itsize: '',
+  unit: '',
   QTY: '0',
   AMT: '0'
 })
@@ -185,12 +176,12 @@ const initGrid = () => {
     placeholder: "조회된 데이터가 없습니다.",
     columnDefaults: { headerSort: false },
     columns: [
-      { title: "품목명", field: "ITEMNM", minWidth: 250, cssClass: "fw-bold" },
-      { title: "규격", field: "ITSIZE", width: 150 },
-      { title: "단위", field: "UNIT", width: 80, hozAlign: "center" },
+      { title: "품목명", field: "itemnm", minWidth: 250, cssClass: "fw-bold" },
+      { title: "규격", field: "itsize", width: 150 },
+      { title: "단위", field: "unit", width: 80, hozAlign: "center" },
       { title: "기초재고수량", field: "QTY", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       {
-        title: "단가", field: "PRICE", width: 120, hozAlign: "right",
+        title: "단가", field: "price", width: 120, hozAlign: "right",
         formatter: (cell) => {
             const data = cell.getData();
             const qty = Number(data.QTY) || 0;
@@ -206,23 +197,23 @@ const initGrid = () => {
   grid.value.on("rowClick", (e, row) => {
     const data = row.getData()
     Object.assign(masterData, data)
-    masterData.YY = searchData.YY
-    masterData.MM = searchData.MM
-    masterData.WHCD = searchData.WHCD
-    masterData.QTY = formatNumber(data.QTY)
-    masterData.AMT = formatNumber(data.AMT)
-    masterData.ACTKIND = 'U0'
+    masterData.yy = searchData.yy
+    masterData.mm = searchData.mm
+    masterData.whcd = searchData.whcd
+    masterData.qty = formatNumber(data.qty)
+    masterData.amt = formatNumber(data.amt)
+    masterData.actkind = 'U0'
   })
 }
 
 // 3. 기능 구현
 async function fetchWhOptions() {
   try {
-    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'W0', CMPYCD: authStore.CMPYCD } })
-    whOptions.value = res.data.map((i: any) => ({ CODECD: i.WHCD, CODENM: i.WHNM }))
+    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
+    whOptions.value = res.data.map((i: any) => ({ codecd: i.whcd, codenm: i.whnm }))
     if (whOptions.value.length > 0) {
-        searchData.WHCD = whOptions.value[0].CODECD
-        masterData.WHCD = whOptions.value[0].CODECD
+        searchData.whcd = whOptions.value[0].codecd
+        masterData.whcd = whOptions.value[0].codecd
     }
   } catch (e) { console.error('창고 목록 로드 실패') }
 }
@@ -230,12 +221,12 @@ async function fetchWhOptions() {
 async function search() {
   try {
     const res = await api.post('/api/hsba/HSBA_810U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
-      YY: searchData.YY,
-      MM: searchData.MM,
-      WHCD: searchData.WHCD,
-      ITEMCD: '',
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
+      yy: searchData.yy,
+      mm: searchData.mm,
+      whcd: searchData.whcd,
+      itemcd: '',
       QTY: 0
     })
     if (grid.value) {
@@ -246,19 +237,19 @@ async function search() {
 }
 
 async function save() {
-  if (!masterData.ITEMCD) return vAlertError('품목을 선택해 주십시요.')
-  if (!masterData.WHCD) return vAlertError('창고를 선택해 주십시요.')
+  if (!masterData.itemcd) return vAlertError('품목을 선택해 주십시요.')
+  if (!masterData.whcd) return vAlertError('창고를 선택해 주십시요.')
   if (Number(masterData.QTY.replace(/,/g, '')) === 0) return vAlertError('수량을 입력해 주십시요.')
 
-  const confirmMsg = masterData.ACTKIND === 'A0' ? '창고 기초재고를 등록하시겠습니까?' : '창고 기초재고 정보를 수정하시겠습니까?'
+  const confirmMsg = masterData.actkind === 'A0' ? '창고 기초재고를 등록하시겠습니까?' : '창고 기초재고 정보를 수정하시겠습니까?'
   if (!confirm(confirmMsg)) return
 
   try {
     const payload = {
       ...masterData,
-      QTY: masterData.QTY.replace(/,/g, ''),
-      AMT: masterData.AMT.replace(/,/g, ''), // Procedure in IF Turn 2 was missing AMT, but Turn 1 submission had it. I'll include it.
-      USERID: authStore.USERID
+      qty: masterData.qty.replace(/,/g, ''),
+      amt: masterData.amt.replace(/,/g, ''), // Procedure in IF Turn 2 was missing AMT, but Turn 1 submission had it. I'll include it.
+      userid: authStore.userid
     }
     await api.post('/api/hsba/HSBA_810U_STR', payload)
     vAlert('성공적으로 저장되었습니다.')
@@ -268,18 +259,18 @@ async function save() {
 }
 
 function initialize() {
-  const currentY = searchData.YY
-  const currentM = searchData.MM
-  const currentWh = searchData.WHCD
+  const currentY = searchData.yy
+  const currentM = searchData.mm
+  const currentWh = searchData.whcd
   resetForm(masterData)
   Object.assign(masterData, {
-    ACTKIND: 'A0',
-    CMPYCD: authStore.CMPYCD,
-    YY: currentY,
-    MM: currentM,
-    WHCD: currentWh,
-    QTY: '0',
-    AMT: '0'
+    actkind: 'A0',
+    cmpycd: authStore.cmpycd,
+    yy: currentY,
+    mm: currentM,
+    whcd: currentWh,
+    qty: '0',
+    amt: '0'
   })
 }
 
@@ -297,20 +288,20 @@ function openHelp(type: string) {
     Object.assign(modalProps, {
       title: '품목 선택',
       path: '/api/hs00/HS00_000S_STR',
-      defaultField: 'ITEMNM',
+      defaultField: 'itemnm',
       large: true,
-      data: { GUBUN: 'I1', CMPYCD: authStore.CMPYCD, GBNCD: '2', LIMITOFFSET: 0, LIMITROWS: 9999 },
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2' },
       columns: [
-        { title: '코드', field: 'ITEMCD', width: 100 },
-        { title: '품목명', field: 'ITEMNM', minWidth: 200 },
-        { title: '규격', field: 'ITSIZE', width: 150 },
-        { title: '단위', field: 'UNITNM', width: 80 }
+        { title: '코드', field: 'itemcd', width: 100 },
+        { title: '품목명', field: 'itemnm', minWidth: 200 },
+        { title: '규격', field: 'itsize', width: 150 },
+        { title: '단위', field: 'unitnm', width: 80 }
       ],
       onConfirm: (data: any) => {
-        masterData.ITEMCD = data.ITEMCD
-        masterData.ITEMNM = data.ITEMNM
-        masterData.ITSIZE = data.ITSIZE
-        masterData.UNIT = data.UNITNM
+        masterData.itemcd = data.itemcd
+        masterData.itemnm = data.itemnm
+        masterData.itsize = data.itsize
+        masterData.unit = data.unitnm
       }
     })
     modalVisible.value = true
@@ -328,21 +319,9 @@ onMounted(async () => {
 })
 
 // Sync masterData with search conditions when in new entry mode
-watch(() => searchData.YY, (val) => { if (masterData.ACTKIND === 'A0') masterData.YY = val })
-watch(() => searchData.MM, (val) => { if (masterData.ACTKIND === 'A0') masterData.MM = val })
-watch(() => searchData.WHCD, (val) => { if (masterData.ACTKIND === 'A0') masterData.WHCD = val })
+watch(() => searchData.yy, (val) => { if (masterData.actkind === 'A0') masterData.yy = val })
+watch(() => searchData.mm, (val) => { if (masterData.actkind === 'A0') masterData.mm = val })
+watch(() => searchData.whcd, (val) => { if (masterData.actkind === 'A0') masterData.whcd = val })
 
 </script>
 
-<style scoped>
-.hsba810u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: auto !important; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 1% !important; white-space: nowrap !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 10px 15px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 8px 12px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-</style>

@@ -24,13 +24,13 @@
 
     <!-- 사용자 정보 및 액션 영역 -->
     <div class="d-flex align-items-center gap-3">
-      <div v-if="authStore.USERNM" class="user-profile-box d-none d-lg-flex align-items-center">
+      <div v-if="authStore.usernm" class="user-profile-box d-none d-lg-flex align-items-center">
         <div class="avatar-icon">
           <i class="bi bi-person-fill"></i>
         </div>
         <div class="user-text-info">
-          <span class="user-name">{{ authStore.USERNM }}님</span>
-          <span class="user-dept">{{ authStore.DEPTNM }}</span>
+          <span class="user-name">{{ authStore.usernm }}님</span>
+          <span class="user-dept">{{ authStore.deptnm }}</span>
         </div>
       </div>
 
@@ -55,8 +55,8 @@ const router = useRouter()
 const headerMenus = computed(() => {
   if (!menuStore.topMenuItems) return []
   return menuStore.topMenuItems.map((item: any) => ({
-    codecd: item.CODECD,
-    codenm: item.CODENM
+    codecd: item.codecd, // 💡 소문자 표준 적용
+    codenm: item.codenm  // 💡 소문자 표준 적용
   }))
 })
 

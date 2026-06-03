@@ -54,8 +54,8 @@
                                             <!-- 💡 대문자 SURV_GB 바인딩 -->
                                             <select v-model="form.SURV_GB" class="form-select form-select-sm border-primary" @change="load_survey_preview">
                                                 <option value="">선택하세요</option>
-                                                <!-- 💡 대문자 CODECD, CODENM 사용 -->
-                                                <option v-for="code in code_910" :key="code.CODECD" :value="code.CODECD">{{ code.CODENM }}</option>
+                                                <!-- 💡 대문자 codecd, codenm 사용 -->
+                                                <option v-for="code in code_910" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
                                             </select>
                                         </td>
                                         <th class="bg-light text-end pe-2">캠페인명</th>
@@ -64,17 +64,17 @@
                                     <tr>
                                         <th class="bg-light text-end pe-2">실행상태</th>
                                         <td>
-                                            <select v-model="form.STATUS" class="form-select form-select-sm">
+                                            <select v-model="form.status" class="form-select form-select-sm">
                                                 <option value="">선택</option>
-                                                <option v-for="code in code_930" :key="code.CODECD" :value="code.CODECD">{{ code.CODENM }}</option>
+                                                <option v-for="code in code_930" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
                                             </select>
                                         </td>
                                         <th class="bg-light text-end pe-2">실행일자</th>
-                                        <td><input v-model="form.ACTDATE" type="text" class="form-control form-control-sm" placeholder="YYYYMMDD" /></td>
+                                        <td><input v-model="form.ACTDATE" type="text" class="form-control form-control-sm" placeholder="yyyymmDD" /></td>
                                     </tr>
                                     <tr>
                                         <th class="bg-light text-end pe-2">비고</th>
-                                        <td colspan="3"><input v-model="form.REMARK" type="text" class="form-control form-control-sm" /></td>
+                                        <td colspan="3"><input v-model="form.remark" type="text" class="form-control form-control-sm" /></td>
                                     </tr>
                                     <tr>
                                         <th class="bg-light text-end pe-2">시작인사</th>
@@ -124,7 +124,7 @@ import AppAlert from '@/components/AppAlert.vue'
 const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
 
 // 💡 모든 속성명을 대문자로 정의
-const form = reactive({ CMPYCD: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', REMARK: '', ACTDATE: '', STATUS: '010', START_MENT: '', END_MENT: '' })
+const form = reactive({ cmpycd: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', remark: '', ACTDATE: '', status: '010', START_MENT: '', END_MENT: '' })
 const campaigns = ref<any[]>([]); const survey_list = ref<any[]>([]); const code_910 = ref<any[]>([]); const code_930 = ref<any[]>([])
 const list_ref = ref<HTMLDivElement | null>(null); let list_instance: Tabulator | null = null
 
@@ -150,7 +150,7 @@ const init_main_grid = () => {
         // 💡 필드명을 대문자로 수정
         columns: [
             { title: "캠페인명", field: "CAMP_NM", hozAlign: "left" },
-            { title: "상태", field: "STATUS", hozAlign: "center", width: 70 }
+            { title: "상태", field: "status", hozAlign: "center", width: 70 }
         ]
     })
     list_instance.on("rowClick", (e, row) => {
@@ -182,7 +182,7 @@ async function search() {
 }
 
 function initialize() {
-	Object.assign(form, { CMPYCD: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', REMARK: '', ACTDATE: new Date().toISOString().slice(0,10).replace(/-/g,''), STATUS: '010', START_MENT: '', END_MENT: '' })
+	Object.assign(form, { cmpycd: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', remark: '', ACTDATE: new Date().toISOString().slice(0,10).replace(/-/g,''), status: '010', START_MENT: '', END_MENT: '' })
 	survey_list.value = [];
     list_instance?.deselectRow();
 }

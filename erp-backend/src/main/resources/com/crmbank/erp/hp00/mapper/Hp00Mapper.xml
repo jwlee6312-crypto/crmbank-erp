@@ -3,7 +3,7 @@
 <mapper namespace="com.crmbank.erp.hp00.mapper.Hp00Mapper">
 
     <select id="HP00_000S_STR" resultType="map">
-        EXEC HP00_000S_STR #{GUBUN}, #{CMPYCD}, #{GBNCD}, #{CODE}
+        exec hp00_000s_str #{gubun}, #{cmpycd}, #{gbncd}, #{code}
     </select>
 
 </mapper>

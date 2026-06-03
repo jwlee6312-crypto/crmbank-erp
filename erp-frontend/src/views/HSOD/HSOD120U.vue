@@ -12,7 +12,7 @@
       </div>
       <div class="btn-group-erp d-flex gap-1">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
-        <button class="btn-erp btn-search" @click="searchMaster">조회</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
         <button class="btn-erp btn-save" @click="processApproval">
           {{ searchData.SELGBN === 'N' ? '승인처리' : '승인취소' }}
         </button>
@@ -33,23 +33,23 @@
                 <th class="required">주문일자</th>
                 <td style="width: 350px;">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="uiIOYMDFR" type="date" class="form-control form-control-sm" />
+                    <input v-model="ioymdfr" type="date" class="form-control form-control-sm" />
                     <span>~</span>
-                    <input v-model="uiIOYMDTO" type="date" class="form-control form-control-sm" />
+                    <input v-model="ioymdto" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th class="required">조회대상</th>
                 <td style="width: 150px;">
-                  <select v-model="searchData.SELGBN" class="form-select form-select-sm" @change="searchMaster">
+                  <select v-model="searchData.SELGBN" class="form-select form-select-sm" @change="search">
                     <option value="N">미승인</option>
                     <option value="Y">승인</option>
                   </select>
                 </td>
                 <th>주문서종류</th>
                 <td>
-                  <select v-model="searchData.ORDKIND" class="form-select form-select-sm" style="width: 150px;" @change="searchMaster">
+                  <select v-model="searchData.ORDKIND" class="form-select form-select-sm" style="width: 150px;" @change="search">
                     <option value="">전체</option>
-                    <option v-for="opt in ordKindOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                    <option v-for="opt in ordKindOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
               </tr>
@@ -67,8 +67,8 @@
             <input type="checkbox" v-model="allSelected" @change="toggleAllSelection" class="form-check-input" />
           </div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="masterGridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="masterGridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
 
@@ -77,25 +77,16 @@
         <div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
           <span class="fw-bold small text-dark"><i class="bi bi-box-seam me-1"></i> 품목 상세 정보</span>
           <div v-if="selectedOrderInfo" class="small text-muted">
-            <span class="me-3">배송처: {{ selectedOrderInfo.ADDRESS }}</span>
-            <span>특기사항: {{ selectedOrderInfo.REMARK }}</span>
+            <span class="me-3">배송처: {{ selectedOrderInfo.address }}</span>
+            <span>특기사항: {{ selectedOrderInfo.remark }}</span>
           </div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="detailGridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="detailGridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
 
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-3 small">선택 주문: <span class="fw-bold text-info">{{ selectedCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="fs-6 fw-light opacity-75">상세 합계: <span class="fw-bold text-white ms-2">{{ formatNumber(detailSum) }}</span></span>
-        </div>
-      </div>
-    </div>
 
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
@@ -118,19 +109,19 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initFRYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
-  IOYMDFR: initFRYMD,
-  IOYMDTO: initYMD,
+  ioymdfr: initfrymd,
+  ioymdto: initymd,
   SELGBN: 'N',
   ORDKIND: ''
 })
 
-const uiIOYMDFR = computed({ get: () => formatDateString(searchData.IOYMDFR, '-'), set: (v) => searchData.IOYMDFR = v.replace(/-/g, '') })
-const uiIOYMDTO = computed({ get: () => formatDateString(searchData.IOYMDTO, '-'), set: (v) => searchData.IOYMDTO = v.replace(/-/g, '') })
+const ioymdfr = computed({ get: () => formatDateString(searchData.ioymdfr, '-'), set: (v) => searchData.ioymdfr = v.replace(/-/g, '') })
+const ioymdto = computed({ get: () => formatDateString(searchData.ioymdto, '-'), set: (v) => searchData.ioymdto = v.replace(/-/g, '') })
 
 const masterGridElement = ref<HTMLElement | null>(null)
 const detailGridElement = ref<HTMLElement | null>(null)
@@ -154,7 +145,7 @@ const initGrids = () => {
       columnDefaults: { headerSort: false },
       columns: [
         {
-          title: "선택", field: "PROCYN", width: 50, hozAlign: "center",
+          title: "선택", field: "procyn", width: 50, hozAlign: "center",
           formatter: "tickCross", editor: true,
           cellClick: (e, cell) => {
               const data = cell.getData();
@@ -166,13 +157,13 @@ const initGrids = () => {
           cellEdited: () => updateSelectedCount()
         },
         { title: "주문번호", field: "ORD_FULL", width: 120, hozAlign: "center", cssClass: "fw-bold text-primary cursor-pointer" },
-        { title: "주문일자", field: "ORDYMD_FMT", width: 100, hozAlign: "center" },
+        { title: "주문일자", field: "ordymd_FMT", width: 100, hozAlign: "center" },
         { title: "주문구분", field: "ORDKINDNM", width: 100, hozAlign: "center" },
-        { title: "거래처", field: "CUSTNM", minWidth: 200 },
-        { title: "출고일자", field: "OUTYMD_FMT", width: 120, editor: "date", cssClass: "bg-light-yellow" },
+        { title: "거래처", field: "custnm", minWidth: 200 },
+        { title: "출고일자", field: "OUtymd_FMT", width: 120, editor: "date", cssClass: "bg-light-yellow" },
         { title: "주문금액", field: "ORDAMT", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         {
-            title: "영업부서", field: "DEPTNM", width: 150,
+            title: "영업부서", field: "deptnm", width: 150,
             formatter: (cell) => (cell.getValue() || '') + " <i class='bi bi-search text-primary ms-1 cursor-pointer'></i>",
             cellClick: (e, cell) => { if ((e.target as HTMLElement).classList.contains('bi-search')) openHelp('DEPT', cell.getRow()) }
         },
@@ -197,14 +188,14 @@ const initGrids = () => {
       placeholder: "주문을 선택하세요.",
       columnDefaults: { headerSort: false },
       columns: [
-        { title: "No", field: "OROWNO", width: 50, hozAlign: "center" },
-        { title: "품명", field: "ITEMNM", minWidth: 200 },
-        { title: "규격", field: "ITSIZE", width: 150 },
-        { title: "단위", field: "UNIT", width: 60, hozAlign: "center" },
-        { title: "수량", field: "ORDQTY", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
+        { title: "No", field: "orowno", width: 50, hozAlign: "center" },
+        { title: "품명", field: "itemnm", minWidth: 200 },
+        { title: "규격", field: "itsize", width: 150 },
+        { title: "단위", field: "unit", width: 60, hozAlign: "center" },
+        { title: "수량", field: "ordqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
         { title: "공급가", field: "ORDAMT", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         { title: "부가세", field: "ORDVAT", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "합계", field: "SUMAMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" }
+        { title: "합계", field: "sumamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" }
       ]
     })
   }
@@ -213,29 +204,29 @@ const initGrids = () => {
 // 3. 기능 구현
 async function fetchOptions() {
   try {
-    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '220' } })
-    ordKindOptions.value = res.data.map((i: any) => ({ CODECD: Object.values(i)[0], CODENM: Object.values(i)[1] }))
+    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '220' } })
+    ordKindOptions.value = res.data.map((i: any) => ({ codecd: Object.values(i)[0], codenm: Object.values(i)[1] }))
   } catch (e) { console.error('옵션 로드 실패') }
 }
 
-async function searchMaster() {
-  if (!searchData.IOYMDFR || !searchData.IOYMDTO) return vAlertError('조회 기간을 입력하세요.')
+async function search() {
+  if (!searchData.ioymdfr || !searchData.ioymdto) return vAlertError('조회 기간을 입력하세요.')
   try {
     const res = await api.post('/api/hsod/HSOD_120U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
       ORDKIND: searchData.ORDKIND,
       SELGBN: searchData.SELGBN,
-      IOYMDFR: searchData.IOYMDFR,
-      IOYMDTO: searchData.IOYMDTO
+      ioymdfr: searchData.ioymdfr,
+      ioymdto: searchData.ioymdto
     })
     if (masterGrid) {
       const mappedData = res.data.map((i: any) => ({
         ...i,
-        PROCYN: searchData.SELGBN === 'N' && i.OUTYN !== 'Y',
-        ORD_FULL: `${i.ORDYM}-${i.ORDNO}`,
-        ORDYMD_FMT: formatDateString(i.ORDYMD, '-'),
-        OUTYMD_FMT: formatDateString(i.OUTYMD, '-')
+        procyn: searchData.SELGBN === 'N' && i.OUTYN !== 'Y',
+        ORD_FULL: `${i.ordym}-${i.ordno}`,
+        ordymd_FMT: formatDateString(i.ordymd, '-'),
+        OUtymd_FMT: formatDateString(i.OUtymd, '-')
       }))
       masterGrid.setData(mappedData)
       allSelected.value = searchData.SELGBN === 'N'
@@ -249,35 +240,35 @@ async function searchMaster() {
 async function fetchDetails(row: any) {
   try {
     const res = await api.post('/api/hsod/HSOD_120U_STR', {
-      ACTKIND: 'S1',
-      CMPYCD: authStore.CMPYCD,
-      ORDYM: row.ORDYM,
-      ORDNO: row.ORDNO
+      actkind: 'S1',
+      cmpycd: authStore.cmpycd,
+      ordym: row.ordym,
+      ordno: row.ordno
     })
     selectedOrderInfo.value = {
-        ADDRESS: row.ADDRESS || '지정된 배송처 없음',
-        REMARK: row.REMARK || '특기사항 없음'
+        address: row.address || '지정된 배송처 없음',
+        remark: row.remark || '특기사항 없음'
     }
     if (detailGrid) {
       const mapped = res.data.map((i: any) => ({
           ...i,
-          SUMAMT: Number(i.ORDAMT || 0) + Number(i.ORDVAT || 0)
+          sumamt: Number(i.ORDAMT || 0) + Number(i.ORDVAT || 0)
       }))
       detailGrid.setData(mapped)
-      detailSum.value = mapped.reduce((acc: number, cur: any) => acc + cur.SUMAMT, 0)
+      detailSum.value = mapped.reduce((acc: number, cur: any) => acc + cur.sumamt, 0)
     }
   } catch (e) { vAlertError('상세 조회 실패') }
 }
 
 async function processApproval() {
-  const selectedRows = masterGrid?.getData().filter((i: any) => i.PROCYN)
+  const selectedRows = masterGrid?.getData().filter((i: any) => i.procyn)
   if (!selectedRows || selectedRows.length === 0) return vAlertError('처리할 대상을 선택하세요.')
 
   // 승인 시 필수 항목 체크
   if (searchData.SELGBN === 'N') {
       for (const row of selectedRows) {
-          if (!row.OUTYMD_FMT) return vAlertError(`[${row.ORD_FULL}] 출고일자를 입력하세요.`)
-          if (!row.DEPTCD) return vAlertError(`[${row.ORD_FULL}] 영업부서를 선택하세요.`)
+          if (!row.OUtymd_FMT) return vAlertError(`[${row.ORD_FULL}] 출고일자를 입력하세요.`)
+          if (!row.deptcd) return vAlertError(`[${row.ORD_FULL}] 영업부서를 선택하세요.`)
           if (!row.ORDEMP) return vAlertError(`[${row.ORD_FULL}] 영업담당자를 선택하세요.`)
       }
   }
@@ -288,39 +279,39 @@ async function processApproval() {
   try {
     for (const row of selectedRows) {
       await api.post('/api/hsod/HSOD_120U_STR', {
-        ACTKIND: 'U0',
-        CMPYCD: authStore.CMPYCD,
+        actkind: 'U0',
+        cmpycd: authStore.cmpycd,
         ORDKIND: searchData.ORDKIND,
         SELGBN: searchData.SELGBN,
-        ORDYM: row.ORDYM,
-        ORDNO: row.ORDNO,
-        OUTYMD: row.OUTYMD_FMT.replace(/-/g, ''),
-        DEPTCD: row.DEPTCD,
-        WHCD: row.WHCD,
+        ordym: row.ordym,
+        ordno: row.ordno,
+        OUtymd: row.OUtymd_FMT.replace(/-/g, ''),
+        deptcd: row.deptcd,
+        whcd: row.whcd,
         ORDEMP: row.ORDEMP,
-        USERID: authStore.USERID
+        userid: authStore.userid
       })
     }
     vAlert('정상적으로 처리되었습니다.')
-    searchMaster()
+    search()
   } catch (e) { vAlertError('처리 중 오류 발생') }
 }
 
 const updateSelectedCount = () => {
     if (!masterGrid) return
-    selectedCount.value = masterGrid.getData().filter((i: any) => i.PROCYN).length
+    selectedCount.value = masterGrid.getData().filter((i: any) => i.procyn).length
 }
 
 const toggleAllSelection = () => {
   if (!masterGrid) return
   const data = masterGrid.getData()
-  masterGrid.updateData(data.map(i => ({ ...i, PROCYN: allSelected.value && i.OUTYN !== 'Y' })))
+  masterGrid.updateData(data.map(i => ({ ...i, procyn: allSelected.value && i.OUTYN !== 'Y' })))
   updateSelectedCount()
 }
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { IOYMDFR: initFRYMD, IOYMDTO: initYMD, SELGBN: 'N', ORDKIND: '' })
+  Object.assign(searchData, { ioymdfr: initfrymd, ioymdto: initymd, SELGBN: 'N', ORDKIND: '' })
   masterGrid?.clearData()
   detailGrid?.clearData()
   selectedOrderInfo.value = null
@@ -335,17 +326,17 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string, row: any) {
   if (type === 'DEPT') {
     Object.assign(modalProps, {
-      title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM',
-      data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }],
-      onConfirm: (data: any) => { row.update({ DEPTCD: data.DEPTCD, DEPTNM: data.DEPTNM }) }
+      title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+      columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+      onConfirm: (data: any) => { row.update({ deptcd: data.deptcd, deptnm: data.deptnm }) }
     })
   } else if (type === 'EMP') {
     Object.assign(modalProps, {
-      title: '사원 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'USERNM',
-      data: { GUBUN: 'U1', CMPYCD: authStore.CMPYCD },
-      columns: [{ title: '코드', field: 'USERID', width: 80 }, { title: '사원명', field: 'USERNM', width: 150 }],
-      onConfirm: (data: any) => { row.update({ ORDEMP: data.USERID, OEMPNM: data.USERNM }) }
+      title: '사원 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'usernm',
+      data: { gubun: 'U1', cmpycd: authStore.cmpycd },
+      columns: [{ title: '코드', field: 'userid', width: 80 }, { title: '사원명', field: 'usernm', width: 150 }],
+      onConfirm: (data: any) => { row.update({ ORDEMP: data.userid, OEMPNM: data.usernm }) }
     })
   }
   modalVisible.value = true

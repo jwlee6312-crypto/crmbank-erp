@@ -21,10 +21,10 @@ public class HabaController {
     private final HabaMapper habaMapper;
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            params.putIfAbsent("CMPYCD", user.getCMPYCD());
-            params.put("UPDEMP", user.getUSER_ID());
+            params.putIfAbsent("cmpycd", user.getCmpycd());
+            params.put("updemp", user.getUserid());
         }
     }
 

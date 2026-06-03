@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hacl.mapper.HaclMapper">
+
+    <select id="HACL_800U_STR" resultType="map">
+        exec hacl_800u_str #{cmpycd}, #{yy}, #{mm}
+    </select>
+
+    <select id="HACL_900U_STR" resultType="map">
+        exec hacl_900u_str #{actkind}, #{cmpycd}, #{clsyy}, #{wkgbn}
+    </select>
+
+</mapper>

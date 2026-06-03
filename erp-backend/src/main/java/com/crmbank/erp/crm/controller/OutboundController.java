@@ -27,8 +27,8 @@ public class OutboundController {
             params.forEach((k, v) -> upperParams.put(k.toUpperCase(), v));
         }
         UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        upperParams.put("CMPYCD", user != null ? user.getCMPYCD() : "HAIONNET");
-        upperParams.put("USERID", user != null ? user.getUSERID() : "SYSTEM");
+        upperParams.put("cmpycd", user != null ? user.getCmpycd() : "HAIONNET");
+        upperParams.put("userid", user != null ? user.getUserid() : "SYSTEM");
         return upperParams;
     }
 
@@ -47,8 +47,8 @@ public class OutboundController {
     @PostMapping("/camp-save")
     public void saveCamp(@RequestBody CampMstDto dto, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        dto.setCMPYCD(user != null ? user.getCMPYCD() : "HAIONNET");
-        dto.setUPDEMP(user != null ? user.getUSERID() : "SYSTEM");
+        dto.setCmpycd(user != null ? user.getCmpycd() : "HAIONNET");
+        dto.setUpdemp(user != null ? user.getUserid() : "SYSTEM");
         outboundService.saveCampMst(dto);
     }
 
@@ -70,10 +70,10 @@ public class OutboundController {
 
     @PostMapping("/surv/save")
     public void saveSurv(@RequestBody Map<String, Object> payload, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         outboundService.saveSurveyTransaction(payload,
-                user != null ? user.getCMPYCD() : "HAIONNET",
-                user != null ? user.getUSERID() : "SYSTEM");
+                user != null ? user.getCmpycd() : "HAIONNET",
+                user != null ? user.getUserid() : "SYSTEM");
     }
 
     @PostMapping("/surv/delete")
@@ -100,9 +100,9 @@ public class OutboundController {
 
     @PostMapping("/call-list/save")
     public void saveCallList(@RequestBody List<Map<String, Object>> list, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        String CMPYCD = user != null ? user.getCMPYCD() : "HAIONNET";
-        list.forEach(item -> item.put("CMPYCD", CMPYCD));
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String cmpycd = user != null ? user.getCmpycd() : "HAIONNET";
+        list.forEach(item -> item.put("cmpycd", cmpycd));
         outboundService.saveCallListBatch(list);
     }
 
@@ -120,7 +120,7 @@ public class OutboundController {
     @PostMapping("/attr-mapper/save")
     public void saveAttrMapper(@RequestBody Map<String, Object> payload, HttpSession session) {
         Map<String, Object> params = getParams(payload, session);
-        List<Map<String, Object>> list = (List<Map<String, Object>>) payload.get("LIST");
+        List<Map<String, Object>> list = (List<Map<String, Object>>) payload.get("list");
         outboundService.saveAttrMapperBatch(params, list);
     }
 

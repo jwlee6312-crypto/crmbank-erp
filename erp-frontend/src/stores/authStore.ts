@@ -9,31 +9,31 @@ export const useAuthStore = defineStore(
 	() => {
 		const isAuthenticated = ref<boolean>(false)
 
-		const CMPYCD = ref<string>('')
-		const USERID = ref<string>('')
-		const USERNM = ref<string>('')
-		const INNER_NO = ref<string>('')
-		const DEPTCD = ref<string>('')
-		const DEPTNM = ref<string>('')
-		const USERGRP = ref<string>('')
-		const SALSYN = ref<string>('')
-		const EMAIL = ref<string>('') // 💡 이메일 필드 추가
+		const cmpycd = ref<string>('')
+		const userid = ref<string>('')
+		const usernm = ref<string>('')
+		const inner_no = ref<string>('')
+		const deptcd = ref<string>('')
+		const deptnm = ref<string>('')
+		const usergrp = ref<string>('')
+		const salsyn = ref<string>('')
+		const email = ref<string>('')
 
 		const tabStore = useTabStore()
 		const menuStore = useMenuStore()
 
 		function setUserInfo(data: any) {
 			if (!data) return;
-			CMPYCD.value = data.CMPYCD || data.cmpycd || ''
-			USERID.value = String(data.USERID || data.USER_ID || data.userId || data.userid || '').trim()
-			USERNM.value = String(data.USERNM || data.USER_NAME || data.userName || data.usernm || '').trim()
-			INNER_NO.value = String(data.INNER_NO || data.inner_no || '').trim()
-			DEPTCD.value = data.DEPTCD || data.deptcd || ''
-			DEPTNM.value = data.DEPTNM || data.deptnm || ''
-			USERGRP.value = data.USERGRP || data.usergrp || ''
-			SALSYN.value = data.SALSYN || data.salsyn || ''
-			EMAIL.value = data.EMAIL || data.email || '' // 💡 이메일 세팅
-			isAuthenticated.value = !!USERID.value
+			cmpycd.value = data.cmpycd || ''
+			userid.value = String(data.userid || '').trim()
+			usernm.value = String(data.usernm || '').trim()
+			inner_no.value = String(data.inner_no || '').trim()
+			deptcd.value = data.deptcd || ''
+			deptnm.value = data.deptnm || ''
+			usergrp.value = data.usergrp || ''
+			salsyn.value = data.salsyn || ''
+			email.value = data.email || ''
+			isAuthenticated.value = !!userid.value
 		}
 
 		async function checkSession() {
@@ -41,6 +41,8 @@ export const useAuthStore = defineStore(
 				const res = await api.get('/api/comm/session')
 				if (res.data) {
 					setUserInfo(res.data)
+					// 💡 [추가] 새로고침 시에도 메뉴를 다시 불러옵니다.
+					await menuStore.fetchMenus()
 					return true
 				}
 			} catch (e) {
@@ -53,9 +55,9 @@ export const useAuthStore = defineStore(
 		async function login(loginData: any) {
 			try {
 				const res = await api.post('/api/comm/login', {
-					CMPYCD: loginData.CMPYCD,
-					USERID: loginData.USERID,
-					PASSWD: loginData.PASSWD
+					cmpycd: loginData.cmpycd,
+					userid: loginData.userid,
+					passwd: loginData.passwd
 				})
 
 				if (res.status === 200 && res.data) {
@@ -65,7 +67,7 @@ export const useAuthStore = defineStore(
 				}
 			} catch (e: any) {
 				console.error('로그인 실패:', e)
-				throw new Error(e.response?.data || '로그인 중 오류가 발생했습니다.')
+				throw new Error(e.response?.data?.message || '로그인 중 오류가 발생했습니다.')
 			}
 		}
 
@@ -86,21 +88,20 @@ export const useAuthStore = defineStore(
 
 		function resetState() {
 			isAuthenticated.value = false
-			CMPYCD.value = ''
-			USERID.value = ''
-			USERNM.value = ''
-			INNER_NO.value = ''
-			DEPTCD.value = ''
-			DEPTNM.value = ''
-			USERGRP.value = ''
-			SALSYN.value = ''
-			EMAIL.value = ''
+			cmpycd.value = ''
+			userid.value = ''
+			usernm.value = ''
+			inner_no.value = ''
+			deptcd.value = ''
+			deptnm.value = ''
+			usergrp.value = ''
+			salsyn.value = ''
+			email.value = ''
 		}
 
 		return {
 			isAuthenticated,
-			CMPYCD, USERID, USERNM, INNER_NO, DEPTCD, DEPTNM, USERGRP, SALSYN, EMAIL,
-			userId: USERID, userName: USERNM,
+			cmpycd, userid, usernm, inner_no, deptcd, deptnm, usergrp, salsyn, email,
 			login, logout, resetState, checkSession, setUserInfo
 		}
 	},

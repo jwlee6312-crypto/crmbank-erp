@@ -93,22 +93,22 @@
                         <div class="row g-2 flex-grow-1" v-if="SELECTED_ITEM">
                             <div class="col-12 text-start">
                                 <label class="fw-bold text-secondary mb-1" style="font-size: 0.7rem;">응대 결과 <span class="text-danger">*</span></label>
-                                <select v-model="FORM.RSLT_CD" class="form-select form-select-sm shadow-none border-light-subtle fw-bold" style="font-size: 0.75rem;">
+                                <select v-model="FORM.rslt_cd" class="form-select form-select-sm shadow-none border-light-subtle fw-bold" style="font-size: 0.75rem;">
                                     <option value="">결과를 선택하세요</option>
-                                    <option v-for="code in RESULT_CODES" :key="code.CODECD" :value="code.CODECD">{{ code.CODENM }}</option>
+                                    <option v-for="code in RESULT_CODES" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
                                 </select>
                             </div>
 
                             <div class="col-12 text-start">
                                 <label class="fw-bold text-secondary mb-1" style="font-size: 0.7rem;">상담결과내용</label>
-                                <textarea v-model="FORM.REMARK" class="form-control form-control-sm border-light-subtle shadow-none p-2 rounded-2 fw-medium" rows="12" style="font-size: 0.75rem;" placeholder="통화 내용을 상세히 기록하세요."></textarea>
+                                <textarea v-model="FORM.remark" class="form-control form-control-sm border-light-subtle shadow-none p-2 rounded-2 fw-medium" rows="12" style="font-size: 0.75rem;" placeholder="통화 내용을 상세히 기록하세요."></textarea>
                             </div>
 
                             <div class="col-12 text-start">
                                 <label class="fw-bold text-secondary mb-1" style="font-size: 0.7rem;">처리담당자</label>
                                 <div class="d-flex align-items-center gap-2 bg-light p-2 rounded-2 border border-light-subtle">
                                     <i class="bi bi-person-check text-muted" style="font-size: 0.75rem;"></i>
-                                    <span class="fw-bold text-dark" style="font-size: 0.7rem;">{{ FORM.USER_NM }} ({{ FORM.USERID }})</span>
+                                    <span class="fw-bold text-dark" style="font-size: 0.7rem;">{{ FORM.user_nm }} ({{ FORM.userid }})</span>
                                 </div>
                             </div>
 
@@ -145,7 +145,7 @@ const GRID_DATA = ref<any[]>([])
 const SELECTED_ITEM = ref<any>(null)
 const RESULT_CODES = ref<any[]>([])
 const IS_SAVING = ref(false)
-const FORM = reactive({ RSLT_CD: '', REMARK: '', USER_NM: '', USERID: '' })
+const FORM = reactive({ rslt_cd: '', remark: '', user_nm: '', userid: '' })
 const METRICS = reactive<any>({ INBOUND_TOTAL: 0, INBOUND_ANSWERED: 0, INBOUND_ABANDONED: 0 })
 
 const METRIC_CONFIG = {
@@ -171,14 +171,14 @@ const fetch_pending_list = async () => {
 }
 
 const handle_save = async () => {
-    if (!FORM.RSLT_CD) return vAlertError('응대 결과를 선택하세요.');
+    if (!FORM.rslt_cd) return vAlertError('응대 결과를 선택하세요.');
     IS_SAVING.value = true;
     try {
         const payload = {
             INTERACTION_ID: SELECTED_ITEM.value.INTERACTION_ID,
-            RSLT_CD: FORM.RSLT_CD,
-            REMARK: FORM.REMARK,
-            USERID: FORM.USERID
+            rslt_cd: FORM.rslt_cd,
+            remark: FORM.remark,
+            userid: FORM.userid
         };
         await api.post('/api/crm/inbound/interaction/save-response', payload);
         vAlert('처리가 완료되었습니다.');
@@ -204,17 +204,17 @@ onMounted(async () => {
             { title: "고객전화번호", field: "CONTACT_NO", width: 150, hozAlign: "center", cssClass: "fw-bold text-primary small py-1 text-start" },
             { title: "발생시각", field: "START_TIME", width: 160, hozAlign: "center", formatter: (c:any) => `<span style="font-size: 0.72rem;" class="text-dark fw-bold">${c.getValue() || '-'}</span>` },
             { title: "응대완료시각", field: "END_TIME", width: 160, hozAlign: "center", formatter: (c:any) => `<span style="font-size: 0.72rem;" class="text-muted">${c.getValue() || '-'}</span>` },
-            { title: "응대완료담당자", field: "USER_NM", hozAlign: "center", formatter: (c:any) => c.getValue() ? `<span class="badge bg-light text-dark border px-2" style="font-size: 0.65rem;">${c.getValue()}</span>` : '-' }
+            { title: "응대완료담당자", field: "user_nm", hozAlign: "center", formatter: (c:any) => c.getValue() ? `<span class="badge bg-light text-dark border px-2" style="font-size: 0.65rem;">${c.getValue()}</span>` : '-' }
         ]
     });
 
     TABLE_INSTANCE.on("rowClick", (e, row) => {
         const data = row.getData();
         SELECTED_ITEM.value = data;
-        FORM.RSLT_CD = '';
-        FORM.REMARK = '';
-        FORM.USER_NM = authStore.USER_NAME;
-        FORM.USERID = authStore.USER_ID;
+        FORM.rslt_cd = '';
+        FORM.remark = '';
+        FORM.user_nm = authStore.user_name;
+        FORM.userid = authStore.user_id;
     });
 
     fetch_pending_list();

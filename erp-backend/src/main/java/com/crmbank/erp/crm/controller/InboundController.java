@@ -33,8 +33,7 @@ public class InboundController {
     private final GeminiAiService geminiAiService;
 
     /**
-     * 📞 ARS 콜백 요청 로그 기록 (Asterisk System curl 호출용)
-     * payload: {"interaction_id":"CB_${UNIQUEID}", "keyword":"${CALLERID(num)}", "media_type":"callback", "cmpycd":"HAIONNET"}
+     * 📞 ARS 콜백 요청 로그 기록
      */
     @PostMapping("/log-callback")
     public ResponseEntity<Map<String, Object>> logCallback(@RequestBody Map<String, Object> params) {
@@ -43,15 +42,15 @@ public class InboundController {
             
             TotalCallLogDto logDto = TotalCallLogDto.builder()
                     .uniqueid(String.valueOf(params.get("interaction_id")))
-                    .KEYWORD(String.valueOf(params.get("keyword")))
-                    .MEDIA_TYPE(String.valueOf(params.get("media_type")))
-                    .CMPYCD(String.valueOf(params.get("cmpycd")))
-                    .DIRECTION("in")
-                    .START_TIME(LocalDateTime.now())
-                    .CALLBACK_YN("Y")
-                    .CALLBACK_NO(String.valueOf(params.get("keyword")))
-                    .CALLBACK_REQ_TIME(LocalDateTime.now())
-                    .CALLBACK_RETRY_CNT(0)
+                    .keyword(String.valueOf(params.get("keyword")))
+                    .media_type(String.valueOf(params.get("media_type")))
+                    .cmpycd(String.valueOf(params.get("cmpycd")))
+                    .direction("in")
+                    .start_time(LocalDateTime.now())
+                    .callback_yn("Y")
+                    .callback_no(String.valueOf(params.get("keyword")))
+                    .callback_req_time(LocalDateTime.now())
+                    .callback_retry_cnt(0)
                     .build();
 
             inboundService.insertTotalInteractionLog(logDto);
@@ -64,36 +63,37 @@ public class InboundController {
     }
 
     /**
-     * 💡 상담 통합 저장 및 자동 STT/요약 (HGIA010U 전용)
+     * 💡 상담 통합 저장 및 자동 STT/요약
      */
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> save(@RequestBody SaveRequest request, HttpSession session) {
         try {
-            UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-            String cmpycd = user != null ? user.getCMPYCD() : "HAIONNET";
-            String userid = user != null ? user.getUSERID() : "SYSTEM";
-            String deptcd = user != null ? user.getDEPTCD() : "";
+            // 💡 [소문자 표준화] session key: "user_session"
+            UserSession user = (UserSession) session.getAttribute("user_session");
+            String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+            String userid = user != null ? user.getUserid() : "system";
+            String deptcd = user != null ? user.getDeptcd() : "";
             
             CallMstDto dto = request.getDto();
-            dto.setCMPYCD(cmpycd);
-            dto.setCONSULTID(userid);
-            dto.setUPDEMP(userid);
-            dto.setDEPTCD(deptcd);
-            dto.setHAPPYCALL_YN("N");
+            dto.setCmpycd(cmpycd);
+            dto.setConsultid(userid);
+            dto.setUpdemp(userid);
+            dto.setDeptcd(deptcd);
+            dto.setHappycall_yn("N");
             
-            if (dto.getINTERACTION_ID() == null || dto.getINTERACTION_ID().isEmpty()) {
-                dto.setINTERACTION_ID("IN_" + UUID.randomUUID().toString().substring(0, 8));
+            if (dto.getInteraction_id() == null || dto.getInteraction_id().isEmpty()) {
+                dto.setInteraction_id("IN_" + UUID.randomUUID().toString().substring(0, 8));
             }
             
-            dto.setEND_TIME(LocalDateTime.now());
+            dto.setEnd_time(LocalDateTime.now());
 
             if (request.getRecordings() != null && !request.getRecordings().isEmpty()) {
                 String lastFile = request.getRecordings().get(request.getRecordings().size() - 1);
                 String fullPath = "/var/spool/asterisk/monitor/" + lastFile;
                 Map<String, String> aiResult = geminiAiService.analyzeAudio(fullPath);
-                dto.setANS_MENT(aiResult.get("stt"));
-                dto.setAI_SUMMARY(aiResult.get("summary"));
-                dto.setREC_FILE(lastFile);
+                dto.setAns_ment(aiResult.get("stt"));
+                dto.setAi_summary(aiResult.get("summary"));
+                dto.setRec_file(lastFile);
             }
 
             String svcymd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -107,16 +107,11 @@ public class InboundController {
         }
     }
 
-    /**
-     * 🤖 텍스트 기반 AI 요약 (상담 작성 중 호출)
-     */
     @PostMapping("/ai-summarize")
     public Map<String, String> aiSummarize(@RequestBody Map<String, String> params) {
         String trbMent = params.get("trb_ment");
         String ansMent = params.get("ans_ment");
         String chatLog = "문의내용: " + trbMent + "\n답변내용: " + ansMent;
-        
-        log.info("🤖 [AI Summarize] Text analysis requested.");
         String summary = geminiAiService.summarizeText(chatLog);
 
         Map<String, String> result = new HashMap<>();
@@ -142,39 +137,44 @@ public class InboundController {
             @RequestParam String todt,
             @RequestParam(required = false) String custnm,
             HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        String cmpycd = user != null ? user.getCMPYCD() : "HAIONNET";
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
         return inboundService.getStatusList(cmpycd, fromdt, todt, custnm);
     }
 
     @GetMapping("/customer-detail")
     public Map<String, Object> getCustomerDetail(@RequestParam String custcd, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        return inboundService.getCustomerByCustCd(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        return inboundService.getCustomerByCustCd(cmpycd, custcd);
     }
 
     @GetMapping("/item-list")
     public List<Map<String, Object>> getItemList(@RequestParam String custcd, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        return inboundService.getItemList(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        return inboundService.getItemList(cmpycd, custcd);
     }
 
     @GetMapping("/call-history")
     public List<Map<String, Object>> getCallHistory(@RequestParam String custcd, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        return inboundService.getCallHistory(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        return inboundService.getCallHistory(cmpycd, custcd);
     }
 
     @GetMapping("/service-history")
     public List<Map<String, Object>> getServiceHistory(@RequestParam String custcd, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        return inboundService.getServiceHistory(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        return inboundService.getServiceHistory(cmpycd, custcd);
     }
 
     @GetMapping("/settle-history")
     public List<Map<String, Object>> getSettleHistory(@RequestParam String custcd, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        return inboundService.getSettleHistory(user != null ? user.getCMPYCD() : "HAIONNET", custcd);
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        return inboundService.getSettleHistory(cmpycd, custcd);
     }
 
     @Data public static class SaveRequest { private CallMstDto dto; private List<String> recordings; }

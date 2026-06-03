@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsst120s-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -11,8 +11,8 @@
       </div>
       <div class="btn-group-erp d-flex gap-1">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
-        <button class="btn-erp btn-search" @click="searchMaster">조회</button>
-        <button class="btn-erp btn-outline-secondary" @click="printSlip">인쇄</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-outline-secondary" @click="print">인쇄</button>
       </div>
     </div>
 
@@ -27,14 +27,14 @@
                 <th class="required" style="width: 100px;">판매부서</th>
                 <td style="width: 250px;">
                   <div class="input-group input-group-sm" style="width: 220px;">
-                    <input v-model="searchData.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
+                    <input v-model="searchData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchData.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required" style="width: 100px;">판매일자</th>
                 <td>
-                  <input v-model="uiYMD" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                  <input v-model="uiymD" type="date" class="form-control form-control-sm" style="width: 150px;" />
                 </td>
               </tr>
             </tbody>
@@ -47,21 +47,11 @@
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 거래처별 판매/입금 현황</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-12 small opacity-75 text-center">
-          <i class="bi bi-info-circle me-1"></i> 잔액 = 전월이월액 + 당월판매금액 - 당월입금액
-        </div>
-      </div>
-    </div>
-
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
@@ -85,18 +75,18 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+const initymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
 // 1. 상태 관리
 const searchData = reactive({
-  DEPTCD: authStore.DEPTCD,
-  DEPTNM: authStore.DEPTNM,
-  YMD: initYMD.replace(/-/g, '')
+  deptcd: authStore.deptcd,
+  deptnm: authStore.deptnm,
+  ymD: initymd.replace(/-/g, '')
 })
 
-const uiYMD = computed({
-  get: () => formatDateString(searchData.YMD, '-'),
-  set: (v) => searchData.YMD = v.replace(/-/g, '')
+const uiymD = computed({
+  get: () => formatDateString(searchData.ymD, '-'),
+  set: (v) => searchData.ymD = v.replace(/-/g, '')
 })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -112,9 +102,9 @@ const initGrid = () => {
     placeholder: "조회된 데이터가 없습니다.",
     columnDefaults: { headerSort: false },
     columns: [
-      { title: "거 래 처 명", field: "CUSTNM", minWidth: 180, cssClass: "fw-bold border-end" },
+      { title: "거 래 처 명", field: "custnm", minWidth: 200, cssClass: "fw-bold border-end" },
       {
-        title: "전월이월액", field: "DFAMT", width: 110, hozAlign: "right",
+        title: "전월이월액", field: "DFAMT", width: 200, hozAlign: "right",
         formatter: "money", formatterParams: { precision: 0 },
         bottomCalc: "sum", bottomCalcFormatter: "money"
       },
@@ -123,7 +113,7 @@ const initGrid = () => {
         title: "판매현황(VAT포함)",
         columns: [
           {
-            title: "당일판매금액", field: "SDAMT", width: 110, hozAlign: "right",
+            title: "당일판매금액", field: "SDAMT", width: 200, hozAlign: "right",
             formatter: (cell) => {
                 const val = cell.getValue();
                 return val !== 0 ? `<span class="text-primary text-decoration-underline cursor-pointer">${formatNumber(val)}</span>` : "0";
@@ -132,7 +122,7 @@ const initGrid = () => {
             cellClick: (e, cell) => { if(cell.getValue() !== 0) navigateToDetail('SD', cell.getData()) }
           },
           {
-            title: "당월판매금액", field: "SMAMT", width: 110, hozAlign: "right",
+            title: "당월판매금액", field: "SMAMT", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
@@ -143,19 +133,19 @@ const initGrid = () => {
         title: "입 금 현 황",
         columns: [
           {
-            title: "당일입금액", field: "IDAMT", width: 110, hozAlign: "right",
+            title: "당일입금액", field: "IDAMT", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
           {
-            title: "당월입금액", field: "IMAMT", width: 110, hozAlign: "right",
+            title: "당월입금액", field: "IMAMT", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
         ]
       },
       {
-        title: "잔액", field: "JNAMT", width: 120, hozAlign: "right",
+        title: "잔액", field: "Jnamt", width: 200, hozAlign: "right",
         formatter: "money", formatterParams: { precision: 0 },
         cssClass: "bg-light fw-bold text-danger",
         bottomCalc: "sum", bottomCalcFormatter: "money"
@@ -165,13 +155,13 @@ const initGrid = () => {
 }
 
 // 3. 기능 구현
-async function searchMaster() {
-  if (!searchData.DEPTCD) return vAlertError('판매부서를 선택해 주십시요.')
+async function search() {
+  if (!searchData.deptcd) return vAlertError('판매부서를 선택해 주십시요.')
   try {
     const res = await api.post('/api/hsst/HSST_120S_STR', {
-      CMPYCD: authStore.CMPYCD,
-      DEPTCD: searchData.DEPTCD,
-      YMD: searchData.YMD
+      cmpycd: authStore.cmpycd,
+      deptcd: searchData.deptcd,
+      ymD: searchData.ymD
     })
     if (grid.value) {
       const mappedData = res.data.map((i: any) => {
@@ -180,7 +170,7 @@ async function searchMaster() {
           const im = Number(i.IMAMT) || 0;
           return {
               ...i,
-              JNAMT: df + sm - im // ASP 계산 로직: 전월이월 + 당월판매 - 당월입금
+              Jnamt: df + sm - im // ASP 계산 로직: 전월이월 + 당월판매 - 당월입금
           }
       })
       grid.value.setData(mappedData)
@@ -191,20 +181,20 @@ async function searchMaster() {
 
 const navigateToDetail = (type: string, row: any) => {
     // ASP 소스의 링크 로직 구현 (router 이용)
-    // 예: HSST_140S.asp?FYMD=...
-    console.log("Navigate to detail", type, row.CUSTCD);
+    // 예: HSST_140S.asp?fymd=...
+    console.log("Navigate to detail", type, row.custcd);
     // router.push({ name: 'SalesDetail', query: { ... } });
 }
 
-function printSlip() {
-  window.open(`/api/report/HSST_120P?DEPTCD=${searchData.DEPTCD}&YMD=${searchData.YMD}&PRTGU=Print`, 'print', 'width=700,height=650')
+function print() {
+  window.open(`/api/report/HSST_120P?deptcd=${searchData.deptcd}&ymD=${searchData.ymD}&PRTGU=Print`, 'print', 'width=700,height=650')
 }
 
 function initialize() {
   resetForm(searchData)
-  searchData.YMD = initYMD.replace(/-/g, '')
-  searchData.DEPTCD = authStore.DEPTCD
-  searchData.DEPTNM = authStore.DEPTNM
+  searchData.ymD = initymd.replace(/-/g, '')
+  searchData.deptcd = authStore.deptcd
+  searchData.deptnm = authStore.deptnm
   grid.value?.clearData()
 }
 
@@ -217,15 +207,15 @@ function openHelp(type: string) {
     Object.assign(modalProps, {
       title: '부서 선택',
       path: '/api/ha00/HA00_00P_STR',
-      defaultField: 'DEPTNM',
-      data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD, LIMITOFFSET: 0, LIMITROWS: 20 },
+      defaultField: 'deptnm',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
       columns: [
-        { title: '코드', field: 'DEPTCD', width: 80 },
-        { title: '부서명', field: 'DEPTNM', width: 180 }
+        { title: '코드', field: 'deptcd', width: 80 },
+        { title: '부서명', field: 'deptnm', width: 180 }
       ],
       onConfirm: (data: any) => {
-        searchData.DEPTCD = data.DEPTCD
-        searchData.DEPTNM = data.DEPTNM
+        searchData.deptcd = data.deptcd
+        searchData.deptnm = data.deptnm
       }
     })
     modalVisible.value = true
@@ -238,23 +228,7 @@ const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) ||
 onMounted(() => {
   nextTick(() => {
     initGrid()
-    searchMaster()
+    search()
   })
 })
 </script>
-
-<style scoped>
-.hsst120s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: auto !important; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 1% !important; white-space: nowrap !important; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 10px 15px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 8px 12px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-
-/* Tabulator 다단 헤더 스타일 조정 */
-:deep(.tabulator-col-group) { border-right: 1px solid #dee2e6 !important; border-bottom: 1px solid #dee2e6 !important; }
-:deep(.tabulator-col) { border-right: 1px solid #dee2e6 !important; }
-</style>

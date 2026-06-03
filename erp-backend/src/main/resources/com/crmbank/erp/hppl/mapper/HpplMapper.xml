@@ -3,15 +3,15 @@
 <mapper namespace="com.crmbank.erp.hppl.mapper.HpplMapper">
 
     <select id="HPPL_100U_STR" resultType="map">
-        EXEC HPPL_100U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{YYMMDD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{PLNQTY}, #{UPDEMP}
+        exec hppl_100u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{yymmdd}, #{itemcd}, #{itsize}, #{unit}, #{plnqty}, #{updemp}
     </select>
 
     <select id="HPPL_110S_STR" resultType="map">
-        EXEC HPPL_110S_STR #{CMPYCD}, #{YYMMDD}
+        exec hppl_110s_str #{cmpycd}, #{yymmdd}
     </select>
 
     <select id="HPPL_120U_STR" resultType="map">
-        EXEC HPPL_120U_STR #{ACTKIND}, #{CMPYCD}, #{LINECD}, #{PROGCD}, #{YYMMDD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{PLNQTY}, #{UPDEMP}
+        exec hppl_120u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{yymmdd}, #{itemcd}, #{itsize}, #{unit}, #{plnqty}, #{updemp}
     </select>
 
 </mapper>

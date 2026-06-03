@@ -33,10 +33,10 @@ public class OutboundService {
     // 2. 캠페인 마스터 관리
     @Transactional
     public void saveCampMst(CampMstDto dto) {
-        if (dto.getCAMP_NO() == null || dto.getCAMP_NO().trim().isEmpty()) {
+        if (dto.getCamp_no() == null || dto.getCamp_no().trim().isEmpty()) {
             Map<String, Object> p = new HashMap<>();
-            p.put("CMPYCD", dto.getCMPYCD());
-            dto.setCAMP_NO(outboundMapper.generateCampNo(p));
+            p.put("cmpycd", dto.getCmpycd());
+            dto.setCamp_no(outboundMapper.generateCampNo(p));
             outboundMapper.insertCampMst(dto);
         } else {
             outboundMapper.updateCampMst(dto);
@@ -62,30 +62,32 @@ public class OutboundService {
     }
 
     @Transactional
-    public void saveSurveyTransaction(Map<String, Object> payload, String CMPYCD, String USERID) {
-        Map<String, Object> mstMap = (Map<String, Object>) payload.get("MST");
-        List<Map<String, Object>> dtlList = (List<Map<String, Object>>) payload.get("DTL");
+    public void saveSurveyTransaction(Map<String, Object> payload, String cmpycd, String userid) {
+        Map<String, Object> mstMap = (Map<String, Object>) payload.get("mst");
+        List<Map<String, Object>> dtlList = (List<Map<String, Object>>) payload.get("dtl");
 
-        String SURV_NO = (String) mstMap.get("SURV_NO");
+        if (mstMap == null) return;
+
+        String survNo = (String) mstMap.get("surv_no");
         SurvMstDto mstDto = objectMapper.convertValue(mstMap, SurvMstDto.class);
-        mstDto.setCMPYCD(CMPYCD);
-        mstDto.setUPDEMP(USERID);
+        mstDto.setCmpycd(cmpycd);
+        mstDto.setUpdemp(userid);
 
-        if (SURV_NO == null || SURV_NO.isEmpty()) {
-            SURV_NO = outboundMapper.generateSurvNo(Map.of("CMPYCD", CMPYCD));
-            mstDto.setSURV_NO(SURV_NO);
+        if (survNo == null || survNo.isEmpty()) {
+            survNo = outboundMapper.generateSurvNo(Map.of("cmpycd", cmpycd));
+            mstDto.setSurv_no(survNo);
             outboundMapper.insertSurvMst(mstDto);
         } else {
             outboundMapper.updateSurvMst(mstDto);
         }
 
-        outboundMapper.deleteSurvDtlAll(Map.of("CMPYCD", CMPYCD, "SURV_NO", SURV_NO));
+        outboundMapper.deleteSurvDtlAll(Map.of("cmpycd", cmpycd, "surv_no", survNo));
         if (dtlList != null) {
             for (Map<String, Object> dtl : dtlList) {
                 SurvDtlDto dtlDto = objectMapper.convertValue(dtl, SurvDtlDto.class);
-                dtlDto.setCMPYCD(CMPYCD);
-                dtlDto.setSURV_NO(SURV_NO);
-                dtlDto.setUPDEMP(USERID);
+                dtlDto.setCmpycd(cmpycd);
+                dtlDto.setSurv_no(survNo);
+                dtlDto.setUpdemp(userid);
                 outboundMapper.insertSurvDtl(dtlDto);
             }
         }
@@ -105,13 +107,13 @@ public class OutboundService {
     @Transactional
     public void saveMapping(Map<String, Object> payload) {
         outboundMapper.deleteCampSurveyAll(payload);
-        List<Map<String, Object>> questions = (List<Map<String, Object>>) payload.get("QUESTIONS");
+        List<Map<String, Object>> questions = (List<Map<String, Object>>) payload.get("questions");
         if (questions != null) {
             for (Map<String, Object> q : questions) {
                 Map<String, Object> p = new HashMap<>(payload);
-                p.put("SURV_NO", q.get("SURV_NO"));
-                p.put("SORTCD", q.get("SORTCD"));
-                p.put("USEYN", "Y");
+                p.put("surv_no", q.get("surv_no"));
+                p.put("sortcd", q.get("sortcd"));
+                p.put("useyn", "y");
                 outboundMapper.insertCampSurvey(p);
             }
         }
@@ -145,8 +147,8 @@ public class OutboundService {
         if (list != null) {
             for (Map<String, Object> item : list) {
                 CampAttrMapperDto dto = objectMapper.convertValue(item, CampAttrMapperDto.class);
-                dto.setCMPYCD((String) params.get("CMPYCD"));
-                dto.setSURV_GB((String) params.get("SURV_GB"));
+                dto.setCmpycd((String) params.get("cmpycd"));
+                dto.setSurv_gb((String) params.get("surv_gb"));
                 outboundMapper.insertAttrMapper(dto);
             }
         }
@@ -156,7 +158,7 @@ public class OutboundService {
     public Map<String, Object> getCampStats(Map<String, Object> params) {
         Map<String, Object> stats = outboundMapper.selectCampCallStats(params);
         if (stats == null) stats = new HashMap<>();
-        stats.put("DETAILS", outboundMapper.selectCampDetailStats(params));
+        stats.put("details", outboundMapper.selectCampDetailStats(params));
         return stats;
     }
 
@@ -173,25 +175,25 @@ public class OutboundService {
     }
 
     /**
-     * 💡 [최종] 캠페인 상담 통합 저장 (에러 보정 및 안정화)
+     * 💡 [최종] 캠페인 상담 통합 저장 (소문자 표준화 적용)
      */
     @Transactional
     public void saveConsolidated(Map<String, Object> payload) {
-        String CMPYCD = (String) payload.get("CMPYCD");
-        String CAMP_NO = (String) payload.get("CAMP_NO");
-        Object callSeqObj = payload.get("CALL_SEQ");
-        Integer CALL_SEQ = callSeqObj instanceof Integer ? (Integer) callSeqObj : Integer.parseInt(String.valueOf(callSeqObj));
-        String RSLT_CD = (String) payload.get("RSLT_CD");
-        String REMARK = (String) (payload.get("MEMO") != null ? payload.get("MEMO") : payload.get("REMARK"));
-        String USERID = (String) payload.get("USERID");
-        String REC_FILE = (String) payload.get("REC_FILE");
-        String CHAT_HISTORY = (String) payload.get("CHAT_HISTORY");
-        String MEDIA_TYPE = (String) payload.get("MEDIA_TYPE");
-        String LINE_NUM = (String) payload.get("LINE_NUM");
+        String cmpycd = (String) payload.get("cmpycd");
+        String campNo = (String) payload.get("camp_no");
+        Object callSeqObj = payload.get("call_seq");
+        Integer callSeq = callSeqObj instanceof Integer ? (Integer) callSeqObj : Integer.parseInt(String.valueOf(callSeqObj));
+        String rsltCd = (String) payload.get("rslt_cd");
+        String remark = (String) (payload.get("memo") != null ? payload.get("memo") : payload.get("remark"));
+        String userid = (String) payload.get("userid");
+        String recFile = (String) payload.get("rec_file");
+        String chatHistory = (String) payload.get("chat_history");
+        String mediaType = (String) payload.get("media_type");
+        String lineNum = (String) payload.get("line_num");
 
         // 시간 파싱 (String -> LocalDateTime)
-        String startTimeStr = (String) payload.get("START_TIME");
-        String endTimeStr = (String) payload.get("END_TIME");
+        String startTimeStr = (String) payload.get("start_time");
+        String endTimeStr = (String) payload.get("end_time");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         
         LocalDateTime startDtime = (startTimeStr != null && !startTimeStr.isEmpty()) ? LocalDateTime.parse(startTimeStr, formatter) : LocalDateTime.now();
@@ -199,74 +201,74 @@ public class OutboundService {
 
         // 1. 고객 정보 조회 (키워드 추출용)
         Map<String, Object> q = new HashMap<>();
-        q.put("CMPYCD", CMPYCD); q.put("CAMP_NO", CAMP_NO); q.put("CALL_SEQ", CALL_SEQ);
+        q.put("cmpycd", cmpycd); q.put("camp_no", campNo); q.put("call_seq", callSeq);
         List<Map<String, Object>> customers = outboundMapper.selectCampCallList(q);
         Map<String, Object> customer = (customers != null && !customers.isEmpty()) ? customers.get(0) : new HashMap<>();
-        String CUST_TEL = (String) customer.get("TEL_NO");
-        String CUST_EMAIL = (String) customer.get("EMAIL");
+        String custTel = (String) customer.get("tel_no");
+        String custEmail = (String) customer.get("email");
 
-        String interactionId = "OUT_" + UUID.randomUUID().toString().substring(0, 8);
+        String interactionId = "out_" + UUID.randomUUID().toString().substring(0, 8);
 
         // 2. 통합 AI 분석 및 요약 적용
-        String fullPath = (REC_FILE != null && !REC_FILE.isEmpty()) ? "/var/spool/asterisk/monitor/" + REC_FILE : null;
-        Map<String, String> aiResult = geminiAiService.analyze(CHAT_HISTORY, fullPath);
+        String fullPath = (recFile != null && !recFile.isEmpty()) ? "/var/spool/asterisk/monitor/" + recFile : null;
+        Map<String, String> aiResult = geminiAiService.analyze(chatHistory, fullPath);
         
         String chatLog = aiResult.get("stt");
         String aiSummary = aiResult.get("summary");
 
-        // 3. 상담 결과 마스터 저장 (DTO 필드명 매핑)
+        // 3. 상담 결과 마스터 저장 (소문자 DTO 필드 매핑)
         CampRsltMstDto mstDto = CampRsltMstDto.builder()
-                .CMPYCD(CMPYCD).CAMP_NO(CAMP_NO).CALL_SEQ(CALL_SEQ).RSLT_CD(RSLT_CD)
-                .INTERACTION_ID(interactionId).REMARK(REMARK).USERID(USERID)
-                .CHAT_LOG(chatLog).AI_SUMMARY(aiSummary).REC_FILE(REC_FILE)
-                .START_DTIME(startDtime).END_DTIME(endDtime).UPDEMP(USERID)
-                .LINE_NUM(LINE_NUM)
+                .cmpycd(cmpycd).camp_no(campNo).call_seq(callSeq).rslt_cd(rsltCd)
+                .interaction_id(interactionId).remark(remark).userid(userid)
+                .chat_log(chatLog).ai_summary(aiSummary).rec_file(recFile)
+                .start_dtime(startDtime).end_dtime(endDtime).updemp(userid)
+                .line_num(lineNum)
                 .build();
         outboundMapper.insertCampaignRsltMst(mstDto);
 
         // 4. 설문 답변 저장
-        List<Map<String, Object>> surveys = (List<Map<String, Object>>) payload.get("SURVEYS");
+        List<Map<String, Object>> surveys = (List<Map<String, Object>>) payload.get("surveys");
         if (surveys != null) {
             for (Map<String, Object> s : surveys) {
                 CampRsltDtlDto dtlDto = CampRsltDtlDto.builder()
-                        .CMPYCD(CMPYCD).RSLT_NO(mstDto.getRSLT_NO()).SURV_NO((String) s.get("SURV_NO"))
-                        .ANS_NO((String) s.get("ANS_NO")).REMARK((String) s.get("REMARK"))
-                        .POINT(s.get("POINT") != null ? new java.math.BigDecimal(s.get("POINT").toString()) : java.math.BigDecimal.ZERO)
-                        .UPDEMP(USERID).build();
+                        .cmpycd(cmpycd).rslt_no(mstDto.getRslt_no()).surv_no((String) s.get("surv_no"))
+                        .ans_no((String) s.get("ans_no")).remark((String) s.get("remark"))
+                        .point(s.get("point") != null ? new java.math.BigDecimal(s.get("point").toString()) : java.math.BigDecimal.ZERO)
+                        .updemp(userid).build();
                 outboundMapper.insertCampaignRsltDtl(dtlDto);
             }
         }
 
         // 5. 통합 히스토리 로그 저장
         Map<String, Object> interLog = new HashMap<>();
-        interLog.put("INTERACTION_ID", interactionId);
-        interLog.put("CMPYCD", CMPYCD);
-        interLog.put("DIRECTION", "out");
-        interLog.put("USERID", USERID);
-        interLog.put("RESULT_CD", RSLT_CD);
-        interLog.put("REC_FILE", REC_FILE);
-        interLog.put("START_TIME", startDtime);
-        interLog.put("END_TIME", endDtime);
+        interLog.put("interaction_id", interactionId);
+        interLog.put("cmpycd", cmpycd);
+        interLog.put("direction", "out");
+        interLog.put("userid", userid);
+        interLog.put("result_cd", rsltCd);
+        interLog.put("rec_file", recFile);
+        interLog.put("start_time", startDtime);
+        interLog.put("end_time", endDtime);
 
-        if ("chat".equalsIgnoreCase(MEDIA_TYPE)) {
-            interLog.put("MEDIA_TYPE", "chat");
-            interLog.put("KEYWORD", CUST_EMAIL);
-            interLog.put("SRC_NO", "SYSTEM");
-            interLog.put("DST_NO", CUST_EMAIL);
+        if ("chat".equalsIgnoreCase(mediaType)) {
+            interLog.put("media_type", "chat");
+            interLog.put("keyword", custEmail);
+            interLog.put("src_no", "system");
+            interLog.put("dst_no", custEmail);
         } else {
-            interLog.put("MEDIA_TYPE", "call");
-            interLog.put("KEYWORD", CUST_TEL);
-            interLog.put("SRC_NO", USERID);
-            interLog.put("DST_NO", CUST_TEL);
+            interLog.put("media_type", "call");
+            interLog.put("keyword", custTel);
+            interLog.put("src_no", userid);
+            interLog.put("dst_no", custTel);
         }
         outboundMapper.insertTotalInteractionLog(interLog);
 
         // 6. 발신 리스트 상태 업데이트
         Map<String, Object> updateParams = new HashMap<>();
-        updateParams.put("CMPYCD", CMPYCD);
-        updateParams.put("CALL_SEQ", CALL_SEQ);
-        updateParams.put("RSLT_CD", RSLT_CD);
-        updateParams.put("STATUS", "030");
+        updateParams.put("cmpycd", cmpycd);
+        updateParams.put("call_seq", callSeq);
+        updateParams.put("rslt_cd", rsltCd);
+        updateParams.put("status", "030");
         outboundMapper.updateCallListStatus(updateParams);
     }
 }

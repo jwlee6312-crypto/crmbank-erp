@@ -5,21 +5,23 @@ import { useAuthStore } from '@/stores/authStore'
 import { checkVer } from '@/composables/useVersionCheck'
 
 /**
- * 💡 모든 전송 데이터(Body, Params)의 문자열 앞뒤 공백을 제거하는 유틸리티
+ * 💡 객체의 키를 소문자로 변환하고 DB 별칭(A.)을 완벽히 제거하는 유틸리티
+ * 원칙: 모든 프론트엔드 코드는 소문자 키로 통일한다.
+ * 문제 해결: DB가 LINECD 혹은 A.LINECD로 주더라도 JS에서는 linecd로 접근하게 함.
  */
-const deepTrim = (obj: any): any => {
-	if (obj === null || typeof obj !== 'object') {
-		return typeof obj === 'string' ? obj.trim() : obj
-	}
-
-	if (Array.isArray(obj)) {
-		return obj.map((v) => deepTrim(v))
-	}
-
+const standardizeKeys = (obj: any): any => {
+	if (obj === null || typeof obj !== 'object' || obj instanceof FormData) return obj
+	if (Array.isArray(obj)) return obj.map(standardizeKeys)
 	const newObj: any = {}
 	for (const key in obj) {
 		if (Object.prototype.hasOwnProperty.call(obj, key)) {
-			newObj[key] = deepTrim(obj[key])
+			// 1. 소문자화 (A.LINECD -> a.linecd)
+			let newKey = key.toLowerCase()
+			// 2. 별칭 제거 (a.linecd -> linecd)
+			if (newKey.includes('.')) {
+				newKey = newKey.split('.').pop() || newKey
+			}
+			newObj[newKey] = standardizeKeys(obj[key])
 		}
 	}
 	return newObj
@@ -33,7 +35,6 @@ export const api = axios.create({
 
 api.interceptors.request.use(
 	async (config) => {
-		// 1. 버전 체크
 		if (config.url?.includes('version.json')) return config
 		const ok = await checkVer()
 		if (!ok) {
@@ -43,39 +44,40 @@ api.interceptors.request.use(
 			await router.push('/auth/login')
 			return Promise.reject(new Error('APP_VERSION_CHANGED'))
 		}
-
-		// 2. 💡 모든 데이터(JSON Body, Query Params) 자동 Trim 처리 (백엔드 Truncation 에러 방지)
-		if (config.data && !(config.data instanceof FormData)) {
-			config.data = deepTrim(config.data)
-		}
-		if (config.params) {
-			config.params = deepTrim(config.params)
-		}
-
+		// 보낼 때 키 소문자 정규화
+		if (config.data && !(config.data instanceof FormData)) config.data = standardizeKeys(config.data)
+		if (config.params) config.params = standardizeKeys(config.params)
 		return config
 	},
 	(error) => Promise.reject(error)
 )
 
 api.interceptors.response.use(
-	(response) => response,
+	(response) => {
+		const resData = response.data
+		let content = resData
+
+		/**
+		 * 🚀 [전역 표준화 로직]
+		 * 어떤 형태의 응답이 오더라도 최종적으로는 "소문자 알맹이"만 반환한다.
+		 */
+
+		// 1. ApiResponse 껍데기 제거 로직 ({ status, data, message } 구조인 경우)
+		if (resData && typeof resData === 'object' && 'status' in resData && 'data' in resData) {
+			content = resData.data
+		}
+
+		// 2. 모든 데이터의 키를 소문자로 변환하고 별칭 제거 (A.LINECD -> linecd)
+		const finalData = standardizeKeys(content)
+
+		// 🚀 [결과] 이제 모든 Vue 컴포넌트에서는 res.data를 "알맹이 데이터"로 즉시 사용 가능
+		return { ...response, data: finalData }
+	},
 	async (error) => {
-		const status = error.response?.status
-		const configUrl = error.config?.url || ''
-
-		if (status === 401) {
+		if (error.response?.status === 401) {
 			const authStore = useAuthStore()
-
-			// 💡 [확인사살] 세션 만료 메시지 표시
-			if (!configUrl.includes('/comm/session')) {
-				alert('세션이 만료되었습니다. 다시 로그인해 주십시오.')
-			}
-
-			authStore.resetState()
-			sessionStorage.clear()
-			if (!router.currentRoute.value.path.includes('/login')) {
-				await router.push('/auth/login')
-			}
+			authStore.resetState(); sessionStorage.clear()
+			if (!router.currentRoute.value.path.includes('/login')) await router.push('/auth/login')
 		}
 		return Promise.reject(error)
 	}

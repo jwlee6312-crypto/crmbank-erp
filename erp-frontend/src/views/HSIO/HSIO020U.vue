@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio020u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -14,7 +14,7 @@
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchMaster">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
-        <button class="btn-erp btn-danger" @click="deleteRequest" :disabled="!masterData.REQNO || masterData.REQNO === '0000'">삭제</button>
+        <button class="btn-erp btn-danger" @click="deleteRequest" :disabled="!masterData.reqno || masterData.reqno === '0000'">삭제</button>
       </div>
     </div>
 
@@ -24,16 +24,16 @@
         <div class="d-flex align-items-center gap-2">
           <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 요청부서:</span>
           <div class="input-group input-group-sm" style="width: 250px;">
-            <input v-model="searchParam.DEPTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-            <input v-model="searchParam.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="fetchMaster" />
+            <input v-model="searchParam.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+            <input v-model="searchParam.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="fetchMaster" />
             <button class="btn btn-outline-secondary" @click="openHelp('S_DEPT')"><i class="bi bi-search"></i></button>
           </div>
         </div>
         <div class="d-flex align-items-center gap-2">
           <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 요청번호:</span>
           <div class="d-flex align-items-center gap-1">
-            <input v-model="searchParam.REQYM" type="month" class="form-control form-control-sm text-center" style="width: 130px;" />
-            <input v-model="searchParam.REQNO" type="text" class="form-control form-control-sm text-center" placeholder="0000" style="width: 60px;" @keyup.enter="fetchMaster" />
+            <input v-model="searchParam.reqym" type="month" class="form-control form-control-sm text-center" style="width: 130px;" />
+            <input v-model="searchParam.reqno" type="text" class="form-control form-control-sm text-center" placeholder="0000" style="width: 60px;" @keyup.enter="fetchMaster" />
             <div class="btn-group btn-group-sm ms-1">
               <button class="btn btn-outline-secondary py-0 px-1"><i class="bi bi-chevron-left"></i></button>
               <button class="btn btn-outline-secondary py-0 px-1"><i class="bi bi-chevron-right"></i></button>
@@ -60,21 +60,21 @@
                   <th class="required">요청부서</th>
                   <td>
                     <div class="input-group input-group-sm w-100">
-                      <input v-model="masterData.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                      <input v-model="masterData.DEPTNM" type="text" class="form-control" @keyup.enter="openHelp('DEPT')" />
+                      <input v-model="masterData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                      <input v-model="masterData.deptnm" type="text" class="form-control" @keyup.enter="openHelp('DEPT')" />
                       <button class="btn btn-outline-secondary" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
                     </div>
                   </td>
                   <th class="required">요청번호</th>
                   <td>
                     <div class="d-flex align-items-center gap-1 w-100">
-                      <input v-model="uiREQYM" type="month" class="form-control form-control-sm text-center fw-bold bg-light" readonly style="flex: 2;" />
-                      <input v-model="masterData.REQNO" type="text" class="form-control form-control-sm text-center fw-bold text-primary bg-light" style="flex: 1;" readonly />
+                      <input v-model="reqym" type="month" class="form-control form-control-sm text-center fw-bold bg-light" readonly style="flex: 2;" />
+                      <input v-model="masterData.reqno" type="text" class="form-control form-control-sm text-center fw-bold text-primary bg-light" style="flex: 1;" readonly />
                     </div>
                   </td>
                   <th class="required">요청일자</th>
                   <td>
-                    <input v-model="uiREQYMD" type="date" class="form-control form-control-sm w-100" />
+                    <input v-model="reqymd" type="date" class="form-control form-control-sm w-100" />
                   </td>
                 </tr>
                 <tr>
@@ -86,14 +86,14 @@
                   </td>
                   <th class="required">입고요청일</th>
                   <td>
-                    <input v-model="uiINYMD" type="date" class="form-control form-control-sm w-100" />
+                    <input v-model="inymd" type="date" class="form-control form-control-sm w-100" />
                   </td>
                   <th class="required">담&nbsp;&nbsp;당&nbsp;&nbsp;자</th>
                   <td>
-                    <select v-model="masterData.USERID" class="form-select form-select-sm w-100">
+                    <select v-model="masterData.userid" class="form-select form-select-sm w-100">
                       <option value="">-- 선택 --</option>
-                      <option v-for="item in empOptions" :key="item.USERID" :value="item.USERID">
-                        {{ item.USERNM }}
+                      <option v-for="item in empOptions" :key="item.userid" :value="item.userid">
+                        {{ item.usernm }}
                       </option>
                     </select>
                   </td>
@@ -112,21 +112,12 @@
             <i class="bi bi-plus-circle me-1"></i> 행추가
           </button>
         </div>
-        <div class="flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
 
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-3 small">분석 품목: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="fs-5 ms-2 fw-light">총 요청액: <span class="fw-bold text-white ms-2">{{ formatNumber(amtTotal) }}</span> 원</span>
-        </div>
-      </div>
-    </div>
 
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
@@ -149,24 +140,24 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date();
-const initYM = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-const initYMD = `${initYM}${String(now.getDate()).padStart(2, '0')}`;
+const initym = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+const initymd = `${initym}${String(now.getDate()).padStart(2, '0')}`;
 
-const searchParam = reactive({ DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, REQYM: initYM, REQNO: '' })
+const searchParam = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, reqym: initym, reqno: '' })
 const masterData = reactive<any>({
-  ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, REQYM: initYM, REQNO: '0000',
-  REQYMD: initYMD, INYMD: initYMD, DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-  REMARK: '', ASGBN: 'Y', USERID: String(authStore.USERID || '').trim()
+  actkind: 'S0', cmpycd: authStore.cmpycd, reqym: initym, reqno: '0000',
+  reqymd: initymd, inymd: initymd, deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+  remark: '', asgbn: 'Y', userid: String(authStore.userid || '').trim()
 })
 
-const uiREQYM = computed({ get: () => masterData.REQYM ? `${masterData.REQYM.substring(0, 4)}-${masterData.REQYM.substring(4, 6)}` : '', set: (v) => masterData.REQYM = v.replace('-', '') })
-const uiREQYMD = computed({ get: () => masterData.REQYMD ? `${masterData.REQYMD.substring(0, 4)}-${masterData.REQYMD.substring(4, 6)}-${masterData.REQYMD.substring(6, 8)}` : '', set: (v) => masterData.REQYMD = v.replace(/-/g, '') })
-const uiINYMD = computed({ get: () => masterData.INYMD ? `${masterData.INYMD.substring(0, 4)}-${masterData.INYMD.substring(4, 6)}-${masterData.INYMD.substring(6, 8)}` : '', set: (v) => masterData.INYMD = v.replace(/-/g, '') })
+const reqym = computed({ get: () => masterData.reqym ? `${masterData.reqym.substring(0, 4)}-${masterData.reqym.substring(4, 6)}` : '', set: (v) => masterData.reqym = v.replace('-', '') })
+const reqymd = computed({ get: () => masterData.reqymd ? `${masterData.reqymd.substring(0, 4)}-${masterData.reqymd.substring(4, 6)}-${masterData.reqymd.substring(6, 8)}` : '', set: (v) => masterData.reqymd = v.replace(/-/g, '') })
+const inymd = computed({ get: () => masterData.inymd ? `${masterData.inymd.substring(0, 4)}-${masterData.inymd.substring(4, 6)}-${masterData.inymd.substring(6, 8)}` : '', set: (v) => masterData.inymd = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null);
 const grid = ref<Tabulator | null>(null);
 const activeItemCount = ref(0);
-const amtTotal = ref(0);
+const amttotal = ref(0);
 const empOptions = ref<any[]>([])
 
 const initGrid = () => {
@@ -176,27 +167,27 @@ const initGrid = () => {
     columnDefaults: { minWidth: 90, headerHozAlign: 'center' },
     columns: [
       { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
-      { title: "품목명", field: "ITEMNM", minWidth: 200, widthGrow: 1, headerSort: false, cssClass: "fw-bold" },
-      { title: "규격", field: "ITSIZE", width: 120, headerSort: false },
-      { title: "단위", field: "UNIT", width: 60, hozAlign: "center", headerSort: false },
-      { title: "소요량", field: "NEEDQTY", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "현재고", field: "STOCK", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary" },
-      { title: "안전재고", field: "SAFESTOCK", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "미입고", field: "UNINQTY", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger" },
-      { title: "요청수량", field: "REQQTY", width: 90, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-yellow fw-bold" },
-      { title: "구매단가", field: "IMPRICE", width: 100, hozAlign: "right", editor: "number", formatter: "money" },
-      { title: "금액", field: "REQAMT", width: 110, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
-      { title: "거래처명", field: "CUSTNM", width: 150 },
-      { title: "발주번호", field: "BALNO", width: 100, hozAlign: "center", cssClass: "small text-muted" },
+      { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, headerSort: false, cssClass: "fw-bold" },
+      { title: "규격", field: "itsize", width: 120, headerSort: false },
+      { title: "단위", field: "unit", width: 60, hozAlign: "center", headerSort: false },
+      { title: "소요량", field: "soqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "현재고", field: "stkqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary" },
+      { title: "안전재고", field: "stock", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "미입고", field: "nonqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger" },
+      { title: "요청수량", field: "reqqty", width: 90, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-yellow fw-bold" },
+      { title: "구매단가", field: "imprice", width: 100, hozAlign: "right", editor: "number", formatter: "money" },
+      { title: "금액", field: "reqamt", width: 110, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
+      { title: "거래처명", field: "custnm", width: 150 },
+      { title: "발주번호", field: "balno", width: 100, hozAlign: "center", cssClass: "small text-muted" },
       { title: "", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger cursor-pointer'></i>", cellClick: (e, c) => { c.getRow().delete(); updateTotals() } }
     ]
   });
 
   grid.value.on("cellEdited", (cell: any) => {
     const row = cell.getRow(); const d = row.getData();
-    if (['REQQTY', 'IMPRICE'].includes(cell.getField())) {
-      const amt = Math.floor((Number(d.REQQTY) || 0) * (Number(d.IMPRICE) || 0));
-      row.update({ REQAMT: amt, UPKIND: d.UPKIND === 'A' ? 'A' : 'U' });
+    if (['reqqty', 'IMprice'].includes(cell.getField())) {
+      const amt = Math.floor((Number(d.reqqty) || 0) * (Number(d.IMprice) || 0));
+      row.update({ reqamt: amt, upkind: d.upkind === 'A' ? 'A' : 'U' });
     }
     updateTotals();
   });
@@ -206,16 +197,16 @@ const updateTotals = () => {
   if (!grid.value) return;
   const data = grid.value.getData();
   activeItemCount.value = data.length;
-  amtTotal.value = data.reduce((acc, i) => acc + (Number(i.REQAMT) || 0), 0);
+  amttotal.value = data.reduce((acc, i) => acc + (Number(i.reqamt) || 0), 0);
 }
 
 const modalVisible = ref(false);
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 async function fetchMaster() {
-  if (!searchParam.REQYM || !searchParam.REQNO) return vAlertError('조회할 요청번호를 입력하세요.');
+  if (!searchParam.reqym || !searchParam.reqno) return vAlertError('조회할 요청번호를 입력하세요.');
   try {
-    const res = await api.post('/api/hsio/HSIO_020U_STR', { ...searchParam, ACTKIND: 'S0', CMPYCD: authStore.CMPYCD });
+    const res = await api.post('/api/hsio/HSIO_020U_STR', { ...searchParam, actkind: 'S0', cmpycd: authStore.cmpycd });
     if (res.data?.length) {
       Object.assign(masterData, res.data[0]);
       fetchDetail();
@@ -225,38 +216,38 @@ async function fetchMaster() {
 
 async function fetchDetail() {
   try {
-    const res = await api.post('/api/hsio/HSIO_021U_STR', { ...masterData, ACTKIND: 'S0' });
+    const res = await api.post('/api/hsio/HSIO_021U_STR', { ...masterData, actkind: 'S0' });
     if (grid.value) { grid.value.setData(res.data); setTimeout(updateTotals, 100); }
   } catch (e) { vAlertError('상세 로드 실패') }
 }
 
 async function handleImportAnalysis() {
-  if (!masterData.DEPTCD) return vAlertError('요청부서를 먼저 선택하세요.');
+  if (!masterData.deptcd) return vAlertError('요청부서를 먼저 선택하세요.');
   vAlert('소요량 데이터를 분석하여 가져옵니다...');
   try {
-    const res = await api.post('/api/hsio/HSIO_020U_STR', { ...masterData, ACTKIND: 'S1' });
+    const res = await api.post('/api/hsio/HSIO_020U_STR', { ...masterData, actkind: 'S1' });
     if (grid.value && res.data) {
-      grid.value.setData(res.data.map((i: any) => ({ ...i, UPKIND: 'A' })));
+      grid.value.setData(res.data.map((i: any) => ({ ...i, upkind: 'A' })));
       setTimeout(updateTotals, 100);
       vAlert(`${res.data.length}건의 소요량이 분석되었습니다.`);
     }
   } catch (e) { vAlertError('가져오기 실패') }
 }
 
-function addRow() { grid.value?.addRow({ UPKIND: 'A', REQQTY: 0, IMPRICE: 0, REQAMT: 0 }); updateTotals(); }
+function addRow() { grid.value?.addRow({ upkind: 'A', reqqty: 0, IMprice: 0, reqamt: 0 }); updateTotals(); }
 
 async function save() {
   if (activeItemCount.value === 0) return vAlertError('저장할 품목이 없습니다.');
   try {
-    const act = (masterData.REQNO === '0000' || !masterData.REQNO) ? 'A0' : 'U0';
-    const mRes = await api.post('/api/hsio/HSIO_020U_STR', { ...masterData, ACTKIND: act, UPDEMP: authStore.USERID });
+    const act = (masterData.reqno === '0000' || !masterData.reqno) ? 'A0' : 'U0';
+    const mRes = await api.post('/api/hsio/HSIO_020U_STR', { ...masterData, actkind: act, updemp: authStore.userid });
     if (mRes.data?.length) {
-      const newNo = mRes.data[0].REQNO;
+      const newNo = mRes.data[0].reqno;
       const items = grid.value!.getData();
       for (const item of items) {
-        await api.post('/api/hsio/HSIO_021U_STR', { ...item, ACTKIND: (item.UPKIND || 'U') + '0', CMPYCD: authStore.CMPYCD, REQYM: masterData.REQYM, REQNO: newNo, DEPTCD: masterData.DEPTCD, UPDEMP: authStore.USERID });
+        await api.post('/api/hsio/HSIO_021U_STR', { ...item, actkind: (item.upkind || 'U') + '0', cmpycd: authStore.cmpycd, reqym: masterData.reqym, reqno: newNo, deptcd: masterData.deptcd, updemp: authStore.userid });
       }
-      vAlert('저장되었습니다.'); masterData.REQNO = newNo; fetchMaster();
+      vAlert('저장되었습니다.'); masterData.reqno = newNo; fetchMaster();
     }
   } catch (e) { vAlertError('저장 중 오류 발생') }
 }
@@ -264,21 +255,21 @@ async function save() {
 async function deleteRequest() {
   if (!confirm('요청 자료를 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_020U_STR', { ...masterData, ACTKIND: 'D0' });
+    await api.post('/api/hsio/HSIO_020U_STR', { ...masterData, actkind: 'D0' });
     vAlert('삭제되었습니다.'); initialize();
   } catch (e) { vAlertError('삭제 실패') }
 }
 
 function initialize() {
   resetForm(masterData);
-  Object.assign(masterData, { ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, REQYM: initYM, REQNO: '0000', REQYMD: initYMD, INYMD: initYMD, DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, ASGBN: 'Y', USERID: String(authStore.USERID || '').trim() });
+  Object.assign(masterData, { actkind: 'S0', cmpycd: authStore.cmpycd, reqym: initym, reqno: '0000', reqymd: initymd, inymd: initymd, deptcd: authStore.deptcd, deptnm: authStore.deptnm, asgbn: 'Y', userid: String(authStore.userid || '').trim() });
   grid.value?.clearData(); updateTotals();
 }
 
 function openHelp(type: string) {
-  const commonProps = { path: '/api/ha00/HA00_00P_STR', CMPYCD: authStore.CMPYCD };
+  const commonProps = { path: '/api/ha00/HA00_00P_STR', cmpycd: authStore.cmpycd };
   if (type === 'DEPT' || type === 'S_DEPT') {
-    Object.assign(modalProps, { title: '부서 선택', ...commonProps, data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD }, columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 200 }, { title: '상위부서', field: 'UDEPTNM', width: 150 }], onConfirm: (d: any) => { if (type === 'S_DEPT') { searchParam.DEPTCD = d.DEPTCD; searchParam.DEPTNM = d.DEPTNM } else { masterData.DEPTCD = d.DEPTCD; masterData.DEPTNM = d.DEPTNM } } });
+    Object.assign(modalProps, { title: '부서 선택', ...commonProps, data: { gubun: 'D0', cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 200 }, { title: '상위부서', field: 'Udeptnm', width: 150 }], onConfirm: (d: any) => { if (type === 'S_DEPT') { searchParam.deptcd = d.deptcd; searchParam.deptnm = d.deptnm } else { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm } } });
   }
   modalVisible.value = true;
 }
@@ -286,44 +277,14 @@ function openHelp(type: string) {
 function formatNumber(v: any) { return new Intl.NumberFormat().format(Number(v) || 0) }
 
 onMounted(() => {
-  api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'SD', CMPYCD: authStore.CMPYCD } }).then(r => {
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data) {
       empOptions.value = r.data.map((i: any) => ({
-        USERID: String(i.USERID || i.userid || Object.values(i)[0]).trim(),
-        USERNM: String(i.USERNM || i.usernm || Object.values(i)[1]).trim()
+        userid: String(i.userid || i.userid || Object.values(i)[0]).trim(),
+        usernm: String(i.usernm || i.usernm || Object.values(i)[1]).trim()
       }))
     }
   })
   nextTick(() => { initGrid(); updateTotals() })
 })
 </script>
-
-<style scoped>
-.hsio020u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
-</style>

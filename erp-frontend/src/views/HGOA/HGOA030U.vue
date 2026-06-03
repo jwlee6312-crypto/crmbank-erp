@@ -58,14 +58,14 @@
                                 <tr>
                                     <th class="small">정렬순서</th>
                                     <td>
-                                        <input v-model="mst_form.DSPORD" type="text" maxlength="3" class="form-control form-control-sm w-50 shadow-none" />
+                                        <input v-model="mst_form.dspord" type="text" maxlength="3" class="form-control form-control-sm w-50 shadow-none" />
                                     </td>
                                 </tr>
                                 <tr>
                                     <th class="small">사용여부</th>
                                     <td>
                                         <div class="form-check form-switch p-0 ps-5">
-                                            <input class="form-check-input ms-0" type="checkbox" v-model="mst_form.USEYN" true-value="Y" false-value="N">
+                                            <input class="form-check-input ms-0" type="checkbox" v-model="mst_form.useyn" true-value="Y" false-value="N">
                                             <label class="form-check-label small fw-bold ms-2" :class="is_used ? 'text-primary' : 'text-danger'">
                                                 {{ is_used ? '사용함' : '미사용' }}
                                             </label>
@@ -112,7 +112,7 @@
                                             <input v-model.number="item.ANS_POINT" type="number" class="form-control form-control-sm border-0 bg-transparent text-center py-0 shadow-none"
                                                    :disabled="mst_form.ANS_TP === '020'" />
                                         </td>
-                                        <td><input v-model="item.USEYN" type="checkbox" true-value="Y" false-value="N" class="form-check-input shadow-none" /></td>
+                                        <td><input v-model="item.useyn" type="checkbox" true-value="Y" false-value="N" class="form-check-input shadow-none" /></td>
                                         <td><input v-model="item.ESSAY_YN" type="checkbox" true-value="Y" false-value="N" class="form-check-input shadow-none" /></td>
                                     </tr>
                                 </tbody>
@@ -144,12 +144,12 @@ import { api } from '@/utils/axios'
 const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
 
 const search_form = reactive({ QUESTION: '' })
-const mst_form = reactive({ CMPYCD: '', SURV_NO: '', QUESTION: '', ANS_TP: '010', DSPORD: '001', USEYN: 'Y' })
+const mst_form = reactive({ cmpycd: '', SURV_NO: '', QUESTION: '', ANS_TP: '010', dspord: '001', useyn: 'Y' })
 const dtl_list = ref<any[]>([])
 
-const is_used = computed(() => (mst_form.USEYN || "").toString().toUpperCase() === 'Y')
+const is_used = computed(() => (mst_form.useyn || "").toString().toUpperCase() === 'Y')
 
-function create_empty_dtl(ansNo: string) { return { ANS_NO: ansNo, ANS_CONT: '', ANS_POINT: 0, USEYN: 'Y', ESSAY_YN: 'N' } }
+function create_empty_dtl(ansNo: string) { return { ANS_NO: ansNo, ANS_CONT: '', ANS_POINT: 0, useyn: 'Y', ESSAY_YN: 'N' } }
 function reset_dtl() { dtl_list.value = []; for (let i = 1; i <= 8; i++) dtl_list.value.push(create_empty_dtl(String(i).padStart(3, '0'))) }
 
 const handle_type_change = () => { if (mst_form.ANS_TP === '020') { reset_dtl(); dtl_list.value[0].ANS_CONT = '자유 서술형 응답'; dtl_list.value[0].ESSAY_YN = 'Y'; } }
@@ -168,8 +168,8 @@ function init_table() {
             { title: "질문번호", field: "SURV_NO", hozAlign: "center", width: 100 },
             { title: "질문 내용", field: "QUESTION", hozAlign: "left", formatter: (cell) => `<div class="fw-bold text-dark py-1">${cell.getValue() || ''}</div>` },
             { title: "유형", field: "ANS_TP", hozAlign: "center", width: 80, formatter: (cell) => cell.getValue() === '010' ? '객관' : cell.getValue() === '020' ? '주관' : '혼합' },
-            { title: "정렬", field: "DSPORD", hozAlign: "center", width: 60 },
-            { title: "사용", field: "USEYN", hozAlign: "center", width: 60, formatter: (cell) => (cell.getValue()||'').toString().toUpperCase()==='Y' ? "O" : "X" }
+            { title: "정렬", field: "dspord", hozAlign: "center", width: 60 },
+            { title: "사용", field: "useyn", hozAlign: "center", width: 60, formatter: (cell) => (cell.getValue()||'').toString().toUpperCase()==='Y' ? "O" : "X" }
         ]
 	})
     table_instance.on("rowClick", (e, row) => load_detail(row.getData()));
@@ -220,7 +220,7 @@ async function delete_item() {
 }
 
 function initialize() {
-    Object.assign(mst_form, { CMPYCD: '', SURV_NO: '', QUESTION: '', ANS_TP: '010', DSPORD: '001', USEYN: 'Y' });
+    Object.assign(mst_form, { cmpycd: '', SURV_NO: '', QUESTION: '', ANS_TP: '010', dspord: '001', useyn: 'Y' });
     reset_dtl();
     table_instance?.deselectRow();
 }

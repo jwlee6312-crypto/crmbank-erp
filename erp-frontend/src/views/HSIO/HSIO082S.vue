@@ -1,92 +1,92 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio082s-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-file-earmark-ruled me-2 text-primary" style="font-size: 18px;"></i>
-        구매정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        발주관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        구매정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        발주관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">발주상세현황 (HSIO082S)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
+      <div class="btn-group-erp d-flex gap-1 pe-2">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchList">조회</button>
-        <button class="btn-erp btn-print" @click="handlePrint">인쇄</button>
-        <button class="btn-erp btn-excel" @click="handleExcel">엑셀</button>
+        <button class="btn-erp btn-print" @click="print">인쇄</button>
+        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
       </div>
     </div>
 
-    <!-- 🔍 2. 상단 조회 필터 (고밀도 2줄 배치) -->
-    <div class="search-bar bg-light border-bottom p-2 px-3 shadow-sm">
-      <div class="d-flex flex-column gap-2">
-        <!-- 첫 번째 줄 -->
-        <div class="d-flex align-items-center gap-4 flex-wrap">
-          <div class="d-flex align-items-center gap-2">
-            <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 발주일자:</span>
-            <div class="d-flex align-items-center gap-1">
-              <input v-model="searchParam.FRYMD" type="date" class="form-control form-control-sm" style="width: 140px;" />
-              <span class="text-muted mx-1">~</span>
-              <input v-model="searchParam.TOYMD" type="date" class="form-control form-control-sm" style="width: 140px;" />
-            </div>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 거 래 처:</span>
-            <div class="input-group input-group-sm" style="width: 250px;">
-              <input v-model="searchParam.CUSTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-              <input v-model="searchParam.CUSTNM" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="fetchList" />
-              <button class="btn btn-outline-secondary" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
-            </div>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 주문번호:</span>
-            <div class="input-group input-group-sm" style="width: 220px;">
-              <input v-model="searchParam.ORDYM" type="month" class="form-control text-center bg-white" style="max-width: 100px;" />
-              <input v-model="searchParam.ORDNO" type="text" class="form-control text-center" placeholder="0000" />
-              <button class="btn btn-outline-secondary" @click="openHelp('ORDER')"><i class="bi bi-search"></i></button>
-            </div>
-          </div>
-        </div>
-        <!-- 두 번째 줄 -->
-        <div class="d-flex align-items-center gap-4 flex-wrap border-top pt-2">
-          <div class="d-flex align-items-center gap-2">
-            <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 담 당 자:</span>
-            <select v-model="searchParam.USERID" class="form-select form-select-sm" style="width: 150px;">
-              <option value="">-- 전체 --</option>
-              <option v-for="item in empOptions" :key="item.USERID" :value="item.USERID">{{ item.USERNM }}</option>
-            </select>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 입고여부:</span>
-            <select v-model="searchParam.IPGOYN" class="form-select form-select-sm" style="width: 100px;">
-              <option value="Y">전체</option>
-              <option value="N">미입고</option>
-            </select>
-          </div>
-          <div class="d-flex align-items-center gap-2 flex-grow-1">
-            <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 특이사항:</span>
-            <input v-model="searchParam.REMARK" type="text" class="form-control form-control-sm" placeholder="특기사항 검색어 입력" @keyup.enter="fetchList" />
-          </div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+      <!-- 🔍 [상단] 조회 필터 영역 (HSOD100U 디자인 패턴 2줄 적용) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 8%" />
+              <col style="width: 25%" />
+              <col style="width: 8%" />
+              <col style="width: 25%" />
+              <col style="width: 8%" />
+              <col style="width: 26%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">발주일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <input v-model="searchParam.frymd" type="date" class="form-control form-control-sm" style="width: 130px;" />
+                  <span class="text-muted">~</span>
+                  <input v-model="searchParam.toymd" type="date" class="form-control form-control-sm" style="width: 130px;" />
+                </td>
+                <th class="text-center bg-light">거 래 처</th>
+                <td>
+                  <div class="input-group input-group-sm w-100">
+                    <input v-model="searchParam.custcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchParam.custnm" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="fetchList" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="text-center bg-light">주문번호</th>
+                <td>
+                  <div class="input-group input-group-sm w-100">
+                    <input v-model="searchParam.ordym" type="month" class="form-control text-center bg-light" style="max-width: 100px;" />
+                    <input v-model="searchParam.ordno" type="text" class="form-control text-center" placeholder="0000" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('ORDER')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th class="text-center bg-light">담 당 자</th>
+                <td>
+                  <select v-model="searchParam.userid" class="form-select form-select-sm w-100">
+                    <option value="">-- 전체 --</option>
+                    <option v-for="item in empOptions" :key="item.userid" :value="item.userid">{{ item.usernm }}</option>
+                  </select>
+                </td>
+                <th class="text-center bg-light">입고여부</th>
+                <td>
+                  <select v-model="searchParam.IPGOYN" class="form-select form-select-sm w-50">
+                    <option value="Y">전체</option>
+                    <option value="N">미입고</option>
+                  </select>
+                </td>
+                <th class="text-center bg-light">특이사항</th>
+                <td>
+                  <input v-model="searchParam.remark" type="text" class="form-control form-control-sm w-100" placeholder="특기사항 검색어 입력" @keyup.enter="fetchList" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
 
-    <!-- 📊 3. 메인 그리드 영역 -->
-    <div class="flex-grow-1 overflow-hidden p-2 bg-white">
-      <div ref="gridElement" style="height: 100%;"></div>
-    </div>
-
-    <!-- 💰 4. 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-2 small">조회 건수: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-10 text-end">
-          <span class="me-3 small opacity-75">발주량: <span class="fw-bold text-white">{{ formatNumber(totals.qty) }}</span></span>
-          <span class="me-3 small opacity-75">공급가: <span class="fw-bold text-white">{{ formatNumber(totals.amt) }}</span></span>
-          <span class="me-3 small opacity-75">부가세: <span class="fw-bold text-white">{{ formatNumber(totals.vat) }}</span></span>
-          <span class="me-3 small opacity-75">입고량: <span class="fw-bold text-white">{{ formatNumber(totals.inQty) }}</span></span>
-          <span class="fs-6 ms-2 fw-light">미입고량: <span class="fw-bold text-warning">{{ formatNumber(totals.qty - totals.inQty) }}</span></span>
+      <!-- 📊 3. 메인 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
@@ -118,15 +118,15 @@ const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
 const formatDateStr = (date: Date) => date.toISOString().substring(0, 10);
 
 const searchParam = reactive({
-  FRYMD: formatDateStr(firstDay),
-  TOYMD: formatDateStr(now),
-  CUSTCD: '',
-  CUSTNM: '',
-  ORDYM: '',
-  ORDNO: '',
-  USERID: '',
+  frymd: formatDateStr(firstDay),
+  toymd: formatDateStr(now),
+  custcd: '',
+  custnm: '',
+  ordym: '',
+  ordno: '',
+  userid: '',
   IPGOYN: 'Y',
-  REMARK: ''
+  remark: ''
 })
 
 const gridElement = ref<HTMLElement | null>(null);
@@ -143,25 +143,25 @@ const initGrid = () => {
     placeholder: "조회된 데이터가 없습니다.",
     columnDefaults: { headerHozAlign: 'center', minWidth: 80 },
     columns: [
-      { title: "발주일자", field: "BALYMD", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
-      { title: "거래처", field: "CUSTNM", minWidth: 150, cssClass: "fw-bold text-dark cursor-pointer", cellClick: (e, cell) => {
+      { title: "발주일자", field: "balymd", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
+      { title: "거래처", field: "custnm", minWidth: 150, cssClass: "fw-bold text-dark cursor-pointer", cellClick: (e, cell) => {
         const d = cell.getData();
-        const path = d.GUBUN === '1' ? '/HSIO/HSIO050U' : '/HSIO/HSIO052U';
-        router.push({ path, query: { BALYM: d.BALYM, BALNO: d.BALNO } });
+        const path = d.gubun === '1' ? '/HSIO/HSIO050U' : '/HSIO/HSIO052U';
+        router.push({ path, query: { BALym: d.BALym, balno: d.balno } });
       }},
-      { title: "담당자", field: "USERNM", width: 90, hozAlign: "center" },
+      { title: "담당자", field: "usernm", width: 90, hozAlign: "center" },
       { title: "주문번호", field: "ORDER_NO", width: 120, formatter: (c) => {
-        const d = c.getData(); return d.ORDYM ? `${d.ORDYM}-${d.ORDNO}` : '';
+        const d = c.getData(); return d.ordym ? `${d.ordym}-${d.ordno}` : '';
       }},
-      { title: "품목코드", field: "ITEMCD", width: 100 },
-      { title: "품목명", field: "ITEMNM", minWidth: 180 },
-      { title: "규격", field: "ITSIZE", width: 120 },
-      { title: "발주량", field: "BALQTY", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().QTYPNT || 0 } },
-      { title: "공급가", field: "BALAMT", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "부가세", field: "BALVAT", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "입고량", field: "INQTY", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().QTYPNT || 0 } },
-      { title: "미입고량", field: "JANQTY", width: 80, hozAlign: "right", cssClass: "text-danger fw-bold", formatter: (c) => {
-        const d = c.getData(); return formatNumber((Number(d.BALQTY) || 0) - (Number(d.INQTY) || 0));
+      { title: "품목코드", field: "itemcd", width: 100 },
+      { title: "품목명", field: "itemnm", minWidth: 180 },
+      { title: "규격", field: "itsize", width: 120 },
+      { title: "발주량", field: "balqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().QTYPNT || 0 } },
+      { title: "공급가", field: "balamt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "부가세", field: "balvat", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "입고량", field: "inqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().QTYPNT || 0 } },
+      { title: "미입고량", field: "janqty", width: 80, hozAlign: "right", cssClass: "text-danger fw-bold", formatter: (c) => {
+        const d = c.getData(); return formatNumber((Number(d.balqty) || 0) - (Number(d.inqty) || 0));
       }}
     ]
   });
@@ -169,10 +169,10 @@ const initGrid = () => {
 
 const updateTotals = (data: any[]) => {
   activeItemCount.value = data.length;
-  totals.qty = data.reduce((acc, i) => acc + (Number(i.BALQTY) || 0), 0);
-  totals.amt = data.reduce((acc, i) => acc + (Number(i.BALAMT) || 0), 0);
-  totals.vat = data.reduce((acc, i) => acc + (Number(i.BALVAT) || 0), 0);
-  totals.inQty = data.reduce((acc, i) => acc + (Number(i.INQTY) || 0), 0);
+  totals.qty = data.reduce((acc, i) => acc + (Number(i.balqty) || 0), 0);
+  totals.amt = data.reduce((acc, i) => acc + (Number(i.balamt) || 0), 0);
+  totals.vat = data.reduce((acc, i) => acc + (Number(i.balvat) || 0), 0);
+  totals.inQty = data.reduce((acc, i) => acc + (Number(i.inqty) || 0), 0);
 }
 
 const modalVisible = ref(false);
@@ -181,15 +181,15 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 async function fetchList() {
   try {
     const res = await api.post('/api/hsio/HSIO_082S_STR', {
-      CMPYCD: authStore.CMPYCD,
-      YMDFR: searchParam.FRYMD.replace(/-/g, ''),
-      YMDTO: searchParam.TOYMD.replace(/-/g, ''),
-      ORDYM: searchParam.ORDYM.replace(/-/g, ''),
-      ORDNO: searchParam.ORDNO,
-      CUSTCD: searchParam.CUSTCD,
-      USERID: searchParam.USERID,
+      cmpycd: authStore.cmpycd,
+      ymdfr: searchParam.frymd.replace(/-/g, ''),
+      ymdto: searchParam.toymd.replace(/-/g, ''),
+      ordym: searchParam.ordym.replace(/-/g, ''),
+      ordno: searchParam.ordno,
+      custcd: searchParam.custcd,
+      userid: searchParam.userid,
       IPGOYN: searchParam.IPGOYN,
-      REMARK: searchParam.REMARK
+      remark: searchParam.remark
     });
     if (grid.value) {
       grid.value.setData(res.data);
@@ -202,38 +202,38 @@ async function fetchList() {
 function initialize() {
   resetForm(searchParam);
   Object.assign(searchParam, {
-    FRYMD: formatDateStr(firstDay), TOYMD: formatDateStr(now),
-    CUSTCD: '', CUSTNM: '', ORDYM: '', ORDNO: '', USERID: '', IPGOYN: 'Y', REMARK: ''
+    frymd: formatDateStr(firstDay), toymd: formatDateStr(now),
+    custcd: '', custnm: '', ordym: '', ordno: '', userid: '', IPGOYN: 'Y', remark: ''
   });
   grid.value?.clearData();
   updateTotals([]);
 }
 
 function openHelp(type: string) {
-  const commonProps = { path: '/api/ha00/HA00_00P_STR', CMPYCD: authStore.CMPYCD };
+  const commonProps = { path: '/api/ha00/HA00_00P_STR', cmpycd: authStore.cmpycd };
   if (type === 'CUST') {
     Object.assign(modalProps, {
       title: '거래처 선택', ...commonProps,
-      data: { GUBUN: 'C4', CMPYCD: authStore.CMPYCD },
+      data: { gubun: 'C4', cmpycd: authStore.cmpycd },
       columns: [
-        { title: '코드', field: 'CUSTCD', width: 70 },
-        { title: '거래처명', field: 'CUSTNM', width: 180 },
-        { title: '사업자번호', field: 'CUSTNO', width: 110 },
-        { title: '대표자', field: 'BOSSNM', width: 80 }
+        { title: '코드', field: 'custcd', width: 70 },
+        { title: '거래처명', field: 'custnm', width: 180 },
+        { title: '사업자번호', field: 'custno', width: 110 },
+        { title: '대표자', field: 'bossnm', width: 80 }
       ],
-      onConfirm: (d: any) => { searchParam.CUSTCD = d.CUSTCD; searchParam.CUSTNM = d.CUSTNM }
+      onConfirm: (d: any) => { searchParam.custcd = d.custcd; searchParam.custnm = d.custnm }
     });
   } else if (type === 'ORDER') {
     Object.assign(modalProps, {
       title: '주문 선택', ...commonProps,
-      data: { GUBUN: 'OR', CMPYCD: authStore.CMPYCD },
+      data: { gubun: 'OR', cmpycd: authStore.cmpycd },
       columns: [
-        { title: '주문월', field: 'ORDYM', width: 90 },
-        { title: '번호', field: 'ORDNO', width: 70 },
-        { title: '주문처', field: 'CUSTNM', width: 180 },
-        { title: '주문일자', field: 'ORDYMD', width: 100 }
+        { title: '주문월', field: 'ordym', width: 90 },
+        { title: '번호', field: 'ordno', width: 70 },
+        { title: '주문처', field: 'custnm', width: 180 },
+        { title: '주문일자', field: 'ordymd', width: 100 }
       ],
-      onConfirm: (d: any) => { searchParam.ORDYM = d.ORDYM; searchParam.ORDNO = d.ORDNO }
+      onConfirm: (d: any) => { searchParam.ordym = d.ordym; searchParam.ordno = d.ordno }
     });
   }
   modalVisible.value = true;
@@ -241,14 +241,14 @@ function openHelp(type: string) {
 
 const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0);
 const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val;
-const handlePrint = () => vAlert('출력 기능을 준비 중입니다.');
-const handleExcel = () => grid.value?.download("xlsx", "발주상세현황.xlsx", { sheetName: "발주상세" });
+const print = () => vAlert('출력 기능을 준비 중입니다.');
+const excel = () => grid.value?.download("xlsx", "발주상세현황.xlsx", { sheetName: "발주상세" });
 
 onMounted(() => {
-  api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'SD', CMPYCD: authStore.CMPYCD } }).then(r => {
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd } }).then(r => {
     empOptions.value = r.data.map((i: any) => ({
-      USERID: String(i.USERID || i.userid || Object.values(i)[0]).trim(),
-      USERNM: String(i.USERNM || i.usernm || Object.values(i)[1]).trim()
+      userid: String(i.userid || i.userid || Object.values(i)[0]).trim(),
+      usernm: String(i.usernm || i.usernm || Object.values(i)[1]).trim()
     }))
   })
   nextTick(() => {
@@ -259,31 +259,30 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hsio020u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
+/* 🎨 HSOD100U 디자인 표준 이식 */
+.main-content-wrapper {
+  padding-bottom: 0vh !important;
 }
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
+/* 폼 셀 높이 32px 고정 및 정렬 */
+.erp-table-dense th, .erp-table-dense td {
+  height: 32px !important;
+  padding: 0 8px !important;
+  font-size: 12px;
+  vertical-align: middle;
+  border: 1px solid #dee2e6;
+}
 
+.erp-table-dense .form-control,
+.erp-table-dense .form-select,
+.erp-table-dense .btn {
+  height: 26px !important;
+  font-size: 12px !important;
+  border-radius: 2px;
+}
+
+.erp-table-dense th {
+  font-weight: 600;
+  color: #495057;
+}
 </style>

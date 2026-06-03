@@ -2,7 +2,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsba700u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-1 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 13px;">
@@ -27,20 +27,11 @@
 
       <!-- 🅱️ 데이터 그리드 영역 -->
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-          <div ref="gridElement"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 3. 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-1 px-4 shadow-lg flex-shrink-0">
-      <div class="d-flex justify-content-between align-items-center" style="font-size: 11px;">
-        <div>설정 가능 대상: <span class="fw-bold text-warning">{{ activeItemCount }}</span> 유형</div>
-        <div class="text-white-50">※ 계정 정보가 모두 누락된 항목은 저장 시 '삭제' 처리됩니다.</div>
-      </div>
-    </div>
-
     <!-- 💡 계정 도움창 모달 -->
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
@@ -77,7 +68,7 @@ const initGrid = () => {
     columnHeaderVertAlign: "middle",
     columnDefaults: { headerSort: false },
     columns: [
-      { title: "재고자산 유형", field: "CDNM", width: 150, hozAlign: "center", cssClass: "fw-bold bg-light", frozen: true },
+      { title: "재고자산 유형", field: "cdnm", width: 150, hozAlign: "center", cssClass: "fw-bold bg-light", frozen: true },
       { title: "코드", field: "CODE", visible: false },
 
       // 매입(Purchase) 그룹
@@ -85,20 +76,20 @@ const initGrid = () => {
         title: "매입 (Purchase)",
         headerHozAlign: "center",
         columns: [
-          { title: "차변계정", field: "IMACCTNM", widthGrow: 1,
-            formatter: (cell) => cell.getData().IMACCTCD ? `[${cell.getData().IMACCTCD}] ${cell.getValue()}` : ""
+          { title: "차변계정", field: "IMacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().IMacctcd ? `[${cell.getData().IMacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchIM", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('IM', cell)
           },
-          { title: "대변계정", field: "IPACCTNM", widthGrow: 1,
-            formatter: (cell) => cell.getData().IPACCTCD ? `[${cell.getData().IPACCTCD}] ${cell.getValue()}` : ""
+          { title: "대변계정", field: "IPacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().IPacctcd ? `[${cell.getData().IPacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchIP", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('IP', cell)
           },
-          { title: "선급부가세", field: "IVACCTNM", widthGrow: 1,
-            formatter: (cell) => cell.getData().IVACCTCD ? `[${cell.getData().IVACCTCD}] ${cell.getValue()}` : ""
+          { title: "선급부가세", field: "IVacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().IVacctcd ? `[${cell.getData().IVacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchIV", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('IV', cell)
@@ -111,20 +102,20 @@ const initGrid = () => {
         title: "매출 (Sales)",
         headerHozAlign: "center",
         columns: [
-          { title: "차변계정", field: "OMACCTNM", widthGrow: 1,
-            formatter: (cell) => cell.getData().OMACCTCD ? `[${cell.getData().OMACCTCD}] ${cell.getValue()}` : ""
+          { title: "차변계정", field: "OMacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().OMacctcd ? `[${cell.getData().OMacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchOM", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('OM', cell)
           },
-          { title: "대변계정", field: "OPACCTNM", widthGrow: 1,
-            formatter: (cell) => cell.getData().OPACCTCD ? `[${cell.getData().OPACCTCD}] ${cell.getValue()}` : ""
+          { title: "대변계정", field: "OPacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().OPacctcd ? `[${cell.getData().OPacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchOP", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('OP', cell)
           },
-          { title: "예수부가세", field: "OVACCTNM", widthGrow: 1,
-            formatter: (cell) => cell.getData().OVACCTCD ? `[${cell.getData().OVACCTCD}] ${cell.getValue()}` : ""
+          { title: "예수부가세", field: "OVacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().OVacctcd ? `[${cell.getData().OVacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchOV", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('OV', cell)
@@ -138,7 +129,7 @@ const initGrid = () => {
 // 3. 데이터 로드 (S0)
 async function fetchList() {
   try {
-    const res = await api.post('/api/hsba/HSBA_700U_STR', { ACTKIND: 'S0', CMPYCD: authStore.CMPYCD })
+    const res = await api.post('/api/hsba/HSBA_700U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd })
     if (grid.value) {
       grid.value.setData(res.data || [])
       activeItemCount.value = (res.data || []).length
@@ -156,21 +147,21 @@ async function handleBulkSave() {
   try {
     for (const row of data) {
       // ASP 로직: 하나라도 계정이 있으면 저장(A0), 모두 없으면 삭제(D0)
-      const hasAccount = row.IMACCTCD || row.IPACCTCD || row.IVACCTCD || row.OMACCTCD || row.OPACCTCD || row.OVACCTCD
+      const hasAccount = row.IMacctcd || row.IPacctcd || row.IVacctcd || row.OMacctcd || row.OPacctcd || row.OVacctcd
       const act = hasAccount ? 'A0' : 'D0'
 
       await api.post('/api/hsba/HSBA_700U_STR', {
-        ACTKIND: act,
-        CMPYCD: authStore.CMPYCD,
-        ASTKIND: row.CODE,
-        ASTKINDNM: row.CDNM,
-        IMACCTCD: row.IMACCTCD || '',
-        IPACCTCD: row.IPACCTCD || '',
-        IVACCTCD: row.IVACCTCD || '',
-        OMACCTCD: row.OMACCTCD || '',
-        OPACCTCD: row.OPACCTCD || '',
-        OVACCTCD: row.OVACCTCD || '',
-        USERID: authStore.USER_ID
+        actkind: act,
+        cmpycd: authStore.cmpycd,
+        astkind: row.CODE,
+        astkindNM: row.cdnm,
+        IMacctcd: row.IMacctcd || '',
+        IPacctcd: row.IPacctcd || '',
+        IVacctcd: row.IVacctcd || '',
+        OMacctcd: row.OMacctcd || '',
+        OPacctcd: row.OPacctcd || '',
+        OVacctcd: row.OVacctcd || '',
+        userid: authStore.user_id
       })
       successCount++
     }
@@ -186,7 +177,7 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openAccountHelp(type: string, cell: any) {
   const row = cell.getRow()
 
-  // ASP의 HELP_ACCTCD_LTD.asp gbn 파라미터 규격 적용
+  // ASP의 HELP_acctcd_LTD.asp gbn 파라미터 규격 적용
   let gbn = '112'
   if (type === 'IM') gbn = '112';
   else if (type === 'IP') gbn = '210';
@@ -199,16 +190,16 @@ function openAccountHelp(type: string, cell: any) {
   Object.assign(modalProps, {
     title: '계정과목 선택',
     path: '/api/ha00/HA00_00P_STR',
-    data: { GUBUN: 'A0', GBNCD: '', CODE: gbn, CMPYCD: authStore.CMPYCD },
-    defaultField: 'ACCTNM',
+    data: { gubun: 'A0', gbncd: '', CODE: gbn, cmpycd: authStore.cmpycd },
+    defaultField: 'acctnm',
     columns: [
-      { title: '계정코드', field: 'ACCTCD', width: 100 },
-      { title: '계정과목명', field: 'ACCTNM', width: 200 }
+      { title: '계정코드', field: 'acctcd', width: 100 },
+      { title: '계정과목명', field: 'acctnm', width: 200 }
     ],
     onConfirm: (selected: any) => {
       const updateData: any = {}
-      updateData[`${type}ACCTCD`] = selected.ACCTCD
-      updateData[`${type}ACCTNM`] = selected.ACCTNM
+      updateData[`${type}acctcd`] = selected.acctcd
+      updateData[`${type}acctnm`] = selected.acctnm
       row.update(updateData)
     }
   })
@@ -223,20 +214,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.hsba700u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-:deep(.tabulator) { border: none !important; font-size: 12px; background: transparent !important; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col) { background-color: #f1f5f9 !important; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; text-align: center; }
-:deep(.tabulator-row) { border-bottom: 1px solid #edf2f7 !important; background-color: #fff !important; }
-:deep(.tabulator-cell) { padding: 6px 4px !important; vertical-align: middle !important; border-right: 1px solid #f1f5f9 !important; }
-
-/* 매입/매출 영역 구분 강조 */
-:deep(.tabulator-col[data-field="IMACCTNM"]),
-:deep(.tabulator-col[data-field="OMACCTNM"]) { border-left: 2px solid #cbd5e1 !important; }
-</style>

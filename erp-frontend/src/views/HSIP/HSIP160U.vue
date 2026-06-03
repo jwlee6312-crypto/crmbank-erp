@@ -1,251 +1,271 @@
-<!--수입관리/비용배부작업-->
+<!--
+	=============================================================
+	프로그램명	: 수입입고작업 (HSIP160U)
+	작성일자	: 2025.02.24
+	설명        : 수입 통관 물품 입고 처리 (ASP 패턴 기반 순차 저장 및 소문자 통일)
+	=============================================================
+-->
+
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-	<div class="hsip160u-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1. 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom shadow-sm bg-white py-2 px-3 sticky-top">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-calculator-fill me-2 text-primary" style="font-size: 18px;"></i>
-				수입관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">비용배부작업 (HSIP160U)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">초기화</button>
-				<button class="btn-erp btn-search" @click="fetchPoList">조회</button>
-				<button class="btn-erp btn-save" @click="handleSave">배부 실행/취소</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-box-seam-fill me-2 text-primary" style="font-size: 18px;"></i>
+        수입관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        입고관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">수입입고작업 (HSIP160U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-2">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="fetchPoList">조회</button>
+        <button class="btn-erp btn-save" @click="save">저장</button>
+      </div>
+    </div>
 
-		<!-- 🔍 2. 검색 조건 -->
-		<table class="erp-table-full border-bottom" style="table-layout: fixed;">
-			<colgroup>
-				<col style="width: 130px;" /> <col />
-				<col style="width: 130px;" /> <col />
-				<col style="width: 130px;" /> <col />
-			</colgroup>
-			<tbody>
-				<tr>
-					<th class="required border-end">발주부서</th>
-					<td>
-						<div class="input-group input-group-sm flex-nowrap ms-1">
-							<input v-model="searchForm.DEPTCD" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-							<input v-model="searchForm.DEPTNM" type="text" class="form-control" />
-							<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-						</div>
-					</td>
-					<th class="required border-end">통관일자</th>
-					<td>
-						<div class="d-flex align-items-center gap-1 ms-1">
-							<input v-model="searchForm.FRYMD" type="date" class="form-control form-control-sm" />
-							<span class="text-muted">~</span>
-							<input v-model="searchForm.TOYMD" type="date" class="form-control form-control-sm" />
-						</div>
-					</td>
-					<th class="border-end">배부여부</th>
-					<td>
-						<div class="d-flex gap-3 ms-1">
-							<div class="form-check m-0">
-								<input v-model="searchForm.DIVYN" class="form-check-input" type="radio" value="N" id="divN" />
-								<label class="form-check-label small fw-bold" for="divN">미배부</label>
-							</div>
-							<div class="form-check m-0">
-								<input v-model="searchForm.DIVYN" class="form-check-input" type="radio" value="Y" id="divY" />
-								<label class="form-check-label small fw-bold" for="divY">배부완료</label>
-							</div>
-						</div>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-		<!-- 📊 3. 메인 작업 영역 -->
-		<div class="d-flex flex-column flex-grow-1 overflow-hidden">
-			<div class="bg-light border-bottom" style="height: 250px;">
-				<div class="grid-title py-1 px-3 border-bottom bg-white fw-bold small text-secondary d-flex justify-content-between">
-					<span><i class="bi bi-card-list me-1"></i> 배부 대상 PO 목록</span>
-					<button class="btn btn-xs btn-outline-primary" @click="toggleSelectAll">전체선택</button>
-				</div>
-				<div ref="poGridRef" class="tabulator-full-height" />
-			</div>
+      <!-- 🔍 [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 10%" /><col style="width: 23%" />
+              <col style="width: 10%" /><col style="width: 23%" />
+              <col style="width: 10%" /><col style="width: 24%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">입고부서</th>
+                <td>
+                  <div class="input-group input-group-sm w-75">
+                    <input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('S_DEPT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="text-center bg-light">통관일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="searchForm.ymdfr" v-model:todt="searchForm.ymdto" />
+                </td>
+                <th class="text-center bg-light">분할여부</th>
+                <td>
+                  <select v-model="searchForm.divyn" class="form-select form-select-sm w-50">
+                    <option value="N">미분할</option>
+                    <option value="Y">분할</option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-			<div class="flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-				<div class="grid-title py-1 px-3 border-bottom fw-bold small text-primary bg-light">
-					<i class="bi bi-box-seam me-1"></i> 선택된 PO의 품목별 비용 배부 상세 내역
-				</div>
-				<div ref="detailGridRef" class="tabulator-full-height" />
-			</div>
-		</div>
-	</div>
+      <!-- 📊 3. 메인 작업 영역 -->
+      <div class="d-flex flex-row flex-grow-1 overflow-hidden gap-2" style="min-height: 0;">
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 380px; min-width: 380px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark d-flex justify-content-between align-items-center">
+            <span>통관 완료 목록</span>
+          </div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="poGridRef" class="tabulator-instance flex-grow-1"></div>
+          </div>
+        </div>
 
-    <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+        <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
+          <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+            <div class="card-body p-0 bg-white">
+              <table class="erp-table-dense w-100">
+                <colgroup>
+                  <col style="width: 100px;" /><col />
+                  <col style="width: 100px;" /><col />
+                  <col style="width: 100px;" /><col />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <th class="bg-light text-center">PO No.</th>
+                    <td><input v-model="formData.fileno" class="form-control bg-light fw-bold text-primary" readonly /></td>
+                    <th class="bg-light text-center">면장번호</th>
+                    <td><input v-model="formData.passno" class="form-control bg-light text-center" readonly /></td>
+                    <th class="bg-light text-center">거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
+                    <td><input v-model="formData.custnm" class="form-control bg-light" readonly /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+              <span class="fw-bold small text-dark d-flex align-items-center">
+                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 입고 예정 품목 명세 (참조용)
+              </span>
+            </div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="itemGridRef" class="tabulator-instance flex-grow-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, nextTick } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import AppAlert from '@/components/AppAlert.vue'
-import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
+import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
-	DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-	FRYMD: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-	TOYMD: new Date().toISOString().substring(0, 10),
-	DIVYN: 'N'
+  deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+  ymdfr: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
+  ymdto: new Date().toISOString().substring(0, 10),
+  divyn: 'N'
 })
 
-const poGridRef = ref<HTMLDivElement | null>(null); const detailGridRef = ref<HTMLDivElement | null>(null);
-let poGrid: Tabulator | null = null; let detailGrid: Tabulator | null = null;
+const formData = reactive<any>({
+  fileno: '', passno: '', custnm: '', custcd: '', shipseq: '', passseq: ''
+})
 
-async function fetchPoList() {
-	if (!searchForm.DEPTCD) return vAlertError('발주부서를 선택하세요.')
-	try {
-		const res = await api.post('/api/hsip/HSIP_160U_STR', {
-            ...searchForm,
-            FRYMD: searchForm.FRYMD.replace(/-/g, ''),
-            TOYMD: searchForm.TOYMD.replace(/-/g, ''),
-            ACTKIND: 'S0',
-            CMPYCD: authStore.CMPYCD
-        })
-		poGrid?.setData(res.data); detailGrid?.clearData(); vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('PO 조회 실패') }
+const poGridRef = ref<HTMLDivElement | null>(null); const itemGridRef = ref<HTMLDivElement | null>(null)
+let poGrid: Tabulator | null = null; let itemGrid: Tabulator | null = null
+
+const fetchPoList = async () => {
+  try {
+    const res = await api.post('/api/hsip/HSIP_160U_STR', {
+      actkind: 'S1', cmpycd: authStore.cmpycd,
+      deptcd: searchForm.deptcd,
+      frymd: searchForm.ymdfr.replace(/-/g, ''),
+      toymd: searchForm.ymdto.replace(/-/g, ''),
+      divyn: searchForm.divyn
+    })
+    poGrid?.setData(res.data || [])
+    itemGrid?.clearData();
+    vAlert('조회되었습니다.')
+  } catch (e) { vAlertError('조회 실패') }
 }
 
-async function fetchDetail(row: any) {
-	const d = row.getData()
-	try {
-		const res = await api.post('/api/hsip/HSIP_161S_STR', {
-            CMPYCD: authStore.CMPYCD, FILENO: d.FILENO, SHIPSEQ: d.SHIPSEQ, PASSSEQ: d.PASSSEQ, DIVYN: searchForm.DIVYN
-        })
-		detailGrid?.setData(res.data)
-	} catch (e) { vAlertError('상세 내역 로드 실패') }
+const fetchDetail = async (row: any) => {
+  Object.assign(formData, row)
+  try {
+    const res = await api.post('/api/hsip/HSIP_161S_STR', {
+      actkind: 'S0', cmpycd: authStore.cmpycd, fileno: row.fileno,
+      shipseq: row.shipseq, passseq: row.passseq
+    })
+    itemGrid?.setData(res.data || [])
+  } catch (e) { vAlertError('상세 조회 실패') }
 }
 
-async function handleSave() {
-	const selected = poGrid?.getSelectedData()
-	if (!selected || selected.length === 0) return vAlertError('배부 처리할 PO를 선택하세요.')
+/**
+ * 🚀 저장 로직 (ASP 패턴: 목록에서 선택된 행들을 순차적으로 입고처리)
+ */
+const save = async () => {
+  const selected = poGrid?.getSelectedData() || []
+  if (selected.length === 0) return vAlertError('입고 처리할 항목을 선택하세요.')
 
-	const msg = searchForm.DIVYN === 'N' ? '배부작업을 실행하시겠습니까?' : '배부작업을 취소하시겠습니까?'
-	if (!confirm(msg)) return
+  if (!confirm('입고 등록을 진행하시겠습니까?')) return
 
-	try {
-        const act = searchForm.DIVYN === 'N' ? 'A0' : 'D0'
-        for (const item of selected) {
-            await api.post('/api/hsip/HSIP_160U_STR', {
-                ...item,
-                ACTKIND: act,
-                CMPYCD: authStore.CMPYCD,
-                UPDEMP: authStore.USERID
-            })
-        }
-		vAlert('처리가 완료되었습니다.'); fetchPoList()
-	} catch (e) { vAlertError('처리 중 오류 발생') }
+  try {
+    for (const item of selected) {
+      const params = {
+        actkind: 'u0', // ASP 로직에 따라 입고 확정은 u0
+        cmpycd: authStore.cmpycd,
+        deptcd: searchForm.deptcd,
+        frymd: searchForm.ymdfr.replace(/-/g, ''),
+        toymd: searchForm.ymdto.replace(/-/g, ''),
+        divyn: searchForm.divyn,
+        fileno: item.fileno,
+        shipseq: item.shipseq,
+        passseq: item.passseq,
+        updemp: authStore.userid
+      }
+
+      const res = await api.post('/api/hsip/HSIP_160U_STR', params)
+      const resData = res.data?.[0]
+
+      // ASP 에러 체크 패턴 적용
+      if (resData && (resData.status === 'y' || resData.erryn === 'y' || resData.status === 'Y' || resData.erryn === 'Y')) {
+        throw new Error(resData.msg || '입고 처리 중 업무 오류가 발생했습니다.')
+      }
+    }
+
+    vAlert('정상적으로 작업이 되었습니다.')
+    fetchPoList(); initialize();
+  } catch (e: any) {
+    vAlertError(e.message || '저장 실패')
+  }
 }
-
-const toggleSelectAll = () => { poGrid?.getRows().forEach(r => r.select()) }
 
 function initialize() {
-	resetForm(searchForm); poGrid?.clearData(); detailGrid?.clearData()
-	Object.assign(searchForm, {
-        DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-        FRYMD: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-        TOYMD: new Date().toISOString().substring(0, 10),
-        DIVYN: 'N'
-    })
+  resetForm(formData); poGrid?.clearData(); itemGrid?.clearData();
 }
 
-const modalVisible = ref(false);
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
 function openHelp(type: string) {
-    const commonProps = { path: '/api/ha00/HA00_00P_STR', CMPYCD: authStore.CMPYCD };
-    if (type === 'DEPT') {
-        Object.assign(modalProps, {
-            title: '부서 선택', ...commonProps, data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
-            columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 200 }],
-            onConfirm: (d: any) => { searchForm.DEPTCD = d.DEPTCD; searchForm.DEPTNM = d.DEPTNM }
-        })
-    }
-    modalVisible.value = true
+  if (type === 'S_DEPT') {
+    openCommonHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
+  }
 }
 
 onMounted(() => {
-	if (poGridRef.value) {
-		poGrid = new Tabulator(poGridRef.value, {
-			layout: 'fitColumns', height: '100%', selectable: true,
-			placeholder: '데이터가 없습니다.',
-			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 100 },
-			columns: [
-				{ title: '선택', formatter: 'rowSelection', titleFormatter: 'rowSelection', hozAlign: 'center', width: 100 },
-				{ title: 'PO No.', field: 'FILENO', width: 250, cssClass: 'fw-bold text-primary' },
-				{ title: '선적', field: 'SHIPSEQ', hozAlign: 'center', width: 200, formatter: (c) => `${c.getValue().substring(0,1)}차` },
-				{ title: '통관', field: 'PASSSEQ', hozAlign: 'center', width: 200, formatter: (c) => `${c.getValue().substring(0,1)}차` },
-				{ title: '거래처(Vender)', field: 'CUSTNM', minWidth: 300, widthGrow: 1, cssClass: 'border-start' },
-				{ title: '총비용(원화)', field: 'COSTAMT', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '배부일자', field: 'DIVYMD', hozAlign: 'center', width: 200 }
-			]
-		})
-		poGrid.on('rowClick', (e, row) => fetchDetail(row))
-	}
+  if (poGridRef.value) {
+    poGrid = new Tabulator(poGridRef.value, {
+      layout: 'fitColumns', height: '100%', selectable: true,
+      columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
+      columns: [
+        { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 60 },
+        { title: 'PO No.', field: 'fileno', cssClass: 'fw-bold text-primary', width: 140 },
+        { title: '면장번호', field: 'passno', width: 100 },
+        { title: '거 래 처', field: 'custnm', minWidth: 100, hozAlign: "left" }
+      ]
+    })
+    poGrid.on('rowClick', (e, row) => fetchDetail(row.getData()))
+  }
 
-	if (detailGridRef.value) {
-		detailGrid = new Tabulator(detailGridRef.value, {
-			layout: 'fitColumns', height: '100%',
-			placeholder: 'PO를 선택하면 상세 품목 정보가 표시됩니다.',
-			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 80 },
-			columns: [
-				{ title: '품목명칭', field: 'ITEMNM', minWidth: 250, widthGrow: 2, cssClass: 'fw-bold text-dark' },
-				{ title: '규격', field: 'ITSIZE', width: 250 },
-				{ title: '단위', field: 'UNIT', hozAlign: 'center', width: 100 },
-				{ title: '입고수량', field: 'INQTY', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '비용종류', field: 'COSTNM', minWidth: 200, widthGrow: 1, cssClass: 'border-start text-primary' },
-				{ title: '단가(Unit)', field: 'PRICE', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 2 } },
-				{ title: '배부금액', field: 'COSTAMT', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'fw-bold' },
-				{ title: '배부기준', field: 'DIVNM', hozAlign: 'center', width: 200 }
-			]
-		})
-	}
-	fetchPoList()
+  if (itemGridRef.value) {
+    itemGrid = new Tabulator(itemGridRef.value, {
+      layout: 'fitColumns', height: '100%',
+      columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
+      columns: [
+        { title: '품목명', field: 'itemnm', minWidth: 180, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
+        { title: '규격', field: 'itsize', width: 120, hozAlign: 'left' },
+        { title: '단위', field: 'unit', width: 60 },
+        { title: '통관량', field: 'iqty', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } }
+      ]
+    })
+  }
+  fetchPoList()
 })
 </script>
 
 <style scoped>
-.hsip160u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
+.main-content-wrapper { padding-bottom: 0vh !important; }
+.grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
+.erp-table-dense th, .erp-table-dense td {
+  height: 32px !important; padding: 0 8px !important; font-size: 12px; vertical-align: middle; border: 1px solid #dee2e6;
 }
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
+.erp-table-dense .form-control, .erp-table-dense .form-select, .erp-table-dense .btn {
+  height: 26px !important; font-size: 12px !important; border-radius: 2px;
+}
+.erp-table-dense th { font-weight: 600; color: #495057; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+:deep(.empty-row-style) { opacity: 0.6; }
 </style>
-

@@ -14,8 +14,8 @@ import lombok.Builder;
 @Builder
 public class CampDtlDto {
 
-    private String CMPYCD;   // 회사코드
-    private String CAMP_NO;  // 캠페인번호
-    private String TYPE;     // 타입
-    private Long CNT;        // 건수
+    private String cmpycd;   // 회사코드
+    private String camp_no;  // 캠페인번호
+    private String type;     // 타입
+    private Long cnt;        // 건수
 }

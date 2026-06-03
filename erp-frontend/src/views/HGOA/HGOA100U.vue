@@ -28,8 +28,8 @@
 					<div class="stat-badge-mini pointer" :class="{active: CURRENT_FILTER === ''}" @click="apply_filter('')">
 						<span class="label">전체</span><span class="value">{{ STATS.TOT_CNT || 0 }}</span>
 					</div>
-					<div v-for="item in DETAIL_STATS" :key="item.RSLT_CD"
-						 class="stat-badge-mini pointer" :class="{active: CURRENT_FILTER === item.RSLT_CD}" @click="apply_filter(item.RSLT_CD)">
+					<div v-for="item in DETAIL_STATS" :key="item.rslt_cd"
+						 class="stat-badge-mini pointer" :class="{active: CURRENT_FILTER === item.rslt_cd}" @click="apply_filter(item.rslt_cd)">
 						<span class="label">{{ item.RSLT_NM }}</span><span class="value">{{ item.CNT }}</span>
 					</div>
 				</div>
@@ -37,7 +37,7 @@
 			<div class="agent-info-area d-flex align-items-center gap-3 flex-shrink-0">
                 <div v-if="ctiStore.isTalking" class="small text-danger animate-pulse fw-bold text-start"><i class="bi bi-record-circle me-1"></i>녹취 중...</div>
 				<div class="agent-status-badge px-3 py-1 rounded bg-success bg-opacity-10 text-success fw-bold border border-success border-opacity-25">
-					<span class="small">내선: {{ authStore.INNER_NO || '미등록' }}</span>
+					<span class="small">내선: {{ authStore.inner_no || '미등록' }}</span>
 				</div>
 			</div>
 		</header>
@@ -46,7 +46,7 @@
 			<aside class="col-md-2 border-end bg-white d-flex flex-column h-100 shadow-sm overflow-hidden">
 				<div class="flex-grow-1 d-flex flex-column overflow-hidden" style="flex-basis: 55%;">
 					<div class="panel-header p-2 bg-light border-bottom d-flex gap-1">
-						<input type="text" v-model="SEARCH_KEYWORD" class="form-control form-control-sm shadow-none" placeholder="검색..." @keyup.enter="load_customer_list">
+						<input type="text" v-model="search_KEYWORD" class="form-control form-control-sm shadow-none" placeholder="검색..." @keyup.enter="load_customer_list">
 						<button class="btn btn-sm btn-dark px-2" @click="load_customer_list"><i class="bi bi-search"></i></button>
 					</div>
 					<div class="flex-grow-1 position-relative">
@@ -60,7 +60,7 @@
 							<div class="extra-small text-truncate">
                                 <span class="text-muted">{{ format_date(log.ADDTIME) }}</span>
                                 <span class="fw-bold text-dark mx-1">[{{ log.RSLT_NM }}]</span>
-                                <span class="text-secondary ms-2 fw-normal">{{ log.REMARK || log.MEMO }}</span>
+                                <span class="text-secondary ms-2 fw-normal">{{ log.remark || log.MEMO }}</span>
                             </div>
 						</div>
 					</div>
@@ -75,7 +75,7 @@
 								<h5 class="fw-bold text-dark mb-0">{{ SELECTED_CUSTOMER?.CUST_NM || '상담 대상' }}</h5>
 								<span class="fw-bold text-muted small">({{ CUSTOMER_INFO.TEL_NO || '-' }})</span>
 								<div class="vr opacity-25 mx-2" style="height: 18px;"></div>
-								<span class="fw-bold text-primary text-truncate small">{{ CUSTOMER_INFO.EMAIL || '-' }}</span>
+								<span class="fw-bold text-primary text-truncate small">{{ CUSTOMER_INFO.email || '-' }}</span>
 							</div>
 							<div class="btn-group btn-group-sm shadow-sm">
 								<button class="btn btn-primary px-2 fw-bold btn-sm" @click="make_call" :disabled="ctiStore.isTalking">통화</button>
@@ -114,9 +114,9 @@
 					<div class="fixed-footer-section border-top bg-white p-3 flex-shrink-0 shadow-inner">
 						<div class="row g-2 align-items-center">
 							<div class="col-md-3">
-								<select v-model="CALL_RESULT.RSLT_CD" class="form-select form-select-sm fw-bold border-success shadow-none">
+								<select v-model="CALL_RESULT.rslt_cd" class="form-select form-select-sm fw-bold border-success shadow-none">
 									<option value="">결과 선택</option>
-									<option v-for="code in RESULT_CODES" :key="code.CODECD" :value="code.CODECD">{{ code.CODENM }}</option>
+									<option v-for="code in RESULT_CODES" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
 								</select>
 							</div>
 							<div class="col-md-6"><input type="text" v-model="CALL_RESULT.MEMO" class="form-control form-control-sm border-success shadow-none" placeholder="상담 중요 요약 메모"></div>
@@ -166,11 +166,11 @@ const authStore = useAuthStore(); const ctiStore = useCtiStore()
 const CURRENT_FILTER = ref(''); const SESSION_START_TIME = ref('');
 const STATS = reactive<any>({ TOT_CNT: 0, READY_CNT: 0 }); const DETAIL_STATS = ref<any[]>([])
 const CAMPAIGNS = ref<any[]>([]); const SELECTED_CAMP_NO = ref('')
-const SEARCH_KEYWORD = ref(''); const SELECTED_CUSTOMER = ref<any>(null)
-const CUSTOMER_INFO = reactive({ EMAIL: '', TEL_NO: '' })
+const search_KEYWORD = ref(''); const SELECTED_CUSTOMER = ref<any>(null)
+const CUSTOMER_INFO = reactive({ email: '', TEL_NO: '' })
 const FILTERED_EXT_DATA = ref<any>({}); const RESULT_CODES = ref<any[]>([])
 const SURVEY_QUESTIONS = ref<any[]>([]); const ACTIVE_QUESTION_NO = ref('')
-const CALL_RESULT = reactive({ RSLT_CD: '', MEMO: '' })
+const CALL_RESULT = reactive({ rslt_cd: '', MEMO: '' })
 const AGENT_CHAT_HISTORY = ref<any[]>([]); const AGENT_REPLY_INPUT = ref('')
 const TIMELINE_DATA = ref<any[]>([])
 const IS_SAVING = ref(false)
@@ -188,9 +188,9 @@ const parseExtData = (ext: any) => {
 }
 
 const fetch_messages = async () => {
-    if (!CUSTOMER_INFO.EMAIL) return;
+    if (!CUSTOMER_INFO.email) return;
     try {
-        const res = await api.get('/common/chat/messages', { params: { email: CUSTOMER_INFO.EMAIL } });
+        const res = await api.get('/common/chat/messages', { params: { email: CUSTOMER_INFO.email } });
         const list = res.data?.data || [];
         const reversedList = [...list].reverse();
         const newHistory = reversedList.filter((m: any) => String(m.message_type).split('.')[0] !== '2').map((m: any) => ({
@@ -206,19 +206,19 @@ const fetch_messages = async () => {
 
 const send_agent_reply = async () => {
     const content = AGENT_REPLY_INPUT.value.trim();
-    if (!content || !CUSTOMER_INFO.EMAIL) return;
+    if (!content || !CUSTOMER_INFO.email) return;
     try {
-        await api.post('/common/chat/reply', { email: CUSTOMER_INFO.EMAIL, content: content });
+        await api.post('/common/chat/reply', { email: CUSTOMER_INFO.email, content: content });
         AGENT_REPLY_INPUT.value = '';
         await fetch_messages();
     } catch (e) { vAlertError('전송 실패'); }
 }
 
 const handle_clear_chat = async () => {
-    if (!CUSTOMER_INFO.EMAIL) return vAlertError('대상 고객 없음');
+    if (!CUSTOMER_INFO.email) return vAlertError('대상 고객 없음');
     if (!confirm('대화 이력을 삭제하고 상담창을 초기화하시겠습니까?')) return;
     try {
-        await api.post('/common/chat/clear', { email: CUSTOMER_INFO.EMAIL });
+        await api.post('/common/chat/clear', { email: CUSTOMER_INFO.email });
         AGENT_CHAT_HISTORY.value = [];
         vAlert('초기화되었습니다.');
     } catch (e) { vAlertError('실패'); }
@@ -256,28 +256,28 @@ const handle_camp_change = async () => {
 const load_customer_list = async () => {
     if (!SELECTED_CAMP_NO.value) return;
     try {
-        const { data } = await api.get('/crm/outbound/call-list', { params: { CAMP_NO: SELECTED_CAMP_NO.value, KEYWORD: SEARCH_KEYWORD.value, FILTER: CURRENT_FILTER.value } });
+        const { data } = await api.get('/crm/outbound/call-list', { params: { CAMP_NO: SELECTED_CAMP_NO.value, KEYWORD: search_KEYWORD.value, FILTER: CURRENT_FILTER.value } });
         CUSTOMER_TABLE_INSTANCE?.setData(data);
     } catch (e) {}
 }
 
 const handle_save_all = async () => {
     if (!SELECTED_CUSTOMER.value) return vAlertError('대상 선택 필요');
-    if (!CALL_RESULT.RSLT_CD) return vAlertError('결과 선택 필요');
+    if (!CALL_RESULT.rslt_cd) return vAlertError('결과 선택 필요');
     IS_SAVING.value = true;
     try {
         const chat_log_str = AGENT_CHAT_HISTORY.value.map(m => `[${m.IS_ME?'상담원':'고객'}] ${m.TEXT}`).join('\n');
         await api.post('/omni/chat/save-consolidated', {
-            CMPYCD: authStore.CMPYCD || 'haionnet',
+            cmpycd: authStore.cmpycd || 'haionnet',
             CAMP_NO: SELECTED_CAMP_NO.value,
             CALL_SEQ: SELECTED_CUSTOMER.value.CALL_SEQ,
-            CUST_EMAIL: CUSTOMER_INFO.EMAIL,
+            CUST_email: CUSTOMER_INFO.email,
             CUST_NM: SELECTED_CUSTOMER.value.CUST_NM,
-            CALL_TELNO: CUSTOMER_INFO.TEL_NO,
-            RSLT_CD: CALL_RESULT.RSLT_CD,
+            CALL_telno: CUSTOMER_INFO.TEL_NO,
+            rslt_cd: CALL_RESULT.rslt_cd,
             MEMO: CALL_RESULT.MEMO,
-            USERID: authStore.USER_ID,
-            LINE_NUM: authStore.INNER_NO,
+            userid: authStore.user_id,
+            LINE_NUM: authStore.inner_no,
             START_TIME: SESSION_START_TIME.value,
             END_TIME: new Date().toISOString().replace('T', ' ').substring(0, 19),
             MEDIA_TYPE: AGENT_CHAT_HISTORY.value.length > 0 ? 'chat' : 'CALL',
@@ -311,7 +311,7 @@ const init_customer_table = () => {
     CUSTOMER_TABLE_INSTANCE.on("rowClick", (e, row) => {
         const d = row.getData();
         SELECTED_CUSTOMER.value = d;
-        CUSTOMER_INFO.TEL_NO = d.TEL_NO; CUSTOMER_INFO.EMAIL = d.EMAIL;
+        CUSTOMER_INFO.TEL_NO = d.TEL_NO; CUSTOMER_INFO.email = d.email;
         FILTERED_EXT_DATA.value = parseExtData(d.EXT_DATA);
         SESSION_START_TIME.value = new Date().toISOString().replace('T', ' ').substring(0, 19);
         fetch_messages();
@@ -320,8 +320,8 @@ const init_customer_table = () => {
 
 const apply_filter = (code: string) => { CURRENT_FILTER.value = code; load_customer_list(); }
 const format_date = (dt: any) => dt ? new Date(dt).toLocaleString() : '';
-const make_call = () => { if (SELECTED_CUSTOMER.value && CUSTOMER_INFO.TEL_NO) api.get('/crm/cti/make-call', { params: { exten: authStore.INNER_NO, dest: CUSTOMER_INFO.TEL_NO.replace(/-/g, ''), context: 'outbound-call' } }); }
-const handle_invite = async () => { if (CUSTOMER_INFO.EMAIL) { await api.post('/mail/send-invite', { toEmail: CUSTOMER_INFO.EMAIL, custNm: SELECTED_CUSTOMER.value.CUST_NM, custcd: SELECTED_CUSTOMER.value.CALL_SEQ.toString() }); vAlert('초대장 발송 완료'); } }
+const make_call = () => { if (SELECTED_CUSTOMER.value && CUSTOMER_INFO.TEL_NO) api.get('/crm/cti/make-call', { params: { exten: authStore.inner_no, dest: CUSTOMER_INFO.TEL_NO.replace(/-/g, ''), context: 'outbound-call' } }); }
+const handle_invite = async () => { if (CUSTOMER_INFO.email) { await api.post('/mail/send-invite', { toEmail: CUSTOMER_INFO.email, custNm: SELECTED_CUSTOMER.value.CUST_NM, custcd: SELECTED_CUSTOMER.value.CALL_SEQ.toString() }); vAlert('초대장 발송 완료'); } }
 
 onMounted(() => {
     init_customer_table();

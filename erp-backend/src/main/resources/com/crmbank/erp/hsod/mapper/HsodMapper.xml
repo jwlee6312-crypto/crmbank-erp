@@ -3,29 +3,33 @@
 <mapper namespace="com.crmbank.erp.hsod.mapper.HsodMapper">
 
     <select id="HSOD_100U_STR" resultType="map">
-        EXEC HSOD_100U_STR #{ACTKIND}, #{CMPYCD}, #{ORDYM}, #{ORDNO}, #{ORDKIND}, #{DEPTCD}, #{CUSTCD}, #{WHCD},
-        #{AREA}, #{ORDYMD}, #{ORDEMP}, #{PAYCNDT}, #{OUTYMD}, #{TRANCD}, #{ADDRESS}, #{REMARK},
-        #{TOTSUM}, #{STS}, #{UPDEMP}, #{TRANAMT}
+        exec hsod_100u_str
+            #{actkind}, #{cmpycd}, #{ymdfr}, #{ymdto}, #{custnm}, #{ordym}, #{ordno}, #{ordkind},
+            #{deptcd}, #{custcd}, #{whcd}, #{area}, #{ordymd},
+            #{ordemp}, #{paycndt}, #{outymd}, #{trancd}, #{address},
+            #{remark}, #{totsum}, #{sts}, #{updemp}, #{tranamt}
     </select>
 
     <select id="HSOD_101U_STR" resultType="map">
-        EXEC HSOD_101U_STR #{ACTKIND}, #{CMPYCD}, #{ORDYM}, #{ORDNO}, #{OROWNO}, #{ORDYMD}, #{DEPTCD},
-        #{CUSTCD}, #{ITEMCD}, #{ITSIZE}, #{UNIT}, #{ORDQTY}, #{PCTYPE}, #{ORDAMT}, #{ORDVAT}, #{UPDEMP}
+        exec hsod_101u_str
+            #{actkind}, #{cmpycd}, #{ordym}, #{ordno}, #{orowno},
+            #{ordymd}, #{deptcd}, #{custcd}, #{itemcd}, #{unit},
+            #{ordqty}, #{pctype}, #{ordamt}, #{ordvat}, #{updemp}
     </select>
 
     <select id="HSOD_110S_STR" resultType="map">
-        EXEC HSOD_110S_STR #{CMPYCD}, #{DEPTCD}, #{CUSTCDFR}, #{CUSTCDTO}, #{FRYMD}, #{TOYMD}
+        exec hsod_110s_str #{cmpycd}, #{deptcd}, #{custcdfr}, #{custcdto}, #{frymd}, #{toymd}
     </select>
 
     <select id="HSOD_120U_STR" resultType="map">
-        EXEC HSOD_120U_STR #{ACTKIND}, #{CMPYCD},
-        #{ORDKIND}, #{SELGBN}, #{ORDYMD_F}, #{ORDYMD_T}, #{ORDYM}, #{ORDNO}, #{OUTYMD},
-        #{DEPTCD}, #{WHCD}, #{ORDEMP}, #{UPDEMP}
+        exec hsod_120u_str #{actkind}, #{cmpycd},
+        #{ordkind}, #{selgbn}, #{ordymd_f}, #{ordymd_t}, #{ordym}, #{ordno}, #{outymd},
+        #{deptcd}, #{whcd}, #{ordemp}, #{updemp}
     </select>
 
     <select id="HSOD_210U_STR" resultType="map">
-        EXEC HSOD_210U_STR #{ACTKIND}, #{CMPYCD}, #{GBN}, #{FRYMD}, #{TOYMD}, #{IOYM}, #{IONO},
-        #{CUSTCD}, #{DEPTCD}, #{IOYMD}, #{IOAMT}, #{IOVAT}, #{REMARK}, #{UPDEMP}
+        exec hsod_210u_str #{actkind}, #{cmpycd}, #{gbn}, #{frymd}, #{toymd}, #{ioym}, #{iono},
+        #{custcd}, #{deptcd}, #{ioymd}, #{ioamt}, #{iovat}, #{remark}, #{updemp}
     </select>
 
 </mapper>

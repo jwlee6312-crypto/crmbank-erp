@@ -14,22 +14,22 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class CampCallListDto {
-    private Integer CALL_SEQ;        // 전화목록 고유번호
-    private String CMPYCD;           // 회사코드
-    private String CAMP_NO;          // 캠페인번호
-    private String SURV_GB;          // 설문유형
-    private String CUST_NM;          // 고객명
-    private String EMAIL;            // 메일주소
-    private String TEL_NO;           // 연락처
-    private String STATUS;           // 상담상태코드
-    private String STATUS_NM;        // 상담상태명
-    private String RSLT_CD;          // 상담결과코드
-    private String RSLT_NM;          // 상담결과명
-    private String USERID;           // 배정상담원
-    private Map<String, Object> EXT_DATA; // 가변 속성 데이터 (JSON)
-    private Integer READ_CNT;        // 조회횟수
-    private String REDIAL_YN;        // 재통화필요여부
-    private String RESV_DTIME;       // ✅ 약속시간 (추가)
-    private String RESV_MEMO;        // ✅ 예약메모 (추가)
-    private String UPDEMP;           // 수정자
+    private Integer call_seq;        // 전화목록 고유번호
+    private String cmpycd;           // 회사코드
+    private String camp_no;          // 캠페인번호
+    private String surv_gb;          // 설문유형
+    private String cust_nm;          // 고객명
+    private String email;            // 메일주소
+    private String tel_no;           // 연락처
+    private String status;           // 상담상태코드
+    private String status_nm;        // 상담상태명
+    private String rslt_cd;          // 상담결과코드
+    private String rslt_nm;          // 상담결과명
+    private String userid;           // 배정상담원
+    private Map<String, Object> ext_data; // 가변 속성 데이터 (JSON)
+    private Integer read_cnt;        // 조회횟수
+    private String redial_yn;        // 재통화필요여부
+    private String resv_dtime;       // ✅ 약속시간 (추가)
+    private String resv_memo;        // ✅ 예약메모 (추가)
+    private String updemp;           // 수정자
 }

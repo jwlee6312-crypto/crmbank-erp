@@ -24,11 +24,11 @@ public class HaaaController {
     private final CommService commService;
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (!params.containsKey("CMPYCD")) params.put("CMPYCD", user.getCMPYCD());
-            if (!params.containsKey("USERID")) params.put("USERID", user.getUSERID());
-            params.put("UPDEMP", user.getUSERID());
+            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
+            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
+            params.put("updemp", user.getUserid());
         }
     }
 
@@ -36,8 +36,8 @@ public class HaaaController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> data, HttpServletRequest request) {
         try {
-            UserSession user = commService.login(data.get("CMPYCD"), data.get("USERID"), data.get("PASSWD"), request.getRemoteAddr());
-            request.getSession(true).setAttribute("USER_SESSION", user);
+            UserSession user = commService.login(data.get("cmpycd"), data.get("userid"), data.get("PASSWD"), request.getRemoteAddr());
+            request.getSession(true).setAttribute("user_session", user);
             return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -52,7 +52,7 @@ public class HaaaController {
 
     @GetMapping("/session")
     public ResponseEntity<?> getSession(HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.status(401).build();
     }
 
@@ -63,7 +63,7 @@ public class HaaaController {
     }
 
     @GetMapping("/left-menus")
-    public ResponseEntity<List<Map<String, Object>>> getLeftMenus(@RequestParam("UPMUCD") String upmucd) {
+    public ResponseEntity<List<Map<String, Object>>> getLeftMenus(@RequestParam("upmucd") String upmucd) {
         return ResponseEntity.ok(commService.getLeftMenus(upmucd));
     }
 
@@ -92,11 +92,11 @@ public class HaaaController {
         String[] keys;
         String proc = procedure.toUpperCase();
         if (proc.equals("HAAA_010U_STR")) {
-            keys = new String[]{"ACTKIND", "CDTYPE", "CODECD", "CODENM", "DSPORD", "REMARK", "USEYN", "USERID"};
+            keys = new String[]{"actkind", "cdtype", "codecd", "codenm", "dspord", "remark", "useyn", "userid"};
         } else if (proc.equals("HAAA_800U_STR")) {
-            keys = new String[]{"ACTKIND", "PGMID", "PGMNM", "UPMUCD", "GRPCD", "GRPNM", "DSPORD", "USEYN", "USERID"};
+            keys = new String[]{"actkind", "pgmid", "pgmnm", "upmucd", "grpcd", "grpnm", "dspord", "useyn", "userid"};
         } else if (proc.equals("HAAA_810U_STR")) {
-            keys = new String[]{"ACTKIND", "UPMUCD", "GRPCD", "GRPNM", "DSPORD", "USEYN", "USERID"};
+            keys = new String[]{"actkind", "upmucd", "grpcd", "grpnm", "dspord", "useyn", "userid"};
         } else {
             keys = params.keySet().toArray(new String[0]);
         }

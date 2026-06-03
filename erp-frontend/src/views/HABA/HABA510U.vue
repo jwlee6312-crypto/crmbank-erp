@@ -1,0 +1,232 @@
+<!--
+	=============================================================
+	프로그램명	: 지불계정관리
+	작성일자	: 2025.02.24
+	작성자	    : AI Assistant
+	설명        : 지불 유형별 연결 계정과목 관리
+	=============================================================
+-->
+
+<template>
+	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+
+	<div class="erp-container">
+		<!-- 🚀 상단 액션 바 -->
+		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
+			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+				<i class="bi bi-credit-card-2-back me-2 text-primary" style="font-size: 18px;"></i>
+				기본정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				<span class="text-primary fw-bolder">지불계정관리 (HABA510U)</span>
+			</div>
+			<div class="btn-group-erp d-flex gap-1">
+				<button class="btn-erp btn-init" @click="initialize">
+					<i class="bi bi-plus-lg"></i> 신규
+				</button>
+				<button class="btn-erp btn-search" @click="search">
+					<i class="bi bi-search"></i> 조회
+				</button>
+				<button class="btn-erp btn-save" @click="save">
+					<i class="bi bi-check-lg"></i> 저장
+				</button>
+				<button v-if="masterForm.actkind === 'U0'" class="btn-erp btn-danger" @click="deleteData">
+					<i class="bi bi-trash"></i> 삭제
+				</button>
+			</div>
+		</div>
+
+		<!-- 📝 입력 영역 -->
+		<div class="p-2 pb-0 flex-shrink-0">
+			<div class="card border shadow-sm bg-white overflow-hidden">
+				<div class="card-header py-1 px-2 bg-light border-bottom">
+					<span class="small fw-bold text-secondary"><i class="bi bi-pencil-square me-1"></i> 지불 계정 상세 정보 [{{ masterForm.actkind === 'A0' ? '신규' : '수정' }}]</span>
+				</div>
+				<table class="erp-table-full small">
+					<colgroup>
+						<col style="width: 100px;" /><col style="width: 15%;" />
+						<col style="width: 100px;" /><col style="width: 25%;" />
+						<col style="width: 100px;" /><col />
+					</colgroup>
+					<tbody>
+						<tr>
+							<th class="text-center bg-light-subtle border-end">지불유형</th>
+							<td class="bg-white border-end px-2 py-1">
+								<input v-model="masterForm.PAYGBN" type="text" class="form-control form-control-sm text-center" maxlength="3" :readonly="masterForm.actkind === 'U0'" placeholder="3자리" />
+							</td>
+							<th class="text-center bg-light-subtle border-end">지불유형명</th>
+							<td class="bg-white border-end px-2 py-1">
+								<input v-model="masterForm.PAYGBNM" type="text" class="form-control form-control-sm" maxlength="20" />
+							</td>
+							<th class="text-center bg-light-subtle border-end">계정과목</th>
+							<td class="bg-white px-2 py-1">
+								<div class="input-group input-group-sm" style="max-width: 300px;">
+									<input v-model="masterForm.acctcd" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
+									<input v-model="masterForm.acctnm" type="text" class="form-control" @keydown.enter="openHelp" />
+									<button class="btn btn-outline-secondary px-2" @click="openHelp"><i class="bi bi-search"></i></button>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<!-- 📊 그리드 영역 -->
+		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
+			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                </div>
+			</div>
+		</div>
+	</div>
+
+	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import { useAlerts } from '@/composables/useAlerts'
+import { api } from '@/utils/axios'
+import { useAuthStore } from '@/stores/authStore'
+import { useFormReset } from '@/composables/useFormReset'
+import Modal from '@/components/Modal.vue'
+import type { ModalProps } from '@/types/modal'
+
+const authStore = useAuthStore()
+const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
+const { resetForm } = useFormReset()
+
+// 📝 마스터 데이터
+const masterForm = reactive({
+	actkind: 'A0',
+	PAYGBN: '',
+	PAYGBNM: '',
+	acctcd: '',
+	acctnm: ''
+})
+
+const mainGridRef = ref<HTMLDivElement | null>(null)
+let mainGrid: Tabulator | null = null
+
+const search = async () => {
+	try {
+		const res = await api.post('/api/haba/HABA_510U_STR', {
+			actkind: 'S0',
+			cmpycd: authStore.cmpycd
+		})
+
+		mainGrid?.setData(res.data || [])
+		if (res.data?.length > 0) vAlert('조회되었습니다.')
+	} catch (e) { vAlertError('조회 중 오류 발생') }
+}
+
+const save = async () => {
+	if (!masterForm.PAYGBN) return vAlert('지불유형을 기재해 주십시요.')
+	if (masterForm.PAYGBN.length < 3) return vAlert('지불유형은 3자리로 입력하셔야 합니다.')
+	if (!masterForm.PAYGBNM) return vAlert('지불유형 명을 기재해 주십시요.')
+	if (!masterForm.acctcd) return vAlert('계정과목을 선택해 주십시요.')
+
+	try {
+		const payload = {
+			actkind: masterForm.actkind,
+			cmpycd: authStore.cmpycd,
+			PAYGBN: masterForm.PAYGBN,
+			PAYGBNM: masterForm.PAYGBNM,
+			acctcd: masterForm.acctcd,
+			userid: authStore.userid
+		}
+
+		const res = await api.post('/api/haba/HABA_510U_STR', payload)
+
+		if (res.data?.[0]?.ret_yn === 'Y') {
+			vAlertError(res.data[0].RET_MSG)
+		} else {
+			vAlert('정상으로 작업이 되었습니다.')
+			search()
+			initialize()
+		}
+	} catch (e) { vAlertError('저장 실패') }
+}
+
+const deleteData = async () => {
+	if (!masterForm.PAYGBN) return vAlert('삭제할 지불유형을 선택해 주십시요.')
+	if (!confirm('정말로 삭제하시겠습니까?')) return
+
+	try {
+		const res = await api.post('/api/haba/HABA_510U_STR', {
+			actkind: 'D0',
+			cmpycd: authStore.cmpycd,
+			PAYGBN: masterForm.PAYGBN,
+			userid: authStore.userid
+		})
+
+		if (res.data?.[0]?.ret_yn === 'Y') {
+			vAlertError(res.data[0].RET_MSG)
+		} else {
+			vAlert('정상적으로 삭제되었습니다.')
+			search()
+			initialize()
+		}
+	} catch (e) { vAlertError('삭제 중 오류 발생') }
+}
+
+const initialize = () => {
+	resetForm(masterForm)
+	masterForm.actkind = 'A0'
+}
+
+// 팝업 설정
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
+
+function openHelp() {
+	Object.assign(modalProps, {
+		title: '계정과목 선택',
+		path: '/api/ha00/HA00_00P_STR',
+		data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: masterForm.acctnm },
+		columns: [
+			{ title: '코드', field: 'col0', width: 100, hozAlign: 'center' },
+			{ title: '계정명', field: 'col1', width: 250 }
+		],
+		onConfirm: (d: any) => {
+			masterForm.acctcd = d.col0
+			masterForm.acctnm = d.col1
+		}
+	})
+	modalVisible.value = true
+}
+
+onMounted(() => {
+	if (mainGridRef.value) {
+		mainGrid = new Tabulator(mainGridRef.value, {
+			layout: 'fitColumns',
+			height: '100%',
+			columnDefaults: { headerSort: false, vertAlign: "middle" },
+			columns: [
+				{ title: "유형", field: "PAYGBN", width: 100, hozAlign: "center" },
+				{ title: "유형명", field: "PAYGBNM", width: 250 },
+				{ title: "계정과목", field: "acctcd", width: 120, hozAlign: "center" },
+				{ title: "계정과목 명", field: "acctnm", minWidth: 250 }
+			],
+			rowClick: (e, row) => {
+				const d = row.getData()
+				masterForm.actkind = 'U0'
+				masterForm.PAYGBN = d.PAYGBN
+				masterForm.PAYGBNM = d.PAYGBNM
+				masterForm.acctcd = d.acctcd
+				masterForm.acctnm = d.acctnm
+			}
+		})
+		search()
+	}
+})
+</script>
+
+<style scoped>
+.erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
+.bg-light-subtle { background-color: #f8f9fa !important; }
+:deep(.tabulator-row) { cursor: pointer; }
+:deep(.tabulator-row:hover) { background-color: #f0f7ff !important; }
+</style>

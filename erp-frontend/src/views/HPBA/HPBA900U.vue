@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hpba900u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -39,33 +39,33 @@
                 <td>
                   <select v-model="formData.CDGBN" class="form-select form-select-sm" style="width: 180px;">
                     <option v-for="opt in groupOptions" :key="opt.CODE" :value="opt.CODE">
-                      [{{ opt.CODE }}] {{ opt.CDNM }}
+                      [{{ opt.CODE }}] {{ opt.cdnm }}
                     </option>
                   </select>
                 </td>
                 <th class="required">코&nbsp;&nbsp;&nbsp;&nbsp;드</th>
                 <td>
-                  <input v-model="formData.CODE" type="text" class="form-control form-control-sm" style="width: 100px;" maxlength="10" :readonly="formData.ACTKIND === 'U0'" />
+                  <input v-model="formData.CODE" type="text" class="form-control form-control-sm" style="width: 100px;" maxlength="10" :readonly="formData.actkind === 'U0'" />
                 </td>
                 <th class="required">코&nbsp;드&nbsp;명</th>
                 <td>
-                  <input v-model="formData.CDNM" type="text" class="form-control form-control-sm" placeholder="코드명 입력" />
+                  <input v-model="formData.cdnm" type="text" class="form-control form-control-sm" placeholder="코드명 입력" />
                 </td>
               </tr>
               <tr>
                 <th>비&nbsp;&nbsp;&nbsp;&nbsp;고</th>
                 <td>
-                  <input v-model="formData.REMARK" type="text" class="form-control form-control-sm" placeholder="설명 입력" />
+                  <input v-model="formData.remark" type="text" class="form-control form-control-sm" placeholder="설명 입력" />
                 </td>
                 <th>출현순서</th>
                 <td>
-                  <input v-model="formData.DSPORD" type="number" class="form-control form-control-sm text-end" style="width: 80px;" />
+                  <input v-model="formData.dspord" type="number" class="form-control form-control-sm text-end" style="width: 80px;" />
                 </td>
                 <th>사용여부</th>
                 <td>
                   <div class="form-check form-switch pt-1">
-                    <input v-model="formData.USEYN" class="form-check-input" type="checkbox" true-value="Y" false-value="N">
-                    <label class="form-check-label small ms-1">{{ formData.USEYN === 'Y' ? '사용함' : '미사용' }}</label>
+                    <input v-model="formData.useyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N">
+                    <label class="form-check-label small ms-1">{{ formData.useyn === 'Y' ? '사용함' : '미사용' }}</label>
                   </div>
                 </td>
               </tr>
@@ -81,8 +81,8 @@
           <div class="card-header bg-light py-2 px-3 border-bottom fw-bold small text-dark">
             <i class="bi bi-folder2-open me-1 text-primary"></i> 코드 그룹
           </div>
-          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-            <div ref="groupGridElement" style="height: 100%;"></div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="groupGridElement" class="tabulator-instance flex-grow-1"></div>
           </div>
         </div>
 
@@ -92,24 +92,14 @@
             <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
               <span class="fw-bold small text-dark">
                 <i class="bi bi-list-ul me-1 text-primary"></i> 상세 코드 리스트
-                <span v-if="selectedGroup.CDNM" class="badge bg-info ms-2 px-3">{{ selectedGroup.CDNM }}</span>
+                <span v-if="selectedGroup.cdnm" class="badge bg-info ms-2 px-3">{{ selectedGroup.cdnm }}</span>
               </span>
               <span class="text-muted small">목록을 클릭하면 수정 모드로 전환됩니다.</span>
             </div>
-            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-              <div ref="codeGridElement" style="height: 100%;"></div>
-            </div>
+              <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                <div ref="codeGridElement" class="tabulator-instance flex-grow-1"></div>
+              </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-4 small">코드 개수: <span class="fw-bold text-info">{{ itemCount }}</span> 개</div>
-        <div class="col-md-8 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 시스템 전반에서 사용되는 기초 공통 코드를 관리하는 화면입니다.
         </div>
       </div>
     </div>
@@ -132,16 +122,16 @@ const { resetForm } = useFormReset()
 
 // 1. 상태 관리
 const formData = reactive({
-  ACTKIND: 'A0',
+  actkind: 'A0',
   CDGBN: '010',
   CODE: '',
-  CDNM: '',
-  REMARK: '',
-  DSPORD: 0,
-  USEYN: 'Y'
+  cdnm: '',
+  remark: '',
+  dspord: 0,
+  useyn: 'Y'
 })
 
-const selectedGroup = reactive({ CODE: '010', CDNM: '' })
+const selectedGroup = reactive({ CODE: '010', cdnm: '' })
 const groupOptions = ref<any[]>([])
 
 const groupGridElement = ref<HTMLElement | null>(null)
@@ -159,13 +149,13 @@ const initGrids = () => {
       placeholder: "데이터가 없습니다.",
       selectable: 1,
       columns: [
-        { title: "코드 그룹명", field: "CDNM", minWidth: 200, cssClass: "fw-bold" }
+        { title: "코드 그룹명", field: "cdnm", minWidth: 200, cssClass: "fw-bold" }
       ],
     })
 
     groupGrid.on("rowClick", (e, row) => {
         const data = row.getData()
-        Object.assign(selectedGroup, { CODE: data.CODE, CDNM: data.CDNM })
+        Object.assign(selectedGroup, { CODE: data.CODE, cdnm: data.cdnm })
         formData.CDGBN = data.CODE
         fetchCodes(data.CODE)
         resetInputForm(data.CODE)
@@ -180,17 +170,17 @@ const initGrids = () => {
       selectable: 1,
       columns: [
         { title: "코드", field: "CODE", width: 100, hozAlign: "center" },
-        { title: "코 드 명", field: "CDNM", minWidth: 200, cssClass: "fw-bold" },
-        { title: "비 고", field: "REMARK", minWidth: 200 },
-        { title: "순서", field: "DSPORD", width: 80, hozAlign: "center" },
-        { title: "사용", field: "USEYN", width: 80, hozAlign: "center", formatter: "tickCross" }
+        { title: "코 드 명", field: "cdnm", minWidth: 200, cssClass: "fw-bold" },
+        { title: "비 고", field: "remark", minWidth: 200 },
+        { title: "순서", field: "dspord", width: 80, hozAlign: "center" },
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
       ],
     })
 
     codeGrid.on("rowClick", (e, row) => {
         const data = row.getData()
         Object.assign(formData, data)
-        formData.ACTKIND = 'U0'
+        formData.actkind = 'U0'
     })
   }
 }
@@ -198,7 +188,7 @@ const initGrids = () => {
 // 3. 비즈니스 로직
 const fetchGroups = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '010' } })
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '010' } })
     groupOptions.value = res.data
     groupGrid?.setData(res.data)
   } catch (e) { vAlertError('그룹 조회 실패') }
@@ -207,8 +197,8 @@ const fetchGroups = async () => {
 const fetchCodes = async (groupCd: string) => {
   try {
     const res = await api.post('/api/hpba/HPBA_900U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
       CDGBN: groupCd
     })
     codeGrid?.setData(res.data)
@@ -217,18 +207,18 @@ const fetchCodes = async (groupCd: string) => {
 }
 
 const saveData = async () => {
-  if (!formData.CODE || !formData.CDNM) {
+  if (!formData.CODE || !formData.cdnm) {
     return vAlertError('코드와 코드명은 필수 입력 사항입니다.')
   }
 
-  const msg = formData.ACTKIND === 'A0' ? '새 코드를 등록하시겠습니까?' : '코드 정보를 수정하시겠습니까?'
+  const msg = formData.actkind === 'A0' ? '새 코드를 등록하시겠습니까?' : '코드 정보를 수정하시겠습니까?'
   if (!confirm(msg)) return
 
   try {
     await api.post('/api/hpba/HPBA_900U_STR', {
       ...formData,
-      CMPYCD: authStore.CMPYCD,
-      USERID: authStore.USERID
+      cmpycd: authStore.cmpycd,
+      userid: authStore.userid
     })
     vAlert('정상적으로 처리되었습니다.')
     fetchCodes(formData.CDGBN)
@@ -237,19 +227,19 @@ const saveData = async () => {
 }
 
 const resetInputForm = (groupCd: string) => {
-    formData.ACTKIND = 'A0'
+    formData.actkind = 'A0'
     formData.CDGBN = groupCd
     formData.CODE = ''
-    formData.CDNM = ''
-    formData.REMARK = ''
-    formData.DSPORD = 0
-    formData.USEYN = 'Y'
+    formData.cdnm = ''
+    formData.remark = ''
+    formData.dspord = 0
+    formData.useyn = 'Y'
 }
 
 const initialize = () => {
   resetForm(formData)
-  Object.assign(formData, { ACTKIND: 'A0', CDGBN: '010', USEYN: 'Y', DSPORD: 0 })
-  Object.assign(selectedGroup, { CODE: '010', CDNM: '' })
+  Object.assign(formData, { actkind: 'A0', CDGBN: '010', useyn: 'Y', dspord: 0 })
+  Object.assign(selectedGroup, { CODE: '010', cdnm: '' })
   groupGrid?.clearData()
   codeGrid?.clearData()
   itemCount.value = 0
@@ -261,26 +251,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.hpba900u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background-color: #f4f7fa !important; }
-.erp-header { background-color: #ffffff !important; }
-
-.btn-erp { padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; border: none; }
-.btn-init { background-color: #f8f9fa !important; color: #495057 !important; border: 1px solid #ced4da !important; }
-.btn-init:hover { background-color: #e9ecef !important; }
-.btn-search { background-color: #4361ee !important; color: #fff !important; }
-.btn-search:hover { background-color: #374fc7 !important; transform: translateY(-1px); }
-.btn-save { background-color: #2ec4b6 !important; color: #fff !important; }
-.btn-save:hover { background-color: #28afa3 !important; transform: translateY(-1px); }
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.erp-table-full th { width: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 12px; padding: 10px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 6px 12px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-
-/* Tabulator 스타일 */
-:deep(.tabulator) { border: none; font-size: 12.5px; border-radius: 0 0 8px 8px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; font-weight: 700; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; color: #333; }
-:deep(.tabulator-row.tabulator-selected) { background-color: #eef2ff !important; }
-</style>

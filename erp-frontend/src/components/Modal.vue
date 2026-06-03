@@ -1,38 +1,55 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
-	<!-- 💡 확실한 배경과 z-index 고정 -->
-	<div v-if="visible" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.7); z-index: 1060;">
-		<div :class="props.modalProps.large ? 'modal-dialog modal-xl modal-dialog-centered' : 'modal-dialog modal-dialog-centered'" style="max-height: 95vh;">
-			<div class="modal-content border-0 shadow-lg" style="border-radius: 6px; overflow: hidden;">
-				<!-- 🚀 헤더 디자인 -->
-				<div class="modal-header py-2 bg-primary text-white border-0">
-					<h5 class="modal-title fw-bold" style="font-size: 15px;">
-						<i class="bi bi-search me-2"></i>{{ props.modalProps.title || '데이터 조회' }}
+
+	<div v-if="visible" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1060; backdrop-filter: blur(2px);">
+		<div :class="props.modalProps.large ? 'modal-dialog modal-lg modal-dialog-centered' : 'modal-dialog modal-dialog-centered'" style="max-height: 85vh;">
+			<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+				<div class="modal-header py-2 bg-white border-bottom shadow-sm">
+					<h5 class="modal-title fw-bolder text-dark d-flex align-items-center" style="font-size: 15px;">
+						<span class="bg-primary p-1 rounded me-2 d-flex align-items-center justify-content-center" style="width: 22px; height: 22px;">
+							<i class="bi bi-search text-white" style="font-size: 12px;"></i>
+						</span>
+						{{ props.modalProps.title || '데이터 조회' }}
 					</h5>
-					<button type="button" class="btn-close btn-close-white" @click="close"></button>
+					<button type="button" class="btn-close shadow-none" style="font-size: 12px;" @click="close"></button>
 				</div>
 
-				<div class="modal-body p-3 bg-white">
-					<!-- 🔍 검색 영역 -->
-					<div class="d-flex gap-2 align-items-center mb-3">
-						<div class="input-group input-group-sm" style="width: 450px;">
-							<select v-model="filterField" class="form-select bg-light fw-bold" style="max-width: 140px">
-								<option v-for="opt in fieldOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-							</select>
-							<input v-model="filterValue" type="text" class="form-control border-primary-subtle" placeholder="검색어 입력 후 엔터..." @keyup.enter="search" />
-							<button class="btn btn-primary px-3 fw-bold" @click="search">검색 (F)</button>
+				<div class="modal-body p-3 bg-light">
+					<div class="d-flex justify-content-between align-items-center mb-3">
+						<div class="input-group input-group-sm shadow-sm" style="width: 320px;">
+							<span class="input-group-text bg-white border-end-0 text-muted">
+								<i class="bi bi-funnel"></i>
+							</span>
+							<input
+								v-model="filterValue"
+								type="text"
+								class="form-control border-start-0 ps-0 shadow-none"
+								:placeholder="`${props.modalProps.title?.replace(' 선택', '')} 검색...`"
+								@keyup.enter="search"
+							/>
+							<button class="btn btn-primary px-3 fw-bold" @click="search" :disabled="loading">조회</button>
 						</div>
-						<div class="small text-muted ms-auto"><i class="bi bi-info-circle me-1"></i> 항목을 선택(클릭)하여 적용하십시오.</div>
+
+						<div v-if="totalCount > 0" class="badge bg-white text-dark border px-3 py-2 fw-normal rounded-pill shadow-sm">
+							조회: <span class="text-primary fw-bold">{{ totalCount.toLocaleString() }}</span> 건
+						</div>
 					</div>
 
-					<!-- 📊 그리드 영역: 명시적 높이 500px 부여 -->
-					<div class="popup-grid-wrapper border rounded bg-white shadow-sm" style="height: 500px; width: 100%; position: relative;">
+					<div class="popup-grid-container border rounded-3 bg-white shadow-sm overflow-hidden" style="height: 480px; position: relative;">
+						<div v-if="loading" class="loading-overlay">
+							<div class="spinner-grow text-primary mb-2" role="status" style="width: 2rem; height: 2rem;"></div>
+							<div class="fw-bold text-primary small">검색 중...</div>
+						</div>
 						<div ref="popupRef" style="height: 100%; width: 100%;"></div>
 					</div>
+
+					<div class="mt-2 text-muted" style="font-size: 11px;">
+						<i class="bi bi-info-circle me-1 text-primary"></i> 항목을 클릭하여 선택하십시오.
+					</div>
 				</div>
 
-				<div class="modal-footer py-2 bg-light border-top text-end">
-					<button type="button" class="btn btn-sm btn-secondary px-4 fw-bold" @click="close">닫기</button>
+				<div class="modal-footer py-2 bg-white border-top border-0 text-end">
+					<button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill fw-bold" @click="close">취소</button>
 				</div>
 			</div>
 		</div>
@@ -40,10 +57,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
-// 💡 표준 CSS 로드
-import 'tabulator-tables/dist/css/tabulator.min.css'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { api } from '@/utils/axios'
 import AppAlert from '@/components/AppAlert.vue'
 import { useAlerts } from '@/composables/useAlerts'
@@ -55,103 +71,102 @@ const { showAlert, showError, alertMessage } = useAlerts()
 
 const popupRef = ref<HTMLElement | null>(null)
 const popupGrid = ref<Tabulator | null>(null)
-const filterField = ref<string>('')
 const filterValue = ref<string>('')
+const loading = ref(false)
+const totalCount = ref(0)
 
 watch(() => props.visible, async (isVisible) => {
 	if (!isVisible) {
 		if (popupGrid.value) { popupGrid.value.destroy(); popupGrid.value = null; }
 		filterValue.value = '';
+		totalCount.value = 0;
 		return
 	}
 
 	await nextTick()
 
-	// 💡 모달이 화면에 완전히 나타난 후(애니메이션 종료) 그리드 생성
 	setTimeout(() => {
 		if (!popupRef.value) return
 
 		popupGrid.value = new Tabulator(popupRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
+			pagination: "local",
+			paginationSize: 15,
+			paginationSizeSelector: [15, 30, 50],
 			data: [],
 			columns: props.modalProps.columns || [],
 			columnDefaults: {
 				headerHozAlign: 'center',
 				headerSort: true,
-				minWidth: 80
+				minWidth: 80,
+				vertAlign: 'middle',
 			},
-			placeholder: "데이터를 조회 중입니다..."
+			placeholder: "데이터가 없습니다."
 		})
 
-		// 초기 검색 필드 설정
-		filterField.value = props.modalProps.defaultField || (props.modalProps.columns?.[0]?.field || '')
-
-		// 💡 지연 없이 즉시 데이터 로드 실행
 		search()
 
 		popupGrid.value.on('rowClick', (_e, row) => {
-			if (props.modalProps.type === 'table') {
-				props.modalProps.onConfirm?.(row.getData())
-				close()
-			}
+			props.modalProps.onConfirm?.(row.getData())
+			close()
 		})
-	}, 300)
+	}, 100)
 })
 
 async function search() {
 	if (!popupGrid.value) return
+	loading.value = true;
 	try {
+		// 💡 소문자 표준 지침에 따라 파라미터 키를 소문자로 구성
 		const body = {
 			...props.modalProps.data,
-			GBNCD: props.modalProps.data.GBNCD || '',
-			CODE: props.modalProps.data.CODE || '',
-			CODENM: filterValue.value || '',
-			ETCVAL: props.modalProps.data.ETCVAL || ''
+			gubun: props.modalProps.data.gubun || '',
+			codenm: filterValue.value || '',
+			etcval: props.modalProps.data.etcval || ''
+		}
+
+		if (!props.modalProps.data.code) {
+			body.code = filterValue.value || '';
+		} else {
+			body.code = props.modalProps.data.code;
 		}
 
 		const res = await api.post(props.modalProps.path, body)
+		// 💡 인터셉터에서 이미 소문자로 정규화된 데이터를 사용
+		const resData = res.data.data || (Array.isArray(res.data) ? res.data : [])
+		totalCount.value = resData.length
 
 		if (popupGrid.value) {
-			await popupGrid.value.setData(res.data || [])
-			// 💡 강제로 그리드를 다시 그려서 투명화 현상 방지
+			await popupGrid.value.setData(resData)
 			popupGrid.value.redraw(true)
 		}
 	} catch (error) {
 		console.error('팝업 조회 실패:', error)
+	} finally {
+		loading.value = false;
 	}
 }
 
 function close() { emit('update:visible', false) }
-
-const fieldOptions = computed(() => {
-	const cols = props.modalProps.columns || []
-	return cols.filter((c: any) => c.field).map((c: any) => ({ label: c.title || c.field, value: c.field }))
-})
 </script>
 
-<style>
-/* 💡 표준 폰트 및 고밀도 디자인 강제 적용 (scoped 제거하여 전역 전파 보장) */
-.popup-grid-wrapper .tabulator {
-	border: none !important;
-	font-size: 12.5px !important;
-	background: #fff !important;
+<style scoped>
+.loading-overlay {
+	position: absolute;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(255, 255, 255, 0.7);
+	z-index: 100;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	backdrop-filter: blur(1px);
 }
-.popup-grid-wrapper .tabulator-header {
-	background-color: #f1f5f9 !important;
-	border-bottom: 2px solid #dee2e6 !important;
-}
-.popup-grid-wrapper .tabulator-col-title {
-	line-height: 1.3 !important;
-	text-align: center !important;
-	font-weight: 800 !important;
-	color: #334155 !important;
-}
-.popup-grid-wrapper .tabulator-cell {
-	padding: 8px 4px !important;
-	border-right: 1px solid #f1f5f9 !important;
-}
-.popup-grid-wrapper .tabulator-row.tabulator-selected {
-	background-color: #e2e8f0 !important;
-}
+.popup-grid-container :deep(.tabulator) { border: none !important; font-size: 13px !important; }
+.popup-grid-container :deep(.tabulator-header) { background-color: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; color: #475569 !important; }
+.popup-grid-container :deep(.tabulator-row:hover) { background-color: #f0f9ff !important; cursor: pointer; }
+.popup-grid-container :deep(.tabulator-footer) { background-color: #fff !important; border-top: 1px solid #e2e8f0 !important; padding: 5px !important; }
+.popup-grid-container :deep(.tabulator-page) { border: 1px solid #e2e8f0 !important; margin: 0 2px !important; padding: 2px 8px !important; border-radius: 4px !important; background: #fff !important; color: #64748b !important; font-size: 12px; }
+.popup-grid-container :deep(.tabulator-page.active) { background-color: #0d6efd !important; color: white !important; border-color: #0d6efd !important; }
 </style>

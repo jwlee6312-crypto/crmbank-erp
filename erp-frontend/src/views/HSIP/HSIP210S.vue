@@ -2,7 +2,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hsip210s-wrapper d-flex flex-column h-100 bg-white p-0 overflow-auto">
+	<div class="erp-container">
 		<!-- 🚀 1. 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom shadow-sm bg-white py-1 sticky-top">
 			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 13px;">
@@ -29,14 +29,14 @@
 					<th class="required border-end text-nowrap">수입부서</th>
 					<td>
 						<div class="input-group input-group-sm flex-nowrap ms-1">
-							<input v-model="searchForm.DEPTCD" type="text" class="form-control bg-light" style="max-width: 60px;" readonly />
-							<input v-model="searchForm.DEPTNM" type="text" class="form-control" />
+							<input v-model="searchForm.deptcd" type="text" class="form-control bg-light" style="max-width: 60px;" readonly />
+							<input v-model="searchForm.deptnm" type="text" class="form-control" />
 							<button class="btn btn-outline-secondary px-2" @click="openDeptPopup"><i class="bi bi-search"></i></button>
 						</div>
 					</td>
 					<th class="required border-end text-nowrap">수입연도</th>
 					<td>
-						<select v-model="searchForm.YY" class="form-select form-select-sm ms-1" style="width: 120px;">
+						<select v-model="searchForm.yy" class="form-select form-select-sm ms-1" style="width: 120px;">
 							<option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
 						</select>
 					</td>
@@ -74,8 +74,8 @@ const { resetForm } = useFormReset()
 
 const currentYear = new Date().getFullYear()
 const searchForm = reactive({
-	DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-	YY: currentYear.toString()
+	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+	yy: currentYear.toString()
 })
 
 const yearOptions = ref<string[]>([])
@@ -93,7 +93,7 @@ async function fetchTrendList() {
 		// 🛠️ [경로 수정] /api/hsip/list -> /api/hsip/HSIP_210S_STR (POST)
 		const res = await api.post('/api/hsip/HSIP_210S_STR', {
 			...searchForm,
-			CMPYCD: authStore.CMPYCD
+			cmpycd: authStore.cmpycd
 		})
 		mainGrid?.setData(res.data)
 		vAlert('조회되었습니다.')
@@ -104,7 +104,7 @@ const openDeptPopup = () => { vAlert('부서 팝업 준비 중') }
 
 function initialize() {
 	resetForm(searchForm)
-	searchForm.YY = currentYear.toString()
+	searchForm.yy = currentYear.toString()
 	mainGrid?.clearData()
 }
 
@@ -115,8 +115,8 @@ onMounted(async () => {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 70 },
 			columns: [
-				{ title: '품목 명칭', field: 'ITEMNM', minWidth: 250, widthGrow: 1, cssClass: 'fw-bold text-dark border-end' },
-				{ title: '합 계', field: 'AMTSUM', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-info-subtle fw-bold' },
+				{ title: '품목 명칭', field: 'itemnm', minWidth: 250, widthGrow: 1, cssClass: 'fw-bold text-dark border-end' },
+				{ title: '합 계', field: 'amtsum', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-info-subtle fw-bold' },
 				{ title: '1월', field: 'AMT01', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '2월', field: 'AMT02', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '3월', field: 'AMT03', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
@@ -135,33 +135,3 @@ onMounted(async () => {
 	fetchTrendList()
 })
 </script>
-
-<style scoped>
-.hsip210s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
-</style>

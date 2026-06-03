@@ -1,76 +1,47 @@
 package com.crmbank.erp.comm.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.io.Serializable;
 
+/**
+ * 사용자 세션 DTO
+ * 완전 소문자 표준화 적용 (JsonProperty 제거)
+ */
 @Data
 public class UserSession implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @JsonProperty("CMPYCD")
-    private String CMPYCD;
-    
-    @JsonProperty("CMPYNM")
-    private String CMPYNM;
-    
-    @JsonProperty("USERID")
-    private String USERID;
-    
-    @JsonProperty("USERNM")
-    private String USERNM;
-    
-    @JsonProperty("INNER_NO")
-    private String INNER_NO;
+    private String cmpycd;
+    private String cmpynm;
+    private String userid;
+    private String usernm;
+    private String inner_no;
+    private String email;
+    private String deptcd;
+    private String deptnm;
+    private String empno;
+    private String domain;
+    private String salsyn;
+    private String usergrp;
+    private String datename;
 
-    @JsonProperty("EMAIL")
-    private String EMAIL;
-
-    
-    @JsonProperty("DEPTCD")
-    private String DEPTCD;
-    
-    @JsonProperty("DEPTNM")
-    private String DEPTNM;
-    
-    @JsonProperty("EMPNO")
-    private String EMPNO;
-    
-    @JsonProperty("DOMAIN")
-    private String DOMAIN;
-    
-    @JsonProperty("SALSYN")
-    private String SALSYN;
-    
-    @JsonProperty("USERGRP")
-    private String USERGRP;
-    
-    @JsonProperty("DATENAME")
-    private String DATENAME;
-
-    // 기존 호환성용 Getter/Setter
-    public String getUSER_ID() { return this.USERID; }
-    public void setUSER_ID(String id) { this.USERID = id; }
-    public String getUSER_NAME() { return this.USERNM; }
-    public void setUSER_NAME(String name) { this.USERNM = name; }
-
-    private String LEFTLOGO;
-    private String RIGHTIMG;
-    private String ACCTMENU;
-    private String PUCHMENU;
-    private String SALSMENU;
-    private String INSAMENU;
-    private String MNGTMENU;
-    private String ETC1MENU;
-    private String ETC2MENU;
-    private String ACCTCODE;
-    private String PUCHCODE;
-    private String SALSCODE;
-    private String INSACODE;
-    private String MNGTCODE;
-    private String ETC1CODE;
-    private String ETC2CODE;
-    private String ETC3CODE;
-    private String ETC4CODE;
-    private String CAPYRIGHT;
+    private String leftlogo;
+    private String rightimg;
+    private String acctmenu;
+    private String puchmenu;
+    private String salsmenu;
+    private String insamenu;
+    private String mngtmenu;
+    private String etc1menu;
+    private String etc2menu;
+    private String acctcode;
+    private String puchcode;
+    private String salscode;
+    private String insacode;
+    private String mngtcode;
+    private String etc1code;
+    private String etc2code;
+    private String etc3code;
+    private String etc4code;
+    private String capyright;
 }

@@ -74,11 +74,11 @@ const grid = ref<Tabulator | null>(null)
 const fetchItems = async () => {
   try {
     const res = await api.post('/api/hs00/HS00_000S_STR', {
-      GUBUN: 'I1',
-      CMPYCD: String(props.cmpycd),
-      GBNCD: String(props.astKind || '2'),
-      CODE: '',
-      CODENM: String(searchWord.value).trim(),
+      gubun: 'I1',
+      cmpycd: String(props.cmpycd),
+      gbncd: String(props.astKind || '2'),
+      code: '',
+      codenm: String(searchWord.value).trim(),
       ETCVAL: ''
     })
     if (grid.value) {
@@ -106,10 +106,10 @@ watch(() => props.visible, async (val) => {
       paginationSize: 15,       // 💡 지시하신 15건 단위
       columnDefaults: { headerHozAlign: 'center', headerSort: true },
       columns: [
-        { title: '코드', field: 'ITEMCD', width: 100, cssClass: 'compact-cell fw-bold text-primary border-end' },
-        { title: '품목명칭', field: 'ITEMNM', minWidth: 200, widthGrow: 1, cssClass: 'compact-cell fw-bold text-dark' },
-        { title: '규격', field: 'ITSIZE', width: 130, cssClass: 'compact-cell text-muted' },
-        { title: '단위', field: 'UNITNM', width: 60, hozAlign: 'center', cssClass: 'compact-cell' },
+        { title: '코드', field: 'itemcd', width: 100, cssClass: 'compact-cell fw-bold text-primary border-end' },
+        { title: '품목명칭', field: 'itemnm', minWidth: 200, widthGrow: 1, cssClass: 'compact-cell fw-bold text-dark' },
+        { title: '규격', field: 'itsize', width: 130, cssClass: 'compact-cell text-muted' },
+        { title: '단위', field: 'unitnm', width: 60, hozAlign: 'center', cssClass: 'compact-cell' },
         {
           title: '재고',
           field: 'QTY',
@@ -118,7 +118,7 @@ watch(() => props.visible, async (val) => {
           cssClass: 'compact-cell fw-bold text-dark',
           formatter: (c:any) => new Intl.NumberFormat().format(Number(c.getValue()) || 0)
         },
-        { title: '구분', field: 'ASTKINDNM', width: 85, hozAlign: 'center', cssClass: 'compact-cell smaller-text' }
+        { title: '구분', field: 'astkindNM', width: 85, hozAlign: 'center', cssClass: 'compact-cell smaller-text' }
       ]
     })
 

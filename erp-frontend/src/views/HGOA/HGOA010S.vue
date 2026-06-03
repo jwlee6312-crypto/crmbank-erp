@@ -56,8 +56,8 @@
               <div class="stat-badge-mini pointer" :class="{active: currentFilter === ''}" @click="applyFilter('')">
                 전체 {{ STATS.TOT_CNT || 0 }}
               </div>
-              <div v-for="item in DETAIL_STATS" :key="item.RSLT_CD"
-                   class="stat-badge-mini pointer" :class="{active: currentFilter === item.RSLT_CD}" @click="applyFilter(item.RSLT_CD)">
+              <div v-for="item in DETAIL_STATS" :key="item.rslt_cd"
+                   class="stat-badge-mini pointer" :class="{active: currentFilter === item.rslt_cd}" @click="applyFilter(item.rslt_cd)">
                 {{ item.RSLT_NM }} {{ item.CNT }}
               </div>
             </div>

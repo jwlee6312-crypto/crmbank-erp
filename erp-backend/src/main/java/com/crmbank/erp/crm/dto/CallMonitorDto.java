@@ -15,11 +15,11 @@ import lombok.Builder;
 @Builder
 public class CallMonitorDto {
 
-    private String CMPYCD;      // 회사코드 (PK)
-    private String SVCNO;       // 접수번호 (PK)
-    private String ROW;         // 녹취SERIAL (PK)
-    private String MONITERNM;   // 녹취파일
-    private LocalDateTime ADDTIME; // 등록일시
-    private LocalDateTime UPDTIME; // 수정일시
-    private String UPDEMP;      // 수정자ID
+    private String cmpycd;      // 회사코드 (PK)
+    private String svcno;       // 접수번호 (PK)
+    private String row;         // 녹취SERIAL (PK)
+    private String moniternm;   // 녹취파일
+    private LocalDateTime addtime; // 등록일시
+    private LocalDateTime updtime; // 수정일시
+    private String updemp;      // 수정자ID
 }

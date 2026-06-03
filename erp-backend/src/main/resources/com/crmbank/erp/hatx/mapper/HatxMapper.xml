@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crmbank.erp.hatx.mapper.HatxMapper">
+
+    <!-- 매입/매출 부가세관리 조회 및 처리 -->
+    <select id="HATX_010U_STR" resultType="map">
+        exec hatx_010u_str
+            #{actkind}, #{cmpycd}, #{frymd}, #{toymd}, #{taxkind},
+            #{taxym}, #{taxno}, #{taxunit}, #{custcd}, #{custno},
+            #{custnm}, #{bossnm}, #{adrs}, #{custkind}, #{custtype},
+            #{pubymd}, #{taxtype}, #{typenm}, #{supyamt}, #{vatamt},
+            #{descnm}, #{slipymd}, #{slipno}, #{srowno}, #{useyn},
+            #{userid}, #{col1}, #{col2}, #{col3}, #{col4},
+            #{bgongcd}, #{col6}
+    </select>
+
+    <!-- 매입/매출 부가세 품목 상세 처리 -->
+    <select id="HATX_011U_STR" resultType="map">
+        exec hatx_011u_str
+            #{actkind}, #{cmpycd}, #{taxkind}, #{taxym}, #{taxno},
+            #{rowno}, #{ymd}, #{itemnm}, #{qty}, #{price},
+            #{amt}, #{vat}, #{bigo}
+    </select>
+
+    <!-- 전자세금계산서발송 처리 -->
+    <select id="HATX_080U_STR" resultType="map">
+        exec hatx_080u_str
+            #{actkind}, #{cmpycd}, #{taxunit}, #{deptcd}, #{frymd},
+            #{toymd}, #{cfmyn}, #{taxkind}, #{taxym}, #{taxno},
+            #{elcyn}, #{userid}
+    </select>
+
+    <!-- 매입장 조회 -->
+    <select id="HATX_030S_STR" resultType="map">
+        exec hatx_030s_str
+            #{cmpycd}, #{saupcd}, #{gubun1}, #{gubun2}, #{stdymd}, #{endymd},
+            #{fcustcd}, #{tcustcd}, #{elcyn}
+    </select>
+
+    <!-- 매출장 조회 -->
+    <select id="HATX_040S_STR" resultType="map">
+        exec hatx_040s_str
+            #{cmpycd}, #{saupcd}, #{gubun1}, #{gubun2}, #{stdymd}, #{endymd},
+            #{fcustcd}, #{tcustcd}
+    </select>
+
+    <!-- 세금계산서합계표 조회 -->
+    <select id="HATX_110S_STR" resultType="map">
+        exec hatx_110s_str #{cmpycd}, #{iogbn}, #{taxunit}, #{ymfr}, #{ymto}
+    </select>
+
+    <!-- 신용카드매출전표수취명세서 조회 -->
+    <select id="HATX_130S_STR" resultType="map">
+        exec hatx_130s_str #{actkind}, #{cmpycd}, #{taxunit}, #{ymfr}, #{ymto}, #{taxtype}
+    </select>
+
+    <!-- 신용카드매출전표등발행금액집계표 조회 -->
+    <select id="HATX_140S_STR" resultType="map">
+        exec hatx_140s_str #{actkind}, #{cmpycd}, #{taxunit}, #{ymfr}, #{ymto}
+    </select>
+
+    <!-- 수출실적명세서 조회 -->
+    <select id="HATX_600S_STR" resultType="map">
+        exec hatx_600s_str #{actkind}, #{cmpycd}, #{taxunit}, #{ymfr}, #{ymto}
+    </select>
+
+    <!-- 전표 마스터 처리 -->
+    <select id="HATX_01AU_STR" resultType="map">
+        exec hatx_01au_str
+            #{actkind}, #{cmpycd}, #{slipymd}, #{slipno}, #{ref_no},
+            #{deptcd}, #{usernm}, #{slipgu}, #{remark}, #{userid}
+    </select>
+
+    <!-- 전표 상세 처리 -->
+    <select id="HATX_01BU_STR" resultType="map">
+        exec hatx_01bu_str
+            #{actkind}, #{cmpycd}, #{slipymd}, #{slipno}, #{srowno},
+            #{col1}, #{acctcd}, #{deptcd}, #{custcd}, #{col2},
+            #{col3}, #{mgtno}, #{col4}, #{col5}, #{col6},
+            #{col7}, #{descnm}, #{col8}, #{col9}, #{col10},
+            #{col11}, #{col12}, #{col13}, #{col14}, #{col15},
+            #{col16}, #{col17}, #{col18}, #{userid}, #{frgnkind},
+            #{frgnrate}, #{frgnamt}
+    </select>
+
+    <!-- 매입/매출 부가세접수 처리 -->
+    <select id="HATX_060U_STR" resultType="map">
+        exec hatx_060u_str
+            #{actkind}, #{cmpycd}, #{taxunit}, #{frymd}, #{toymd},
+            #{cfmyn}, #{taxkind}, #{taxym}, #{taxno}, #{elcyn},
+            #{userid}
+    </select>
+
+</mapper>

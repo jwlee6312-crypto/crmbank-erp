@@ -30,19 +30,25 @@ public class CommController {
     private final Hp00Mapper hp00Mapper;
     private final Hs00Mapper hs00Mapper;
 
+    /**
+     * 💡 [소문자 표준화] 세션 정보를 파라미터 맵에 소문자 키로 주입
+     */
     private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            params.put("CMPYCD", user.getCMPYCD());
-            params.put("USERID", user.getUSERID());
-            params.put("UPDEMP", user.getUSERID());
+            params.put("cmpycd", user.getCmpycd());
+            params.put("userid", user.getUserid());
+            params.put("updemp", user.getUserid());
         }
     }
 
+    /**
+     * 💡 [소문자 표준화] 모든 파라미터 키를 소문자로 정규화
+     */
     private Map<String, Object> normalizeParams(Map<String, Object> params) {
-        Map<String, Object> upperParams = new HashMap<>();
-        params.forEach((k, v) -> upperParams.put(k.toUpperCase(), v));
-        return upperParams;
+        Map<String, Object> lowerParams = new HashMap<>();
+        params.forEach((k, v) -> lowerParams.put(k.toLowerCase(), v));
+        return lowerParams;
     }
 
     @GetMapping("/codes/{cdType}")
@@ -54,8 +60,8 @@ public class CommController {
     public ResponseEntity<List<Map<String, Object>>> executeHS00_000S_STR(@RequestParam Map<String, Object> params, HttpSession session) {
         Map<String, Object> p = normalizeParams(params);
         injectSession(p, session);
-        p.putIfAbsent("GBNCD", "");
-        p.putIfAbsent("CODE", "");
+        p.putIfAbsent("gbncd", "");
+        p.putIfAbsent("code", "");
         List<Map<String, Object>> result = hs00Mapper.HS00_000S_STR(p);
         return ResponseEntity.ok(result);
     }
@@ -64,8 +70,8 @@ public class CommController {
     public ResponseEntity<List<Map<String, Object>>> executeHP00_000S_STR(@RequestParam Map<String, Object> params, HttpSession session) {
         Map<String, Object> p = normalizeParams(params);
         injectSession(p, session);
-        p.putIfAbsent("GBNCD", "");
-        p.putIfAbsent("CODE", "");
+        p.putIfAbsent("gbncd", "");
+        p.putIfAbsent("code", "");
         List<Map<String, Object>> result = hp00Mapper.HP00_000S_STR(p);
         return ResponseEntity.ok(result);
     }
@@ -74,9 +80,9 @@ public class CommController {
     public ResponseEntity<List<Map<String, Object>>> executeHA00_00P_STR(@RequestParam Map<String, Object> params, HttpSession session) {
         Map<String, Object> p = normalizeParams(params);
         injectSession(p, session);
-        p.putIfAbsent("SELGBN", "");
-        p.putIfAbsent("SEARCH", "");
-        p.putIfAbsent("ETC", "");
+        p.putIfAbsent("selgbn", "");
+        p.putIfAbsent("search", "");
+        p.putIfAbsent("etc", "");
         List<Map<String, Object>> result = ha00Mapper.HA00_00P_STR(p);
         return ResponseEntity.ok(result);
     }
@@ -84,20 +90,21 @@ public class CommController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> data, HttpServletRequest request) {
         try {
-            UserSession user = commService.login(data.get("CMPYCD"), data.get("USERID"), data.get("PASSWD"), request.getRemoteAddr());
+            // 💡 [소문자 표준화] 프론트엔드에서 보낸 소문자 키로 접근
+            UserSession user = commService.login(data.get("cmpycd"), data.get("userid"), data.get("passwd"), request.getRemoteAddr());
             HttpSession session = request.getSession(true);
             
-            session.setAttribute("USER_SESSION", user);
-            session.setAttribute("cmpycd", user.getCMPYCD());
-            session.setAttribute("userid", user.getUSERID());
-            session.setAttribute("usernm", user.getUSERNM());
-            session.setAttribute("email", user.getEMAIL());
-            session.setAttribute("deptcd", user.getDEPTCD());
-            session.setAttribute("deptnm", user.getDEPTNM());
-            session.setAttribute("inner_no", user.getINNER_NO());
-            session.setAttribute("extension", user.getINNER_NO());
+            session.setAttribute("user_session", user);
+            // 내부 세션 속성도 소문자로 관리
+            session.setAttribute("cmpycd", user.getCmpycd());
+            session.setAttribute("userid", user.getUserid());
+            session.setAttribute("usernm", user.getUsernm());
+            session.setAttribute("email", user.getEmail());
+            session.setAttribute("deptcd", user.getDeptcd());
+            session.setAttribute("deptnm", user.getDeptnm());
+            session.setAttribute("inner_no", user.getInner_no());
 
-            log.info("🔐 [로그인 성공] ID: {}", user.getUSERID());
+            log.info("🔐 [로그인 성공] ID: {}", user.getUserid());
             return ResponseEntity.ok(user);
         } catch (Exception e) { 
             return ResponseEntity.badRequest().body(e.getMessage()); 
@@ -110,14 +117,10 @@ public class CommController {
         return ResponseEntity.ok("로그아웃"); 
     }
 
-    /**
-     * 💡 무한 루프 방지를 위해 세션이 없을 경우 401 대신 빈 응답 반환
-     */
     @GetMapping("/session")
     public ResponseEntity<?> getSession(HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user == null) {
-            // 💡 401을 반환하면 프론트엔드에서 무한 루프가 발생할 수 있으므로 빈 응답 반환
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.ok(user);
@@ -127,5 +130,5 @@ public class CommController {
     public ResponseEntity<List<Map<String, Object>>> getTopMenus() { return ResponseEntity.ok(commService.getTopMenus()); }
 
     @GetMapping("/left-menus")
-    public ResponseEntity<List<Map<String, Object>>> getLeftMenus(@RequestParam("UPMUCD") String upmucd) { return ResponseEntity.ok(commService.getLeftMenus(upmucd)); }
+    public ResponseEntity<List<Map<String, Object>>> getLeftMenus(@RequestParam("upmucd") String upmucd) { return ResponseEntity.ok(commService.getLeftMenus(upmucd)); }
 }

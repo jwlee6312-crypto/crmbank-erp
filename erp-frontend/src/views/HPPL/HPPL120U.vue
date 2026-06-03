@@ -27,23 +27,23 @@
               <tr>
                 <th class="required">계획일자</th>
                 <td>
-                  <input v-model="uiYMD" type="date" class="form-control form-control-sm" style="width: 150px;" @change="fetchList" />
+                  <input v-model="uiymD" type="date" class="form-control form-control-sm" style="width: 150px;" @change="fetchList" />
                 </td>
                 <th class="required">생산라인</th>
                 <td>
-                  <select v-model="searchData.LINECD" class="form-select form-select-sm" style="width: 200px;" @change="onLineChange">
+                  <select v-model="searchData.linecd" class="form-select form-select-sm" style="width: 200px;" @change="onLineChange">
                     <option value="">라인 선택</option>
-                    <option v-for="opt in lineOptions" :key="opt.LINECD" :value="opt.LINECD">
-                      [{{ opt.LINECD }}] {{ opt.LINENM }}
+                    <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">
+                      [{{ opt.linecd }}] {{ opt.linenm }}
                     </option>
                   </select>
                 </td>
                 <th class="required">생산공정</th>
                 <td>
-                  <select v-model="searchData.PROGCD" class="form-select form-select-sm" style="width: 200px;" @change="fetchList">
+                  <select v-model="searchData.progcd" class="form-select form-select-sm" style="width: 200px;" @change="fetchList">
                     <option value="">공정 선택</option>
-                    <option v-for="opt in progOptions" :key="opt.PROGCD" :value="opt.PROGCD">
-                      [{{ opt.PROGCD }}] {{ opt.PROGNM }}
+                    <option v-for="opt in progOptions" :key="opt.progcd" :value="opt.progcd">
+                      [{{ opt.progcd }}] {{ opt.prognm }}
                     </option>
                   </select>
                 </td>
@@ -59,22 +59,11 @@
           <span class="fw-bold small text-dark"><i class="bi bi-list-task me-1"></i> 생산 계획 품목</span>
           <div class="small text-muted">항목 선택 후 계획수량을 수정하고 저장 버튼을 누르세요.</div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-3 small">조회건수: <span class="fw-bold text-info">{{ itemCount }}</span> 건</div>
-        <div class="col-md-9 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 수량 수정 후 '저장' 버튼을 클릭해야 데이터가 반영됩니다.
-        </div>
-      </div>
-    </div>
-
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
@@ -96,21 +85,21 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
 
 // 1. 상태 관리
 const searchData = reactive({
-  YMD: initYMD,
-  LINECD: '',
-  PROGCD: ''
+  ymD: initymd,
+  linecd: '',
+  progcd: ''
 })
 
 const lineOptions = ref<any[]>([])
 const progOptions = ref<any[]>([])
 
-const uiYMD = computed({
-  get: () => formatDateString(searchData.YMD, '-'),
-  set: (v) => { if (v) searchData.YMD = v.replace(/-/g, '') }
+const uiymD = computed({
+  get: () => formatDateString(searchData.ymD, '-'),
+  set: (v) => { if (v) searchData.ymD = v.replace(/-/g, '') }
 })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -121,7 +110,7 @@ const itemCount = ref(0)
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', {
-      params: { GUBUN: 'L0', CMPYCD: authStore.CMPYCD, GBNCD: 'Y', CODE: '' }
+      params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', CODE: '' }
     })
     lineOptions.value = res.data
   } catch (e) {
@@ -137,7 +126,7 @@ const fetchProgOptions = async (lineCd: string) => {
   }
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', {
-      params: { GUBUN: 'G0', CMPYCD: authStore.CMPYCD, GBNCD: lineCd, CODE: '' }
+      params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: lineCd, CODE: '' }
     })
     progOptions.value = res.data
   } catch (e) {
@@ -146,8 +135,8 @@ const fetchProgOptions = async (lineCd: string) => {
 }
 
 const onLineChange = () => {
-  searchData.PROGCD = ''
-  fetchProgOptions(searchData.LINECD)
+  searchData.progcd = ''
+  fetchProgOptions(searchData.linecd)
 }
 
 // 2. 그리드 초기화
@@ -160,11 +149,11 @@ const initGrid = () => {
       selectable: true,
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", vertAlign: "middle", headerSort: false },
-        { title: "품목명", field: "ITEMNM", minWidth: 250 },
-        { title: "규격", field: "ITSIZE", width: 120, hozAlign: "center" },
-        { title: "단위", field: "UNIT", width: 80, hozAlign: "center" },
+        { title: "품목명", field: "itemnm", minWidth: 250 },
+        { title: "규격", field: "itsize", width: 120, hozAlign: "center" },
+        { title: "단위", field: "unit", width: 80, hozAlign: "center" },
         {
-          title: "계획수량", field: "PLNQTY", width: 150, hozAlign: "right",
+          title: "계획수량", field: "PLnqty", width: 150, hozAlign: "right",
           editor: "number",
           formatter: (cell) => {
             const val = Number(cell.getValue() || 0)
@@ -178,15 +167,15 @@ const initGrid = () => {
 
 // 3. 비즈니스 로직
 const fetchList = async () => {
-  if (!searchData.LINECD || !searchData.PROGCD) return
+  if (!searchData.linecd || !searchData.progcd) return
 
   try {
     const res = await api.post('/api/hppl/HPPL_120U_STR', {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
-      LINECD: searchData.LINECD,
-      PROGCD: searchData.PROGCD,
-      YMD: searchData.YMD
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
+      linecd: searchData.linecd,
+      progcd: searchData.progcd,
+      ymD: searchData.ymD
     })
     grid?.setData(res.data)
     itemCount.value = res.data.length
@@ -205,16 +194,16 @@ const saveData = async () => {
   try {
     for (const item of selectedData) {
       await api.post('/api/hppl/HPPL_120U_STR', {
-        ACTKIND: 'A0',
-        CMPYCD: authStore.CMPYCD,
-        USERID: authStore.USERID,
-        LINECD: searchData.LINECD,
-        PROGCD: searchData.PROGCD,
-        YYMMDD: searchData.YMD,
-        ITEMCD: item.ITEMCD,
-        ITSIZE: item.ITSIZE,
-        UNIT: item.UNIT,
-        PLNQTY: item.PLNQTY
+        actkind: 'A0',
+        cmpycd: authStore.cmpycd,
+        userid: authStore.userid,
+        linecd: searchData.linecd,
+        progcd: searchData.progcd,
+        yymmDD: searchData.ymD,
+        itemcd: item.itemcd,
+        itsize: item.itsize,
+        unit: item.unit,
+        PLnqty: item.PLnqty
       })
     }
     vAlert('정상적으로 저장되었습니다.')
@@ -225,16 +214,16 @@ const saveData = async () => {
 }
 
 const initialize = () => {
-  searchData.YMD = initYMD
-  searchData.LINECD = ''
-  searchData.PROGCD = ''
+  searchData.ymD = initymd
+  searchData.linecd = ''
+  searchData.progcd = ''
   progOptions.value = []
   grid?.clearData()
   itemCount.value = 0
 }
 
 const exportExcel = () => {
-  grid?.download("xlsx", `일일생산계획_${searchData.YMD}.xlsx`, { title: "일일 생산 계획" })
+  grid?.download("xlsx", `일일생산계획_${searchData.ymD}.xlsx`, { title: "일일 생산 계획" })
 }
 
 const modalVisible = ref(false)

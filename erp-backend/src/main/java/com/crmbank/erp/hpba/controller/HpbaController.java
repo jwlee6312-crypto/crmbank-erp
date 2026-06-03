@@ -20,11 +20,11 @@ public class HpbaController {
     private final HpbaMapper hpbaMapper;
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (!params.containsKey("CMPYCD")) params.put("CMPYCD", user.getCMPYCD());
-            if (!params.containsKey("USERID")) params.put("USERID", user.getUSERID());
-            params.put("UPDEMP", user.getUSERID());
+            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
+            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
+            params.put("updemp", user.getUserid());
         }
     }
 

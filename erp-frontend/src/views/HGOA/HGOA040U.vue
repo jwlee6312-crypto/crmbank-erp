@@ -103,15 +103,15 @@ function init_tables() {
 	TYPE_LIST_INSTANCE = new Tabulator(TYPE_LIST_REF.value!, {
 		layout: 'fitColumns', selectable: 1, height: '100%',
 		columns: [
-            { title: '코드', field: 'CODECD', width: 80, hozAlign: 'center' },
-            { title: '유형명', field: 'CODENM', hozAlign: 'left' }
+            { title: '코드', field: 'codecd', width: 80, hozAlign: 'center' },
+            { title: '유형명', field: 'codenm', hozAlign: 'left' }
         ]
 	})
 	TYPE_LIST_INSTANCE.on("rowClick", (e, row) => {
         const data = row.getData()
-		SELECTED_SURV_GB.value = data.CODECD
-        SELECTED_SURV_GB_NM.value = data.CODENM
-		search_selected_questions(data.CODECD)
+		SELECTED_SURV_GB.value = data.codecd
+        SELECTED_SURV_GB_NM.value = data.codenm
+		search_selected_questions(data.codecd)
 	})
 
     const q_cols = [
@@ -161,7 +161,7 @@ function add_from_master() {
     const current_data = SELECTED_TABLE_INSTANCE?.getData() || []
     selected.forEach(item => {
         if (!current_data.find(c => c.SURV_NO === item.SURV_NO)) {
-            SELECTED_TABLE_INSTANCE?.addRow({ ...item, SORTCD: String(current_data.length + 1).padStart(3, '0') })
+            SELECTED_TABLE_INSTANCE?.addRow({ ...item, sortCD: String(current_data.length + 1).padStart(3, '0') })
         }
     })
     TOTAL_TABLE_INSTANCE?.deselectRow()

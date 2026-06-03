@@ -1,55 +1,73 @@
+<!--
+	=============================================================
+	프로그램명	: 제품입고(자가생산) (HPIO400U)
+	작성일자	: 2025.02.24
+	설명        : 생산 공정별 완료 항목의 입고 처리 관리 (HPIO210U 표준 패턴 적용)
+	=============================================================
+-->
+
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-  <div class="hpio400u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-box-arrow-in-down me-2 text-primary" style="font-size: 18px;"></i>
-        생산정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        생산정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">제품입고(자가생산) (HPIO400U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
+      <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchProcesses">조회</button>
-        <button class="btn-erp btn-save" @click="saveReceipt" :disabled="!selectedProg.PROGCD">입고저장</button>
+        <button class="btn-erp btn-save" @click="saveReceipt" :disabled="!selectedProg.progcd">입고저장</button>
       </div>
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
-      <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
-        <div class="card-body p-0">
-          <table class="erp-table-full">
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 10%" /><col style="width: 30%" />
+                <col style="width: 10%" /><col style="width: 15%" />
+            </colgroup>
             <tbody>
               <tr>
-                <th class="required">생산라인</th>
+                <th class="text-center bg-light required">생산라인</th>
                 <td>
-                  <select v-model="searchData.LINECD" class="form-select form-select-sm" style="width: 200px;" @change="onLineChange">
+                  <select v-model="searchForm.linecd" class="form-select form-select-sm" @change="onLineChange">
                     <option value="">라인 선택</option>
-                    <option v-for="opt in lineOptions" :key="opt.LINECD" :value="opt.LINECD">
-                      [{{ opt.LINECD }}] {{ opt.LINENM }}
+                    <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">
+                      [{{ opt.linecd }}] {{ opt.linenm }}
                     </option>
                   </select>
                 </td>
-                <th class="required">생산일자</th>
-                <td>
-                  <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="uiPROYMDFR" type="date" class="form-control form-control-sm" />
-                    <span class="px-1">~</span>
-                    <input v-model="uiPROYMDTO" type="date" class="form-control form-control-sm" />
-                  </div>
+                <th class="text-center bg-light required">생산일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <input v-model="proymdfr_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <span class="px-1 opacity-50">~</span>
+                  <input v-model="proymdto_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
-                <th class="required">입고창고</th>
+                <th class="text-center bg-light required">입고일자</th>
                 <td>
-                  <select v-model="searchData.WHCD" class="form-select form-select-sm" style="width: 180px;">
-                    <option v-for="opt in whOptions" :key="opt.WHCD" :value="opt.WHCD">{{ opt.WHNM }}</option>
+                  <input v-model="inymd_f" type="date" class="form-control form-control-sm" />
+                </td>
+              </tr>
+              <tr>
+                <th class="text-center bg-light required">입고창고</th>
+                <td>
+                  <select v-model="searchForm.whcd" class="form-select form-select-sm">
+                    <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
                   </select>
                 </td>
-                <th class="required">입고일자</th>
-                <td>
-                  <input v-model="uiINYMD" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                <td colspan="4" class="text-muted small ps-3">
+                  <i class="bi bi-info-circle me-1"></i> 생산 공정별 실적 완료 건에 대해 창고 입고 처리를 수행합니다.
                 </td>
               </tr>
             </tbody>
@@ -57,54 +75,35 @@
         </div>
       </div>
 
-      <!-- 🅱️ 데이터 작업 영역 -->
-      <div class="d-flex flex-grow-1 gap-2 overflow-hidden">
-        <!-- 좌측: 공정 목록 -->
-        <div class="card border shadow-sm d-flex flex-column" style="width: 200px;">
-          <div class="card-header bg-light py-1 px-3 border-bottom fw-bold small text-dark text-center">
-            공정
-          </div>
-          <div class="card-body p-0 flex-grow-1 bg-white overflow-auto">
-            <ul class="list-group list-group-flush process-list">
-              <li v-for="prog in processList" :key="prog.PROGCD"
-                  class="list-group-item list-group-item-action py-2 text-center small"
-                  :class="{ active: selectedProg.PROGCD === prog.PROGCD }"
-                  @click="onProcessSelect(prog)">
-                {{ prog.PROGNM }}
-              </li>
-            </ul>
+      <!-- [하단] 투-그리드 레이아웃 영역 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
+
+        <!-- ⬅️ 좌측: 공정 목록 (grid1) -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 250px; min-width: 250px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark text-center">공정 목록</div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
           </div>
         </div>
 
-        <!-- 우측: 입고 대상 목록 -->
+        <!-- ➡️ 우측: 입고 대상 그리드 (grid2) -->
         <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
-          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-            <div class="card-header bg-white py-1 px-3 border-bottom d-flex justify-content-between align-items-center">
+          <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
               <span class="fw-bold small text-dark">
-                <i class="bi bi-list-check me-1"></i> 입고 대상 내역
-                <span v-if="selectedProg.PROGNM" class="text-primary ms-2">[{{ selectedProg.PROGNM }}]</span>
+                <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>입고 대상 내역
+                <span v-if="selectedProg.prognm" class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ selectedProg.prognm }}</span>
               </span>
-              <div class="small text-muted">※ 생산 완료된 항목을 선택하여 입고 처리하세요.</div>
+              <div class="small text-muted">※ 항목 선택 후 '입고저장'을 클릭하세요.</div>
             </div>
-            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-              <div ref="gridElement" style="height: 100%;"></div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="tableRef2" class="tabulator-instance flex-grow-1"></div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
-
-    <!-- 📊 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-4 small">조회건수: <span class="fw-bold text-info">{{ itemCount }}</span> 건</div>
-        <div class="col-md-8 text-end text-muted small">
-          <i class="bi bi-info-circle me-1"></i> 미입고량 범위 내에서 입고수량을 수정할 수 있습니다.
-        </div>
-      </div>
-    </div>
-
-    <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
 </template>
 
@@ -112,195 +111,179 @@
 import { reactive, ref, onMounted, computed, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import AppAlert from '@/components/AppAlert.vue'
-import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { getDate } from '@/composables/useDate'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
 
 const authStore = useAuthStore()
+const { today, firstDay } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
-const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initFRYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+// [1] 데이터 모델링
+const initymd = today.replace(/-/g, '')
+const initfrymd = firstDay.replace(/-/g, '')
 
-// 1. 상태 관리
-const searchData = reactive({
-  LINECD: '010',
-  PROYMDFR: initFRYMD,
-  PROYMDTO: initYMD,
-  WHCD: '200',
-  INYMD: initYMD
+const searchForm = reactive({
+  linecd: '010',
+  proymdfr: initfrymd,
+  proymdto: initymd,
+  whcd: '200',
+  inymd: initymd
 })
 
-const lineOptions = ref<any[]>([])
-const processList = ref<any[]>([])
-const whOptions = ref<any[]>([])
-const selectedProg = reactive({ PROGCD: '', PROGNM: '' })
-const closingInfo = reactive({ CLSYMD: '', SCLSYM: '', PCLSYM: '' })
+const lineOptions = ref<any[]>([]); const whOptions = ref<any[]>([])
+const selectedProg = reactive({ progcd: '', prognm: '' })
+const closingInfo = reactive({ clsymd: '', sclsym: '' })
 
-const uiPROYMDFR = computed({ get: () => formatDateString(searchData.PROYMDFR, '-'), set: (v) => { if(v) searchData.PROYMDFR = v.replace(/-/g, '') } })
-const uiPROYMDTO = computed({ get: () => formatDateString(searchData.PROYMDTO, '-'), set: (v) => { if(v) searchData.PROYMDTO = v.replace(/-/g, '') } })
-const uiINYMD = computed({ get: () => formatDateString(searchData.INYMD, '-'), set: (v) => { if(v) searchData.INYMD = v.replace(/-/g, '') } })
+// 포맷팅 헬퍼 (ui 접두어 제거)
+const proymdfr_f = computed({ get: () => formatDate(searchForm.proymdfr), set: (v) => { if(v) searchForm.proymdfr = v.replace(/-/g, '') } })
+const proymdto_f = computed({ get: () => formatDate(searchForm.proymdto), set: (v) => { if(v) searchForm.proymdto = v.replace(/-/g, '') } })
+const inymd_f = computed({ get: () => formatDate(searchForm.inymd), set: (v) => { if(v) searchForm.inymd = v.replace(/-/g, '') } })
 
-const gridElement = ref<HTMLElement | null>(null)
-let grid: Tabulator | null = null
-const itemCount = ref(0)
+const tableRef1 = ref<HTMLDivElement | null>(null)
+const tableRef2 = ref<HTMLDivElement | null>(null)
+let grid1: Tabulator | null = null
+let grid2: Tabulator | null = null
 
-// 🏭 라인 로드
+// [2] 그리드 초기화
+const initGrids = () => {
+  // Left: 공정 목록
+  grid1 = new Tabulator(tableRef1.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "라인 선택", selectable: 1,
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
+      { title: "공정명", field: "cdnm", hozAlign: "left", headerSort: false },
+      { title: "코드", field: "code", hozAlign: "center", width: 80, cssClass: "fw-bold text-primary", headerSort: false }
+    ],
+  });
+  grid1.on("rowClick", (e, row) => onProcessSelect(row.getData()));
+
+  // Right: 입고 대상
+  grid2 = new Tabulator(tableRef2.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "공정을 선택하세요.", selectable: true,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columns: [
+      { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerSort: false },
+      { title: "생산일자", field: "proymd", width: 110, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
+      { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold" },
+      { title: "규격", field: "itsize", width: 150 },
+      { title: "단위", field: "unit", width: 70, hozAlign: "center" },
+      { title: "생산량", field: "prdqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "미입고", field: "ninqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger" },
+      { title: "입고량", field: "inqty", width: 100, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold" },
+      { title: "작업처", field: "work_info", width: 150, hozAlign: "left" }
+    ]
+  });
+}
+
+// [3] 비즈니스 로직
 const fetchLineOptions = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'L0', CMPYCD: authStore.CMPYCD, GBNCD: 'Y' } })
-    lineOptions.value = res.data.map((i: any) => ({ LINECD: i.CODE, LINENM: i.CDNM }))
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
+    lineOptions.value = res.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
   } catch (e) {}
 }
 
-// 🏭 창고 로드 (HS00_000S_STR 'W0' 적용)
 const fetchWhOptions = async () => {
   try {
-    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'W0', CMPYCD: authStore.CMPYCD } })
-    whOptions.value = res.data.map((i: any) => ({ WHCD: i.WHCD, WHNM: i.WHNM }))
+    const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'W0', cmpycd: authStore.cmpycd, gbncd: '', code: '', codenm: '', etcval: '' })
+    whOptions.value = res.data.map((i: any) => ({ whcd: i.whcd, whnm: i.whnm }));
   } catch (e) {}
 }
 
 const fetchProcesses = async () => {
-  if (!searchData.LINECD) return
+  if (!searchForm.linecd) { vAlertError('라인을 선택하세요.'); return; }
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'G2', CMPYCD: authStore.CMPYCD, LINECD: searchData.LINECD } })
-    processList.value = res.data.map((i: any) => ({ PROGCD: i.CODE, PROGNM: i.CDNM }))
-    grid?.clearData(); itemCount.value = 0; selectedProg.PROGCD = '';
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G2', cmpycd: authStore.cmpycd, gbncd: searchForm.linecd, code: '' } })
+    grid1?.setData(res.data)
+    grid2?.clearData(); selectedProg.progcd = ''; selectedProg.prognm = '';
   } catch (e) {}
 }
 
-const onLineChange = () => fetchProcesses()
-
 const onProcessSelect = (prog: any) => {
-  selectedProg.PROGCD = prog.PROGCD
-  selectedProg.PROGNM = prog.PROGNM
+  selectedProg.progcd = prog.code; selectedProg.prognm = prog.cdnm
   fetchGridData()
 }
 
 const fetchGridData = async () => {
   try {
     const res = await api.post('/api/hpio/HPIO_400U_STR', {
-      ACTKIND: 'S0', CMPYCD: authStore.CMPYCD,
-      LINECD: searchData.LINECD, PROGCD: selectedProg.PROGCD,
-      PROYMDFR: searchData.PROYMDFR, PROYMDTO: searchData.PROYMDTO
+      actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, proymdFR: searchForm.proymdfr, proymdTO: searchForm.proymdto
     })
     const mapped = res.data.map((item: any) => ({
       ...item,
-      NINQTY: Number(item.PRDQTY || 0) - Number(item.INQTY || 0),
-      WORK_INFO: item.PRODCD === '100' ? item.WORKNM : item.CUSTNM
+      ninqty: Number(item.prdqty || 0) - Number(item.inqty || 0),
+      work_info: item.prodcd === '100' ? item.worknm : item.custnm
     }))
-    grid?.setData(mapped)
-    itemCount.value = mapped.length
+    grid2?.setData(mapped)
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
 }
 
-// 2. 그리드 초기화
-const initGrid = () => {
-  if (gridElement.value) {
-    grid = new Tabulator(gridElement.value, {
-      layout: "fitColumns", height: "100%", selectable: true, headerHeight: 60,
-      columns: [
-          { title: "", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", vertAlign: "middle", headerSort: false },
-          { title: "생산일자", field: "PROYMD", width: 120, hozAlign: "center", vertAlign: "middle", formatter: (c) => formatDateString(c.getValue(), '-') },
-          { title: "품목명", field: "ITEMNM", minWidth: 200, vertAlign: "middle", cssClass: "fw-bold" },
-          { title: "규격", field: "ITSIZE", width: 120, vertAlign: "middle" },
-          { title: "단위", field: "UNIT", width: 70, hozAlign: "center", vertAlign: "middle" },
-          { title: "생산량", field: "PRDQTY", width: 90, hozAlign: "right", vertAlign: "middle", formatter: "money", formatterParams: { precision: 0 } },
-          { title: "미입고", field: "NINQTY", width: 90, hozAlign: "right", vertAlign: "middle", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger" },
-          { title: "입고량", field: "INQTY", width: 90, hozAlign: "right", vertAlign: "middle", editor: "number", cssClass: "bg-light-yellow fw-bold" },
-          { title: "비고", field: "WORK_INFO", width: 150, vertAlign: "middle" }
-      ]
-    })
-  }
-}
-
-// 3. 저장 로직
 const saveReceipt = async () => {
-  const selected = grid?.getSelectedData() || []
+  const selected = grid2?.getSelectedData() || []
   if (selected.length === 0) return vAlertError('입고 처리할 항목을 선택하세요.')
 
-  const inYmd = searchData.INYMD.replace(/-/g, '')
-  if (inYmd <= closingInfo.CLSYMD) return vAlertError('회계 마감된 일자입니다.')
-  if (inYmd.substring(0,6) <= closingInfo.SCLSYM) return vAlertError('영업 마감된 월입니다.')
+  const inYmd = searchForm.inymd.replace(/-/g, '')
+  if (inYmd <= closingInfo.clsymd) return vAlertError('회계 마감된 일자입니다.')
+  if (inYmd.substring(0, 6) <= closingInfo.sclsym) return vAlertError('영업 마감된 월입니다.')
 
   if (!confirm('선택한 내역을 입고 처리하시겠습니까?')) return
 
   try {
     const masterRes = await api.post('/api/hsio/HSIO_060U_STR', {
-      ACTKIND: 'A0', CMPYCD: authStore.CMPYCD, IOGBN: '100',
-      PROYMDFR: searchData.PROYMDFR, PROYMDTO: searchData.PROYMDTO,
-      DEPTCD: '21000', WHCD: searchData.WHCD, JINYMD: inYmd,
-      REMARK: `생산입고-${searchData.INYMD}`, CFMYN: 'Y', USERID: authStore.USERID
+      actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '100', proymdFR: searchForm.proymdfr, proymdTO: searchForm.proymdto,
+      deptcd: '21000', whcd: searchForm.whcd, Jinymd: inYmd, remark: `생산입고-${searchForm.inymd}`, cfmyn: 'Y', userid: authStore.userid
     })
 
-    const ioYm = masterRes.data[0].IOYM; const ioNo = masterRes.data[0].IONO
+    const ioYm = masterRes.data[0].ioym; const ioNo = masterRes.data[0].iono
 
     for (const item of selected) {
       const detailRes = await api.post('/api/hsio/HSIO_061U_STR', {
-        ACTKIND: 'A0', CMPYCD: authStore.CMPYCD, IOGBN: '100',
-        IOYM: ioYm, IONO: ioNo, DEPTCD: '21000', WHCD: searchData.WHCD,
-        JINYMD: inYmd, ITEMCD: item.ITEMCD, UNIT: item.UNIT, ITSIZE: item.ITSIZE,
-        INQTY: item.INQTY, USERID: authStore.USERID, ORDYM: item.ORDYM, ORDNO: item.ORDNO
+        actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '100', ioym: ioYm, iono: ioNo, deptcd: '21000', whcd: searchForm.whcd,
+        Jinymd: inYmd, itemcd: item.itemcd, unit: item.unit, itsize: item.itsize, inqty: item.inqty, userid: authStore.userid, ordym: item.ordym, ordno: item.ordno
       })
-
-      const ioRowNo = detailRes.data[0].IOROWNO
+      const ioRowNo = detailRes.data[0].iorowno
 
       await api.post('/api/hpio/HPIO_400U_STR', {
-        ACTKIND: 'A0', CMPYCD: authStore.CMPYCD, LINECD: searchData.LINECD, PROGCD: selectedProg.PROGCD,
-        PROYMD: item.PROYMD, JINYMD: inYmd, ORDYMD: item.ORDYMD, DEPTCD: '21000', WHCD: searchData.WHCD,
-        ITEMCD: item.ITEMCD, INQTY: item.INQTY, IOYM: ioYm, IONO: ioNo, IOROWNO: ioRowNo,
-        ORDYM: item.ORDYM, ORDNO: item.ORDNO, PRODCD: item.PRODCD
+        actkind: 'A0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd,
+        proymd: item.proymd, Jinymd: inYmd, ordymd: item.ordymd, deptcd: '21000', whcd: searchForm.whcd,
+        itemcd: item.itemcd, inqty: item.inqty, ioym: ioYm, iono: ioNo, iorowno: ioRowNo, ordym: item.ordym, ordno: item.ordno, PRODCD: item.prodcd
       })
     }
-    vAlert('정상적으로 입고 처리되었습니다.')
-    fetchGridData()
+    vAlert('정상적으로 입고 처리되었습니다.'); fetchGridData()
   } catch (e) { vAlertError('입고 처리 중 오류 발생') }
 }
 
+const onLineChange = () => fetchProcesses()
 const initialize = () => {
-  resetForm(searchData)
-  Object.assign(searchData, { LINECD: '010', PROYMDFR: initFRYMD, PROYMDTO: initYMD, WHCD: '200', INYMD: initYMD })
-  fetchProcesses()
+  resetForm(searchForm);
+  Object.assign(searchForm, { linecd: '010', proymdfr: initfrymd, proymdto: initymd, whcd: '200', inymd: initymd });
+  grid1?.clearData(); grid2?.clearData();
+  selectedProg.progcd = ''; selectedProg.prognm = '';
+  fetchProcesses();
 }
 
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-const formatDateString = (v: any, sep: string) => v && String(v).length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : (v || '')
+const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
 
 onMounted(async () => {
-  api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD } }).then(r => {
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) {
-      closingInfo.CLSYMD = String(Object.values(r.data[0])[0]).trim()
-      closingInfo.SCLSYM = String(Object.values(r.data[0])[1]).trim()
-      closingInfo.PCLSYM = String(Object.values(r.data[0])[2]).trim()
+      closingInfo.clsymd = r.data[0].clsymd
+      closingInfo.sclsym = r.data[0].sclsym
     }
   })
-  fetchLineOptions(); fetchWhOptions(); fetchProcesses(); nextTick(() => initGrid())
+  fetchLineOptions(); fetchWhOptions(); fetchProcesses();
+  nextTick(initGrids);
 })
 </script>
 
 <style scoped>
-.hpio400u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #0056b3 !important; color: #fff !important; border: none !important; }
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #dee2e6; }
-.erp-table-full th { width: 90px; background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 700; font-size: 11.5px; padding: 6px !important; color: #495057; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-.process-list .list-group-item { cursor: pointer; border-left: 4px solid transparent; }
-.process-list .list-group-item.active { background-color: #e7f1ff; color: #0056b3; border-left-color: #0056b3; font-weight: bold; }
-:deep(.tabulator) { border: none; font-size: 12.5px; }
-:deep(.tabulator-header) { background-color: #f8f9fa !important; border-bottom: 2px solid #dee2e6 !important; }
-:deep(.tabulator-col-title) { line-height: 1.3 !important; text-align: center !important; }
-.bg-light-yellow { background-color: #fffde7 !important; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+.grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
 </style>

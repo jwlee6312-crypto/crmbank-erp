@@ -10,7 +10,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hsio200s-wrapper d-flex flex-column h-100 bg-white p-0">
+	<div class="erp-container">
 		<!-- 🚀 1. 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -22,7 +22,7 @@
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-init" @click="initialize">초기화</button>
 				<button class="btn-erp btn-search" @click="fetchList">조회</button>
-				<button class="btn-erp btn-print" @click="handlePrint">인쇄</button>
+				<button class="btn-erp btn-print" @click="print">인쇄</button>
 			</div>
 		</div>
 
@@ -40,24 +40,24 @@
 							<tr>
 								<th>입고창고</th>
 								<td>
-									<select v-model="searchForm.WHCD" class="form-select form-select-sm">
+									<select v-model="searchForm.whcd" class="form-select form-select-sm">
 										<option value="000">전체</option>
-										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
+										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
 									</select>
 								</td>
 								<th>입고일자</th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.FRYMD" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.TOYMD" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" />
 									</div>
 								</td>
 								<th>거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
 								<td>
 									<div class="input-group input-group-sm">
-										<input v-model="searchForm.CUSTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.CUSTNM" type="text" class="form-control" placeholder="거래처 검색" />
+										<input v-model="searchForm.custcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.custnm" type="text" class="form-control" placeholder="거래처 검색" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
@@ -67,21 +67,21 @@
 								<td>
 									<select v-model="searchForm.IOTYPE" class="form-select form-select-sm">
 										<option value="000">전체</option>
-										<option v-for="opt in typeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CDNM }}</option>
+										<option v-for="opt in typeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
 									</select>
 								</td>
 								<th>주문번호</th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.ORDYM" type="month" class="form-control form-control-sm" style="width: 130px;" />
-										<input v-model="searchForm.ORDNO" type="text" class="form-control form-control-sm" style="width: 60px;" placeholder="0000" />
+										<input v-model="searchForm.ordym" type="month" class="form-control form-control-sm" style="width: 130px;" />
+										<input v-model="searchForm.ordno" type="text" class="form-control form-control-sm" style="width: 60px;" placeholder="0000" />
 									</div>
 								</td>
 								<th>담&nbsp;&nbsp;당&nbsp;&nbsp;자</th>
 								<td>
 									<div class="input-group input-group-sm">
-										<input v-model="searchForm.SCH_USERID" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.SCH_USERNM" type="text" class="form-control" />
+										<input v-model="searchForm.SCH_userid" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.SCH_usernm" type="text" class="form-control" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('USER')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
@@ -100,9 +100,9 @@
 						<i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 입고 현황 상세 목록
 					</span>
 				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                </div>
 			</div>
 		</div>
 	</div>
@@ -127,13 +127,13 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const searchForm = reactive<any>({
-	WHCD: '000',
+	whcd: '000',
 	IOTYPE: '000',
-	FRYMD: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-	TOYMD: now.toISOString().substring(0, 10),
-	CUSTCD: '', CUSTNM: '',
-	ORDYM: '', ORDNO: '',
-	SCH_USERID: '', SCH_USERNM: ''
+	frymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
+	toymd: now.toISOString().substring(0, 10),
+	custcd: '', custnm: '',
+	ordym: '', ordno: '',
+	SCH_userid: '', SCH_usernm: ''
 })
 
 const whOptions = ref<any[]>([])
@@ -143,11 +143,11 @@ const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | 
 async function loadInitData() {
 	try {
 		const [resWh, resType] = await Promise.all([
-			api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'W0', CMPYCD: authStore.CMPYCD } }),
-			api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'E0', CMPYCD: authStore.CMPYCD, GBNCD: '120' } })
+			api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } }),
+			api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '120' } })
 		])
-		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.WHCD, CDNM: i.CDNM || i.WHNM }))
-		typeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE, CDNM: i.CDNM }))
+		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.whcd, cdnm: i.cdnm || i.whnm }))
+		typeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE, cdnm: i.cdnm }))
 	} catch (e) {}
 }
 
@@ -155,10 +155,10 @@ async function fetchList() {
 	try {
 		const res = await api.post('/api/hsio/HSIO_200S_STR', {
 			...searchForm,
-			CMPYCD: authStore.CMPYCD,
-			FRYMD: searchForm.FRYMD.replace(/-/g, ''),
-			TOYMD: searchForm.TOYMD.replace(/-/g, ''),
-			ORDYM: searchForm.ORDYM.replace(/-/g, '')
+			cmpycd: authStore.cmpycd,
+			frymd: searchForm.frymd.replace(/-/g, ''),
+			toymd: searchForm.toymd.replace(/-/g, ''),
+			ordym: searchForm.ordym.replace(/-/g, '')
 		})
 		mainGrid?.setData(res.data.data || [])
 		vAlert('조회되었습니다.')
@@ -167,13 +167,13 @@ async function fetchList() {
 
 function initialize() {
 	resetForm(searchForm)
-	searchForm.WHCD = '000'; searchForm.IOTYPE = '000'
-	searchForm.FRYMD = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
-	searchForm.TOYMD = now.toISOString().substring(0, 10)
+	searchForm.whcd = '000'; searchForm.IOTYPE = '000'
+	searchForm.frymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
+	searchForm.toymd = now.toISOString().substring(0, 10)
 	mainGrid?.clearData()
 }
 
-const handlePrint = () => { vAlert('인쇄 기능을 준비 중입니다.') }
+const print = () => { vAlert('인쇄 기능을 준비 중입니다.') }
 const openHelp = (type: string) => { /* 팝업 로직 */ }
 const modalVisible = ref(false); const modalProps = reactive<any>({ title: '', path: '', onConfirm: () => {} })
 
@@ -183,54 +183,24 @@ onMounted(async () => {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 100 },
 			columns: [
-				{ title: '입고번호', field: 'IONO_FULL', width: 130, hozAlign: 'center', cssClass: 'fw-bold text-primary',
-                  mutatorData: (v, d) => `${d.IOYM || ''}-${d.IONO || ''}` },
-				{ title: '거래처', field: 'CUSTNM', minWidth: 180, widthGrow: 1 },
-				{ title: '입고유형', field: 'IOTYPENM', width: 100, hozAlign: 'center' },
-				{ title: '입고일자', field: 'IOYMD', width: 100, hozAlign: 'center',
+				{ title: '입고번호', field: 'iono_FULL', width: 130, hozAlign: 'center', cssClass: 'fw-bold text-primary',
+                  mutatorData: (v, d) => `${d.ioym || ''}-${d.iono || ''}` },
+				{ title: '거래처', field: 'custnm', minWidth: 180, widthGrow: 1 },
+				{ title: '입고유형', field: 'IOtypenm', width: 100, hozAlign: 'center' },
+				{ title: '입고일자', field: 'ioymd', width: 100, hozAlign: 'center',
                   formatter: (c) => { const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v } },
-				{ title: '품명', field: 'ITEMNM', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
-				{ title: '규격', field: 'ITSIZE', width: 150 },
-				{ title: '단위', field: 'UNIT', width: 60, hozAlign: 'center' },
+				{ title: '품명', field: 'itemnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
+				{ title: '규격', field: 'itsize', width: 150 },
+				{ title: '단위', field: 'unit', width: 60, hozAlign: 'center' },
 				{ title: '수량', field: 'QTY', hozAlign: 'right', width: 80, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '단가', field: 'PRICE', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '공급가', field: 'SPYAMT', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '부가세', field: 'VATAMT', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '합계', field: 'TOTAMT', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 },
-                  mutatorData: (v, d) => Number(d.SPYAMT || 0) + Number(d.VATAMT || 0), cssClass: 'fw-bold bg-light' }
+				{ title: '단가', field: 'price', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '공급가', field: 'spyamt', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '부가세', field: 'vatamt', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '합계', field: 'totamt', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 },
+                  mutatorData: (v, d) => Number(d.spyamt || 0) + Number(d.vatamt || 0), cssClass: 'fw-bold bg-light' }
 			]
 		})
 	}
 	await loadInitData()
 })
 </script>
-
-<style scoped>
-.hsio200s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
-</style>

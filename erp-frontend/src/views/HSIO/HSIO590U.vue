@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio590u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -31,24 +31,24 @@
                 <th class="required">판매부서</th>
                 <td style="width: 250px;">
                   <div class="input-group input-group-sm" style="width: 220px;">
-                    <input v-model="searchData.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('SEARCH_DEPT')" />
+                    <input v-model="searchData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchData.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('SEARCH_DEPT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('SEARCH_DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">판매일자</th>
                 <td style="width: 300px;">
                   <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="uiIOYMDFR" type="date" class="form-control form-control-sm" />
+                    <input v-model="ioymdfr" type="date" class="form-control form-control-sm" />
                     <span class="px-1">~</span>
-                    <input v-model="uiIOYMDTO" type="date" class="form-control form-control-sm" />
+                    <input v-model="ioymdto" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th>영업사원</th>
                 <td>
-                  <select v-model="searchData.SALSEMP" class="form-select form-select-sm" style="width: 150px;">
+                  <select v-model="searchData.salsemp" class="form-select form-select-sm" style="width: 150px;">
                     <option value="000">전체</option>
-                    <option v-for="opt in empOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                    <option v-for="opt in empOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
               </tr>
@@ -68,19 +68,19 @@
               <tr>
                 <th class="required bg-light-primary">사업장</th>
                 <td style="width: 250px;">
-                  <select v-model="registerData.TAXUNIT" class="form-select form-select-sm" style="width: 220px;">
-                    <option v-for="opt in taxUnitOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                  <select v-model="registerData.taxunit" class="form-select form-select-sm" style="width: 220px;">
+                    <option v-for="opt in taxUnitOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required bg-light-primary">유형</th>
                 <td style="width: 300px;">
-                  <select v-model="registerData.VATTYPE" class="form-select form-select-sm" style="width: 150px;">
-                    <option v-for="opt in vatTypeOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                  <select v-model="registerData.vattype" class="form-select form-select-sm" style="width: 150px;">
+                    <option v-for="opt in vatTypeOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required bg-light-primary">발행일</th>
                 <td>
-                  <input v-model="uiPUBYMD" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="pubymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
               </tr>
             </tbody>
@@ -97,8 +97,8 @@
             <input type="checkbox" v-model="allSelected" @change="toggleAllSelection" class="form-check-input" />
           </div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
@@ -123,24 +123,24 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initFRYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
-  DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-  IOYMDFR: initFRYMD, IOYMDTO: initYMD, SALSEMP: authStore.USERID
+  deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+  ioymdfr: initfrymd, ioymdto: initymd, salsemp: authStore.userid
 })
 
 const registerData = reactive({
-  TAXUNIT: '100', VATTYPE: '010', PUBYMD: initYMD,
-  SPLAMT: 0, VATAMT: 0, SUMAMT: 0,
-  CLSYMD: '', SCLSYM: ''
+  taxunit: '100', vattype: '010', pubymd: initymd,
+  splamt: 0, vatamt: 0, sumamt: 0,
+  clsymd: '', sclsym: ''
 })
 
-const uiIOYMDFR = computed({ get: () => formatDate(searchData.IOYMDFR, '-'), set: (v) => searchData.IOYMDFR = v.replace(/-/g, '') })
-const uiIOYMDTO = computed({ get: () => formatDate(searchData.IOYMDTO, '-'), set: (v) => searchData.IOYMDTO = v.replace(/-/g, '') })
-const uiPUBYMD = computed({ get: () => formatDate(registerData.PUBYMD, '-'), set: (v) => registerData.PUBYMD = v.replace(/-/g, '') })
+const ioymdfr = computed({ get: () => formatDate(searchData.ioymdfr, '-'), set: (v) => searchData.ioymdfr = v.replace(/-/g, '') })
+const ioymdto = computed({ get: () => formatDate(searchData.ioymdto, '-'), set: (v) => searchData.ioymdto = v.replace(/-/g, '') })
+const pubymd = computed({ get: () => formatDate(registerData.pubymd, '-'), set: (v) => registerData.pubymd = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
@@ -159,50 +159,50 @@ const initGrid = () => {
     columnDefaults: { headerSort: false },
     columns: [
       {
-        title: "선택", field: "PROCYN", width: 50, hozAlign: "center",
+        title: "선택", field: "procyn", width: 50, hozAlign: "center",
         formatter: "tickCross", editor: true, cellEdited: () => updateTotals()
       },
-      { title: "거래처", field: "CUSTNM", minWidth: 200 },
-      { title: "판매부서", field: "DEPTNM", width: 150 },
-      { title: "수량", field: "IOQTY", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "공급가", field: "IOAMT", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "부가세", field: "IOVAT", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "합계", field: "IOSUM", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" }
+      { title: "거래처", field: "custnm", minWidth: 200 },
+      { title: "판매부서", field: "deptnm", width: 150 },
+      { title: "수량", field: "ioqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "공급가", field: "ioamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "부가세", field: "iovat", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "합계", field: "iosum", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" }
     ]
   })
 }
 
 const updateTotals = () => {
   if (!grid.value) return
-  const data = grid.value.getData().filter((i: any) => i.PROCYN)
+  const data = grid.value.getData().filter((i: any) => i.procyn)
   activeItemCount.value = data.length
-  registerData.SPLAMT = data.reduce((acc, cur) => acc + (Number(cur.IOAMT) || 0), 0)
-  registerData.VATAMT = data.reduce((acc, cur) => acc + (Number(cur.IOVAT) || 0), 0)
-  registerData.SUMAMT = registerData.SPLAMT + registerData.VATAMT
+  registerData.splamt = data.reduce((acc, cur) => acc + (Number(cur.ioamt) || 0), 0)
+  registerData.vatamt = data.reduce((acc, cur) => acc + (Number(cur.iovat) || 0), 0)
+  registerData.sumamt = registerData.splamt + registerData.vatamt
 }
 
 const toggleAllSelection = () => {
   if (!grid.value) return
   const data = grid.value.getData()
-  grid.value.updateData(data.map(i => ({ ...i, PROCYN: allSelected.value })))
+  grid.value.updateData(data.map(i => ({ ...i, procyn: allSelected.value })))
   updateTotals()
 }
 
 // 3. 기능 구현
 async function search() {
-  if (!searchData.DEPTCD) return vAlertError('판매부서를 선택하세요.')
+  if (!searchData.deptcd) return vAlertError('판매부서를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_590U_STR', {
-      ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, GUBUN: '200',
-      IOYMDFR: searchData.IOYMDFR, IOYMDTO: searchData.IOYMDTO,
-      DEPTCD: searchData.DEPTCD, SALSEMP: searchData.SALSEMP === '000' ? '' : searchData.SALSEMP
+      actkind: 's0', cmpycd: authStore.cmpycd, gubun: '200',
+      ioymdfr: searchData.ioymdfr, ioymdto: searchData.ioymdto,
+      deptcd: searchData.deptcd, salsemp: searchData.salsemp === '000' ? '' : searchData.salsemp
     })
     if (grid.value) {
       grid.value.setData(res.data.map((i: any) => {
-        const ioQty = (Number(i.QTY) || 0) - (Number(i.JQTY) || 0)
-        const ioAmt = (Number(i.AMT) || 0) - (Number(i.JAMT) || 0)
-        const ioVat = (Number(i.VAT) || 0) - (Number(i.JVAT) || 0)
-        return { ...i, PROCYN: true, IOQTY: ioQty, IOAMT: ioAmt, IOVAT: ioVat, IOSUM: ioAmt + ioVat }
+        const ioqty = (Number(i.qty || i.QTY) || 0) - (Number(i.jqty || i.JQTY) || 0)
+        const ioamt = (Number(i.amt || i.AMT) || 0) - (Number(i.jamt || i.JAMT) || 0)
+        const iovat = (Number(i.vat || i.VAT) || 0) - (Number(i.jvat || i.JVAT) || 0)
+        return { ...i, procyn: true, ioqty, ioamt, iovat, iosum: ioamt + iovat }
       }))
       allSelected.value = true
       updateTotals()
@@ -210,33 +210,58 @@ async function search() {
   } catch (e) { vAlertError('조회 실패') }
 }
 
+/**
+ * 🚀 저장 처리 (ASP 로직 반영)
+ */
 async function save() {
-  const selected = grid.value?.getData().filter((i: any) => i.PROCYN)
+  const selected = grid.value?.getData().filter((i: any) => i.procyn)
   if (!selected || selected.length === 0) return vAlertError('정산할 자료를 선택해 주십시오.')
 
-  if (registerData.PUBYMD <= registerData.CLSYMD) return vAlertError('회계 마감된 일자입니다.')
+  // 마감여부 check (ASP 로직 반영)
+  const jsanymd = registerData.pubymd
+  if (registerData.clsymd && registerData.clsymd >= jsanymd) {
+    return vAlertError('회계정보가 마감이 되었습니다. 해당 정산일자로 작업할 수 없습니다.')
+  }
+  if (registerData.sclsym && registerData.sclsym >= jsanymd.substring(0, 6)) {
+    return vAlertError('영업정보가 마감이 되었습니다. 해당 정산일자로 작업할 수 없습니다.')
+  }
+
   if (confirm('정산 작업을 진행하시겠습니까?')) {
     try {
+      const ioymdfr = searchData.ioymdfr
+      const ioymdto = searchData.ioymdto
+      const salsemp = searchData.salsemp === '000' ? '' : searchData.salsemp
+
       for (const item of selected) {
         await api.post('/api/hsio/HSIO_590U_STR', {
-          ACTKIND: 'U0', CMPYCD: authStore.CMPYCD, GUBUN: '200',
-          IOYMDFR: searchData.IOYMDFR, IOYMDTO: searchData.IOYMDTO,
-          DEPTCD: item.DEPTCD, CUSTCD: item.CUSTCD, SALSEMP: searchData.SALSEMP,
-          TAXUNIT: registerData.TAXUNIT, VATTYPE: registerData.VATTYPE,
-          JSANYMD: registerData.PUBYMD, IOAMT: item.IOAMT, IOVAT: item.IOVAT,
-          USERID: authStore.USERID
+          actkind: 'u0',
+          cmpycd: authStore.cmpycd,
+          gubun: '200',
+          ioymdfr: ioymdfr,
+          ioymdto: ioymdto,
+          deptcd: item.deptcd,
+          custcd: item.custcd,
+          salsemp: salsemp,
+          taxunit: registerData.taxunit,
+          vattype: registerData.vattype,
+          jsanymd: jsanymd,
+          ioamt: item.ioamt,
+          iovat: item.iovat,
+          userid: authStore.userid
         })
       }
       vAlert('정상으로 작업이 되었습니다.')
       search()
-    } catch (e) { vAlertError('저장 중 오류 발생') }
+    } catch (e) {
+      vAlertError('저장 중 오류 발생')
+    }
   }
 }
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM, IOYMDFR: initFRYMD, IOYMDTO: initYMD, SALSEMP: authStore.USERID })
-  Object.assign(registerData, { TAXUNIT: '100', VATTYPE: '010', PUBYMD: initYMD, SPLAMT: 0, VATAMT: 0, SUMAMT: 0 })
+  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, ioymdfr: initfrymd, ioymdto: initymd, salsemp: authStore.userid })
+  Object.assign(registerData, { taxunit: '100', vattype: '010', pubymd: initymd, splamt: 0, vatamt: 0, sumamt: 0 })
   if (grid.value) grid.value.clearData()
   updateTotals()
 }
@@ -248,10 +273,10 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
   if (type === 'SEARCH_DEPT') {
     Object.assign(modalProps, {
-      title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM', large: false,
-      data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD, LIMITOFFSET: 0, LIMITROWS: 20 },
-      columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }],
-      onConfirm: (data: any) => { searchData.DEPTCD = data.DEPTCD; searchData.DEPTNM = data.DEPTNM }
+      title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm', large: false,
+      data: { gubun: 'd0', cmpycd: authStore.cmpycd },
+      columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+      onConfirm: (data: any) => { searchData.deptcd = data.deptcd; searchData.deptnm = data.deptnm }
     })
     modalVisible.value = true
   }
@@ -261,46 +286,19 @@ const formatDate = (v: any, sep: string) => v && v.length === 8 ? `${v.substring
 const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0)
 
 onMounted(async () => {
-  api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD } }).then(r => {
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) {
-      registerData.CLSYMD = String(Object.values(r.data[0])[0]).trim()
-      registerData.SCLSYM = String(Object.values(r.data[0])[1]).trim()
+      const d = r.data[0]
+      registerData.clsymd = String(d.clsymd || d.CLSYMD || Object.values(d)[0]).trim()
+      registerData.sclsym = String(d.sclsym || d.SCLSYM || Object.values(d)[1]).trim()
     }
   })
-  api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'SD', CMPYCD: authStore.CMPYCD, LIMITOFFSET: 0, LIMITROWS: 999 } }).then(r => {
-    if (r.data) empOptions.value = r.data.map((i: any) => ({ CODECD: i.USERID, CODENM: i.USERNM }))
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'sd', cmpycd: authStore.cmpycd, limitoffset: 0, limitrows: 999 } }).then(r => {
+    if (r.data) empOptions.value = r.data.map((i: any) => ({ codecd: i.userid, codenm: i.usernm }))
   })
-  api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'SA', CMPYCD: authStore.CMPYCD } }).then(r => taxUnitOptions.value = r.data.map((i: any) => ({ CODECD: i.CODE, CODENM: i.CDNM })))
-  api.get('/api/ha00/HA00_00P_STR', { params: { GUBUN: 'E0', GBNCD: '130', CMPYCD: authStore.CMPYCD } }).then(r => vatTypeOptions.value = r.data.map((i: any) => ({ CODECD: i.CODE, CODENM: i.CDNM })))
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'sa', cmpycd: authStore.cmpycd }).then(r => { taxUnitOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.taxunit||Object.values(i)[0]).trim(), codenm:String(i.unitnm||Object.values(i)[1]).trim()})); if(taxUnitOptions.value.length) registerData.taxunit = taxUnitOptions.value[0].codecd; });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'e0', gbncd: '120', cmpycd: authStore.cmpycd }).then(r => vatTypeOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.codecd||Object.values(i)[0]).trim(), codenm:String(i.codenm||Object.values(i)[1]).trim()})));
 
   nextTick(() => initGrid())
 })
 </script>
-
-<style scoped>
-.hsio590u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
-  white-space: nowrap;
-}
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-</style>
-

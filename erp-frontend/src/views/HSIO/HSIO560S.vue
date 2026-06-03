@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio560s-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -23,16 +23,16 @@
           <div class="d-flex align-items-center gap-4">
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold small text-dark" style="min-width: 60px;">출고창고</span>
-              <select v-model="searchForm.WHCD" class="form-select form-select-sm" style="width: 150px;">
-                <option v-for="opt in whOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+              <select v-model="searchForm.whcd" class="form-select form-select-sm" style="width: 150px;">
+                <option v-for="opt in whOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
               </select>
             </div>
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold small text-dark" style="min-width: 60px;">출고일자</span>
               <div class="d-flex align-items-center gap-1">
-                <input v-model="searchForm.OUTYMDFR" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                <input v-model="searchForm.OUTymdfr" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 <span class="text-muted">~</span>
-                <input v-model="searchForm.OUTYMDTO" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                <input v-model="searchForm.OUTymdto" type="date" class="form-control form-control-sm" style="width: 140px;" />
               </div>
             </div>
             <button class="btn btn-sm btn-dark px-4 fw-bold ms-auto" @click="fetchCustList">
@@ -62,10 +62,10 @@
             <tbody>
               <tr v-for="(cust, idx) in custList" :key="idx"
                   class="clickable"
-                  :class="{ 'table-danger': selectedCust?.IONO === cust.IONO }"
+                  :class="{ 'table-danger': selectedCust?.iono === cust.iono }"
                   @click="selectCust(cust)">
-                <td class="text-truncate px-2">{{ idx + 1 }}. {{ cust.CUSTNM }}</td>
-                <td class="text-center px-1">{{ formatDateDot(cust.IOYMD) }}</td>
+                <td class="text-truncate px-2">{{ idx + 1 }}. {{ cust.custnm }}</td>
+                <td class="text-center px-1">{{ formatDateDot(cust.ioymd) }}</td>
               </tr>
               <tr v-if="custList.length === 0">
                 <td colspan="2" class="text-center p-4 text-muted italic">데이터가 없습니다.</td>
@@ -86,15 +86,15 @@
                 <tr>
                   <th>거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
                   <td style="width: 35%;">
-                    <input :value="masterData.CUSTNM" type="text" class="form-control form-control-sm bg-light" readonly />
+                    <input :value="masterData.custnm" type="text" class="form-control form-control-sm bg-light" readonly />
                   </td>
                   <th>창&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;고</th>
                   <td style="width: 20%;">
-                    <input :value="masterData.WHNM" type="text" class="form-control form-control-sm bg-light" readonly />
+                    <input :value="masterData.whnm" type="text" class="form-control form-control-sm bg-light" readonly />
                   </td>
                   <th>출고일자</th>
                   <td>
-                    <input :value="formatDateDash(masterData.IOYMD)" type="text" class="form-control form-control-sm bg-light text-center" readonly />
+                    <input :value="formatDateDash(masterData.ioymd)" type="text" class="form-control form-control-sm bg-light text-center" readonly />
                   </td>
                 </tr>
                 <tr>
@@ -118,23 +118,13 @@
             <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 출고 품목 상세 내역</span>
             <span class="badge bg-danger text-white px-2">취소 항목 선택</span>
           </div>
-          <div class="card-body p-0 flex-grow-1 bg-white">
-            <div ref="gridElement" style="height: 100%;"></div>
-          </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
+        </div>
         </div>
       </div>
     </div>
 
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center w-100">
-        <div class="col-md-3 small">취소 선택: <span class="fw-bold text-warning">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="me-4 small opacity-75">선택 총 수량: <span class="fw-bold text-info ms-1">{{ formatNumber(qtySum) }}</span></span>
-          <span class="fs-6 fw-light text-danger italic">※ 정산 완료된 자료는 취소할 수 없습니다.</span>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -153,18 +143,18 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date();
-const initYM = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-const initYMD = `${initYM}${String(now.getDate()).padStart(2, '0')}`;
+const initym = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+const initymd = `${initym}${String(now.getDate()).padStart(2, '0')}`;
 
 const searchForm = reactive({
-  WHCD: '100',
-  OUTYMDFR: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
-  OUTYMDTO: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  whcd: '100',
+  OUTymdfr: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
+  OUTymdto: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 })
 
 const masterData = reactive<any>({
-  CUSTCD: '', CUSTNM: '', WHCD: '', WHNM: '', IOYMD: '', ADDRES: '', TRNEMPNM: '', IOYM: '', IONO: '',
-  CLSYMD: '', SCLSYM: ''
+  custcd: '', custnm: '', whcd: '', whnm: '', ioymd: '', ADDRES: '', TRNEMPNM: '', ioym: '', iono: '',
+  clsymd: '', sclsym: ''
 })
 
 const gridElement = ref<HTMLElement | null>(null);
@@ -184,17 +174,17 @@ const initGrid = () => {
     columnDefaults: { minWidth: 100, headerSort: false },
     columns: [
       { title: "", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center" },
-      { title: "품목", field: "ITEMNM", minWidth: 200, widthGrow: 1 },
-      { title: "규격", field: "ITSIZE", width: 150 },
-      { title: "단위", field: "UNIT", width: 70, hozAlign: "center" },
-      { title: "수량", field: "IOQTY", width: 100, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
-      { title: "금액", field: "JSANAMT", width: 110, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
-      { title: "부가세", field: "JSANVAT", width: 100, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
-      { title: "합계", field: "IOSUM", width: 120, hozAlign: "right", cssClass: "fw-bold", formatter: (c) => formatNumber(c.getValue()) }
+      { title: "품목", field: "itemnm", minWidth: 200, widthGrow: 1 },
+      { title: "규격", field: "itsize", width: 150 },
+      { title: "단위", field: "unit", width: 70, hozAlign: "center" },
+      { title: "수량", field: "ioqty", width: 100, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
+      { title: "금액", field: "jsanamt", width: 110, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
+      { title: "부가세", field: "jsanvat", width: 100, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
+      { title: "합계", field: "Iosum", width: 120, hozAlign: "right", cssClass: "fw-bold", formatter: (c) => formatNumber(c.getValue()) }
     ],
     rowSelectionChanged: (data) => {
        activeItemCount.value = data.length;
-       qtySum.value = data.reduce((acc, cur) => acc + (Number(cur.IOQTY) || 0), 0);
+       qtySum.value = data.reduce((acc, cur) => acc + (Number(cur.ioqty) || 0), 0);
     }
   });
 }
@@ -202,10 +192,10 @@ const initGrid = () => {
 async function fetchCustList() {
   try {
     const res = await api.post('/api/hsio/HSIO_560U_STR', {
-      ACTKIND: 'S1', CMPYCD: authStore.CMPYCD, IOGBN: '200',
-      OUTYMDFR: searchForm.OUTYMDFR.replace(/-/g, ''),
-      OUTYMDTO: searchForm.OUTYMDTO.replace(/-/g, ''),
-      WHCD: searchForm.WHCD
+      actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '200',
+      OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
+      OUTymdto: searchForm.OUTymdto.replace(/-/g, ''),
+      whcd: searchForm.whcd
     });
     custList.value = res.data || [];
     if (grid.value) grid.value.clearData();
@@ -222,15 +212,15 @@ async function selectCust(cust: any) {
 async function fetchDetail(cust: any) {
   try {
     const res = await api.post('/api/hsio/HSIO_560U_STR', {
-      ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, IOGBN: '200',
-      OUTYMDFR: searchForm.OUTYMDFR.replace(/-/g, ''),
-      OUTYMDTO: searchForm.OUTYMDTO.replace(/-/g, ''),
-      CUSTCD: cust.CUSTCD, WHCD: cust.WHCD, IOYM: cust.IOYM, IONO: cust.IONO
+      actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '200',
+      OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
+      OUTymdto: searchForm.OUTymdto.replace(/-/g, ''),
+      custcd: cust.custcd, whcd: cust.whcd, ioym: cust.ioym, iono: cust.iono
     });
     if (grid.value) {
       grid.value.setData(res.data.map((i: any) => ({
         ...i,
-        IOSUM: (Number(i.JSANAMT) || 0) + (Number(i.JSANVAT) || 0)
+        Iosum: (Number(i.jsanamt) || 0) + (Number(i.jsanvat) || 0)
       })));
     }
   } catch (e) { vAlertError('상세 내역 로드 실패'); }
@@ -244,21 +234,21 @@ async function saveCancel() {
   if (items.some((i: any) => i.JYN === 'Y')) return vAlertError('정산 완료된 자료입니다. 취소할 수 없습니다.');
 
   // 마감 체크 (ASP 로직)
-  const ioYmd = String(masterData.IOYMD);
-  if (ioYmd <= masterData.CLSYMD) return vAlertError('회계 마감이 되었습니다. 해당 일자로 작업할 수 없습니다.');
-  if (ioYmd.substring(0,6) <= masterData.SCLSYM) return vAlertError('영업 마감이 되었습니다. 해당 일자로 작업할 수 없습니다.');
+  const ioYmd = String(masterData.ioymd);
+  if (ioYmd <= masterData.clsymd) return vAlertError('회계 마감이 되었습니다. 해당 일자로 작업할 수 없습니다.');
+  if (ioYmd.substring(0,6) <= masterData.sclsym) return vAlertError('영업 마감이 되었습니다. 해당 일자로 작업할 수 없습니다.');
 
   if (!confirm("출고처리를 취소하시겠습니까?")) return;
 
   try {
     for (const item of items) {
       await api.post('/api/hsio/HSIO_560U_STR', {
-        ACTKIND: 'D0', CMPYCD: authStore.CMPYCD, IOGBN: '200',
-        OUTYMDFR: searchForm.OUTYMDFR.replace(/-/g, ''),
-        OUTYMDTO: searchForm.OUTYMDTO.replace(/-/g, ''),
-        WHCD: masterData.WHCD, CUSTCD: masterData.CUSTCD,
-        IOYM: masterData.IOYM, IONO: masterData.IONO, IOROWNO: item.IOROWNO,
-        UPDEMP: authStore.USERID
+        actkind: 'D0', cmpycd: authStore.cmpycd, iogbn: '200',
+        OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
+        OUTymdto: searchForm.OUTymdto.replace(/-/g, ''),
+        whcd: masterData.whcd, custcd: masterData.custcd,
+        ioym: masterData.ioym, iono: masterData.iono, iorowno: item.iorowno,
+        updemp: authStore.userid
       });
     }
     vAlert('정상으로 취소되었습니다.');
@@ -274,8 +264,8 @@ function initialize() {
 
 async function loadComboCodes(gbn: string, gbnCd: string) {
   try {
-    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: gbn, CMPYCD: authStore.CMPYCD, GBNCD: gbnCd, LIMITOFFSET: 0, LIMITROWS: 9999 } });
-    return res.data.map((item: any) => ({ CODECD: String(item.CODE || item.CODECD || item.WHCD || Object.values(item)[0]).trim(), CODENM: String(item.CDNM || item.CODENM || item.WHNM || Object.values(item)[1]).trim() }))
+    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: gbn, cmpycd: authStore.cmpycd, gbncd: gbnCd, LIMITOFFSET: 0, LIMITROWS: 9999 } });
+    return res.data.map((item: any) => ({ codecd: String(item.CODE || item.codecd || item.whcd || Object.values(item)[0]).trim(), codenm: String(item.cdnm || item.codenm || item.whnm || Object.values(item)[1]).trim() }))
   } catch (e) { return [] }
 }
 
@@ -284,38 +274,8 @@ function formatDateDot(val: any) { return val && val.length === 8 ? `${val.subst
 function formatDateDash(val: any) { return val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val; }
 
 onMounted(async () => {
-  api.get('/api/hp00/HP00_000S_STR', { params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD } }).then(r => { if (r.data?.length) { masterData.CLSYMD = String(Object.values(r.data[0])[0]).trim(); masterData.SCLSYM = String(Object.values(r.data[0])[1]).trim(); } })
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => { if (r.data?.length) { masterData.clsymd = String(Object.values(r.data[0])[0]).trim(); masterData.sclsym = String(Object.values(r.data[0])[1]).trim(); } })
   whOptions.value = await loadComboCodes('W0', '');
   nextTick(initGrid);
 })
 </script>
-
-<style scoped>
-.hsio560s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
-</style>

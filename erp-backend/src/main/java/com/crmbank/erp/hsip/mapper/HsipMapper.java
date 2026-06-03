@@ -6,9 +6,9 @@ import java.util.Map;
 
 @Mapper
 public interface HsipMapper {
-    // 수입 발주
-    List<Map<String, Object>> HSIP_100U_STR(Map<String, Object> params);
-    List<Map<String, Object>> HSIP_101U_STR(Map<String, Object> params);
+    // 수입 발주 (통합 저장용 Object 지원)
+    List<Map<String, Object>> HSIP_100U_STR(Object params);
+    List<Map<String, Object>> HSIP_101U_STR(Object params);
     
     // 선적 통지
     List<Map<String, Object>> HSIP_110U_STR(Map<String, Object> params);

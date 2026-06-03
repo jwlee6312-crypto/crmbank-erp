@@ -22,16 +22,17 @@ public class Hs00Controller {
     private final Hs00Mapper hs00Mapper;
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
+        // 💡 [소문자 표준화] session key: "user_session"
+        UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            params.putIfAbsent("CMPYCD", user.getCMPYCD());
+            params.putIfAbsent("cmpycd", user.getCmpycd());
         }
         // 💡 파라미터 NULL 방지 로직 추가 (빈 값 주입)
-        params.putIfAbsent("GUBUN", "");
-        params.putIfAbsent("GBNCD", "");
-        params.putIfAbsent("CODE", "");
-        params.putIfAbsent("CODENM", "");
-        params.putIfAbsent("ETCVAL", "");
+        params.putIfAbsent("gubun", "");
+        params.putIfAbsent("gbncd", "");
+        params.putIfAbsent("code", "");
+        params.putIfAbsent("codenm", "");
+        params.putIfAbsent("etcval", "");
     }
 
     @GetMapping("/{procedure}")
@@ -59,7 +60,7 @@ public class Hs00Controller {
 
     private String buildSsmsLog(String procedure, Map<String, Object> params) {
         // 💡 XML 규격에 맞춘 6개 키 정의
-        String[] keys = {"GUBUN", "CMPYCD", "GBNCD", "CODE", "CODENM", "ETCVAL"};
+        String[] keys = {"gubun", "cmpycd", "gbncd", "code", "codenm", "etcval"};
         String values = java.util.Arrays.stream(keys)
                 .map(key -> {
                     Object val = params.get(key);

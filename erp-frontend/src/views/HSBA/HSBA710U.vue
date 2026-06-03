@@ -2,7 +2,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsba710u-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-1 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 13px;">
@@ -38,7 +38,7 @@
         <div class="card-header py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
           <span class="fw-bold small text-dark"><i class="bi bi-pencil-square me-1"></i> 유형 정보 및 계정 설정</span>
           <div class="d-flex gap-2 align-items-center">
-            <span v-if="formData.ACTKIND === 'U0'" class="badge bg-warning text-dark" style="font-size: 10px;">수정 중</span>
+            <span v-if="formData.actkind === 'U0'" class="badge bg-warning text-dark" style="font-size: 10px;">수정 중</span>
             <span v-else class="badge bg-primary" style="font-size: 10px;">신규 등록</span>
           </div>
         </div>
@@ -54,22 +54,22 @@
             <tbody>
               <tr>
                 <th class="required">입금유형</th>
-                <td><input v-model="formData.IMGBN" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="3" :readonly="formData.ACTKIND === 'U0'" placeholder="CODE" /></td>
+                <td><input v-model="formData.IMGBN" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="3" :readonly="formData.actkind === 'U0'" placeholder="CODE" /></td>
                 <th class="required">유형명</th>
                 <td><input v-model="formData.IMGBNNM" type="text" class="form-control form-control-sm" maxlength="50" /></td>
                 <th class="required">차변계정</th>
                 <td>
                   <div class="input-group input-group-sm">
-                    <input v-model="formData.DACCTCD" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-                    <input v-model="formData.DACCTNM" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('D')" />
+                    <input v-model="formData.Dacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+                    <input v-model="formData.Dacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('D')" />
                     <button class="btn btn-outline-secondary btn-sm px-1" @click="openAccountHelp('D')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">대변계정</th>
                 <td>
                   <div class="input-group input-group-sm">
-                    <input v-model="formData.CACCTCD" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-                    <input v-model="formData.CACCTNM" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('C')" />
+                    <input v-model="formData.Cacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+                    <input v-model="formData.Cacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('C')" />
                     <button class="btn btn-outline-secondary btn-sm px-1" @click="openAccountHelp('C')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -92,20 +92,11 @@
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 입금유형 리스트</span>
           <span class="text-muted" style="font-size: 11px;">※ 행 클릭 시 상단에 정보가 로드됩니다. (페이지당 15행)</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden">
-          <div ref="gridElement"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
-
-    <!-- 📊 3. 하단 정보 바 -->
-    <div class="erp-footer bg-dark text-white py-1 px-4 shadow-lg flex-shrink-0">
-      <div class="d-flex justify-content-between align-items-center" style="font-size: 11px;">
-        <div>조회 건수: <span class="fw-bold text-warning">{{ activeItemCount }}</span> 건</div>
-        <div class="text-white-50">※ 설정된 입금 계정은 자동 전표 생성 시 참조됩니다.</div>
-      </div>
-    </div>
-
     <!-- 💡 계정 도움창 모달 -->
     <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
   </div>
@@ -131,8 +122,8 @@ const { resetForm } = useFormReset()
 const deleteCheck = ref(false)
 const searchForm = reactive({ IMGBNNM: '' })
 const formData = reactive({
-  ACTKIND: 'A0', CMPYCD: authStore.CMPYCD, USERID: authStore.USER_ID,
-  IMGBN: '', IMGBNNM: '', DACCTCD: '', DACCTNM: '', CACCTCD: '', CACCTNM: '', USEYN: 'Y'
+  actkind: 'A0', cmpycd: authStore.cmpycd, userid: authStore.user_id,
+  IMGBN: '', IMGBNNM: '', Dacctcd: '', Dacctnm: '', Cacctcd: '', Cacctnm: '', useyn: 'Y'
 })
 
 const gridElement = ref<HTMLElement | null>(null); const grid = ref<Tabulator | null>(null); const activeItemCount = ref(0)
@@ -146,18 +137,18 @@ const initGrid = () => {
     columns: [
       { title: "유형코드", field: "IMGBN", width: 100, hozAlign: "center", cssClass: "fw-bold bg-light" },
       { title: "유형명칭", field: "IMGBNNM", width: 180, cssClass: "text-primary fw-bold" },
-      { title: "차변코드", field: "DACCTCD", width: 90, hozAlign: "center" },
-      { title: "차변계정명", field: "DACCTNM", widthGrow: 1 },
-      { title: "대변코드", field: "CACCTCD", width: 90, hozAlign: "center" },
-      { title: "대변계정명", field: "CACCTNM", widthGrow: 1 },
-      { title: "사용", field: "USEYN", width: 70, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
+      { title: "차변코드", field: "Dacctcd", width: 90, hozAlign: "center" },
+      { title: "차변계정명", field: "Dacctnm", widthGrow: 1 },
+      { title: "대변코드", field: "Cacctcd", width: 90, hozAlign: "center" },
+      { title: "대변계정명", field: "Cacctnm", widthGrow: 1 },
+      { title: "사용", field: "useyn", width: 70, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
     ]
   })
   grid.value.on("rowClick", (e, row) => {
     const data = row.getData()
     Object.assign(formData, data)
-    formData.ACTKIND = 'U0'
-    deleteCheck.value = (data.USEYN === 'N')
+    formData.actkind = 'U0'
+    deleteCheck.value = (data.useyn === 'N')
   })
 }
 
@@ -165,7 +156,7 @@ const initGrid = () => {
 async function search() {
   try {
     const res = await api.post('/api/hsba/HSBA_710U_STR', {
-      ACTKIND: 'S0', CMPYCD: authStore.CMPYCD, IMGBN: '', IMGBNNM: searchForm.IMGBNNM
+      actkind: 'S0', cmpycd: authStore.cmpycd, IMGBN: '', IMGBNNM: searchForm.IMGBNNM
     })
     if (grid.value) {
       grid.value.setData(res.data || [])
@@ -176,16 +167,16 @@ async function search() {
 
 async function save() {
   if (!formData.IMGBN || !formData.IMGBNNM) return vAlertError('입금유형 코드와 명칭은 필수입니다.')
-  if (!formData.DACCTCD || !formData.CACCTCD) return vAlertError('차변/대변 계정을 모두 선택하십시오.')
+  if (!formData.Dacctcd || !formData.Cacctcd) return vAlertError('차변/대변 계정을 모두 선택하십시오.')
 
   if (!confirm('설정 정보를 저장하시겠습니까?')) return
 
-  // ASP 로직 반영: 삭제 체크 시 USEYN을 N으로, 아니면 Y로 전송
-  const finalAct = formData.ACTKIND
+  // ASP 로직 반영: 삭제 체크 시 useyn을 N으로, 아니면 Y로 전송
+  const finalAct = formData.actkind
   const finalUseYn = deleteCheck.value ? 'N' : 'Y'
 
   try {
-    await api.post('/api/hsba/HSBA_710U_STR', { ...formData, ACTKIND: finalAct, USEYN: finalUseYn })
+    await api.post('/api/hsba/HSBA_710U_STR', { ...formData, actkind: finalAct, useyn: finalUseYn })
     vAlert('성공적으로 저장되었습니다.')
     search()
     initialize()
@@ -195,7 +186,7 @@ async function save() {
 function initialize() {
   resetForm(formData)
   Object.assign(formData, {
-    ACTKIND: 'A0', CMPYCD: authStore.CMPYCD, USERID: authStore.USER_ID, USEYN: 'Y'
+    actkind: 'A0', cmpycd: authStore.cmpycd, userid: authStore.user_id, useyn: 'Y'
   })
   deleteCheck.value = false
 }
@@ -210,19 +201,19 @@ function openAccountHelp(mode: 'D' | 'C') {
   Object.assign(modalProps, {
     title: mode === 'D' ? '차변 계정 선택' : '대변 계정 선택',
     path: '/api/ha00/HA00_00P_STR',
-    data: { GUBUN: 'AC', ACCT: gbn, CMPYCD: authStore.CMPYCD },
-    defaultField: 'CDNM',
+    data: { gubun: 'AC', ACCT: gbn, cmpycd: authStore.cmpycd },
+    defaultField: 'cdnm',
     columns: [
       { title: '코드', field: 'CODE', width: 100 },
-      { title: '계정명', field: 'CDNM', width: 200 }
+      { title: '계정명', field: 'cdnm', width: 200 }
     ],
     onConfirm: (selected: any) => {
       if (mode === 'D') {
-        formData.DACCTCD = selected.CODE
-        formData.DACCTNM = selected.CDNM
+        formData.Dacctcd = selected.CODE
+        formData.Dacctnm = selected.cdnm
       } else {
-        formData.CACCTCD = selected.CODE
-        formData.CACCTNM = selected.CDNM
+        formData.Cacctcd = selected.CODE
+        formData.Cacctnm = selected.cdnm
       }
     }
   })
@@ -236,20 +227,3 @@ onMounted(() => {
   })
 })
 </script>
-
-<style scoped>
-.hsba710u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-:deep(.tabulator-footer) { background-color: #fff !important; border-top: 1px solid #dee2e6 !important; padding: 2px !important; font-size: 11px; }
-</style>

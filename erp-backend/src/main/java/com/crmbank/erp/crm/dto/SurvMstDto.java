@@ -14,16 +14,15 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 public class SurvMstDto {
-
-    private String CMPYCD;           // 회사코드
-    private String SURV_NO;          // 질문번호
-    private String QUESTION;         // 질문내용
-    private String ANS_TP;           // 답변유형
-    private Integer ANS_CNT;         // 답변개수
-    private Double WEIGHT;           // 가중치
-    private String DSPORD;           // 표시순서
-    private String USEYN;            // 사용여부
-    private LocalDateTime ADDTIME;   // 등록일시
-    private LocalDateTime UPDTIME;   // 수정일시
-    private String UPDEMP;           // 수정자
+    private String cmpycd;           // 회사코드
+    private String surv_no;          // 질문번호
+    private String question;         // 질문내용
+    private String ans_tp;           // 답변유형
+    private Integer ans_cnt;         // 답변개수
+    private Double weight;           // 가중치
+    private String dspord;           // 표시순서
+    private String useyn;            // 사용여부
+    private LocalDateTime addtime;   // 등록일시
+    private LocalDateTime updtime;   // 수정일시
+    private String updemp;           // 수정자
 }

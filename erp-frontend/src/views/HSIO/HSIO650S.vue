@@ -1,7 +1,7 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio650s-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -31,25 +31,25 @@
                 <th class="required" style="width: 100px;">입출일자</th>
                 <td style="width: 320px;">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="uiFYMD" type="date" class="form-control form-control-sm" />
+                    <input v-model="uifymd" type="date" class="form-control form-control-sm" />
                     <span>~</span>
-                    <input v-model="uiTYMD" type="date" class="form-control form-control-sm" />
+                    <input v-model="uitymd" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th class="required" style="width: 100px;">창&nbsp;&nbsp;&nbsp;&nbsp;고</th>
                 <td style="width: 180px;">
-                  <select v-model="searchData.WHCD" class="form-select form-select-sm">
+                  <select v-model="searchData.whcd" class="form-select form-select-sm">
                     <option value="000">전체</option>
-                    <option v-for="opt in whOptions" :key="opt.CODECD" :value="opt.CODECD">{{ opt.CODENM }}</option>
+                    <option v-for="opt in whOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required" style="width: 100px;">품&nbsp;&nbsp;&nbsp;&nbsp;목</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 450px;">
-                    <input v-model="searchData.ITEMCD" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="searchData.ITEMNM" type="text" class="form-control" placeholder="품목 선택" @keyup.enter="openHelp('ITEM')" />
-                    <input v-model="searchData.ITSIZE" type="text" class="form-control bg-light text-center" style="max-width: 100px;" readonly />
-                    <input v-model="searchData.UNIT" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+                    <input v-model="searchData.itemcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="searchData.itemnm" type="text" class="form-control" placeholder="품목 선택" @keyup.enter="openHelp('ITEM')" />
+                    <input v-model="searchData.itsize" type="text" class="form-control bg-light text-center" style="max-width: 100px;" readonly />
+                    <input v-model="searchData.unit" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
                     <button class="btn btn-outline-secondary" @click="openHelp('ITEM')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -65,20 +65,8 @@
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 품목별 상세 수불 이력</span>
           <div class="small text-muted">출고번호 또는 적요를 클릭하면 원본 전표로 이동합니다.</div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white">
-          <div ref="gridElement" style="height: 100%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📊 하단 요약 바 -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
-      <div class="row align-items-center">
-        <div class="col-md-3 small">내역 건수: <span class="fw-bold text-white">{{ activeItemCount }}</span> 건</div>
-        <div class="col-md-9 text-end">
-          <span class="me-4 small opacity-75">기간 내 입고: <span class="fw-bold text-info ms-1">{{ formatNumber(totals.IN) }}</span></span>
-          <span class="me-4 small opacity-75">기간 내 출고: <span class="fw-bold text-warning ms-1">{{ formatNumber(totals.OUT) }}</span></span>
-          <span class="fs-6 ms-2 fw-light">최종 재고: <span class="fw-bold text-white ms-2">{{ formatNumber(totals.STOCK) }}</span></span>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
@@ -107,25 +95,25 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 const now = new Date()
-const initYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initFRYMD = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
-  FYMD: (route.query.FYMD as string) || initFRYMD,
-  TYMD: (route.query.TYMD as string) || initYMD,
-  WHCD: (route.query.WHCD as string) || '000',
-  ASTKIND: (route.query.ASTKIND as string) || '120',
-  ITEMCD: (route.query.ITEMCD as string) || '',
-  ITEMNM: '',
-  ITSIZE: '',
-  UNIT: ''
+  fymd: (route.query.fymd as string) || initfrymd,
+  tymd: (route.query.tymd as string) || initymd,
+  whcd: (route.query.whcd as string) || '000',
+  astkind: (route.query.astkind as string) || '120',
+  itemcd: (route.query.itemcd as string) || '',
+  itemnm: '',
+  itsize: '',
+  unit: ''
 })
 
-const uiFYMD = computed({ get: () => formatDateString(searchData.FYMD, '-'), set: (v) => searchData.FYMD = v.replace(/-/g, '') })
-const uiTYMD = computed({ get: () => formatDateString(searchData.TYMD, '-'), set: (v) => searchData.TYMD = v.replace(/-/g, '') })
+const uifymd = computed({ get: () => formatDateString(searchData.fymd, '-'), set: (v) => searchData.fymd = v.replace(/-/g, '') })
+const uitymd = computed({ get: () => formatDateString(searchData.tymd, '-'), set: (v) => searchData.tymd = v.replace(/-/g, '') })
 
-const totals = reactive({ IN: 0, OUT: 0, STOCK: 0 })
+const totals = reactive({ IN: 0, OUT: 0, stock: 0 })
 const whOptions = ref<any[]>([])
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
@@ -149,23 +137,23 @@ const initGrid = () => {
         cellClick: (e, cell) => navigateToOrigin(cell.getData())
       },
       {
-        title: "적요 (거래처/유형)", field: "REMARK", minWidth: 250,
+        title: "적요 (거래처/유형)", field: "remark", minWidth: 250,
         formatter: (cell) => `<span class="text-primary cursor-pointer">${cell.getValue()}</span>`,
         cellClick: (e, cell) => navigateToOrigin(cell.getData())
       },
-      { title: "입출구분", field: "IOTYPENM", width: 100, hozAlign: "center" },
-      { title: "입고", field: "INQTY", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
-      { title: "출고", field: "OUTQTY", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
+      { title: "입출구분", field: "IOtypenm", width: 100, hozAlign: "center" },
+      { title: "입고", field: "inqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
+      { title: "출고", field: "OUtqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
       {
-        title: "재고", field: "STKQTY", width: 110, hozAlign: "right",
+        title: "재고", field: "stkqty", width: 110, hozAlign: "right",
         formatter: (cell) => {
           const val = Number(cell.getValue()) || 0;
           const formatted = new Intl.NumberFormat().format(val);
           return val < 0 ? `<span class="text-danger fw-bold">${formatted}</span>` : formatted;
         }
       },
-      { title: "입출창고", field: "WHNM", width: 120 },
-      { title: "입출부서", field: "DEPTNM", width: 120 }
+      { title: "입출창고", field: "whnm", width: 120 },
+      { title: "입출부서", field: "deptnm", width: 120 }
     ]
   })
 }
@@ -179,40 +167,40 @@ const formatQty = (cell: any) => {
 // 3. 기능 구현
 async function fetchWhOptions() {
   try {
-    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'W0', CMPYCD: authStore.CMPYCD } })
-    whOptions.value = res.data.map((i: any) => ({ CODECD: Object.values(i)[0], CODENM: Object.values(i)[1] }))
+    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
+    whOptions.value = res.data.map((i: any) => ({ codecd: Object.values(i)[0], codenm: Object.values(i)[1] }))
   } catch (e) { console.error('창고 옵션 로드 실패') }
 }
 
 async function search() {
-  if (!searchData.ITEMCD) return vAlertError('품목을 선택해 주십시요.')
+  if (!searchData.itemcd) return vAlertError('품목을 선택해 주십시요.')
   try {
     const res = await api.post('/api/hsio/HSIO_650S_STR', {
-      CMPYCD: authStore.CMPYCD,
-      WHCD: searchData.WHCD,
-      FYMD: searchData.FYMD,
-      TYMD: searchData.TYMD,
-      ASTKIND: searchData.ASTKIND,
-      ITEMCD: searchData.ITEMCD
+      cmpycd: authStore.cmpycd,
+      whcd: searchData.whcd,
+      fymd: searchData.fymd,
+      tymd: searchData.tymd,
+      astkind: searchData.astkind,
+      itemcd: searchData.itemcd
     })
     if (grid.value) {
-      // 행별 누적 재고 계산 (ASP의 STKQTY = STKQTY + INQTY - OUTQTY 로직)
+      // 행별 누적 재고 계산 (ASP의 stkqty = stkqty + inqty - OUtqty 로직)
       let currentStock = 0;
       let totalIn = 0;
       let totalOut = 0;
 
       const processedData = res.data.map((i: any) => {
-          const inQty = Number(i.INQTY) || 0;
-          const outQty = Number(i.OUTQTY) || 0;
+          const inQty = Number(i.inqty) || 0;
+          const outQty = Number(i.OUtqty) || 0;
           currentStock = currentStock + inQty - outQty;
           totalIn += inQty;
           totalOut += outQty;
 
           return {
               ...i,
-              IO_FULL: i.IOYMD === '00000000' ? '' : `${i.IOYM}-${i.IONO}`,
-              REMARK: `${i.CUSTNM || ''} / ${i.IOTYPENM || ''}`,
-              STKQTY: currentStock
+              IO_FULL: i.ioymd === '00000000' ? '' : `${i.ioym}-${i.iono}`,
+              remark: `${i.custnm || ''} / ${i.IOtypenm || ''}`,
+              stkqty: currentStock
           }
       })
 
@@ -220,42 +208,42 @@ async function search() {
       activeItemCount.value = processedData.length
       totals.IN = totalIn;
       totals.OUT = totalOut;
-      totals.STOCK = currentStock;
+      totals.stock = currentStock;
     }
   } catch (e) { vAlertError('조회 실패') }
 }
 
 const navigateToOrigin = (row: any) => {
-    const { IOGBN, GUBUN, IOTYPE, IOYM, IONO, DEPTCD, OUTQTY } = row;
-    if (!IOYM || !IONO) return;
+    const { iogbn, gubun, IOTYPE, ioym, iono, deptcd, OUtqty } = row;
+    if (!ioym || !iono) return;
 
     let routeName = '';
     // ASP 소스의 복잡한 분기 로직 이식
-    if (IOGBN === "200" && GUBUN === "1" && IOTYPE === "100" && Number(OUTQTY) > 0) routeName = 'HSIO500U';
-    else if (IOGBN === "200" && GUBUN === "2" && IOTYPE === "100" && Number(OUTQTY) > 0) routeName = 'HSOD200S';
-    else if (IOGBN === "200" && GUBUN === "1" && IOTYPE === "100" && Number(OUTQTY) < 0) routeName = 'HSIO490U';
-    else if (IOGBN === "200" && Number(IOTYPE) >= 300 && Number(IOTYPE) < 390) routeName = 'HSIO570U';
-    else if (IOGBN === "200" && IOTYPE === "390") routeName = 'HSIO730U';
+    if (iogbn === "200" && gubun === "1" && IOTYPE === "100" && Number(OUtqty) > 0) routeName = 'HSIO500U';
+    else if (iogbn === "200" && gubun === "2" && IOTYPE === "100" && Number(OUtqty) > 0) routeName = 'HSOD200S';
+    else if (iogbn === "200" && gubun === "1" && IOTYPE === "100" && Number(OUtqty) < 0) routeName = 'HSIO490U';
+    else if (iogbn === "200" && Number(IOTYPE) >= 300 && Number(IOTYPE) < 390) routeName = 'HSIO570U';
+    else if (iogbn === "200" && IOTYPE === "390") routeName = 'HSIO730U';
     else if (IOTYPE === "390") routeName = 'HSIO720U';
-    else if (IOGBN === "200" && IOTYPE === "200") routeName = 'HSIO580U';
-    else if (IOGBN === "100" && GUBUN === "1" && IOTYPE === "100") routeName = 'HSIO100U';
-    else if (IOGBN === "100" && GUBUN === "2" && IOTYPE === "100") routeName = 'HSOD300S';
-    else if (IOGBN === "100" && GUBUN === "1" && IOTYPE === "120") routeName = 'HSIO250U';
+    else if (iogbn === "200" && IOTYPE === "200") routeName = 'HSIO580U';
+    else if (iogbn === "100" && gubun === "1" && IOTYPE === "100") routeName = 'HSIO100U';
+    else if (iogbn === "100" && gubun === "2" && IOTYPE === "100") routeName = 'HSOD300S';
+    else if (iogbn === "100" && gubun === "1" && IOTYPE === "120") routeName = 'HSIO250U';
 
     if (routeName) {
         router.push({
             name: routeName,
-            query: { IOYM, IONO, DEPTCD, ACTKIND: 'S' }
+            query: { ioym, iono, deptcd, actkind: 'S' }
         });
     }
 }
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { FYMD: initFRYMD, TYMD: initYMD, WHCD: '000', ASTKIND: '120', ITEMCD: '', ITEMNM: '', ITSIZE: '', UNIT: '' })
+  Object.assign(searchData, { fymd: initfrymd, tymd: initymd, whcd: '000', astkind: '120', itemcd: '', itemnm: '', itsize: '', unit: '' })
   grid.value?.clearData()
   activeItemCount.value = 0
-  totals.IN = 0; totals.OUT = 0; totals.STOCK = 0;
+  totals.IN = 0; totals.OUT = 0; totals.stock = 0;
 }
 
 function print(type: string) {
@@ -271,20 +259,20 @@ function openHelp(type: string) {
     Object.assign(modalProps, {
       title: '품목 선택',
       path: '/api/hs00/HS00_000S_STR',
-      defaultField: 'ITEMNM',
+      defaultField: 'itemnm',
       large: true,
-      data: { GUBUN: 'I1', CMPYCD: authStore.CMPYCD, GBNCD: '2', LIMITOFFSET: 0, LIMITROWS: 9999 },
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', LIMITOFFSET: 0, LIMITROWS: 9999 },
       columns: [
-        { title: '코드', field: 'ITEMCD', width: 100 },
-        { title: '품목명', field: 'ITEMNM', minWidth: 200 },
-        { title: '규격', field: 'ITSIZE', width: 150 },
-        { title: '단위', field: 'UNITNM', width: 80 }
+        { title: '코드', field: 'itemcd', width: 100 },
+        { title: '품목명', field: 'itemnm', minWidth: 200 },
+        { title: '규격', field: 'itsize', width: 150 },
+        { title: '단위', field: 'unitnm', width: 80 }
       ],
       onConfirm: (data: any) => {
-        searchData.ITEMCD = data.ITEMCD
-        searchData.ITEMNM = data.ITEMNM
-        searchData.ITSIZE = data.ITSIZE
-        searchData.UNIT = data.UNITNM
+        searchData.itemcd = data.itemcd
+        searchData.itemnm = data.itemnm
+        searchData.itsize = data.itsize
+        searchData.unit = data.unitnm
         search() // 품목 선택 시 자동 조회
       }
     })
@@ -299,13 +287,13 @@ onMounted(async () => {
   await fetchWhOptions()
   nextTick(() => {
       initGrid()
-      if (searchData.ITEMCD) {
+      if (searchData.itemcd) {
           // HSIO640S에서 넘어온 경우 자동 조회
-          api.get('/api/ha00/HA00_010S_STR', { params: { GUBUN: 'I0', CMPYCD: authStore.CMPYCD, CODE: searchData.ITEMCD } }).then(r => {
+          api.get('/api/ha00/HA00_010S_STR', { params: { gubun: 'I0', cmpycd: authStore.cmpycd, CODE: searchData.itemcd } }).then(r => {
               if (r.data?.length) {
-                  searchData.ITEMNM = r.data[0].ITEMNM;
-                  searchData.ITSIZE = r.data[0].ITSIZE;
-                  searchData.UNIT = r.data[0].UNIT;
+                  searchData.itemnm = r.data[0].itemnm;
+                  searchData.itsize = r.data[0].itsize;
+                  searchData.unit = r.data[0].unit;
                   search();
               }
           })
@@ -313,30 +301,3 @@ onMounted(async () => {
   })
 })
 </script>
-
-<style scoped>
-.hsio650s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 16px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #6c757d !important; border: 1px solid #6c757d !important; }
-.btn-search { background-color: #2d3748 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (표준) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-
-.erp-table-full { width: 100%; border-collapse: collapse; table-layout: fixed !important; border: 1px solid #dee2e6; }
-.erp-table-full th {
-  background-color: #f8fafc; border: 1px solid #dee2e6;
-  text-align: center; font-weight: 800; font-size: 12px; padding: 6px 10px !important; color: #495057;
-  white-space: nowrap;
-}
-.erp-table-full td { border: 1px solid #dee2e6; padding: 4px 8px !important; vertical-align: middle; background-color: #fff; }
-.required::after { content: ' *'; color: #ef4444; }
-
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-</style>

@@ -1,63 +1,78 @@
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="hsio080s-wrapper d-flex flex-column h-100 bg-white p-0">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-file-earmark-bar-graph me-2 text-primary" style="font-size: 18px;"></i>
-        구매정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        발주관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        구매정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        발주관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">발주현황 (HSIO080S)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
+      <div class="btn-group-erp d-flex gap-1 pe-2">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchList">조회</button>
-        <button class="btn-erp btn-print" @click="handlePrint">인쇄</button>
-        <button class="btn-erp btn-excel" @click="handleExcel">엑셀</button>
+        <button class="btn-erp btn-print" @click="print">인쇄</button>
+        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
       </div>
     </div>
 
-    <!-- 🔍 2. 상단 조회 필터 -->
-    <div class="search-bar bg-light border-bottom p-2 px-3 d-flex align-items-center shadow-sm">
-      <div class="d-flex align-items-center gap-4 flex-grow-1">
-        <!-- 발주부서 -->
-        <div class="d-flex align-items-center gap-2">
-          <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 발주부서:</span>
-          <div class="input-group input-group-sm" style="width: 250px;">
-            <input v-model="searchParam.DEPTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-            <input v-model="searchParam.DEPTNM" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="fetchList" />
-            <button class="btn btn-outline-secondary" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-          </div>
-        </div>
-        <!-- 발주일자 -->
-        <div class="d-flex align-items-center gap-2">
-          <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 발주일자:</span>
-          <div class="d-flex align-items-center gap-1">
-            <input v-model="searchParam.FRYMD" type="date" class="form-control form-control-sm" style="width: 140px;" @change="fetchList" />
-            <span class="text-muted mx-1">~</span>
-            <input v-model="searchParam.TOYMD" type="date" class="form-control form-control-sm" style="width: 140px;" @change="fetchList" />
-          </div>
-        </div>
-        <!-- 거래처 -->
-        <div class="d-flex align-items-center gap-2">
-          <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 거 래 처:</span>
-          <div class="input-group input-group-sm" style="width: 250px;">
-            <input v-model="searchParam.CUSTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-            <input v-model="searchParam.CUSTNM" type="text" class="form-control" placeholder="거래처 검색" @keyup.enter="fetchList" />
-            <button class="btn btn-outline-secondary" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
-          </div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+      <!-- 🔍 [상단] 조회 필터 영역 (HSOD100U 디자인 패턴 1줄 적용) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 8%" />
+              <col style="width: 25%" />
+              <col style="width: 8%" />
+              <col style="width: 26%" />
+              <col style="width: 8%" />
+              <col style="width: 25%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">발주부서</th>
+                <td>
+                  <div class="input-group input-group-sm w-100">
+                    <input v-model="searchParam.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchParam.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="fetchList" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="text-center bg-light">발주일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <input v-model="searchParam.frymd" type="date" class="form-control form-control-sm" style="width: 130px;" @change="fetchList" />
+                  <span class="text-muted mx-1">~</span>
+                  <input v-model="searchParam.toymd" type="date" class="form-control form-control-sm" style="width: 130px;" @change="fetchList" />
+                </td>
+                <th class="text-center bg-light">거 래 처</th>
+                <td>
+                  <div class="input-group input-group-sm w-100">
+                    <input v-model="searchParam.custcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchParam.custnm" type="text" class="form-control" placeholder="거래처 검색" @keyup.enter="fetchList" />
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
 
-    <!-- 📊 3. 메인 그리드 영역 -->
-    <div class="flex-grow-1 overflow-hidden p-2 bg-white">
-      <div ref="gridElement" style="height: 100%;"></div>
+      <!-- 📊 3. 메인 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
     </div>
 
     <!-- 💰 4. 하단 합계 라인 (Summary) -->
-    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom">
+    <div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
       <div class="row align-items-center">
         <div class="col-md-3 small">조회 결과: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
         <div class="col-md-9 text-end">
@@ -94,12 +109,12 @@ const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
 const formatDateStr = (date: Date) => date.toISOString().substring(0, 10);
 
 const searchParam = reactive({
-  DEPTCD: authStore.DEPTCD,
-  DEPTNM: authStore.DEPTNM,
-  FRYMD: formatDateStr(firstDay),
-  TOYMD: formatDateStr(now),
-  CUSTCD: '',
-  CUSTNM: ''
+  deptcd: authStore.deptcd,
+  deptnm: authStore.deptnm,
+  frymd: formatDateStr(firstDay),
+  toymd: formatDateStr(now),
+  custcd: '',
+  custnm: ''
 })
 
 const gridElement = ref<HTMLElement | null>(null);
@@ -115,26 +130,26 @@ const initGrid = () => {
     placeholder: "조회된 데이터가 없습니다.",
     columnDefaults: { headerHozAlign: 'center', minWidth: 90 },
     columns: [
-      { title: "거래처", field: "CUSTNM", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-dark cursor-pointer", cellClick: (e, cell) => {
-        console.log('Navigate to HSIO090S with', cell.getData().CUSTCD);
+      { title: "거래처", field: "custnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-dark cursor-pointer", cellClick: (e, cell) => {
+        console.log('Navigate to HSIO090S with', cell.getData().custcd);
       }},
-      { title: "구매요청자", field: "USERNM", width: 100, hozAlign: "center" },
-      { title: "주요품목", field: "ITEMNM", minWidth: 250, widthGrow: 2, formatter: (cell) => {
+      { title: "구매요청자", field: "usernm", width: 100, hozAlign: "center" },
+      { title: "주요품목", field: "itemnm", minWidth: 250, widthGrow: 2, formatter: (cell) => {
         const d = cell.getData();
         const cnt = Number(d.ITEM_CNT) || 0;
-        return cnt > 0 ? `${d.ITEMNM} 외 ${cnt}건` : d.ITEMNM;
+        return cnt > 0 ? `${d.itemnm} 외 ${cnt}건` : d.itemnm;
       }},
-      { title: "발주량", field: "BALQTY", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "공급가", field: "BALAMT", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "부가세", field: "BALVAT", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "발주량", field: "balqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "공급가", field: "balamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "부가세", field: "balvat", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       { title: "합계", field: "TOTAL", width: 120, hozAlign: "right", cssClass: "fw-bold", formatter: (cell) => {
         const d = cell.getData();
-        return formatNumber((Number(d.BALAMT) || 0) + (Number(d.BALVAT) || 0));
+        return formatNumber((Number(d.balamt) || 0) + (Number(d.balvat) || 0));
       }},
-      { title: "입고량", field: "INQTY", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: (cell:any) => cell.getData().QTYPNT || 0 } },
-      { title: "미입고량", field: "JANQTY", width: 90, hozAlign: "right", cssClass: "text-danger fw-bold", formatter: (cell) => {
+      { title: "입고량", field: "inqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: (cell:any) => cell.getData().QTYPNT || 0 } },
+      { title: "미입고량", field: "janqty", width: 90, hozAlign: "right", cssClass: "text-danger fw-bold", formatter: (cell) => {
         const d = cell.getData();
-        return formatNumber((Number(d.BALQTY) || 0) - (Number(d.INQTY) || 0));
+        return formatNumber((Number(d.balqty) || 0) - (Number(d.inqty) || 0));
       }}
     ]
   });
@@ -142,9 +157,9 @@ const initGrid = () => {
 
 const updateTotals = (data: any[]) => {
   activeItemCount.value = data.length;
-  totals.qty = data.reduce((acc, i) => acc + (Number(i.BALQTY) || 0), 0);
-  totals.amt = data.reduce((acc, i) => acc + (Number(i.BALAMT) || 0), 0);
-  totals.vat = data.reduce((acc, i) => acc + (Number(i.BALVAT) || 0), 0);
+  totals.qty = data.reduce((acc, i) => acc + (Number(i.balqty) || 0), 0);
+  totals.amt = data.reduce((acc, i) => acc + (Number(i.balamt) || 0), 0);
+  totals.vat = data.reduce((acc, i) => acc + (Number(i.balvat) || 0), 0);
   totals.sum = totals.amt + totals.vat;
 }
 
@@ -152,15 +167,15 @@ const modalVisible = ref(false);
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 async function fetchList() {
-  if (!searchParam.DEPTCD) return vAlertError('발주부서를 선택하세요.');
+  if (!searchParam.deptcd) return vAlertError('발주부서를 선택하세요.');
   try {
     const res = await api.post('/api/hsio/HSIO_080S_STR', {
-      CMPYCD: authStore.CMPYCD,
-      DEPTCD: searchParam.DEPTCD,
-      CUSTCD: searchParam.CUSTCD,
-      CUSTNM: searchParam.CUSTNM,
-      YMDFR: searchParam.FRYMD.replace(/-/g, ''),
-      YMDTO: searchParam.TOYMD.replace(/-/g, '')
+      cmpycd: authStore.cmpycd,
+      deptcd: searchParam.deptcd,
+      custcd: searchParam.custcd,
+      custnm: searchParam.custnm,
+      ymdfr: searchParam.frymd.replace(/-/g, ''),
+      ymdto: searchParam.toymd.replace(/-/g, '')
     });
     if (grid.value) {
       grid.value.setData(res.data);
@@ -173,48 +188,48 @@ async function fetchList() {
 function initialize() {
   resetForm(searchParam);
   Object.assign(searchParam, {
-    DEPTCD: authStore.DEPTCD,
-    DEPTNM: authStore.DEPTNM,
-    FRYMD: formatDateStr(firstDay),
-    TOYMD: formatDateStr(now)
+    deptcd: authStore.deptcd,
+    deptnm: authStore.deptnm,
+    frymd: formatDateStr(firstDay),
+    toymd: formatDateStr(now)
   });
   grid.value?.clearData();
   updateTotals([]);
 }
 
 function openHelp(type: string) {
-  const commonProps = { path: '/api/ha00/HA00_00P_STR', CMPYCD: authStore.CMPYCD };
+  const commonProps = { path: '/api/ha00/HA00_00P_STR', cmpycd: authStore.cmpycd };
   if (type === 'DEPT') {
     Object.assign(modalProps, {
       title: '부서 선택', ...commonProps,
-      data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd },
       columns: [
-        { title: '코드', field: 'DEPTCD', width: 80 },
-        { title: '부서명', field: 'DEPTNM', width: 180 },
-        { title: '상위부서', field: 'UDEPTNM', width: 150 }
+        { title: '코드', field: 'deptcd', width: 80 },
+        { title: '부서명', field: 'deptnm', width: 180 },
+        { title: '상위부서', field: 'Udeptnm', width: 150 }
       ],
-      onConfirm: (d: any) => { searchParam.DEPTCD = d.DEPTCD; searchParam.DEPTNM = d.DEPTNM }
+      onConfirm: (d: any) => { searchParam.deptcd = d.deptcd; searchParam.deptnm = d.deptnm }
     });
   } else if (type === 'CUST') {
     Object.assign(modalProps, {
       title: '거래처 선택', ...commonProps,
-      data: { GUBUN: 'C4', CMPYCD: authStore.CMPYCD },
+      data: { gubun: 'C4', cmpycd: authStore.cmpycd },
       columns: [
-        { title: '코드', field: 'CUSTCD', width: 70 },
-        { title: '거래처명', field: 'CUSTNM', width: 180 },
-        { title: '사업자번호', field: 'CUSTNO', width: 110 },
-        { title: '대표자', field: 'BOSSNM', width: 80 },
-        { title: '주소', field: 'ADDRESS', minWidth: 250 }
+        { title: '코드', field: 'custcd', width: 70 },
+        { title: '거래처명', field: 'custnm', width: 180 },
+        { title: '사업자번호', field: 'custno', width: 110 },
+        { title: '대표자', field: 'bossnm', width: 80 },
+        { title: '주소', field: 'address', minWidth: 250 }
       ],
-      onConfirm: (d: any) => { searchParam.CUSTCD = d.CUSTCD; searchParam.CUSTNM = d.CUSTNM }
+      onConfirm: (d: any) => { searchParam.custcd = d.custcd; searchParam.custnm = d.custnm }
     });
   }
   modalVisible.value = true;
 }
 
 const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0);
-const handlePrint = () => vAlert('출력 기능을 준비 중입니다.');
-const handleExcel = () => grid.value?.download("xlsx", "발주현황.xlsx", { sheetName: "발주현황" });
+const print = () => vAlert('출력 기능을 준비 중입니다.');
+const excel = () => grid.value?.download("xlsx", "발주현황.xlsx", { sheetName: "발주현황" });
 
 onMounted(() => {
   nextTick(() => {
@@ -225,31 +240,36 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hsio080s-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
+/* 🎨 HSOD100U 디자인 표준 이식 */
+.main-content-wrapper {
+  padding-bottom: 0vh !important;
 }
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
 
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
+/* 폼 셀 높이 32px 고정 및 정렬 */
+.erp-table-dense th, .erp-table-dense td {
+  height: 32px !important;
+  padding: 0 8px !important;
+  font-size: 12px;
+  vertical-align: middle;
+  border: 1px solid #dee2e6;
+}
 
+.erp-table-dense .form-control,
+.erp-table-dense .form-select,
+.erp-table-dense .btn {
+  height: 26px !important;
+  font-size: 12px !important;
+  border-radius: 2px;
+}
+
+.erp-table-dense th {
+  font-weight: 600;
+  color: #495057;
+}
+
+.erp-footer {
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
 </style>

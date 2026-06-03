@@ -1,17 +1,16 @@
 <!--
 	=============================================================
-	프로그램명	: 매출전표취소 [디자인 원칙 13가지 + 검색영역 단일행 균등배분]
-	작성일자	: 25.02.24
-	작성자	    : AI Assistant
-	설명        : 발행된 매출 전표 조회 및 취소 처리 (디자인 표준 완벽 적용)
+	프로그램명	: 매출전표취소 (HSIO540U)
+	작성일자	: 2025.02.24
+	설명        : 발행된 매출 전표 조회 및 취소 처리 (ASP 패턴 기반 순차 저장 로직 및 소문자 통일)
 	=============================================================
 -->
 
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hsio540u-wrapper d-flex flex-column h-100 bg-white p-0">
-		<!-- 🚀 1, 12. 상단 액션 바: 버튼 그룹 우측 상단 정렬 및 표준 색상 -->
+	<div class="erp-container">
+		<!-- 🚀 1. 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-file-earmark-x-fill me-2 text-danger" style="font-size: 18px;"></i>
@@ -32,7 +31,7 @@
 			</div>
 		</div>
 
-		<!-- 🔍 9. 최상단 검색 항목 영역 (단일행 균등 배분 적용) -->
+		<!-- 🔍 2. 최상단 검색 항목 영역 -->
 		<div class="p-2 pb-0 flex-shrink-0">
 			<div class="card border shadow-sm overflow-hidden">
 				<table class="erp-table-full" style="table-layout: fixed;">
@@ -46,8 +45,8 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">판매부서</span>
 									<div class="input-group input-group-sm flex-nowrap" style="max-width: 300px;">
-										<input v-model="searchForm.DEPTCD" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.DEPTNM" type="text" class="form-control" placeholder="부서 선택" />
+										<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('DEPT')" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
 									</div>
 								</div>
@@ -56,9 +55,9 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">발행일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1" style="max-width: 320px;">
-										<input v-model="searchForm.IOYMDFR" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.ioymdfr" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.IOYMDTO" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.ioymdto" type="date" class="form-control form-control-sm" />
 									</div>
 								</div>
 							</td>
@@ -68,7 +67,7 @@
 			</div>
 		</div>
 
-		<!-- 📊 3. 중앙: 발행 대상 그리드 (상하좌우 중앙 정렬 표준) -->
+		<!-- 📊 3. 중앙: 취소 대상 그리드 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
 				<div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
@@ -76,21 +75,12 @@
 						<i class="bi bi-list-check me-2 text-primary"></i> 전표 취소 대상 목록
 					</span>
 				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white">
-					<div ref="mainGridRef" style="height: 100%;"></div>
-				</div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                </div>
 			</div>
 		</div>
 
-		<!-- 📊 4. 하단 요약 바 -->
-		<div class="erp-footer bg-dark text-white py-2 px-4 shadow-lg sticky-bottom flex-shrink-0">
-			<div class="row align-items-center w-100">
-				<div class="col-md-3 small">선택 전표: <span class="fw-bold text-info">{{ activeItemCount }}</span> 건</div>
-				<div class="col-md-9 text-end">
-					<span class="fs-5 ms-2 fw-light">취소 합계액: <span class="fw-bold text-warning ms-2">{{ formatNumber(totals.SUM) }}</span> 원</span>
-				</div>
-			</div>
-		</div>
 	</div>
 
 	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
@@ -112,52 +102,105 @@ const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
-// 13. 모든 변수명 대문자 고수
+// 상태 관리 (소문자 통일)
 const searchForm = reactive({
-	DEPTCD: authStore.DEPTCD, DEPTNM: authStore.DEPTNM,
-	IOYMDFR: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-	IOYMDTO: new Date().toISOString().substring(0, 10)
+	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+	ioymdfr: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
+	ioymdto: new Date().toISOString().substring(0, 10)
 })
 
-const closingInfo = reactive({ CLSYMD: '', SCLSYM: '' })
+const closingInfo = reactive({ clsymd: '', sclsym: '' })
 const activeItemCount = ref(0)
-const totals = reactive({ SUM: 0 })
+const totals = reactive({ sum: 0 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const fetchIssuedList = async () => {
 	try {
 		const res = await api.post('/api/hsio/HSIO_540U_STR', {
-			...searchForm,
-			ACTKIND: 'S0',
-			CMPYCD: authStore.CMPYCD,
-			IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
-			IOYMDTO: searchForm.IOYMDTO.replace(/-/g, '')
+			actkind: 's0',
+			cmpycd: authStore.cmpycd,
+            gubun: '200',
+			ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
+			ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+            deptcd: searchForm.deptcd
 		})
-		mainGrid?.setData(res.data || [])
+		mainGrid?.setData(res.data.map((i: any) => ({
+            ...i,
+            slipymd: i.slipymd || i.SLIPYMD,
+            slipno: i.slipno || i.SLIPNO,
+            udeptcd: i.udeptcd || i.UDEPTCD || i.deptcd || i.DEPTCD,
+            spyamt: i.spyamt || i.SPYAMT,
+            vatamt: i.vatamt || i.VATAMT,
+            custcd: i.custcd || i.CUSTCD,
+            custnm: i.custnm || i.CUSTNM,
+            vattypenm: i.vattypenm || i.VATTYPENM
+        })))
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
 
+/**
+ * 🚀 전표 취소 처리 (ASP 로직 반영)
+ */
 const handleCancelSlip = async () => {
 	const selected = mainGrid?.getSelectedData()
 	if (!selected || selected.length === 0) return vAlertError('취소할 전표를 선택하세요.')
 
 	if (!confirm('선택한 전표를 삭제(취소) 하시겠습니까?')) return
 	try {
+        // 1. 자동전표 여부 확인 (gbn: 'p1')
+        const resset = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
+        const autoslip = (resset.data?.[0]?.slipyn || 'n').toLowerCase()
+
 		for (const item of selected) {
-			await api.post('/api/hsio/HSIO_540U_STR', {
-				...item,
-				ACTKIND: 'D',
-				CMPYCD: authStore.CMPYCD,
-				IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
-				IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
-				UPDEMP: authStore.USERID
+            const slipymd = (item.slipymd || '').replace(/-/g, '')
+            const slipno = item.slipno
+            const udeptcd = item.udeptcd
+
+            if (!slipymd || slipymd === '00000000') continue;
+
+            // 2. 자동전표인 경우 확정 취소 (ASP: HASL_020U_STR 'A0')
+            if (autoslip === 'y') {
+                await api.post('/api/hasl/HASL_020U_STR', {
+                    actkind: 'a0',
+                    cmpycd: authStore.cmpycd,
+                    slipymd: slipymd,
+                    acctymd: slipymd,
+                    slipno: slipno,
+                    deptcd: udeptcd,
+                    slipkind: '040',
+                    slipyn: 'y',
+                    cofmyn: 'n',
+                    empnm: authStore.usernm,
+                    updemp: authStore.userid
+                })
+            }
+
+            // 3. 정산 내역 전표 정보 삭제 (ASP: HSIO_540U_STR 'D0')
+			const res = await api.post('/api/hsio/HSIO_540U_STR', {
+				actkind: 'd0',
+				cmpycd: authStore.cmpycd,
+                gubun: '200',
+				ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
+				ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+                udeptcd: udeptcd,
+                slipymd: slipymd,
+                slipno: slipno,
+				userid: authStore.userid
 			})
+
+            const resData = res.data?.[0]
+            if (resData && (resData.result === 'y' || resData.erryn === 'y' || resData.RESULT === 'Y' || resData.ERRYN === 'Y')) {
+                throw new Error(resData.msg || resData.MSG || '전표 취소 중 업무 오류 발생')
+            }
 		}
+
 		vAlert('정상적으로 처리되었습니다.')
 		fetchIssuedList()
-	} catch (e) { vAlertError('취소 실패') }
+	} catch (e: any) {
+        vAlertError(e.message || '취소 실패')
+    }
 }
 
 const toggleAllRows = () => {
@@ -170,10 +213,10 @@ const toggleAllRows = () => {
 
 const initialize = () => {
 	resetForm(searchForm);
-	searchForm.DEPTCD = authStore.DEPTCD; searchForm.DEPTNM = authStore.DEPTNM;
-	searchForm.IOYMDFR = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10);
-	searchForm.IOYMDTO = new Date().toISOString().substring(0, 10);
-	mainGrid?.clearData(); activeItemCount.value = 0; totals.SUM = 0;
+	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
+	searchForm.ioymdfr = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10);
+	searchForm.ioymdto = new Date().toISOString().substring(0, 10);
+	mainGrid?.clearData(); activeItemCount.value = 0; totals.sum = 0;
 }
 
 const modalVisible = ref(false);
@@ -182,20 +225,21 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
-			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'DEPTNM',
-			data: { GUBUN: 'D0', CMPYCD: authStore.CMPYCD },
-			columns: [{ title: '코드', field: 'DEPTCD', width: 80 }, { title: '부서명', field: 'DEPTNM', width: 180 }],
-			onConfirm: (d: any) => { searchForm.DEPTCD = d.DEPTCD; searchForm.DEPTNM = d.DEPTNM }
+			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
+			data: { gubun: 'd0', cmpycd: authStore.cmpycd },
+			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
 		})
 	}
 	modalVisible.value = true
 }
 
 onMounted(async () => {
-	api.get('/api/hs00/HS00_000S_STR', { params: { GUBUN: 'CL', CMPYCD: authStore.CMPYCD } }).then(r => {
+	api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } }).then(r => {
 		if (r.data?.length) {
-			closingInfo.CLSYMD = String(r.data[0].CLSYMD || '');
-			closingInfo.SCLSYM = String(r.data[0].SCLSYM || '');
+            const d = r.data[0]
+			closingInfo.clsymd = String(d.clsymd || d.CLSYMD || '');
+			closingInfo.sclsym = String(d.sclsym || d.SCLSYM || '');
 		}
 	});
 
@@ -205,61 +249,31 @@ onMounted(async () => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
 			columns: [
 				{
-					title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 60, hozAlign: "center",
+					title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 80, hozAlign: "center",
 					headerClick: () => toggleAllRows()
 				},
-				{ title: "전표번호", field: "SLIP_FULL", width: 160, cssClass: "fw-bold text-primary",
+				{ title: "전표번호", field: "slip_full", width: 160, cssClass: "fw-bold text-primary",
 				  formatter: (cell) => {
 					  const d = cell.getData();
-					  return d.SLIPYMD && d.SLIPNO ? `${d.SLIPYMD}-${d.SLIPNO}` : '';
+                      const slipymd = d.slipymd || d.SLIPYMD;
+                      const slipno = d.slipno || d.SLIPNO;
+					  return slipymd && slipno ? `${slipymd}-${slipno}` : '';
 				  }
 				},
-				{ title: "발행부서", field: "DEPTNM", width: 150 },
-				{ title: "거래처", field: "CUSTNM", minWidth: 200, hozAlign: "left", cssClass: "fw-bold" },
-				{ title: "유형", field: "VATTYPENM", width: 120 },
-				{ title: "공급가액", field: "SPYAMT", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "부가세", field: "VATAMT", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "합계금액", field: "JSANSUM", hozAlign: "right", width: 140, formatter: "money", cssClass: "text-danger fw-bold",
-				  mutatorData: (v,d) => Number(d.SPYAMT||0) + Number(d.VATAMT||0)
+				{ title: "발행부서", field: "deptnm", width: 250 },
+				{ title: "거래처", field: "custnm", minWidth: 200, hozAlign: "left", cssClass: "fw-bold" },
+				{ title: "유형", field: "vattypenm", width: 150 },
+				{ title: "공급가액", field: "spyamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "부가세", field: "vatamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "합계금액", field: "jsansum", hozAlign: "right", width: 150, formatter: "money", cssClass: "text-danger fw-bold",
+				  mutatorData: (v,d) => Number(d.spyamt||0) + Number(d.vatamt||0)
 				}
 			]
 		})
 		mainGrid.on('rowSelectionChanged', (data) => {
 			activeItemCount.value = data.length
-			totals.SUM = data.reduce((acc, cur: any) => acc + (Number(cur.SPYAMT||0) + Number(cur.VATAMT||0)), 0)
+			totals.sum = data.reduce((acc, cur: any) => acc + (Number(cur.spyamt||0) + Number(cur.vatamt||0)), 0)
 		})
 	}
 })
-
-const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 </script>
-
-<style scoped>
-.hsio540u-wrapper { height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; }
-.btn-erp { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-init { background-color: #fff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
-.btn-search { background-color: #374151 !important; color: #fff !important; border: none !important; }
-.btn-save { background-color: #005a9f !important; color: #fff !important; border: none !important; }
-
-.flex-shrink-0 { flex-shrink: 0 !important; }
-.flex-grow-1 { flex-grow: 1 !important; min-height: 0 !important; }
-.overflow-hidden { overflow: hidden !important; }
-/* 🚀 입력 필드 글자 크기 및 높이 최적화 (HSBA070U 패턴) */
-.form-control, .form-select {
-  font-size: 12px !important;
-  height: 28px !important;
-  padding: 2px 8px !important;
-}
-.erp-table-full { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-.erp-table-full th { background-color: #f8f9fa; border: 1px solid #dee2e6; text-align: center; font-weight: 800; font-size: 11px; padding: 4px 5px !important; color: #495057; white-space: nowrap; }
-.erp-table-full td { border: 1px solid #dee2e6; padding: 2px 4px !important; background-color: #fff; vertical-align: middle; }
-.required::after { content: ' *'; color: #dc3545; }
-:deep(.tabulator-header) { background-color: #f1f5f9 !important; border-bottom: 2px solid #dee2e6 !important; font-size: 12px; }
-:deep(.tabulator-col-title) { font-weight: 800; color: #334155; }
-
-/* 🚀 팝업 가독성 표준 스타일 */
-:deep(.modal-content) { background-color: #ffffff !important; }
-:deep(.modal-content .tabulator) { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #dee2e6 !important; }
-:deep(.modal-content .tabulator-cell) { color: #000000 !important; font-size: 13px !important; padding: 8px !important; }
-
-</style>

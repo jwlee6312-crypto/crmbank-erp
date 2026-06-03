@@ -1,86 +1,112 @@
 <!--
 	=============================================================
-	프로그램명	  : 공정별배부작업 (Legacy MS-SQL 이관)
-    프로그램 ID	: HFMF202U
-	작성일자	    : 25.02.24
-	작성자	      : AI Assistant
-    설명         : ASP 파일을 통합하여 Vue로 이관 (MS-SQL 프로시저 호출)
+	프로그램명	: 공정별배부작업 (HFMF202U)
+	작성일자	: 2025.02.24
+	설명        : 작업장별 제조비용 배부 실행 및 취소 (HSOD100U 표준 UI 적용)
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="hfmf202u-wrapper bg-light text-start p-2 h-100 d-flex flex-column gap-1">
-		<!-- 1. 상단 버튼 라인 -->
-		<div class="d-flex justify-content-between align-items-center mb-1 bg-white p-2 rounded shadow-sm border border-secondary-subtle">
-			<div class="fw-bold text-dark small"><i class="bi bi-diagram-2 me-2 text-primary"></i>원가관리 >> 공정별배부작업</div>
-			<div class="btn-group shadow-sm">
-				<button class="btn btn-sm btn-primary px-4 fw-bold" @click="handleExecute"><i class="bi bi-play-fill me-1"></i>배부실행</button>
-				<button class="btn btn-sm btn-danger px-4 fw-bold" @click="handleCancel"><i class="bi bi-trash-fill me-1"></i>배부취소</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-diagram-2 me-2 text-primary" style="font-size: 18px;"></i>
+        원가관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        원가결산 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">공정별배부작업 (HFMF202U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="loadInitData">초기화</button>
+        <button class="btn-erp btn-save" @click="handleExecute">배부실행</button>
+        <button class="btn-erp btn-delete" @click="handleCancel">배부취소</button>
+      </div>
+    </div>
 
-		<!-- 2. 처리 대상 및 조건 -->
-		<div class="card shadow-sm border-0 mb-1 flex-shrink-0">
-			<div class="card-header bg-white py-1 fw-bold small border-bottom">☞ 처리대상</div>
-			<div class="card-body p-3">
-				<table class="table table-sm table-bordered form-table mb-0 small">
-					<colgroup>
-						<col style="width: 180px"><col />
-					</colgroup>
-					<tbody>
-						<tr>
-							<th class="bg-light text-center">1.최종배부작업년월</th>
-							<td>
-								<input :value="dvdYm" class="form-control form-control-sm bg-light" readonly style="width: 120px;" />
-							</td>
-						</tr>
-						<tr>
-							<th class="bg-light text-center">2.배부 작업 년월</th>
-							<td>
-								<div class="d-flex align-items-center gap-2">
-									<input v-model="searchForm.ym" type="month" class="form-control form-control-sm d-inline-block w-auto" />
-									<span class="text-primary small fw-bold">※ 원가마감 전 작업을 완료하세요.</span>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-		<!-- 3. 작업 결과 -->
-		<div class="card shadow-sm border-0 flex-grow-1 border-top border-3 border-success">
-			<div class="card-header bg-white py-1 fw-bold small border-bottom">☞ 작업결과</div>
-			<div class="card-body p-3">
-				<div class="row g-4">
-					<div class="col-md-6">
-						<label class="small fw-bold mb-2 text-primary"><i class="bi bi-clock-history me-1"></i>작업시간</label>
-						<div class="input-group input-group-sm mb-2">
-							<span class="input-group-text bg-light" style="width: 120px;">시작시간</span>
-							<input :value="resultInfo.startdt" class="form-control text-end bg-light" readonly />
-						</div>
-						<div class="input-group input-group-sm">
-							<span class="input-group-text bg-light" style="width: 120px;">종료시간</span>
-							<input :value="resultInfo.enddt" class="form-control text-end bg-light" readonly />
-						</div>
-					</div>
-					<div class="col-md-6">
-						<label class="small fw-bold mb-2 text-success"><i class="bi bi-calculator me-1"></i>공정배부 금액</label>
-						<div class="input-group input-group-sm mb-2">
-							<span class="input-group-text bg-light" style="width: 120px;">배부전합계</span>
-							<input :value="resultInfo.amt_bf" class="form-control text-end bg-light" readonly />
-						</div>
-						<div class="input-group input-group-sm">
-							<span class="input-group-text bg-light" style="width: 120px;">배부후합계</span>
-							<input :value="resultInfo.amt_af" class="form-control text-end bg-light" readonly />
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+      <!-- [상단] 처리 대상 및 조건 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+          <span class="fw-bold small text-dark"><i class="bi bi-gear-fill me-2 text-primary"></i>배부 처리 조건</span>
+        </div>
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 180px" /><col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">1. 최종배부작업년월</th>
+                <td>
+                  <div class="px-2">
+                    <input :value="dvdYm" class="form-control form-control-sm bg-light text-center fw-bold" readonly style="max-width: 120px;" />
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th class="text-center bg-light required">2. 배부 작업 년월</th>
+                <td>
+                  <div class="d-flex align-items-center gap-2 px-2">
+                    <input v-model="searchForm.ym" type="month" class="form-control form-control-sm" style="max-width: 150px;" />
+                    <span class="text-primary small fw-bold">※ 원가마감 전 작업을 완료하세요.</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- [하단] 작업 결과 현황 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+          <span class="fw-bold small text-dark"><i class="bi bi-clipboard-data me-2 text-success"></i>작업 처리 결과</span>
+        </div>
+        <div class="card-body p-4 bg-white overflow-auto">
+          <div class="row g-5">
+            <div class="col-md-6 border-end">
+              <h6 class="fw-bold text-primary mb-3"><i class="bi bi-clock-history me-2"></i>처리 시간 상세</h6>
+              <div class="d-flex flex-column gap-3">
+                <div class="d-flex align-items-center">
+                  <span class="erp-label" style="min-width: 100px;">시작시간</span>
+                  <input :value="resultInfo.startdt" class="form-control bg-light text-center fw-bold" readonly />
+                </div>
+                <div class="d-flex align-items-center">
+                  <span class="erp-label" style="min-width: 100px;">종료시간</span>
+                  <input :value="resultInfo.enddt" class="form-control bg-light text-center fw-bold" readonly />
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h6 class="fw-bold text-success mb-3"><i class="bi bi-calculator me-2"></i>공정배부 금액</h6>
+              <div class="d-flex flex-column gap-3">
+                <div class="d-flex align-items-center">
+                  <span class="erp-label" style="min-width: 100px;">배부전합계</span>
+                  <input :value="Number(resultInfo.amt_bf).toLocaleString()" class="form-control bg-light text-end fw-bold" readonly />
+                </div>
+                <div class="d-flex align-items-center">
+                  <span class="erp-label" style="min-width: 100px;">배부후합계</span>
+                  <input :value="Number(resultInfo.amt_af).toLocaleString()" class="form-control bg-light text-end fw-bold text-success" readonly />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 p-3 bg-light rounded border">
+            <p class="mb-0 small text-muted">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              작업장 배부 작업은 공통 제조비용을 각 생산 공정(작업장)별로 배분하는 과정입니다.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -100,61 +126,52 @@ const loadInitData = async () => {
 	try {
 		const { data } = await api.post('/the/basicInfo/fmf/callFmf2020uStr', { actkind: 'S0' })
 		if (data.data && data.data[0]) {
-			dvdYm.value = data.data[0].DVDYM
-			clsWclsym.value = data.data[0].WCLSYM
+			dvdYm.value = data.data[0].DVDym || data.data[0].dvdym || ''
+			clsWclsym.value = data.data[0].wclsym || ''
 		}
 	} catch (e) {}
 }
 
-// 배부 실행 (A1)
 const handleExecute = async () => {
 	const ym = searchForm.ym.replace('-', '')
-	if (clsWclsym.value >= ym) return vAlertError('원가마감 되었습니다. 마감 취소 후 작업하세요.')
+	if (clsWclsym.value && clsWclsym.value >= ym) return vAlertError('원가마감 되었습니다. 마감 취소 후 작업하세요.')
 
 	if (!confirm('작업장 배부작업을 하시겠습니까?')) return
 
 	try {
 		resultInfo.startdt = new Date().toLocaleTimeString()
-		const res = await api.post('/the/basicInfo/fmf/callFmf2020uStr', {
-			ym,
-			actkind: 'A1',
-			val: ''
-		})
+		const res = await api.post('/the/basicInfo/fmf/callFmf2020uStr', { ym, actkind: 'A1', val: '' })
 
 		const d = res.data.data[0]
-		if (d.RESULT === 'N') {
-			vAlertError(d.MESSAGE)
+		if (d.RESULT === 'N' || d.result === 'N') {
+			vAlertError(d.MESSAGE || d.message)
 		} else {
 			Object.assign(resultInfo, {
-				amt_bf: d.AMT_BF,
-				amt_af: d.AMT_AF,
+				amt_bf: d.AMT_BF || d.amt_bf || '0',
+				amt_af: d.AMT_AF || d.amt_af || '0',
 				enddt: new Date().toLocaleTimeString()
 			})
-			vAlert(d.MESSAGE || '배부작업이 완료되었습니다.')
+			vAlert(d.MESSAGE || d.message || '배부작업이 완료되었습니다.')
 		}
 	} catch (e) { vAlertError('작업 중 오류 발생') }
 }
 
-// 배부 취소 (D0)
 const handleCancel = async () => {
 	const ym = searchForm.ym.replace('-', '')
-	if (clsWclsym.value >= ym) return vAlertError('원가마감 되었습니다. 마감 취소 후 작업하세요.')
-
+	if (clsWclsym.value && clsWclsym.value >= ym) return vAlertError('원가마감 되었습니다.')
 	if (!confirm('작업장 배부을 취소 하시겠습니까?')) return
 
 	try {
 		const res = await api.post('/the/basicInfo/fmf/callFmf2020uStr', { ym, actkind: 'D0' })
-		vAlert(res.data.data[0].MESSAGE || '취소되었습니다.')
+		vAlert(res.data.data[0].MESSAGE || res.data.data[0].message || '취소되었습니다.')
 		Object.assign(resultInfo, { startdt: '-', enddt: '-', amt_bf: '0', amt_af: '0' })
 	} catch (e) { vAlertError('취소 중 오류 발생') }
 }
 
-onMounted(() => {
-	loadInitData()
-})
+onMounted(loadInitData)
 </script>
 
 <style scoped>
-.hfmf202u-wrapper { height: calc(100vh - 110px); }
-.form-table th { background-color: #f8f9fa; font-weight: bold; }
+.grid-container-right { border-bottom: 3px solid #198754 !important; }
+.erp-label { min-width: 80px; font-weight: 600; color: #495057; font-size: 12px; }
 </style>

@@ -3,7 +3,7 @@
 		<!-- 📬 우편번호 및 검색 버튼 그룹 -->
 		<div class="d-flex gap-1" style="min-width: 185px;">
 			<input
-				v-model="postnoValue"
+				v-model="postno_val"
 				type="text"
 				class="form-control form-control-sm text-center bg-light"
 				placeholder="우편번호"
@@ -14,7 +14,6 @@
 			<button
 				type="button"
 				class="btn btn-sm btn-dark"
-				:disabled="!active"
 				title="다음 주소 검색"
 				@click="openPostcode"
 			>
@@ -24,7 +23,6 @@
 			<button
 				type="button"
 				class="btn btn-sm btn-outline-secondary"
-				:disabled="!active"
 				title="기존 배송지 선택"
 				@click="emit('open-address')"
 			>
@@ -34,7 +32,7 @@
 
 		<!-- 🏠 기본주소 -->
 		<input
-			v-model="addressValue"
+			v-model="address_val"
 			type="text"
 			class="form-control form-control-sm flex-grow-1 bg-light"
 			placeholder="기본주소"
@@ -43,12 +41,11 @@
 
 		<!-- ✏️ 상세주소 -->
 		<input
-			v-model="dAddressValue"
+			v-model="d_address_val"
 			type="text"
 			class="form-control form-control-sm"
 			style="width: 25%;"
 			placeholder="상세주소 입력"
-			:readonly="!active"
 		/>
 	</div>
 </template>
@@ -60,22 +57,21 @@ const props = defineProps({
 	postno: String,
 	address: String,
 	d_address: String,
-	active: Boolean,
 })
 
 const emit = defineEmits(['update:postno', 'update:address', 'update:d_address', 'open-address'])
 
-const postnoValue = computed({ get: () => props.postno, set: (val) => emit('update:postno', val) })
-const addressValue = computed({ get: () => props.address, set: (val) => emit('update:address', val) })
-const dAddressValue = computed({ get: () => props.d_address, set: (val) => emit('update:d_address', val) })
+const postno_val = computed({ get: () => props.postno, set: (val) => emit('update:postno', val) })
+const address_val = computed({ get: () => props.address, set: (val) => emit('update:address', val) })
+const d_address_val = computed({ get: () => props.d_address, set: (val) => emit('update:d_address', val) })
 
 const openPostcode = () => {
 	if (!(window as any).daum) { alert('주소 서비스를 로드할 수 없습니다.'); return }
 	new (window as any).daum.Postcode({
 		oncomplete: (data: any) => {
-			postnoValue.value = data.zonecode
-			addressValue.value = data.address
-			dAddressValue.value = ''
+			postno_val.value = data.zonecode
+			address_val.value = data.address
+			d_address_val.value = ''
 		},
 	}).open()
 }

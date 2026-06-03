@@ -22,7 +22,7 @@ export const useMenuStore = defineStore('menu', {
 				const res = await api.get('/api/comm/top-menus')
 				this.topMenuItems = res.data
 				if (this.topMenuItems.length > 0 && !this.activeCodecd) {
-					await this.selectTopMenu(this.topMenuItems[0].CODECD)
+					await this.selectTopMenu(this.topMenuItems[0].codecd)
 				}
 			} catch (e) { console.error('❌ [상단 메뉴 로드 실패]:', e) }
 		},
@@ -33,12 +33,12 @@ export const useMenuStore = defineStore('menu', {
 		async selectTopMenu(upmucd: string) {
 			this.activeCodecd = upmucd
 			try {
-				const res = await api.get('/api/comm/left-menus', { params: { UPMUCD: upmucd } })
+				const res = await api.get('/api/comm/left-menus', { params: { upmucd: upmucd } })
 
 				// DB의 'HAAA_010U.asp' 형식을 'HAAA010U'로 변환하여 Vue와 일치시킴
 				this.sidebarItems = res.data.map((item: any) => ({
 					...item,
-					PGMID: item.PGMID ? item.PGMID.replace(/[_\-\.]|asp/gi, '').toUpperCase() : ''
+					pgmid: item.pgmid ? item.pgmid.replace(/[_\-\.]|asp/gi, '').toUpperCase() : ''
 				}))
 			} catch (e) { console.error('❌ [좌측 메뉴 로드 실패]:', e) }
 		},
@@ -62,9 +62,9 @@ export const useMenuStore = defineStore('menu', {
 		groupedSidebarItems: (state) => {
 			const map = new Map()
 			for (const item of state.sidebarItems) {
-				const grpcd = item.GRPCD
+				const grpcd = item.grpcd
 				if (!map.has(grpcd)) {
-					map.set(grpcd, { GRPCD: grpcd, GRPNM: item.GRPNM, items: [] })
+					map.set(grpcd, { grpcd: grpcd, grpnm: item.grpnm, items: [] })
 				}
 				map.get(grpcd).items.push(item)
 			}
