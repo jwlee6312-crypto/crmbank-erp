@@ -41,7 +41,6 @@ export const useAuthStore = defineStore(
 				const res = await api.get('/api/comm/session')
 				if (res.data) {
 					setUserInfo(res.data)
-					// 💡 [추가] 새로고침 시에도 메뉴를 다시 불러옵니다.
 					await menuStore.fetchMenus()
 					return true
 				}

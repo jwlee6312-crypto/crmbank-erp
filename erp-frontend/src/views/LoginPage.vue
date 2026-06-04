@@ -72,7 +72,7 @@ interface FormData {
 }
 
 const form = reactive<FormData>({
-	cmpycd: 'haionnet',
+	cmpycd: 'COIT',
 	userid: '',
 	passwd: '',
 })

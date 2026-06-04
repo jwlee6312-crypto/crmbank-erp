@@ -10,8 +10,8 @@ export function useCommonHelp() {
   })
 
   /**
-   * 💡 공통 도움창 호출 함수
-   * @param type 팝업 유형 (DEPT, CUST, ACCT, MGT, PRJ, USER, SLIP, SUB, BUGT, ITEM, ADDR)
+   * 💡 공통 도움창 호출 함수 (논리적 컬럼명 사용 표준화)
+   * @param type 팝업 유형
    * @param callback 선택 완료 후 콜백
    * @param extraData 추가 파라미터 (search, acctcd, custcd, mgtgbn, prjcd 등)
    */
@@ -19,7 +19,6 @@ export function useCommonHelp() {
     const commonPath = '/api/ha00/HA00_00P_STR'
 
     if (type === 'DEPT') {
-      // 💡 부서 선택 팝업 (D0)
       Object.assign(modalProps, {
         title: '부서 선택',
         path: commonPath,
@@ -33,7 +32,6 @@ export function useCommonHelp() {
         onConfirm: callback
       })
     } else if (type === 'CUST') {
-      // 💡 거래처 선택 팝업 (C4)
       Object.assign(modalProps, {
         title: '거래처 선택',
         path: commonPath,
@@ -47,52 +45,48 @@ export function useCommonHelp() {
         onConfirm: callback
       })
     } else if (type === 'ACCT') {
-      // 💡 계정과목 선택 팝업 (A0)
       Object.assign(modalProps, {
         title: '계정과목 선택',
         path: commonPath,
-        defaultField: 'ACCTNM',
+        defaultField: 'acctnm',
         large: true,
         data: { gubun: 'A0', cmpycd: authStore.cmpycd, gbncd: '', code: extraData.search || '', remark: '' },
         columns: [
-          { title: '계정코드', field: 'ACCTCD', width: 120, hozAlign: 'center', headerSort: false },
-          { title: '계정명', field: 'ACCTNM', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
-          { title: '비고', field: 'CACCTNM', minWidth: 150, hozAlign: 'left', headerSort: false }
+          { title: '계정코드', field: 'acctcd', width: 120, hozAlign: 'center', headerSort: false },
+          { title: '계정명', field: 'acctnm', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
+          { title: '비고', field: 'cacctnm', minWidth: 150, hozAlign: 'left', headerSort: false }
         ],
         onConfirm: callback
       })
     } else if (type === 'MGT') {
-      // 💡 관리번호 선택 팝업 (M0)
       Object.assign(modalProps, {
         title: '관리번호 선택',
         path: commonPath,
-        defaultField: 'MGTNM',
+        defaultField: 'mgtnm',
         large: true,
         data: { gubun: 'M0', cmpycd: authStore.cmpycd, gbncd: extraData.mgtgbn || '', code: extraData.search || '', remark: extraData.acctcd || '' },
         columns: [
-          { title: '코드', field: 'MGTNO', width: 120, hozAlign: 'center', headerSort: false },
-          { title: '코드명', field: 'MGTNM', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
-          { title: '비고', field: 'BIGO', minWidth: 150, hozAlign: 'left', headerSort: false }
+          { title: '코드', field: 'mgtno', width: 120, hozAlign: 'center', headerSort: false },
+          { title: '코드명', field: 'mgtnm', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
+          { title: '비고', field: 'bigo', minWidth: 150, hozAlign: 'left', headerSort: false }
         ],
         onConfirm: callback
       })
     } else if (type === 'PRJ') {
-      // 💡 프로젝트 선택 팝업 (P0)
       Object.assign(modalProps, {
         title: '프로젝트 선택',
         path: commonPath,
-        defaultField: 'PRJNM',
+        defaultField: 'prjnm',
         large: true,
         data: { gubun: 'P0', cmpycd: authStore.cmpycd, gbncd: extraData.prjcd || '', code: extraData.search || '', remark: '' },
         columns: [
-          { title: '프로젝트코드', field: 'PRJCD', width: 120, hozAlign: 'center', headerSort: false },
-          { title: '프로젝트명', field: 'PRJNM', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
-          { title: '비고', field: 'BIGO', minWidth: 150, hozAlign: 'left', headerSort: false }
+          { title: '코드', field: 'prjcd', width: 120, hozAlign: 'center', headerSort: false },
+          { title: '프로젝트명', field: 'prjnm', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
+          { title: '비고', field: 'bigo', minWidth: 150, hozAlign: 'left', headerSort: false }
         ],
         onConfirm: callback
       })
     } else if (type === 'USER') {
-      // 💡 사용자 선택 팝업 (U0)
       Object.assign(modalProps, {
         title: '사용자 선택',
         path: commonPath,
@@ -106,11 +100,10 @@ export function useCommonHelp() {
         onConfirm: callback
       })
     } else if (type === 'SLIP') {
-      // 💡 전표번호 선택 팝업 (P1)
       Object.assign(modalProps, {
         title: '전표번호 선택',
         path: commonPath,
-        defaultField: 'descnm',
+        defaultField: 'remark',
         large: true,
         data: { gubun: 'P1', cmpycd: authStore.cmpycd, gbncd: extraData.acctcd || '', code: extraData.search || '', remark: extraData.custcd || '' },
         columns: [
@@ -118,17 +111,17 @@ export function useCommonHelp() {
             title: '전표번호', field: 'slipno', width: 150, hozAlign: 'center',
             formatter: (cell: any) => {
               const d = cell.getData();
-              return d.slipno || (d.col0 && d.col1 ? `${d.col0}${d.col1}${d.col2 || ''}` : '');
+              // 서버에서 가공된 slipno를 보내주거나, 일자/번호 필드를 조합
+              return d.slipno || (d.slipymd && d.slipno_seq ? `${d.slipymd}-${d.slipno_seq}` : '');
             }
           },
           { title: '거래처', field: 'custnm', width: 180, hozAlign: 'left' },
-          { title: '적요', field: 'descnm', minWidth: 200, widthGrow: 1, hozAlign: 'left' },
+          { title: '적요', field: 'remark', minWidth: 200, widthGrow: 1, hozAlign: 'left' },
           { title: '미지불액', field: 'janamt', width: 120, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } }
         ],
         onConfirm: callback
       })
     } else if (type === 'SUB') {
-      // 💡 보조과목 선택 팝업 (S0)
       Object.assign(modalProps, {
         title: '보조과목 선택',
         path: commonPath,
@@ -136,14 +129,13 @@ export function useCommonHelp() {
         large: true,
         data: { gubun: 'S0', cmpycd: authStore.cmpycd, gbncd: '', code: extraData.search || '', remark: '' },
         columns: [
-          { title: '코드', field: 'subcd', width: 120, hozAlign: 'center', headerSort: false },
-          { title: '보조과목명', field: 'subnm', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
-          { title: '비고', field: 'bigo', minWidth: 150, hozAlign: 'left', headerSort: false }
+          { title: '코드', field: 'subcd', width: 120, hozAlign: 'center' },
+          { title: '보조과목명', field: 'subnm', minWidth: 200, widthGrow: 1, hozAlign: 'left' },
+          { title: '비고', field: 'bigo', minWidth: 150, hozAlign: 'left' }
         ],
         onConfirm: callback
       })
     } else if (type === 'BUGT') {
-      // 💡 계정예산코드 선택 팝업 (B0)
       Object.assign(modalProps, {
         title: '예산코드 선택',
         path: commonPath,
@@ -151,9 +143,9 @@ export function useCommonHelp() {
         large: true,
         data: { gubun: 'B0', cmpycd: authStore.cmpycd, gbncd: extraData.acctcd || '', code: extraData.search || '', remark: '' },
         columns: [
-          { title: '예산코드', field: 'bugtcd', width: 120, hozAlign: 'center', headerSort: false },
-          { title: '예산명', field: 'bugtnm', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
-          { title: '비고', field: 'codenm', minWidth: 150, hozAlign: 'left', headerSort: false }
+          { title: '코드', field: 'bugtcd', width: 120, hozAlign: 'center' },
+          { title: '예산명', field: 'bugtnm', minWidth: 200, widthGrow: 1, hozAlign: 'left' },
+          { title: '비고', field: 'codenm', minWidth: 150, hozAlign: 'left' }
         ],
         onConfirm: callback
       })

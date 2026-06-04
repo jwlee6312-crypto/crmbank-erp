@@ -9,9 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -30,9 +33,6 @@ public class HaslController {
         }
     }
 
-    /**
-     * 일반 프로시저 실행 (조회 등)
-     */
     @PostMapping("/{procedure}")
     public ResponseEntity<Object> executeProcedure(
             @PathVariable String procedure,
@@ -40,148 +40,125 @@ public class HaslController {
             HttpSession session) {
         
         injectSession(params, session);
-        
-        // SAVE 로직은 별도 메소드에서 처리
-        if (procedure.equalsIgnoreCase("HASL_010U_SAVE")) {
-            return saveSlip010(params, session);
-        }
-        if (procedure.equalsIgnoreCase("HASL_110U_SAVE")) {
-            return saveSlip110(params, session);
+        String proc = procedure.trim().toLowerCase();
+
+        if (proc.equals("hasl_010u_save")) return saveSlip010(params, session);
+        if (proc.equals("hasl_110u_save")) return saveSlip110(params, session);
+
+        if (proc.equals("hasl_040s_str")) {
+            String rawkeyword = String.valueOf(params.getOrDefault("keyword", "")).trim();
+            if (!rawkeyword.isEmpty() && !rawkeyword.equalsIgnoreCase("null")) {
+                params.put("keywords", modernTokenize(rawkeyword));
+            }
+            return ResponseEntity.ok(haslMapper.hasl_040s_str(params));
         }
 
-        log.info("🚀 [HASL] {} 호출: {}", procedure, params);
+        log.info("🚀 [hasl] procedure: {}, params: {}", proc, params);
         
-        switch (procedure.toUpperCase()) {
-            case "HASL_010U_STR": return ResponseEntity.ok(haslMapper.HASL_010U_STR(params));
-            case "HASL_011U_STR": return ResponseEntity.ok(haslMapper.HASL_011U_STR(params));
-            case "HASL_020U_STR": return ResponseEntity.ok(haslMapper.HASL_020U_STR(params));
-            case "HASL_110U_STR": return ResponseEntity.ok(haslMapper.HASL_110U_STR(params));
-            case "HASL_111U_STR": return ResponseEntity.ok(haslMapper.HASL_111U_STR(params));
-            case "HASL_030S_STR": return ResponseEntity.ok(haslMapper.HASL_030S_STR(params));
-            case "HASL_120S_STR": return ResponseEntity.ok(haslMapper.HASL_120S_STR(params));
-            case "HASL_130S_STR": return ResponseEntity.ok(haslMapper.HASL_130S_STR(params));
+        switch (proc) {
+            case "hasl_010u_str": return ResponseEntity.ok(haslMapper.hasl_010u_str(params));
+            case "hasl_011u_str": return ResponseEntity.ok(haslMapper.hasl_011u_str(params));
+            case "hasl_020u_str": return ResponseEntity.ok(haslMapper.hasl_020u_str(params));
+            case "hasl_110u_str": return ResponseEntity.ok(haslMapper.hasl_110u_str(params));
+            case "hasl_111u_str": return ResponseEntity.ok(haslMapper.hasl_111u_str(params));
+            case "hasl_030s_str": return ResponseEntity.ok(haslMapper.hasl_030s_str(params));
+            case "hasl_120s_str": return ResponseEntity.ok(haslMapper.hasl_120s_str(params));
+            case "hasl_130s_str": return ResponseEntity.ok(haslMapper.hasl_130s_str(params));
+            case "hasl_050u_master": return ResponseEntity.ok(haslMapper.hasl_050u_master(params));
+            case "hasl_050u_str": return ResponseEntity.ok(haslMapper.hasl_050u_str(params));
+            case "hasl_510s_str": return ResponseEntity.ok(haslMapper.hasl_510s_str(params));
+            case "hasl_520s_str": return ResponseEntity.ok(haslMapper.hasl_520s_str(params));
+            case "hasl_530s_str": return ResponseEntity.ok(haslMapper.hasl_530s_str(params));
+            case "hasl_540s_str": return ResponseEntity.ok(haslMapper.hasl_540s_str(params));
+            case "hasl_550s_str": return ResponseEntity.ok(haslMapper.hasl_550s_str(params));
+            case "hasl_560s_str": return ResponseEntity.ok(haslMapper.hasl_560s_str(params));
+            case "hasl_610s_str": return ResponseEntity.ok(haslMapper.hasl_610s_str(params));
+            case "get_slip_list": return ResponseEntity.ok(haslMapper.get_slip_list(params));
+            case "hasl_630s_str": return ResponseEntity.ok(haslMapper.hasl_630s_str(params));
+            case "hasl_710s_str": return ResponseEntity.ok(haslMapper.hasl_710s_str(params));
             default:
-                log.warn("⚠️ 미등록 HASL 프로시저: {}", procedure);
+                log.warn("❌ [hasl] Unregistered procedure: {}", proc);
                 return ResponseEntity.notFound().build();
         }
     }
 
-    /**
-     * 현업전표등록(010U) 통합 저장 로직
-     */
+    private List<String> modernTokenize(String query) {
+        if (query == null || query.trim().isEmpty()) return List.of();
+        String cleaned = query.replaceAll("[\\.,\\?\\!\\(\\)\\[\\]]", " ")
+                             .replaceAll("[0-9]", "")
+                             .replaceAll("원", "")
+                             .replaceAll("\\s+", " ").trim();
+        String particleregex = "(은|는|이|가|을|를|과|와|로|으로|에서|에게|의|도|만|까지|부터|하고|했다|하며|하였다|했으며|하였습니다|하였으며|이다|입니다|습니까|니까|함|했고|있다|았다|었다|들과|들의|같이)$";
+        Pattern pattern = Pattern.compile(particleregex);
+        return Arrays.stream(cleaned.split(" "))
+                .map(word -> {
+                    String prev = ""; String curr = word;
+                    while(!prev.equals(curr)) { prev = curr; curr = pattern.matcher(curr).replaceAll(""); }
+                    return curr;
+                })
+                .filter(word -> word.length() >= 1)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public ResponseEntity<Object> saveSlip010(Map<String, Object> payload, HttpSession session) {
         try {
-            Map<String, Object> master = (Map<String, Object>) payload.get("MASTER");
-            List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("DETAILS");
-            String actKind = (String) payload.get("actkind");
-
+            Map<String, Object> master = (Map<String, Object>) payload.get("master");
+            List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
+            String actkind = (String) payload.get("actkind");
             injectSession(master, session);
-
-            // 1. 전표 마스터 저장
-            master.put("actkind", actKind);
-            List<Map<String, Object>> masterResult = haslMapper.HASL_010U_STR(master);
-            
-            if (masterResult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
-            
-            String slipNo = String.valueOf(masterResult.get(0).get("slipno"));
-            String slipYmd = String.valueOf(master.get("slipymd"));
-
-            // 2. 전표 상세 저장
+            master.put("actkind", actkind);
+            List<Map<String, Object>> masterresult = haslMapper.hasl_010u_str(master);
+            if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
+            String slipno = String.valueOf(masterresult.get(0).get("slipno"));
+            String slipymd = String.valueOf(master.get("slipymd"));
             if (details != null) {
                 for (Map<String, Object> detail : details) {
                     injectSession(detail, session);
-                    detail.put("slipymd", slipYmd);
-                    detail.put("slipno", slipNo);
+                    detail.put("slipymd", slipymd); detail.put("slipno", slipno);
                     detail.put("acctymd", master.get("acctymd"));
-                    
-                    if ("D".equals(actKind)) {
-                        detail.put("actkind", "D");
-                    } else {
-                        String rowKind = (String) detail.getOrDefault("upkind", "A");
-                        detail.put("actkind", rowKind);
-                    }
-
-                    List<Map<String, Object>> detRes = haslMapper.HASL_011U_STR(detail);
-                    if (!detRes.isEmpty()) {
-                        Map<String, Object> resMap = detRes.get(0);
-                        if ("Y".equals(resMap.get("ret_yn"))) {
-                            throw new RuntimeException(String.valueOf(resMap.get("ret_msg")));
-                        }
-                    }
+                    detail.put("actkind", "d".equals(actkind) ? "d" : detail.getOrDefault("upkind", "a"));
+                    haslMapper.hasl_011u_str(detail);
                 }
             }
-
             Map<String, Object> response = new HashMap<>();
-            response.put("slipno", slipNo);
-            response.put("status", "SUCCESS");
+            response.put("slipno", slipno); response.put("status", "success");
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            log.error("❌ 010U 저장 오류: {}", e.getMessage());
             Map<String, Object> error = new HashMap<>();
-            error.put("status", "ERROR");
-            error.put("message", e.getMessage());
+            error.put("status", "error"); error.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
     }
 
-    /**
-     * 경리전표입력(110U) 통합 저장 로직
-     */
     @Transactional
     public ResponseEntity<Object> saveSlip110(Map<String, Object> payload, HttpSession session) {
         try {
-            Map<String, Object> master = (Map<String, Object>) payload.get("MASTER");
-            List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("DETAILS");
-            String actKind = (String) payload.get("actkind");
-
+            Map<String, Object> master = (Map<String, Object>) payload.get("master");
+            List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
+            String actkind = (String) payload.get("actkind");
             injectSession(master, session);
-
-            // 1. 전표 마스터 저장
-            master.put("actkind", actKind);
-            List<Map<String, Object>> masterResult = haslMapper.HASL_110U_STR(master);
-            
-            if (masterResult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
-            
-            String slipno = String.valueOf(masterResult.get(0).get("slipno"));
+            master.put("actkind", actkind);
+            List<Map<String, Object>> masterresult = haslMapper.hasl_110u_str(master);
+            if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
+            String slipno = String.valueOf(masterresult.get(0).get("slipno"));
             String slipymd = String.valueOf(master.get("slipymd"));
-
-            // 2. 전표 상세 저장
             if (details != null) {
                 for (Map<String, Object> detail : details) {
                     injectSession(detail, session);
-                    detail.put("slipymd", slipymd);
-                    detail.put("slipno", slipno);
-                    detail.put("ACCTYMD", master.get("ACCTYMD"));
-                    
-                    if ("D".equals(actKind)) {
-                        detail.put("actkind", "D");
-                    } else {
-                        String rowKind = (String) detail.getOrDefault("upkind", "A");
-                        detail.put("actkind", rowKind);
-                    }
-
-                    List<Map<String, Object>> detRes = haslMapper.HASL_111U_STR(detail);
-                    if (!detRes.isEmpty()) {
-                        Map<String, Object> resMap = detRes.get(0);
-                        if ("Y".equals(resMap.get("ret_yn"))) {
-                            throw new RuntimeException(String.valueOf(resMap.get("ret_msg")));
-                        }
-                    }
+                    detail.put("slipymd", slipymd); detail.put("slipno", slipno);
+                    detail.put("acctymd", master.get("acctymd"));
+                    detail.put("actkind", "d".equals(actkind) ? "d" : detail.getOrDefault("upkind", "a"));
+                    haslMapper.hasl_111u_str(detail);
                 }
             }
-
             Map<String, Object> response = new HashMap<>();
-            response.put("slipno", slipno);
-            response.put("status", "SUCCESS");
+            response.put("slipno", slipno); response.put("status", "success");
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            log.error("❌ 110U 저장 오류: {}", e.getMessage());
             Map<String, Object> error = new HashMap<>();
-            error.put("status", "ERROR");
-            error.put("message", e.getMessage());
+            error.put("status", "error"); error.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
     }

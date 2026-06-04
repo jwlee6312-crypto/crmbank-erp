@@ -69,7 +69,7 @@
 			</div>
 		</div>
 
-		<!-- 💡 메인 컨텐츠 영역 (상하 분할) -->
+		<!-- 💡 메인 컨텐츠 영역 -->
 		<div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-3 bg-light main-content-wrapper">
 
 			<!-- 🅰️ 메인 집계 그리드 -->
