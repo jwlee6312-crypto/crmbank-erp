@@ -104,7 +104,7 @@ const loadInitData = async () => {
 			api.post('/api/hfmf/FMF2110U_STR', {
                 cmpycd: authStore.cmpycd, actkind: 'S0', ym: '', jobord: '', userid: authStore.userid, MsgYn: '', MsgText: ''
             }),
-			api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } })
+			api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } })
 		])
 
 		if (res.data && res.data[0]) {

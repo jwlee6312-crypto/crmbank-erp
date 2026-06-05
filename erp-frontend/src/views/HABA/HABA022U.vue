@@ -176,7 +176,7 @@ const masterForm = reactive({
 	caltype: '000',
 	calgagam: '000',
 	useyn: 'Y',
-	UPDYN: 'Y',
+	updyn: 'Y',
 	rstyn: 'N'
 })
 
@@ -228,7 +228,7 @@ const fetchLeftGrid = async () => {
 			upacct: r.col1,
 			acctnm: r.col2,
 			gubun_NM: r.col3,
-			UPDYN: r.col4,
+			updyn: r.col4,
 			rstyn: r.col5 // 'Y'일 때만 등록 가능 (충당금계정)
 		}))
 
@@ -252,9 +252,9 @@ const fetchRightGrid = async (row: any) => {
 		const processed = (res.data || []).map((r: any) => ({
 			acctcd: r.col0,
 			acctnm: r.col1,
-			caltype_NM: r.col2,
+			caltype_nm: r.col2,
 			caltype: r.col3,
-			calgagam_NM: r.col4,
+			calgagam_nm: r.col4,
 			calgagam: r.col5,
 			useyn: r.col6,
 			gubun: r.col7,
@@ -267,7 +267,7 @@ const fetchRightGrid = async (row: any) => {
 }
 
 const save = async () => {
-	if (masterForm.UPDYN !== 'Y') return vAlert('수정할 수 없습니다.')
+	if (masterForm.updyn !== 'Y') return vAlert('수정할 수 없습니다.')
 	if (masterForm.rstyn !== 'Y') return vAlert('충당금계정만 등록 가능합니다.')
 	if (!masterForm.upacct) return vAlert('집계계정을 선택해 주십시요.')
 	if (!masterForm.acctcd) return vAlert('계정코드를 선택해 주십시요.')
@@ -285,7 +285,7 @@ const save = async () => {
 		})
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('저장되었습니다.')
 			fetchRightGrid({ gubun: masterForm.gubun, upacct: masterForm.upacct })
@@ -298,14 +298,14 @@ const initialize = () => {
 	const currentUpAcct = masterForm.upacct
 	const currentUpAcctT = masterForm.upacct_t
 	const currentRstyn = masterForm.rstyn
-	const currentUpdyn = masterForm.UPDYN
+	const currentUpdyn = masterForm.updyn
 
 	resetForm(masterForm)
 	masterForm.actkind = 'I1'
 	masterForm.upacct = currentUpAcct
 	masterForm.upacct_t = currentUpAcctT
 	masterForm.rstyn = currentRstyn
-	masterForm.UPDYN = currentUpdyn
+	masterForm.updyn = currentUpdyn
 	masterForm.useyn = 'Y'
 }
 
@@ -318,7 +318,7 @@ function openHelp(type: string) {
 		if (!masterForm.gubun) return vAlert('재무제표 종류가 확인되지 않습니다.')
 		Object.assign(modalProps, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: masterForm.acctcd_t },
+			data: { gubun: 'A0', cmpycd: authStore.cmpycd, code: masterForm.acctcd_t },
 			columns: [{ title: '코드', field: 'col0', width: 80 }, { title: '계정명', field: 'col1', width: 180 }],
 			onConfirm: (d: any) => { masterForm.acctcd = d.col0; masterForm.acctcd_t = d.col1 }
 		})
@@ -361,7 +361,7 @@ onMounted(() => {
 				masterForm.upacct = d.upacct
 				masterForm.upacct_t = d.acctnm
 				masterForm.gubun = d.gubun
-				masterForm.UPDYN = d.UPDYN
+				masterForm.updyn = d.updyn
 				masterForm.rstyn = d.rstyn
 				fetchRightGrid(d)
 				initialize()
@@ -378,8 +378,8 @@ onMounted(() => {
 			columns: [
 				{ title: "계정코드", field: "acctcd", width: 90, hozAlign: "center" },
 				{ title: "계정과목명", field: "acctnm", width: 180 },
-				{ title: "연산대상", field: "caltype_NM", width: 100, hozAlign: "center" },
-				{ title: "연산수식", field: "calgagam_NM", width: 100, hozAlign: "center" },
+				{ title: "연산대상", field: "caltype_nm", width: 100, hozAlign: "center" },
+				{ title: "연산수식", field: "calgagam_nm", width: 100, hozAlign: "center" },
 				{ title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross" }
 			],
 			rowClick: (e, row) => {

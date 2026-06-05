@@ -286,7 +286,7 @@ function openHelp(type: string) {
 }
 
 onMounted(async () => {
-  api.get('/api/comm/HA00_00P_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
      .then(r => whOptions.value = r.data.map((i:any)=>({code: i.code || i.whcd, cdnm: i.cdnm || i.whnm})));
 
   if (poGridRef.value) {

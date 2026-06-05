@@ -68,7 +68,7 @@ export function useCommonHelp() {
         columns: [
           { title: '코드', field: 'mgtno', width: 120, hozAlign: 'center', headerSort: false },
           { title: '코드명', field: 'mgtnm', minWidth: 200, widthGrow: 1, hozAlign: 'left', headerSort: true },
-          { title: '비고', field: 'bigo', minWidth: 150, hozAlign: 'left', headerSort: false }
+          { title: '비고', field: 'remark', minWidth: 150, hozAlign: 'left', headerSort: false }
         ],
         onConfirm: callback
       })

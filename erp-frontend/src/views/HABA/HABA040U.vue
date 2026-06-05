@@ -46,7 +46,7 @@
 						<tr>
 							<th class="text-center border-end">보조과목 명</th>
 							<td class="bg-white border-end px-2">
-								<input v-model="searchForm.SUBNM_H" type="text" class="form-control form-control-sm" placeholder="검색어 입력" @keydown.enter="search" />
+								<input v-model="searchForm.subnm_h" type="text" class="form-control form-control-sm" placeholder="검색어 입력" @keydown.enter="search" />
 							</td>
 							<td class="bg-white px-3 text-muted small">
 								<i class="bi bi-info-circle me-1"></i> 보조과목명을 입력하여 검색하실 수 있습니다.
@@ -73,11 +73,11 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end">보조과목</th>
 							<td class="bg-white border-end px-2">
-								<input v-model="masterForm.SUBCD" type="text" class="form-control form-control-sm text-center fw-bold" maxlength="5" :readonly="masterForm.actkind === 'U0'" placeholder="코드 입력" />
+								<input v-model="masterForm.subcd" type="text" class="form-control form-control-sm text-center fw-bold" maxlength="5" :readonly="masterForm.actkind === 'U0'" placeholder="코드 입력" />
 							</td>
 							<th class="text-center bg-light-subtle border-end">보조과목명</th>
 							<td colspan="3" class="bg-white px-2">
-								<input v-model="masterForm.SUBNM" type="text" class="form-control form-control-sm" maxlength="30" />
+								<input v-model="masterForm.subnm" type="text" class="form-control form-control-sm" maxlength="30" />
 							</td>
 						</tr>
 						<tr>
@@ -131,14 +131,14 @@ const { resetForm } = useFormReset()
 
 // 🔍 검색 데이터
 const searchForm = reactive({
-	SUBNM_H: ''
+	subnm_h: ''
 })
 
 // 📝 마스터 데이터
 const masterForm = reactive({
 	actkind: 'A0',
-	SUBCD: '',
-	SUBNM: '',
+	subcd: '',
+	subnm: '',
 	remark: '',
 	dspord: '',
 	useyn: 'Y'
@@ -152,12 +152,12 @@ const search = async () => {
 		const res = await api.post('/api/haba/HABA_040U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			SUBNM_H: searchForm.SUBNM_H
+			subnm: searchForm.subnm_h
 		})
 
 		const processedData = (res.data || []).map((r: any) => ({
-			SUBCD: r.SUBCD || r.col0,
-			SUBNM: r.SUBNM || r.col1,
+			subcd: r.subcd || r.col0,
+			subnm: r.subnm || r.col1,
 			remark: r.bigo || r.col2,
 			dspord: r.dspord || r.col3,
 			useyn: r.useyn || r.col4
@@ -169,8 +169,8 @@ const search = async () => {
 }
 
 const save = async () => {
-	if (!masterForm.SUBCD) return vAlert('보조과목 코드를 입력하십시오.')
-	if (!masterForm.SUBNM) return vAlert('보조과목명을 입력하십시오.')
+	if (!masterForm.subcd) return vAlert('보조과목 코드를 입력하십시오.')
+	if (!masterForm.subnm) return vAlert('보조과목명을 입력하십시오.')
 	if (!masterForm.dspord) return vAlert('출현순서를 입력하십시오.')
 
 	try {
@@ -183,7 +183,7 @@ const save = async () => {
 		const res = await api.post('/api/haba/HABA_040U_STR', payload)
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('저장되었습니다.')
 			search()
@@ -207,8 +207,8 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "보조과목", field: "SUBCD", width: 100, hozAlign: "center" },
-				{ title: "보조과목 명", field: "SUBNM", minWidth: 200 },
+				{ title: "보조과목", field: "subcd", width: 100, hozAlign: "center" },
+				{ title: "보조과목 명", field: "subnm", minWidth: 200 },
 				{ title: "비고", field: "remark", minWidth: 300 },
 				{ title: "출현순서", field: "dspord", width: 100, hozAlign: "center" },
 				{ title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }

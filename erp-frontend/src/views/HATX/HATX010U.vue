@@ -97,7 +97,7 @@
 						</div>
 					</div>
 					<div class="col-md-3 text-end">
-						<div v-if="formData.SSLIPNO" class="badge bg-info p-2 w-100">전표: {{ formData.SSLIPNO }}</div>
+						<div v-if="formData.Sslipno" class="badge bg-info p-2 w-100">전표: {{ formData.Sslipno }}</div>
 					</div>
 
 					<div class="col-md-3">
@@ -159,7 +159,7 @@
 					<div class="col-md-6">
 						<div class="d-flex align-items-center">
 							<span class="erp-label-form">주소</span>
-							<input v-model="formData.ADRS" type="text" class="form-control form-control-sm" />
+							<input v-model="formData.adrs" type="text" class="form-control form-control-sm" />
 						</div>
 					</div>
 
@@ -215,7 +215,7 @@
 				<div class="card erp-slip-card border-info-subtle mb-0 shadow-none">
 					<div class="card-header bg-info-subtle p-2 d-flex justify-content-between align-items-center shadow-none border-info-subtle">
 						<div class="form-check mb-0">
-							<input v-model="formData.SLIPYN" class="form-check-input border-primary" type="checkbox" id="slipCheck" :disabled="!!formData.SSLIPNO" true-value="Y" false-value="N">
+							<input v-model="formData.slipyn" class="form-check-input border-primary" type="checkbox" id="slipCheck" :disabled="!!formData.Sslipno" true-value="Y" false-value="N">
 							<label class="form-check-label fw-bold text-primary" for="slipCheck">전표 생성 정보</label>
 						</div>
 						<div class="form-check mb-0">
@@ -223,7 +223,7 @@
 							<label class="form-check-label fw-bold text-success" for="receiptCheck">접수확인</label>
 						</div>
 					</div>
-					<div v-if="formData.SLIPYN === 'Y'" class="card-body p-3 bg-white border border-top-0 border-info-subtle rounded-bottom">
+					<div v-if="formData.slipyn === 'Y'" class="card-body p-3 bg-white border border-top-0 border-info-subtle rounded-bottom">
 						<div class="row g-2 small">
 							<div class="col-md-4">
 								<div class="d-flex align-items-center">
@@ -298,10 +298,10 @@
 		<template #footer>
 			<div class="d-flex justify-content-between w-100">
 				<div class="btn-group gap-1">
-					<button v-if="formData.SSLIPNO" class="btn btn-sm btn-print" @click="handleSlipPrint">
+					<button v-if="formData.Sslipno" class="btn btn-sm btn-print" @click="handleSlipPrint">
 						<i class="bi bi-printer"></i> 전표인쇄
 					</button>
-					<button v-if="formData.SSLIPNO" class="btn btn-sm btn-danger" @click="handleSlipDelete">
+					<button v-if="formData.Sslipno" class="btn btn-sm btn-danger" @click="handleSlipDelete">
 						<i class="bi bi-trash"></i> 전표삭제
 					</button>
 				</div>
@@ -361,9 +361,9 @@ const formData = reactive({
 	TAXTYPE_VAL: '0',
 	TAXTYPE: '', typenm: '',
 	supyamt: '0', vatamt: '0', amtsum: '0',
-	bossnm: '', descnm: '', custtype: '', custkind: '', ADRS: '',
+	bossnm: '', descnm: '', custtype: '', custkind: '', adrs: '',
 	BGONGCD: '01',
-	useyn: 'N', SLIPYN: 'N', SSLIPNO: '',
+	useyn: 'N', slipyn: 'N', Sslipno: '',
 	deptcd: authStore.deptcd || '', deptnm: authStore.deptnm || '',
 	acctcd: '', acctnm: '',
 	CPAYCNDT1: '000', CInamt1: 0, Cmgtno1: '', Cmgtnm1: '', Cmgtgbn1: '000', Cacctcd1: '', CROWACT1: 'A', Cstdymd1: today, Cendymd1: today, CPAYTYPE1: '000', CPAyyMD1: today,
@@ -439,7 +439,7 @@ const handleNew = () => {
 	Object.assign(formData, {
 		taxunit: searchForm.taxunit, custcd: '', custnm: '', custno: '', taxno: '', taxym: '',
 		pubymd: today, TAXTYPE_VAL: '0', TAXTYPE: '', typenm: '', supyamt: '0', vatamt: '0', amtsum: '0',
-		bossnm: '', descnm: '', custtype: '', custkind: '', ADRS: '', BGONGCD: '01', useyn: 'N', SLIPYN: 'N', SSLIPNO: '',
+		bossnm: '', descnm: '', custtype: '', custkind: '', adrs: '', BGONGCD: '01', useyn: 'N', slipyn: 'N', Sslipno: '',
 		deptcd: authStore.deptcd || '', deptnm: authStore.deptnm || '', acctcd: '', acctnm: '',
 		CPAYCNDT1: '000', CInamt1: 0, CPAYCNDT2: '000', CInamt2: 0,
 		items: Array.from({ length: 4 }, () => ({ rowno: '', ymD: today, itemnm: '', QTY: 0, price: 0, AMT: '0', VAT: '0', bigo: '' }))
@@ -495,7 +495,7 @@ const save = async () => {
 
 	try {
 		// 전표 생성 시 검증
-		if (formData.SLIPYN === 'Y') {
+		if (formData.slipyn === 'Y') {
 			if (!formData.deptcd) return vAlertError('발행부서를 선택하세요.')
 			if (!formData.acctcd) return vAlertError('매입계정을 선택하세요.')
 			const inAmt = Number(formData.CInamt1) + Number(formData.CInamt2)
@@ -544,7 +544,7 @@ const handleSlipDelete = async () => {
 	try {
 		await api.post('/api/hatx/HATX_010U_STR', {
 			SLIPACT: 'D', cmpycd: authStore.cmpycd,
-			SSLIPNO: formData.SSLIPNO, deptcd: formData.deptcd, usernm: authStore.usernm, userid: authStore.userid
+			Sslipno: formData.Sslipno, deptcd: formData.deptcd, usernm: authStore.usernm, userid: authStore.userid
 		})
 		vAlert('전표가 삭제되었습니다.')
 		detailModalVisible.value = false
@@ -553,10 +553,10 @@ const handleSlipDelete = async () => {
 }
 
 const handleSlipPrint = () => {
-	if (!formData.SSLIPNO) return
-	const ymd = formData.SSLIPNO.substring(0, 8)
-	const no = formData.SSLIPNO.substring(9, 12)
-	window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=010&slipymd=${ymd}&SLIPNO=${no}`, 'SlipPrint', 'width=800,height=700,scrollbars=yes')
+	if (!formData.Sslipno) return
+	const ymd = formData.Sslipno.substring(0, 8)
+	const no = formData.Sslipno.substring(9, 12)
+	window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=010&slipymd=${ymd}&slipno=${no}`, 'SlipPrint', 'width=800,height=700,scrollbars=yes')
 }
 
 const loadDetail = async (row: any) => {
@@ -575,9 +575,9 @@ const loadDetail = async (row: any) => {
 				vatamt: Number(d.col16).toLocaleString(),
 				amtsum: (Number(d.col15) + Number(d.col16)).toLocaleString(),
 				descnm: d.col17, useyn: d.col18,
-				SSLIPNO: d.col19 > '00000000' ? `${d.col19}-${d.col20}-${d.col21}` : '',
-				BGONGCD: d.col28 || '01', SLIPYN: 'N',
-				custcd: d.col5, custnm: d.col7, custno: d.col6, bossnm: d.col8, ADRS: d.COL9, custkind: d.col10, custtype: d.col11
+				Sslipno: d.col19 > '00000000' ? `${d.col19}-${d.col20}-${d.col21}` : '',
+				BGONGCD: d.col28 || '01', slipyn: 'N',
+				custcd: d.col5, custnm: d.col7, custno: d.col6, bossnm: d.col8, adrs: d.COL9, custkind: d.col10, custtype: d.col11
 			})
 			showNonDeductible.value = d.col13 === '060'
 
@@ -610,7 +610,7 @@ function openHelp(type: string, idx?: number) {
 			title: '거래처 선택', path: '/api/ha00/HELP_custcd_ALL_STR',
 			data: { search: formData.custnm },
 			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 180 }, { title: '사업자번호', field: 'custno', width: 120 }],
-			onConfirm: (d: any) => { formData.custcd = d.custcd; formData.custnm = d.custnm; formData.custno = d.custno; formData.bossnm = d.bossnm; formData.ADRS = d.ADRS; formData.custtype = d.custtype; formData.custkind = d.custkind }
+			onConfirm: (d: any) => { formData.custcd = d.custcd; formData.custnm = d.custnm; formData.custno = d.custno; formData.bossnm = d.bossnm; formData.adrs = d.adrs; formData.custtype = d.custtype; formData.custkind = d.custkind }
 		})
 	} else if (type === 'ITEM' && idx !== undefined) {
 		Object.assign(modalProps, {

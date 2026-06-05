@@ -3,20 +3,20 @@
 	프로그램명	: 분개장(현업)
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 부서별/기간별 전표 분개 내역 및 상세 조회
+	설명        : 부서별/기간별 전표 분개 내역 상세 조회 (소문자 원칙 준수, 라우팅 수정, 중복 방지 및 분리 링크)
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+	<app_alert :show="show_alert" :error="show_error" :message="alert_message" />
 
 	<div class="erp-container">
 		<!-- 🚀 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi- journals me-2 text-primary" style="font-size: 18px;"></i>
+				<i class="bi bi-journals me-2 text-primary" style="font-size: 18px;"></i>
 				전표관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">분개장(현업) (HASL030S)</span>
+				<span class="text-primary fw-bolder">분개장(현업) (hasl030s)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-init" @click="initialize">
@@ -49,9 +49,9 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">발행부서</span>
 									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" @keydown.enter="openHelp('DEPT')" />
-										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+										<input v-model="searchform.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+										<input v-model="searchform.deptnm" type="text" class="form-control" placeholder="부서 선택" @keydown.enter="open_help('dept')" />
+										<button class="btn btn-outline-secondary px-2" @click="open_help('dept')"><i class="bi bi-search"></i></button>
 									</div>
 								</div>
 							</td>
@@ -59,9 +59,9 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">발행일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
-										<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" />
+										<input v-model="searchform.frymd" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" />
+										<input v-model="searchform.toymd" type="date" class="form-control form-control-sm" />
 									</div>
 								</div>
 							</td>
@@ -70,15 +70,15 @@
 									<span class="erp-label me-2">계정과목</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
 										<div class="input-group input-group-sm flex-nowrap">
-											<input v-model="searchForm.acctcd1" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-											<input v-model="searchForm.acctnm1" type="text" class="form-control" @keydown.enter="openHelp('ACCT1')" />
-											<button class="btn btn-outline-secondary px-2" @click="openHelp('ACCT1')"><i class="bi bi-search"></i></button>
+											<input v-model="searchform.acctcd1" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+											<input v-model="searchform.acctnm1" type="text" class="form-control" @keydown.enter="open_help('acct1')" />
+											<button class="btn btn-outline-secondary px-2" @click="open_help('acct1')"><i class="bi bi-search"></i></button>
 										</div>
 										<span class="text-muted">~</span>
 										<div class="input-group input-group-sm flex-nowrap">
-											<input v-model="searchForm.acctcd2" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-											<input v-model="searchForm.acctnm2" type="text" class="form-control" @keydown.enter="openHelp('ACCT2')" />
-											<button class="btn btn-outline-secondary px-2" @click="openHelp('ACCT2')"><i class="bi bi-search"></i></button>
+											<input v-model="searchform.acctcd2" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+											<input v-model="searchform.acctnm2" type="text" class="form-control" @keydown.enter="open_help('acct2')" />
+											<button class="btn btn-outline-secondary px-2" @click="open_help('acct2')"><i class="bi bi-search"></i></button>
 										</div>
 									</div>
 								</div>
@@ -93,40 +93,42 @@
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
                 <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                  <div ref="maingridref" class="tabulator-instance flex-grow-1"></div>
                 </div>
 			</div>
 		</div>
 	</div>
 
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+	<modal_component v-model:visible="modalvisible" :modalProps="modalprops" />
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
-import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import { ref as _ref, reactive as _reactive, onMounted as _on_mounted, nextTick as _next_tick } from 'vue'
+import { TabulatorFull as tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import { useAlerts } from '@/composables/useAlerts'
+import { useAlerts as use_alerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
-import { useAuthStore } from '@/stores/authStore'
-import { useFormReset } from '@/composables/useFormReset'
-import { useRouter } from 'vue-router'
-import Modal from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
+import { useAuthStore as use_auth_store } from '@/stores/authStore'
+import { useFormReset as use_form_reset } from '@/composables/useFormReset'
+import { useRouter as use_router } from 'vue-router'
+import { addDynamicRoute as add_dynamic_route } from '@/router/dynamicRoute'
+import modal_component from '@/components/Modal.vue'
+import app_alert from '@/components/AppAlert.vue'
+import type { ModalProps as modal_props_type } from '@/types/modal'
 
-const authStore = useAuthStore()
-const router = useRouter()
-const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
-const { resetForm } = useFormReset()
+const authstore = use_auth_store()
+const router = use_router()
+const { showAlert: show_alert, showError: show_error, alertMessage: alert_message, vAlert: v_alert, vAlertError: v_alert_error } = use_alerts()
+const { resetForm: reset_form } = use_form_reset()
 
 const now = new Date()
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
+const firstday = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
 const today = now.toISOString().substring(0, 10)
 
-const searchForm = reactive({
-	deptcd: authStore.deptcd,
-	deptnm: authStore.deptnm,
-	frymd: firstDay,
+const searchform = _reactive({
+	deptcd: authstore.deptcd,
+	deptnm: authstore.deptnm,
+	frymd: firstday,
 	toymd: today,
 	acctcd1: '',
 	acctnm1: '',
@@ -134,106 +136,140 @@ const searchForm = reactive({
 	acctnm2: ''
 })
 
-const mainGridRef = ref<HTMLDivElement | null>(null)
-let mainGrid: Tabulator | null = null
+const maingridref = _ref<HTMLDivElement | null>(null)
+let maingrid: tabulator | null = null
 
 const search = async () => {
-	if (!searchForm.deptcd) return vAlert('발행부서를 선택해 주십시오.')
+	if (!searchform.deptcd) return v_alert('발행부서를 선택해 주십시오.')
 
 	try {
 		const res = await api.post('/api/hasl/HASL_030S_STR', {
-			cmpycd: authStore.cmpycd,
-			deptcd: searchForm.deptcd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
-			acctcd1: searchForm.acctcd1,
-			acctcd2: searchForm.acctcd2,
-			actkind: 'SR'
+			cmpycd: authstore.cmpycd,
+			deptcd: searchform.deptcd,
+			frymd: searchform.frymd.replace(/-/g, ''),
+			toymd: searchform.toymd.replace(/-/g, ''),
+			acctcd1: searchform.acctcd1,
+			acctcd2: searchform.acctcd2,
+			actkind: 'sr'
 		})
 
-		const data = res.data || []
-		mainGrid?.setData(data)
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 실패') }
+		// 💡 소문자 원칙: API 데이터를 즉시 소문자 키로 정규화
+		const data = (res.data || []).map((item: any) => {
+			return Object.fromEntries(
+				Object.entries(item).map(([k, v]) => [k.toLowerCase(), v])
+			)
+		})
+
+		maingrid?.setData(data)
+		v_alert('조회되었습니다.')
+	} catch (e) { v_alert_error('조회 실패') }
 }
 
 const initialize = () => {
-	resetForm(searchForm)
-	searchForm.deptcd = authStore.deptcd
-	searchForm.deptnm = authStore.deptnm
-	searchForm.frymd = firstDay
-	searchForm.toymd = today
-	mainGrid?.clearData()
+	reset_form(searchform)
+	searchform.deptcd = authstore.deptcd
+	searchform.deptnm = authstore.deptnm
+	searchform.frymd = firstday
+	searchform.toymd = today
+	maingrid?.clearData()
 }
 
-const excel = () => mainGrid?.download("xlsx", "분개장.xlsx")
+const excel = () => maingrid?.download("xlsx", "분개장.xlsx")
 const print = () => {
-	const params = new URLSearchParams(searchForm).toString()
+	const params = new URLSearchParams(searchform).toString().toLowerCase()
 	window.open(`/api/hasl/HASL_030P?${params}`, 'Print', 'width=1000,height=800')
 }
 
 // 팝업 설정
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
+const modalvisible = _ref(false)
+const modalprops = _reactive<modal_props_type>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
-function openHelp(type: string) {
-	if (type === 'DEPT') {
-		Object.assign(modalProps, {
+function open_help(type: string) {
+	if (type === 'dept') {
+		Object.assign(modalprops, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm },
+			data: { gubun: 'd0', cmpycd: authstore.cmpycd, search: searchform.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
-			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
+			onConfirm: (d: any) => { searchform.deptcd = d.deptcd; searchform.deptnm = d.deptnm }
 		})
-	} else if (type.startsWith('ACCT')) {
-		Object.assign(modalProps, {
+	} else if (type.startsWith('acct')) {
+		Object.assign(modalprops, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'acctnm',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: type === 'ACCT1' ? searchForm.acctnm1 : searchForm.acctnm2 },
+			data: { gubun: 'a0', cmpycd: authstore.cmpycd, search: type === 'acct1' ? searchform.acctnm1 : searchform.acctnm2 },
 			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }],
 			onConfirm: (d: any) => {
-				if (type === 'ACCT1') { searchForm.acctcd1 = d.acctcd; searchForm.acctnm1 = d.acctnm }
-				else { searchForm.acctcd2 = d.acctcd; searchForm.acctnm2 = d.acctnm }
+				if (type === 'acct1') { searchform.acctcd1 = d.acctcd; searchform.acctnm1 = d.acctnm }
+				else { searchform.acctcd2 = d.acctcd; searchform.acctnm2 = d.acctnm }
 			}
 		})
 	}
-	modalVisible.value = true
+	modalvisible.value = true
 }
 
-onMounted(() => {
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
+/**
+ * 🚀 전표 이동 (라우팅 경로 수정 및 분리 처리)
+ */
+const go_to_slip = (slipkey: string) => {
+	if (!slipkey) return;
+	let ymd = ""; let no = "";
+
+	// 💡 전표번호 (20260601-001) 분리 처리
+	if (slipkey.includes('-')) {
+		const parts = slipkey.split('-');
+		ymd = parts[0]; no = parts[1];
+	} else if (slipkey.length >= 11) {
+		ymd = slipkey.substring(0, 8); no = slipkey.substring(8);
+	} else return;
+
+	// 💡 시스템 라우팅 규칙(dynamicRoute.ts)에 따라 경로는 '/HASL010U'입니다.
+	const pgmid = 'HASL010U'
+	add_dynamic_route(pgmid, '현업전표등록', 'HASL')
+
+	router.push({
+		path: `/${pgmid}`,
+		query: {
+			slipymd: ymd,
+			slipno: no,
+			deptcd: searchform.deptcd
+		}
+	})
+}
+
+_on_mounted(() => {
+	if (maingridref.value) {
+		maingrid = new tabulator(maingridref.value, {
 			layout: 'fitColumns',
 			height: '100%',
-			groupBy: "SLIPNO",
-			groupHeader: (value, count, data: any) => {
-				const sumD = data.reduce((s: number, r: any) => s + Number(r.dbamt || 0), 0)
-				const sumC = data.reduce((s: number, r: any) => s + Number(r.cramt || 0), 0)
-				const isDiff = sumD !== sumC
-				return `
-					<div class="d-flex justify-content-between align-items-center w-100 pe-3">
-						<span>전표번호: <b class="text-primary cursor-pointer" onclick="window.dispatchEvent(new CustomEvent('go-slip', {detail:'${value}'}))">${value}</b></span>
-						<span class="small ${isDiff ? 'text-danger' : 'text-secondary'}">
-							[소계] 차변: ${sumD.toLocaleString()} / 대변: ${sumC.toLocaleString()}
-							${isDiff ? ' <i class="bi bi-exclamation-triangle-fill"></i> 대차불일치' : ''}
-						</span>
-					</div>`
-			},
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
-				{ title: "No", field: "srowno", width: 50 },
 				{
-					title: "계정과목", field: "acctnm", width: 150, hozAlign: "left",
+					title: "전표번호", field: "slipno", width: 150, cssClass: "fw-bold",
+					formatter: (cell) => {
+						const value = cell.getValue();
+						if (!value) return "";
+						// 💡 중복 방지: 이전 행과 전표번호가 같으면 표시 안 함
+						const prevrow = cell.getRow().getPrevRow();
+						if (prevrow && prevrow.getData().slipno === value) {
+							return "";
+						}
+						return `<span class="text-primary cursor-pointer text-decoration-underline">${value}</span>`;
+					},
+					cellClick: (e, cell) => {
+						const value = cell.getData().slipno; // 표시 안 된 행이라도 실제 데이터에서 가져옴
+						if(value) go_to_slip(String(value));
+					}
+				},
+				{ title: "행번호", field: "srowno", width: 65 },
+				{
+					title: "계정과목", field: "acctnm", width: 160, hozAlign: "left",
 					formatter: (cell) => `<div>${cell.getData().acctcd}</div><div class="small text-muted">${cell.getValue()}</div>`
 				},
 				{
-					title: "적요 및 세부내역", field: "remark", hozAlign: "left", minWidth: 300,
-					formatter: (cell) => {
-						const d = cell.getData()
-						const detail = d.DETAIL_INFO ? `<div class="mt-1 small text-primary border-top pt-1">${d.DETAIL_INFO}</div>` : ''
-						return `<div>${cell.getValue() || ''}</div>${detail}`
-					}
+					title: "적요", field: "remark", hozAlign: "left", minWidth: 300,
+					formatter: (cell) => `<div class="fw-bold">${cell.getValue() || ''}</div>`
 				},
 				{
-					title: "회계일", field: "acctymD", width: 90,
+					title: "회계일", field: "acctymd", width: 90,
 					formatter: (cell) => {
 						const val = cell.getValue()
 						return val && val.length === 8 ? `${val.substring(2, 4)}.${val.substring(4, 6)}.${val.substring(6, 8)}` : val
@@ -242,20 +278,25 @@ onMounted(() => {
 				{ title: "차변", field: "dbamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
 				{ title: "대변", field: "cramt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" }
 			],
-			columnCalcs: "table"
+			columnCalcs: "table",
+			rowFormatter: (row) => {
+				const data = row.getData();
+				if (data.detail_info) {
+					const holder = document.createElement("div");
+					holder.style.padding = "4px 8px 4px 365px"; // 전표(150)+행번(65)+계정(160) 대략적인 위치 뒤부터
+					holder.style.borderTop = "1px dashed #eee";
+					holder.style.backgroundColor = "#f8f9fa";
+					holder.style.fontSize = "11px";
+					holder.className = "text-primary fw-normal";
+					holder.innerHTML = `<i class="bi bi-info-circle me-1"></i><b>세부내역:</b> ${data.detail_info}`;
+					row.getElement().appendChild(holder);
+				}
+			}
 		})
 
-		// 전표 이동 이벤트 리스너
+		// 💡 기존 리스너 대응 (하위 호환성)
 		window.addEventListener('go-slip', ((e: CustomEvent) => {
-			const slipKey = e.detail; // 예: 20240101-001
-			router.push({
-				path: '/HASL/HASL010U',
-				query: {
-					slipymd: slipKey.substring(0, 8),
-					SLIPNO: slipKey.substring(9, 12),
-					deptcd: searchForm.deptcd
-				}
-			})
+			go_to_slip(e.detail);
 		}) as EventListener)
 	}
 })
@@ -268,11 +309,6 @@ onMounted(() => {
 	color: #495057;
 }
 
-:deep(.tabulator-group) {
-	background-color: #f0f4f8 !important;
-	border-top: 1px solid #dee2e6 !important;
-}
-:deep(.tabulator-group-header) {
-	padding: 8px 12px !important;
-}
+:deep(.tabulator-row) { min-height: 42px; border-bottom: 1px solid #eee !important; }
+.cursor-pointer { cursor: pointer; }
 </style>

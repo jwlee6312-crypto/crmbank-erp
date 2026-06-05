@@ -10,7 +10,7 @@
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
   <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-  <div class="erp-container">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -26,22 +26,22 @@
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3">
+    <div class="flex-grow-1 overflow-hidden p-3 d-flex flex-column gap-3 bg-light">
       <!-- 조회 조건 -->
       <div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
         <div class="card-body p-0 bg-white">
           <table class="erp-table-full border-0">
             <tbody>
               <tr>
-                <th style="width: 120px;">재무제표</th>
+                <th class="bg-light text-center" style="width: 120px;">재무제표</th>
                 <td>
-                  <select v-model="searchForm.gubun" class="form-select" style="max-width: 200px;" @change="search">
+                  <select v-model="searchForm.gubun" class="form-select form-select-sm" style="max-width: 200px;" @change="search">
                     <option v-for="opt in statementOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                   </select>
                 </td>
-                <th style="width: 120px;">계 정 명</th>
+                <th class="bg-light text-center" style="width: 120px;">계 정 명</th>
                 <td>
-                  <input v-model="searchForm.acctnm" type="text" class="form-control" placeholder="계정명 검색" @keydown.enter="search" style="max-width: 300px;" />
+                  <input v-model="searchForm.acctnm" type="text" class="form-control form-control-sm" placeholder="계정명 검색" @keydown.enter="search" style="max-width: 300px;" />
                 </td>
               </tr>
             </tbody>
@@ -55,11 +55,11 @@
           <table class="erp-table-full border-0">
             <tbody>
               <tr>
-                <th class="required" style="width: 110px;">계정과목</th>
-                <td><input v-model="masterForm.acctcd" type="text" class="form-control text-center fw-bold" maxlength="7" :readonly="masterForm.actkind === 'u1'" /></td>
-                <th class="required" style="width: 110px;">계 정 명</th>
-                <td><input v-model="masterForm.acctnm" type="text" class="form-control" maxlength="30" /></td>
-                <th style="width: 110px;">상위계정</th>
+                <th class="required bg-light text-center" style="width: 110px;">계정과목</th>
+                <td><input v-model="masterForm.acctcd" type="text" class="form-control form-control-sm text-center fw-bold" maxlength="7" :readonly="masterForm.actkind === 'u1'" /></td>
+                <th class="required bg-light text-center" style="width: 110px;">계 정 명</th>
+                <td><input v-model="masterForm.acctnm" type="text" class="form-control form-control-sm" maxlength="30" /></td>
+                <th class="bg-light text-center" style="width: 110px;">상위계정</th>
                 <td>
                   <div class="input-group input-group-sm">
                     <input v-model="masterForm.upacct" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 70px;" readonly />
@@ -69,23 +69,23 @@
                 </td>
               </tr>
               <tr>
-                <th>차대구분</th>
+                <th class="bg-light text-center">차대구분</th>
                 <td>
-                  <select v-model="masterForm.typedc" class="form-select">
+                  <select v-model="masterForm.typedc" class="form-select form-select-sm">
                     <option value="D">차변</option>
                     <option value="C">대변</option>
                   </select>
                 </td>
-                <th>전표발생</th>
+                <th class="bg-light text-center">전표발생</th>
                 <td>
-                  <select v-model="masterForm.slipyn" class="form-select">
+                  <select v-model="masterForm.slipyn" class="form-select form-select-sm">
                     <option value="Y">발행</option>
                     <option value="N">미발행</option>
                   </select>
                 </td>
-                <th>사용여부</th>
+                <th class="bg-light text-center">사용여부</th>
                 <td>
-                  <select v-model="masterForm.useyn" class="form-select">
+                  <select v-model="masterForm.useyn" class="form-select form-select-sm">
                     <option value="Y">사용</option>
                     <option value="N">미사용</option>
                   </select>
@@ -122,7 +122,7 @@ const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: commonOpenHelp } = useCommonHelp()
 
 const searchForm = reactive({ gubun: '010', acctnm: '' })
-const masterForm = reactive({
+const masterForm = reactive<any>({
   actkind: 'i1', gubun: '010', acctcd: '', acctnm: '', upacct: '', upacct_t: '', typedc: 'D', slipyn: 'Y', useyn: 'Y'
 })
 
@@ -133,7 +133,7 @@ let mainGrid: Tabulator | null = null
 const search = async () => {
   try {
     const res = await api.post('/api/haba/HABA_010U_STR', { actkind: 's2', cmpycd: authStore.cmpycd, gubun: searchForm.gubun, acctnm: searchForm.acctnm });
-    mainGrid?.setData(res.data);
+    mainGrid?.setData(res.data || []);
   } catch (e) { vAlertError('조회 실패') }
 }
 
@@ -152,25 +152,43 @@ const initialize = () => {
 
 function openHelp(type: string) {
   if (type === 'upacct') {
-    commonOpenHelp('ACCT', (d) => { masterData.upacct = d.acctcd; masterData.upacct_t = d.acctnm; });
+    commonOpenHelp('ACCT', (d) => { masterForm.upacct = d.acctcd; masterForm.upacct_t = d.acctnm; });
   }
 }
 
 onMounted(async () => {
+  // 재무제표 옵션 로드 (필드명 매핑 수정)
   api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', search: '070' }).then(r => {
-    statementOptions.value = (r.data || []).filter((i: any) => i.code <= '030');
+    statementOptions.value = (r.data || [])
+      .filter((i: any) => (i.code || i.CODE) <= '030')
+      .map((i: any) => ({
+        code: i.code || i.CODE,
+        cdnm: i.codenm || i.CODENM
+      }));
   });
 
   mainGrid = new Tabulator(mainGridRef.value!, {
     layout: "fitColumns", height: "100%", selectable: 1,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false },
     columns: [
       { title: "코드", field: "acctcd", width: 100, hozAlign: "center" },
       { title: "계정과목명", field: "acctnm", minWidth: 200 },
-      { title: "차대", field: "typedc", width: 80, hozAlign: "center" },
-      { title: "전표", field: "slipyn", width: 80, hozAlign: "center", formatter: "tickCross" }
+      { title: "차대", field: "typedc", width: 80, hozAlign: "center", formatter: (c) => c.getValue() === 'D' ? '차변' : '대변' },
+      { title: "전표", field: "slipyn", width: 80, hozAlign: "center", formatter: "tickCross" },
+      { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
     ]
   });
-  mainGrid.on("rowClick", (e, row) => { Object.assign(masterForm, row.getData()); masterForm.actkind = 'u1'; });
-  search();
+
+  mainGrid.on("rowClick", (e, row) => {
+    const data = row.getData();
+    Object.assign(masterForm, data);
+    masterForm.actkind = 'u1';
+  });
+
+  nextTick(() => search());
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+</style>

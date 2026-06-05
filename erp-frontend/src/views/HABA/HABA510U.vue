@@ -141,7 +141,7 @@ const save = async () => {
 		const res = await api.post('/api/haba/HABA_510U_STR', payload)
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('정상으로 작업이 되었습니다.')
 			search()
@@ -163,7 +163,7 @@ const deleteData = async () => {
 		})
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('정상적으로 삭제되었습니다.')
 			search()

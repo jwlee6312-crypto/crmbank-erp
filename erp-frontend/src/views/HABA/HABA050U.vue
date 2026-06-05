@@ -46,7 +46,7 @@
 						<tr>
 							<th>은 행 명</th>
 							<td class="bg-white">
-								<input v-model="searchForm.banknm_H" type="text" class="form-control" placeholder="은행명 입력" @keydown.enter="search" />
+								<input v-model="searchForm.banknm_h" type="text" class="form-control" placeholder="은행명 입력" @keydown.enter="search" />
 							</td>
 							<td class="bg-white"></td>
 						</tr>
@@ -125,7 +125,7 @@ const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
-const searchForm = reactive({ banknm_H: '' })
+const searchForm = reactive({ banknm_h: '' })
 const masterForm = reactive({ actkind: 'A0', bankcd: '', banknm: '', remark: '', dspord: '', useyn: 'Y' })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -133,8 +133,8 @@ let mainGrid: Tabulator | null = null
 
 const search = async () => {
 	try {
-		const res = await api.post('/api/haba/HABA_050U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, banknm_H: searchForm.banknm_H })
-		const processedData = (res.data || []).map((r: any) => ({ bankcd: r.bankcd || r.col0, banknm: r.banknm || r.col1, remark: r.bigo || r.col2, dspord: r.dspord || r.col3, useyn: r.useyn || r.col4 }))
+		const res = await api.post('/api/haba/HABA_050U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, banknm: searchForm.banknm_h })
+		const processedData = (res.data || []).map((r: any) => ({ bankcd: r.bankcd, banknm: r.banknm, remark: r.bigo, dspord: r.dspord, useyn: r.useyn }))
 		mainGrid?.setData(processedData)
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 중 오류 발생') }

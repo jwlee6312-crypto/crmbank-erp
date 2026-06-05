@@ -109,7 +109,7 @@
                     <!-- [1] 접대비 상세 (typeacct: 100) -->
                     <template v-if="selectedrow.typeacct === '100'">
                         <tr>
-                            <th class="bg-light border-bottom text-end pe-3 required">증빙유형</th>
+                            <th class="bg-light border-bottom text-end pe-3 required">유&nbsp;&nbsp;&nbsp;&nbsp;형</th>
                             <td class="border-bottom">
                                 <select v-model="selectedrow.docno3" class="form-select form-select-sm border-0">
                                     <option v-for="opt in enttypeoptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
@@ -123,37 +123,37 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="bg-light border-bottom text-end pe-3 text-primary">상호/접대지</th>
-                            <td class="border-bottom">
-                                <div class="input-group input-group-sm">
-                                    <input v-model="selectedrow.docno4" class="form-control border-0" placeholder="상호명 입력" />
-                                    <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handle_open_help('VAT_CUST')"><i class="bi bi-search"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
                             <th class="bg-light border-bottom text-end pe-3">사업번호</th>
                             <td class="border-bottom">
                                 <input v-model="selectedrow.docno2" class="form-control form-control-sm border-0" placeholder="숫자만 입력" />
                             </td>
                         </tr>
-                        <tr v-if="selectedrow.docno3 === '01'">
-                            <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카드번호</th>
+                        <tr>
+                            <th class="bg-light border-bottom text-end pe-3 text-primary">상&nbsp;&nbsp;&nbsp;&nbsp;호</th>
                             <td class="border-bottom">
                                 <div class="input-group input-group-sm">
-                                    <input v-model="selectedrow.docno5" class="form-control border-0 text-primary" placeholder="카드도움창 선택" />
+                                    <input v-model="selectedrow.docno4" class="form-control border-0" placeholder="상호명 직접입력 또는 검색" />
+                                    <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handle_open_help('VAT_CUST')"><i class="bi bi-search"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr v-if="selectedrow.docno3 === '01'">
+                            <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카&nbsp;&nbsp;&nbsp;&nbsp;드</th>
+                            <td class="border-bottom">
+                                <div class="input-group input-group-sm">
+                                    <input v-model="selectedrow.docno5" class="form-control border-0 text-primary" placeholder="카드번호 도움창 선택" />
                                     <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handle_open_help('CARD')"><i class="bi bi-credit-card"></i></button>
                                 </div>
                             </td>
                         </tr>
                         <tr>
-                            <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">순접대비</th>
+                            <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">순&nbsp;접&nbsp;대&nbsp;비</th>
                             <td class="border-bottom">
                                 <input v-model="selectedrow.docno8" type="number" class="form-control form-control-sm border-0 text-end fw-bold" placeholder="0" />
                             </td>
                         </tr>
                         <tr>
-                            <th class="bg-light border-bottom text-end pe-3">봉사료/기타</th>
+                            <th class="bg-light border-bottom text-end pe-3">봉&nbsp;사&nbsp;료</th>
                             <td class="border-bottom">
                                 <input v-model="selectedrow.docno9" type="number" class="form-control form-control-sm border-0 text-end" placeholder="0" />
                             </td>
@@ -162,36 +162,64 @@
 
                     <!-- [2] 부가세 상세 (typeacct: 090) -->
                     <template v-else-if="selectedrow.typeacct === '090'">
-                        <tr>
-                            <th class="bg-light border-bottom text-end pe-3 required">세무유형</th>
-                            <td class="border-bottom">
-                                <select v-model="selectedrow.docno3" class="form-select form-select-sm border-0">
-                                    <option value="">유형 선택</option>
-                                    <option v-for="opt in dynamicvatoptions" :key="opt.cd" :value="opt.cd">{{ opt.nm }}</option>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light border-bottom text-end pe-3 required">거래처</th>
-                            <td class="border-bottom">
-                                <div class="input-group input-group-sm">
-                                    <input v-model="selectedrow.docno2nm" class="form-control border-0" readonly placeholder="도움창 선택" />
-                                    <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handle_open_help('VAT_CUST')"><i class="bi bi-search"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">공급가액</th>
-                            <td class="border-bottom">
-                                <input v-model="selectedrow.docno8" type="number" class="form-control form-control-sm border-0 text-end fw-bold" @input="calc_vat" />
-                            </td>
-                        </tr>
-                        <tr>
-                            <th class="bg-light border-bottom text-end pe-3 fw-bold text-danger">부가세액</th>
-                            <td class="border-bottom">
-                                <input v-model="selectedrow.docno9" type="number" class="form-control form-control-sm border-0 text-end fw-bold" />
-                            </td>
-                        </tr>
+                        <!-- 💡 상위 조건 통합: (성격 = 입력차대) 일 때만 상세 내역 일괄 노출 (HASL010U 완벽 이식) -->
+                        <template v-if="String(selectedrow.typedc || '').trim().toUpperCase() === String(selectedrow.dbcr || '').trim().toUpperCase()">
+                            <tr>
+                                <th class="bg-light border-bottom text-end pe-3 required">사&nbsp;업&nbsp;장</th>
+                                <td class="border-bottom">
+                                    <select v-model="selectedrow.docno1" class="form-select form-select-sm border-0">
+                                        <option value="">사업장 선택</option>
+                                        <option v-for="opt in bizplaceoptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light border-bottom text-end pe-3 required">유&nbsp;&nbsp;&nbsp;&nbsp;형</th>
+                                <td class="border-bottom">
+                                    <select v-model="selectedrow.docno3" class="form-select form-select-sm border-0">
+                                        <option value="">유형 선택</option>
+                                        <option v-for="opt in dynamicvatoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light border-bottom text-end pe-3 required">거&nbsp;래&nbsp;처</th>
+                                <td class="border-bottom">
+                                    <div class="input-group input-group-sm">
+                                        <input v-model="selectedrow.docno2nm" class="form-control border-0" readonly placeholder="거래처 도움창 선택" />
+                                        <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handle_open_help('VAT_CUST')"><i class="bi bi-search"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light border-bottom text-end pe-3 required">발&nbsp;행&nbsp;일</th>
+                                <td class="border-bottom">
+                                    <input v-model="selectedrow.docno6" type="date" class="form-control form-control-sm border-0" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">공&nbsp;급&nbsp;가</th>
+                                <td class="border-bottom">
+                                    <input v-model="selectedrow.docno8" type="number" class="form-control form-control-sm border-0 text-end fw-bold" @input="calc_vat" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light border-bottom text-end pe-3 fw-bold text-danger">부&nbsp;가&nbsp;세</th>
+                                <td class="border-bottom">
+                                    <input v-model="selectedrow.docno9" type="number" class="form-control form-control-sm border-0 text-end fw-bold" />
+                                </td>
+                            </tr>
+                            <!-- 💡 차변(D,D)일 경우에만 카드번호 노출 (ASP 로직 반영) -->
+                            <tr v-if="String(selectedrow.dbcr || '').trim().toUpperCase() === 'D'">
+                                <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카&nbsp;&nbsp;&nbsp;&nbsp;드</th>
+                                <td class="border-bottom">
+                                    <div class="input-group input-group-sm">
+                                        <input v-model="selectedrow.docno4" class="form-control border-0 text-primary" placeholder="카드번호 선택" />
+                                        <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handle_open_help('CARD')"><i class="bi bi-credit-card"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
                     </template>
 
                     <!-- [3] 어음 상세 (050, 060, 070) -->
@@ -209,15 +237,6 @@
                             <th class="bg-light border-bottom text-end pe-3">만기일자</th>
                             <td class="border-bottom">
                                 <input v-model="selectedrow.docno7" type="date" class="form-control form-control-sm border-0" />
-                            </td>
-                        </tr>
-                        <tr v-if="(selectedrow.typeacct === '050' && selectedrow.dbcr?.toLowerCase() === 'd') || (selectedrow.typeacct === '060' && selectedrow.dbcr?.toLowerCase() === 'c')">
-                            <th class="bg-light border-bottom text-end pe-3">지급/수취처</th>
-                            <td class="border-bottom">
-                                <div class="input-group input-group-sm">
-                                    <input v-model="selectedrow.docno9nm" class="form-control border-0" readonly />
-                                    <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handle_open_help('VAT_CUST')"><i class="bi bi-search"></i></button>
-                                </div>
                             </td>
                         </tr>
                     </template>
@@ -270,7 +289,9 @@
              </table>
           </div>
           <div class="card-footer bg-light p-2 border-top">
-             <button class="btn btn-xs btn-primary w-100 py-1 fw-bold shadow-sm" @click="update_auto_remark(true)">적요 자동 조합</button>
+             <button class="btn btn-xs btn-primary w-100 py-1 fw-bold shadow-sm" @click="update_auto_remark(true)">
+                <i class="bi bi-magic me-1"></i> 적요 자동 조합 (표준 포맷 적용)
+             </button>
           </div>
         </div>
 
@@ -320,18 +341,24 @@ const balance = _computed(() => total_debit.value - total_credit.value)
 const format_money = (val: any) => Number(val || 0).toLocaleString()
 
 const purchasevatoptions = _ref<any[]>([]); const salesvatoptions = _ref<any[]>([])
+const bizplaceoptions = _ref<any[]>([]);
 const enttypeoptions = [{code:'01', name:'카드'}, {code:'02', name:'현금'}, {code:'03', name:'세금계산서'}]
 
 const dynamicvatoptions = _computed(() => {
   if (!selectedrow.value) return []
-  return selectedrow.value.dbcr?.toLowerCase() === 'd' ? purchasevatoptions.value : salesvatoptions.value
+  return (selectedrow.value.dbcr||'').toLowerCase() === 'd' ? purchasevatoptions.value : salesvatoptions.value
 })
 
 _watch(selectedrow, (newval) => { if (newval) update_auto_remark(); }, { deep: true });
 
 const update_auto_remark = (force = false) => {
     const row = selectedrow.value; if (!row) return;
-    let prefix = row.subnm ? `[${row.subnm}] ` : (row.mgtnm ? `[${row.mgtnm}] ` : (row.acctnm ? `[${row.acctnm}] ` : ""));
+    let prefix = "";
+    if (row.subnm) prefix = `[${row.subnm}] `;
+    else if (row.docno4) prefix = `[${row.docno4}] `;
+    else if (row.mgtnm) prefix = `[${row.mgtnm}] `;
+    else if (row.acctnm) prefix = `[${row.acctnm}] `;
+
     if (force || !row.remark || row.remark.startsWith('[') || row.remark === masterform.business) {
         row.remark = prefix + (masterform.business || "");
     }
@@ -340,8 +367,10 @@ const update_auto_remark = (force = false) => {
 const syncremarktorows = () => {
     main_grid?.getRows().forEach(row => {
         const d = row.getData();
-        let prefix = d.subnm ? `[${d.subnm}] ` : (d.mgtnm ? `[${d.mgtnm}] ` : (d.acctnm ? `[${d.acctnm}] ` : ""));
-        row.update({ remark: prefix + masterform.business });
+        if (!d.remark || d.remark.startsWith('[') || d.remark === "") {
+            let prefix = d.subnm ? `[${d.subnm}] ` : (d.mgtnm ? `[${d.mgtnm}] ` : (d.acctnm ? `[${d.acctnm}] ` : ""));
+            row.update({ remark: prefix + masterform.business });
+        }
     });
 }
 
@@ -374,7 +403,6 @@ const update_totals = () => {
 }
 
 const fetch_template = async (jurncd: string, gbn: string) => {
-  console.log("🔍 fetch_template start - jurncd:", jurncd, "gbn:", gbn);
   try {
     if (gbn === '100') {
       masterform.business = ''; masterform.slipgu = '010'; masterform.slipno = '';
@@ -384,7 +412,6 @@ const fetch_template = async (jurncd: string, gbn: string) => {
         actkind: 'S', cmpycd: authstore.cmpycd, jurncd: jurncd, search_gbn: gbn,
         deptcd: authstore.deptcd, empnm: authstore.usernm, updemp: authstore.userid
       });
-      console.log("📦 master result:", res_m.data);
       if (res_m.data && res_m.data.length > 0) {
         const m = Object.fromEntries(Object.entries(res_m.data[0]).map(([k, v]) => [k.toLowerCase(), v]));
         masterform.business = m.business || ''; masterform.slipgu = m.slipgu || '010';
@@ -396,13 +423,14 @@ const fetch_template = async (jurncd: string, gbn: string) => {
       actkind: 'S', cmpycd: authstore.cmpycd, jurncd: jurncd, search_gbn: gbn,
       deptcd: authstore.deptcd, updemp: authstore.userid
     });
-    console.log("📦 detail result:", res_d.data);
 
     const details = (res_d.data || []).map((row: any) => {
       const d = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]));
       return {
-        ...d, amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt,
-        dbcr: (d.dbcr || (Number(d.dbamt || 0) > 0 ? 'd' : 'c')).toLowerCase()
+        ...d,
+        amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt,
+        dbcr: (d.dbcr || (Number(d.dbamt || 0) > 0 ? 'd' : 'c')).toLowerCase(),
+        typedc: (d.typedc || d.drcr || '').trim()
       };
     });
 
@@ -455,11 +483,14 @@ function handle_open_help(type: string, target?: any) {
         selectedrow.value = target.getData();
     });
   } else if (type === 'MGT' || type === 'CARD') {
-      // 구좌번호 010, 차입금 020 유가증권 030 법인카드 040 적용 <%=TYPEMGT%>
       const mgtgbn = type === 'CARD' ? '040' : selectedrow.value.typemgt;
       openhelp('MGT', (d) => {
-          selectedrow.value.mgtno = d.mgtno; selectedrow.value.mgtnm = d.mgtnm;
-          if (type === 'CARD') selectedrow.value.docno5 = d.mgtno;
+          if (type === 'CARD' && selectedrow.value.typeacct === '090') {
+              selectedrow.value.docno4 = d.mgtno;
+          } else {
+              selectedrow.value.mgtno = d.mgtno;
+              selectedrow.value.mgtnm = d.mgtnm;
+          }
           update_auto_remark();
       }, { acctcd: selectedrow.value.acctcd, mgtgbn: mgtgbn });
   } else if (type === 'SUB' || type === 'VAT_CUST') {
@@ -468,8 +499,7 @@ function handle_open_help(type: string, target?: any) {
         else {
             selectedrow.value.docno2 = d.busino || d.custcd;
             selectedrow.value.docno2nm = d.custnm;
-            selectedrow.value.docno4 = d.custnm;
-            selectedrow.value.docno9nm = d.custnm;
+            if (selectedrow.value.typeacct === '100') selectedrow.value.docno4 = d.custnm;
         }
       });
   } else if (type === 'PRJ') {
@@ -482,8 +512,9 @@ function handle_open_help(type: string, target?: any) {
 const calc_vat = () => { if (selectedrow.value?.typeacct === '090') selectedrow.value.docno9 = Math.floor(Number(selectedrow.value.docno8 || 0) * 0.1); }
 
 _on_mounted(() => {
-  api.get('/api/comm/HA00_00P_STR', { params: { gubun: 'E0', search: '120' } }).then(r => purchasevatoptions.value = r.data.map((i: any) => ({ cd: (i.code||i.CD), nm: (i.codenm||i.NM) })));
-  api.get('/api/comm/HA00_00P_STR', { params: { gubun: 'E0', search: '130' } }).then(r => salesvatoptions.value = r.data.map((i: any) => ({ cd: (i.code||i.CD), nm: (i.codenm||i.NM) })));
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '120' }).then(r => purchasevatoptions.value = (r.data || []).map((i: any) => ({ codecd: i.codecd, codenm: i.codenm })));
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '130' }).then(r => salesvatoptions.value = (r.data || []).map((i: any) => ({ codecd: i.codecd, codenm: i.codenm })));
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authstore.cmpycd }).then(r => bizplaceoptions.value = (r.data || []).map((i: any) => ({ code: i.taxunit || i.code || i.whcd || '', name: i.unitnm || i.codenm || i.whnm || '' })));
   init_grid();
   const { jurncd, gbn } = route.query;
   if (jurncd && gbn) fetch_template(String(jurncd), String(gbn));
@@ -493,9 +524,11 @@ _on_mounted(() => {
 <style scoped>
 .tabulator-instance { width: 100% !important; background-color: #fff; }
 .custom-scrollbar { overflow-y: auto; scrollbar-width: thin; }
-.side-detail-table th { background-color: #f8f9fa; padding: 4px 8px; font-size: 12px; border: 1px solid #eee; text-align: right; }
-.side-detail-table td { padding: 4px 8px; border: 1px solid #eee; }
+.side-detail-table { border-collapse: collapse; width: 100%; }
+.side-detail-table th { background-color: #f8f9fa; padding: 2px 10px !important; font-size: 12px; font-weight: 600; color: #555; border: 1px solid #eee; text-align: right; height: 25px; white-space: nowrap; }
+.side-detail-table td { padding: 1px 6px !important; border: 1px solid #eee; vertical-align: middle; }
 .bg-light-yellow { background-color: #fffdf0 !important; }
 .cursor-pointer { cursor: pointer; }
 .required::after { content: " *"; color: #dc3545; }
+:deep(.tabulator-row-selected) { background-color: #e7f1ff !important; }
 </style>

@@ -43,6 +43,7 @@ public class HabaController {
             case "HABA_030U_STR": return ResponseEntity.ok(habaMapper.HABA_030U_STR(params));
             case "HABA_060U_STR": return ResponseEntity.ok(habaMapper.HABA_060U_STR(params));
             case "HABA_100U_STR": return ResponseEntity.ok(habaMapper.HABA_100U_STR(params));
+            case "HABA_110U_STR": return ResponseEntity.ok(habaMapper.HABA_110U_STR(params));
             case "HABA_900U_STR": return ResponseEntity.ok(habaMapper.HABA_900U_STR(params));
             case "HABA_910U_STR": return ResponseEntity.ok(habaMapper.HABA_910U_STR(params));
             case "HABA_920U_STR": return ResponseEntity.ok(habaMapper.HABA_920U_STR(params));

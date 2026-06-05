@@ -40,8 +40,8 @@
 						<div class="d-flex align-items-center">
 							<span class="erp-label"><i class="bi bi-dot"></i>프로젝트</span>
 							<div class="input-group input-group-sm" style="width: 250px;">
-								<input v-model="searchForm.PRJCD" type="text" class="form-control text-center bg-light" style="max-width: 65px;" readonly />
-								<input v-model="searchForm.PRJNM" type="text" class="form-control" @keydown.enter="openHelp('PRJ')" placeholder="프로젝트명 입력" />
+								<input v-model="searchForm.prjcd" type="text" class="form-control text-center bg-light" style="max-width: 65px;" readonly />
+								<input v-model="searchForm.prjnm" type="text" class="form-control" @keydown.enter="openHelp('PRJ')" placeholder="프로젝트명 입력" />
 								<button class="btn btn-outline-secondary px-2" @click="openHelp('PRJ')"><i class="bi bi-search"></i></button>
 							</div>
 						</div>
@@ -97,8 +97,8 @@ const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({
-	PRJCD: '',
-	PRJNM: '',
+	prjcd: '',
+	prjnm: '',
 	yy: String(currentYear),
     mm: currentMonth
 })
@@ -109,7 +109,7 @@ let mainGrid: Tabulator | null = null
 const sNUM = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ', 'Ⅺ', 'Ⅻ', 'XIII', 'XIV']
 
 const search = async () => {
-	if (!searchForm.PRJCD) {
+	if (!searchForm.prjcd) {
 		vAlertError('프로젝트를 선택해 주십시오.')
 		return
 	}
@@ -117,7 +117,7 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hacl/HACL_070S_STR', {
 			cmpycd: authStore.cmpycd,
-			PRJCD: searchForm.PRJCD,
+			prjcd: searchForm.prjcd,
 			yymm: `${searchForm.yy}${searchForm.mm}`
 		})
 
@@ -218,8 +218,8 @@ const excel = () => {
 }
 
 const print = () => {
-	if (!searchForm.PRJCD) return vAlertError('프로젝트를 먼저 선택하세요.')
-	const params = `PRJCD=${searchForm.PRJCD}&PRJNM=${searchForm.PRJNM}&yy=${searchForm.yy}.mm=${searchForm.mm}&PRTGU=1`
+	if (!searchForm.prjcd) return vAlertError('프로젝트를 먼저 선택하세요.')
+	const params = `prjcd=${searchForm.prjcd}&prjnm=${searchForm.prjnm}&yy=${searchForm.yy}.mm=${searchForm.mm}&PRTGU=1`
 	window.open(`/api/hacl/HACL_070P?${params}`, 'ProjectIncomePrint', 'width=800,height=800,scrollbars=yes')
 }
 
@@ -230,11 +230,11 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
 	Object.assign(modalProps, {
 		title: '프로젝트 선택', path: '/api/ha00/HA00_03P_STR', defaultField: 'col1',
-		data: { custgbn: '060', cmpycd: authStore.cmpycd, search: searchForm.PRJNM },
+		data: { custgbn: '060', cmpycd: authStore.cmpycd, search: searchForm.prjnm },
 		columns: [{ title: '코드', field: 'col0', width: 80 }, { title: '프로젝트명', field: 'col1', width: 250 }],
 		onConfirm: (d: any) => {
-			searchForm.PRJCD = d.col0
-			searchForm.PRJNM = d.col1
+			searchForm.prjcd = d.col0
+			searchForm.prjnm = d.col1
 			search()
 		}
 	})
@@ -243,7 +243,7 @@ function openHelp(type: string) {
 
 const goDrillDown = (data: any) => {
 	if (!data.CAN_DRILLDOWN) return
-	const params = `PRJCD=${searchForm.PRJCD}&upacct=${data.col0}&ym=${searchForm.yy}${searchForm.mm}`
+	const params = `prjcd=${searchForm.prjcd}&upacct=${data.col0}&ym=${searchForm.yy}${searchForm.mm}`
 	window.open(`/api/hacl/HACL_071U?${params}`, 'ProjectCostDetail', 'width=400,height=500,scrollbars=yes')
 }
 

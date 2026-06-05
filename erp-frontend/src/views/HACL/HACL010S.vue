@@ -117,7 +117,7 @@ const search = async () => {
 			cramt: Number(row.col4 || row.cramt || 0),
 			Jdbamt: Number(row.col5 || row.Jdbamt || 0),
 			Jcramt: Number(row.col6 || row.Jcramt || 0),
-			IS_TOTAL: row.col0 === '9999999'
+			is_total: row.col0 === '9999999'
 		}))
 
 		mainGrid?.setData(data)
@@ -164,7 +164,7 @@ onMounted(() => {
 					title: "과  목 (Account)", field: "acctnm", widthGrow: 1, hozAlign: "center",
 					formatter: (cell) => {
 						const d = cell.getData()
-						if (d.IS_TOTAL) return `<strong>${cell.getValue()}</strong>`
+						if (d.is_total) return `<strong>${cell.getValue()}</strong>`
 						return cell.getValue()
 					},
 					cssClass: "border-start border-end fw-bold bg-light"
@@ -187,7 +187,7 @@ onMounted(() => {
 			],
 			rowFormatter: (row) => {
 				const d = row.getData()
-				if (d.IS_TOTAL) {
+				if (d.is_total) {
 					row.getElement().style.backgroundColor = "#f0f7ff"
 					row.getElement().style.fontWeight = "bold"
 				}

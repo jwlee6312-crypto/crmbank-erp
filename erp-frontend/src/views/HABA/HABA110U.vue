@@ -164,6 +164,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import AppAlert from '@/components/AppAlert.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -216,19 +217,19 @@ const search = async () => {
 		})
 
 		const processedData = (res.data || []).map((r: any) => ({
-			acctcd: r.col0,
-			acctnm: r.col1,
-			gujano: r.col2,
-			bankcd: r.col3,
-			banknm: r.col4,
-			stdymd: formatYmd(r.col5),
-			endymd: formatYmd(r.col6),
-			wonamt: Number(r.col7 || 0),
-			rate: Number(r.col8 || 0),
-			payamt: Number(r.COL9 || 0),
-			paydd: r.col10,
-			remark: r.col11,
-			useyn: r.col12
+			acctcd: r.acctcd || r.ACCTCD,
+			acctnm: r.acctnm || r.ACCTNM || r.descnm || r.DESCNM,
+			gujano: r.gujano || r.GUJANO || r.slipno || r.SLIPNO,
+			bankcd: r.bankcd || r.BANKCD,
+			banknm: r.banknm || r.BANKNM || r.subnm || r.SUBNM,
+			stdymd: r.stdymd || r.STDYMD || r.acctymd || r.ACCTYMD,
+			endymd: r.endymd || r.ENDYMD,
+			wonamt: Number(r.wonamt || r.WONAMT || r.dbamt || r.DBAMT || 0),
+			rate: Number(r.rate || r.RATE || 0),
+			payamt: Number(r.payamt || r.PAYAMT || r.cramt || r.CRAMT || 0),
+			paydd: r.paydd || r.PAYDD,
+			remark: r.remark || r.REMARK,
+			useyn: r.useyn || r.USEYN
 		}))
 
 		mainGrid?.setData(processedData)
@@ -253,7 +254,7 @@ const save = async () => {
 		const res = await api.post('/api/haba/HABA_110U_STR', payload)
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('정상으로 작업이 되었습니다.')
 			search()
@@ -276,15 +277,15 @@ const modalVisible = ref(false)
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 function openHelp(type: string) {
+
 	if (type === 'search_acct') {
 		Object.assign(modalProps, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: searchForm.acctcd_t, ATRB: '023' },
-			columns: [{ title: '코드', field: 'col0', width: 80 }, { title: '계정명', field: 'col1', width: 180 }],
+			data: { gubun: 'A6', cmpycd: authStore.cmpycd, gbncd:'023', code:'' },
+			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }],
 			onConfirm: (d: any) => {
-				searchForm.acctcd = d.col0;
-				searchForm.acctcd_t = d.col1;
-				searchForm.custgbn = d.col2;
+				searchForm.acctcd = d.acctcd;
+				searchForm.acctcd_t = d.acctnm;
 				initialize();
 			}
 		})
@@ -292,7 +293,7 @@ function openHelp(type: string) {
 		if (!masterForm.acctcd) return vAlert('조회 후 입력하시기 바랍니다.')
 		Object.assign(modalProps, {
 			title: '은행 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'C0', cmpycd: authStore.cmpycd, search: masterForm.bankcd_t, custgbn: masterForm.custgbn },
+			data: { gubun: 'C3', cmpycd: authStore.cmpycd },
 			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '은행명', field: 'custnm', width: 180 }],
 			onConfirm: (d: any) => { masterForm.bankcd = d.custcd; masterForm.bankcd_t = d.custnm }
 		})
@@ -322,17 +323,34 @@ onMounted(() => {
 				{ title: "불입일", field: "paydd", width: 70, hozAlign: "center", formatter: (c) => c.getValue() ? c.getValue() + "일" : "-" },
 				{ title: "비고", field: "remark", minWidth: 150 },
 				{ title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross" }
-			],
-			rowClick: (e, row) => {
-				const d = row.getData()
-				Object.assign(masterForm, d)
-				masterForm.actkind = 'U1'
-				masterForm.acctcd_t = d.acctnm
-				masterForm.bankcd_t = d.banknm
-			}
+			]
+		})
+
+		// 📊 하단 그리드 행 클릭 시 이벤트 처리 (기존 options 방식 대신 .on 사용)
+		mainGrid.on("rowClick", (e, row) => {
+			const d = row.getData()
+
+			// 1. 전체 데이터 복사 (반응성 유지)
+			Object.assign(masterForm, d)
+
+			// 2. 수정 모드(U1)로 전환
+			masterForm.actkind = 'U1'
+
+			// 3. 상단 input(v-model)에 표시될 이름 필드 명시적 매핑
+			masterForm.acctcd_t = d.acctnm
+			masterForm.bankcd_t = d.banknm
+
+			// 4. 날짜 필드 형식 변환 (20250224 -> 2025-02-24)
+			// type="date" 입력 필드는 반드시 YYYY-MM-DD 형식이어야 표시됩니다.
+			masterForm.stdymd = formatYmd(d.stdymd)
+			masterForm.endymd = formatYmd(d.endymd)
+
+			// (선택사항) 디버깅용 알림
+			vAlert('선택하신 자료가 상단에 표시되었습니다.')
 		})
 	}
 })
+
 </script>
 
 <style scoped>

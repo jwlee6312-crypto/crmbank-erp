@@ -248,7 +248,7 @@ async function issueSlip() {
 
         // 1. 전표번호 채번 (actkind: 'a')
         const resA = await api.post('/api/hsio/HSIO_325U_STR', { ...baseParams, actkind: 'a', slipno: '' })
-        const slipno = resA.data?.[0]?.slipno || resA.data?.[0]?.SLIPNO
+        const slipno = resA.data?.[0]?.slipno || resA.data?.[0]?.slipno
         if (!slipno || slipno === '000000') throw new Error('전표 번호 채번 실패')
 
         // 2. 실제 정산 저장 (actkind: 'u')
@@ -299,10 +299,10 @@ function formatNumber(val: any) { return new Intl.NumberFormat().format(Number(v
 function formatDate(val: any) { return val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val; }
 
 onMounted(async () => {
-  api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } }).then(r => {
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) { slipmaster.clsymd = r.data[0].clsymd; slipmaster.sclsym = r.data[0].sclsym; }
   })
-  api.get('/api/comm/HA00_00P_STR', { params: { gubun: 'sd', cmpycd: authStore.cmpycd } }).then(r => {
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'sd', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data) empOptions.value = r.data.map((i: any) => ({ codecd: i.userid, codenm: i.usernm }))
   })
   nextTick(initGrid)

@@ -151,7 +151,7 @@ const searchForm = reactive({ WORD: '' })
 const posOptions = ref<any[]>([])
 
 const formData = reactive({
-	actkind: 'S2', cmpycd: authStore.cmpycd, userid: '', pw: '', usernm: '', telno: '', inner_no: '', hpno: '', deptcd: '', deptnm: '', empno: '', EMPNM: '', positionoff: '', usergrp: '', email: '', pricegbn: '1', useyn: 'Y', salsyn: 'N', remark: ''
+	actkind: 'S2', cmpycd: authStore.cmpycd, userid: '', pw: '', usernm: '', telno: '', inner_no: '', hpno: '', deptcd: '', deptnm: '', empno: '', empnm: '', positionoff: '', usergrp: '', email: '', pricegbn: '1', useyn: 'Y', salsyn: 'N', remark: ''
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null

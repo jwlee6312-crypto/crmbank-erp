@@ -138,7 +138,7 @@ const resultInfo = reactive({ startdt: '-', enddt: '-' })
 
 const loadClsInfo = async () => {
 	try {
-		const res = await api.get('/api/comm/HP00_000S_STR', {
+		const res = await api.get('/api/hp00/HP00_000S_STR', {
 			params: { gubun: 'CL', cmpycd: authStore.cmpycd }
 		})
         if (res.data?.length > 0) {

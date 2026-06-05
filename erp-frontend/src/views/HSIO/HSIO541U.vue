@@ -193,7 +193,7 @@ async function search() {
     if (grid.value) {
       const mappedData = res.data.map((i: any) => {
           const slipymd = i.slipymd || i.SLIPYMD || ''
-          const slipno = i.slipno || i.SLIPNO || ''
+          const slipno = i.slipno || i.slipno || ''
           return {
               ...i,
               slipymd,
@@ -305,7 +305,7 @@ onMounted(async () => {
   api.get('/api/ha00/HA00_010S_STR', { params: { gubun: 'p1', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) {
         const d = r.data[0]
-        autoslip.value = (d.slipyn || d.SLIPYN || 'N').toUpperCase()
+        autoslip.value = (d.slipyn || d.slipyn || 'N').toUpperCase()
     }
   })
   nextTick(() => initGrid())

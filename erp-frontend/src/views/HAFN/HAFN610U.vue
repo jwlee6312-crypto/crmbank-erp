@@ -207,9 +207,9 @@ const search = async () => {
 
 		const targetData = (resTarget.data || []).map((row: any) => ({
 			...row,
-			SLIP_KEY: `${row.col0}-${row.col1}-${row.col2}`,
+			slip_key: `${row.col0}-${row.col1}-${row.col2}`,
 			slipymd: row.col0,
-			SLIPNO: row.col1,
+			slipno: row.col1,
 			srowno: row.col2,
 			remark: row.col3,
 			acctcd: row.col4,
@@ -285,7 +285,7 @@ const save = async () => {
 				remark: `${searchForm.custnm} 외상금 지불`,
 				AMOUNT: row.INPUT_PAY_AMT,
 				custcd: searchForm.custcd,
-				SSLIPNO: `${row.slipymd}${row.SLIPNO}${row.srowno}`
+				Sslipno: `${row.slipymd}${row.slipno}${row.srowno}`
 			})
 		})
 
@@ -313,7 +313,7 @@ const save = async () => {
 			MASTER: {
 				cmpycd: authStore.cmpycd,
 				slipymd: voucherForm.PAyyMD.replace(/-/g, ''),
-				acctymD: voucherForm.PAyyMD.replace(/-/g, ''),
+				acctymd: voucherForm.PAyyMD.replace(/-/g, ''),
 				deptcd: voucherForm.deptcd,
 				business: `${searchForm.custnm} 지불건`,
 				SLIPGU: '010'
@@ -323,8 +323,8 @@ const save = async () => {
 
 		const res = await api.post('/api/hasl/HASL_010U_SAVE', payload)
 		vAlert('성공적으로 처리되었습니다.')
-		if (res.data.SLIPNO) {
-			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=010&slipymd=${payload.MASTER.slipymd}&SLIPNO=${res.data.SLIPNO}&deptcd=${voucherForm.deptcd}`)
+		if (res.data.slipno) {
+			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=010&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
 		}
 		initialize()
 	} catch (e) { vAlertError('저장 실패') }
@@ -400,7 +400,7 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{ title: "선택", field: "SELECT", width: 40, hozAlign: "center", formatter: "tickCross", editor: true, cellClick: (e, cell) => { cell.setValue(!cell.getValue()); updateTargetTotal() } },
-				{ title: "전표번호", field: "SLIP_KEY", width: 130, hozAlign: "center" },
+				{ title: "전표번호", field: "slip_key", width: 130, hozAlign: "center" },
 				{ title: "적요", field: "remark", minWidth: 200 },
 				{ title: "요청일", field: "reqymd", width: 90, hozAlign: "center", formatter: (c) => formatYmd(c.getValue()) },
 				{ title: "미지급금", field: "UNPAID_AMT", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },

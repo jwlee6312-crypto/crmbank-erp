@@ -26,7 +26,7 @@
 					<div class="d-flex align-items-center gap-3">
 						<div class="input-group input-group-sm flex-nowrap" style="width: 420px;">
 							<span class="input-group-text bg-light fw-bold px-3 border-0">부서명 검색</span>
-							<input v-model="searchForm.deptnm_S" class="form-control border-light-subtle" placeholder="부서명을 입력하고 엔터..." @keyup.enter="fetchList" />
+							<input v-model="searchForm.deptnm_s" class="form-control border-light-subtle" placeholder="부서명을 입력하고 엔터..." @keyup.enter="fetchList" />
 							<button class="btn btn-dark px-3" @click="fetchList"><i class="bi bi-search"></i></button>
 						</div>
 					</div>
@@ -54,14 +54,14 @@
 								<th class="required">부서명칭</th>
 								<td><input v-model="formData.deptnm" type="text" class="form-control" /></td>
 								<th>영문명칭</th>
-								<td><input v-model="formData.DEPTENM" type="text" class="form-control" /></td>
+								<td><input v-model="formData.deptenm" type="text" class="form-control" /></td>
 							</tr>
 							<tr>
 								<th>상위부서</th>
 								<td>
 									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="formData.UPDEPT" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 60px;" readonly />
-										<input v-model="formData.UPdeptnm" type="text" class="form-control border-start-0" placeholder="상위부서 검색" @keyup.enter="openDeptPopup" />
+										<input v-model="formData.updept" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 60px;" readonly />
+										<input v-model="formData.updeptnm" type="text" class="form-control border-start-0" placeholder="상위부서 검색" @keyup.enter="openDeptPopup" />
 										<button class="btn btn-outline-secondary px-2" @click="openDeptPopup"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
@@ -74,7 +74,7 @@
 								</td>
 								<th>비용구분</th>
 								<td>
-									<select v-model="formData.COSTGBN" class="form-select">
+									<select v-model="formData.costgbn" class="form-select">
 										<option value="">-- 선택 --</option>
 										<option value="100">관리비용</option>
 										<option value="110">제조비용</option>
@@ -83,9 +83,9 @@
 							</tr>
 							<tr>
 								<th class="required">적용일자</th>
-								<td><input v-model="formData.DEPTOPN" type="date" class="form-control" /></td>
+								<td><input v-model="formData.deptopn" type="date" class="form-control" /></td>
 								<th>유효일자</th>
-								<td><input v-model="formData.DEPTCLD" type="date" class="form-control" /></td>
+								<td><input v-model="formData.deptcld" type="date" class="form-control" /></td>
 								<th>사용여부</th>
 								<td class="bg-light-subtle text-center">
 									<div class="form-check form-switch m-0 d-inline-block">
@@ -126,11 +126,11 @@ const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
-const searchForm = reactive({ deptnm_S: '' })
+const searchForm = reactive({ deptnm_s: '' })
 const formData = reactive({
-	actkind: 'S0', cmpycd: authStore.cmpycd, deptcd: '', deptnm: '', DEPTENM: '', DEPTSNM: '', UPDEPT: '', UPdeptnm: '',
-	DEPTDUM: 'N', taxunit: '', COSTGBN: '', DEPTEMP: '', DEPTEMPNM: '',
-	DEPTOPN: new Date().toISOString().substring(0, 10), DEPTCLD: '', dspord: '1', useyn: 'Y'
+	actkind: 'S0', cmpycd: authStore.cmpycd, deptcd: '', deptnm: '', deptenm: '', deptsnm: '', updept: '', updeptnm: '',
+	deptdum: 'N', taxunit: '', costgbn: '', DEPTEMP: '', deptempnm: '',
+	deptopn: new Date().toISOString().substring(0, 10), deptcld: '', dspord: '1', useyn: 'Y'
 })
 
 const saOptions = ref<any[]>([])
@@ -158,7 +158,7 @@ async function fetchList() {
 		const res = await api.post('/api/haba/HABA_060U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			deptnm: searchForm.deptnm_S
+			deptnm: searchForm.deptnm_s
 		})
 		mainGrid?.setData(res.data || [])
 		vAlert('조회되었습니다.')
@@ -190,8 +190,8 @@ onMounted(async () => {
 			columns: [
 				{ title: '부서코드', field: 'deptcd', hozAlign: 'center', width: 100, cssClass: 'fw-bold text-primary border-end' },
 				{ title: '부서명칭', field: 'deptnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
-				{ title: '상위부서', field: 'UPdeptnm', minWidth: 150, widthGrow: 1 },
-				{ title: '적용일', field: 'DEPTOPN', hozAlign: 'center', width: 120 },
+				{ title: '상위부서', field: 'updeptnm', minWidth: 150, widthGrow: 1 },
+				{ title: '적용일', field: 'deptopn', hozAlign: 'center', width: 120 },
 				{ title: '사용', field: 'useyn', hozAlign: 'center', width: 80, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
 			]
 		})

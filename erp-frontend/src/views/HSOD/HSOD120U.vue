@@ -168,7 +168,7 @@ const initGrids = () => {
             cellClick: (e, cell) => { if ((e.target as HTMLElement).classList.contains('bi-search')) openHelp('DEPT', cell.getRow()) }
         },
         {
-            title: "영업담당", field: "OEMPNM", width: 120,
+            title: "영업담당", field: "Oempnm", width: 120,
             formatter: (cell) => (cell.getValue() || '') + " <i class='bi bi-search text-primary ms-1 cursor-pointer'></i>",
             cellClick: (e, cell) => { if ((e.target as HTMLElement).classList.contains('bi-search')) openHelp('EMP', cell.getRow()) }
         }
@@ -336,7 +336,7 @@ function openHelp(type: string, row: any) {
       title: '사원 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'usernm',
       data: { gubun: 'U1', cmpycd: authStore.cmpycd },
       columns: [{ title: '코드', field: 'userid', width: 80 }, { title: '사원명', field: 'usernm', width: 150 }],
-      onConfirm: (data: any) => { row.update({ ORDEMP: data.userid, OEMPNM: data.usernm }) }
+      onConfirm: (data: any) => { row.update({ ORDEMP: data.userid, Oempnm: data.usernm }) }
     })
   }
   modalVisible.value = true

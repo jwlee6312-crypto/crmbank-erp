@@ -173,8 +173,8 @@ const totals = computed(() => {
 async function fetchOptions() {
   try {
     const [resSa, resVat] = await Promise.all([
-      api.post('/api/comm/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd }),
-      api.post('/api/comm/HA00_00P_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '120' })
+      api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd }),
+      api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '120' })
     ])
     saOptions.value = resSa.data; vatOptions.value = resVat.data;
     if (saOptions.value.length > 0) formData.taxunit = saOptions.value[0].taxunit;

@@ -66,7 +66,7 @@
 							<td>
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label">전표종류</span>
-									<select v-model="searchForm.SLIPKIND" class="form-select">
+									<select v-model="searchForm.slipkind" class="form-select">
 										<option value="000">전체</option>
 										<option v-for="item in slipKindOptions" :key="item.codecd" :value="item.codecd">{{ item.codenm }}</option>
 									</select>
@@ -75,7 +75,7 @@
 							<td>
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label">확정여부</span>
-									<select v-model="searchForm.SLIPYN" class="form-select">
+									<select v-model="searchForm.slipyn" class="form-select">
 										<option value="N">미확정</option>
 										<option value="Y">확정</option>
 									</select>
@@ -92,7 +92,7 @@
 			<div class="card border shadow-sm bg-white overflow-hidden">
 				<div class="card-header py-1 px-2 bg-light border-bottom d-flex justify-content-between align-items-center">
 					<span class="fw-bold small text-secondary">선택 전표 상세</span>
-					<button v-if="masterForm.SLIPNO" class="btn btn-erp btn-init" style="height: 22px; padding: 0 8px;" @click="goSlipDetail">
+					<button v-if="masterForm.slipno" class="btn btn-erp btn-init" style="height: 22px; padding: 0 8px;" @click="goSlipDetail">
 						<i class="bi bi-link-45deg"></i> 전표보기
 					</button>
 				</div>
@@ -108,14 +108,14 @@
 							<td>
 								<div class="d-flex align-items-center gap-1">
 									<input :value="masterForm.slipymd" type="text" class="form-control bg-light" readonly />
-									<input :value="masterForm.SLIPNO" type="text" class="form-control text-center bg-light" style="width: 60px;" readonly />
+									<input :value="masterForm.slipno" type="text" class="form-control text-center bg-light" style="width: 60px;" readonly />
 								</div>
 							</td>
 							<th>발 행 인</th>
-							<td><input v-model="masterForm.EMPNM" type="text" class="form-control bg-light" readonly /></td>
+							<td><input v-model="masterForm.empnm" type="text" class="form-control bg-light" readonly /></td>
 							<th class="text-primary">회계일자</th>
 							<td>
-								<input v-model="masterForm.acctymD" type="date" class="form-control border-primary shadow-sm" />
+								<input v-model="masterForm.acctymd" type="date" class="form-control border-primary shadow-sm" />
 							</td>
 						</tr>
 						<tr>
@@ -126,8 +126,8 @@
 							<th>확정여부</th>
 							<td>
 								<div class="form-check form-switch d-flex align-items-center h-100 ps-5">
-									<input v-model="masterForm.COFMYN" class="form-check-input" type="checkbox" id="cofmSwitch" />
-									<label class="form-check-label ms-2" for="cofmSwitch">{{ masterForm.COFMYN ? '확정' : '미확정' }}</label>
+									<input v-model="masterForm.cofmyn" class="form-check-input" type="checkbox" id="cofmSwitch" />
+									<label class="form-check-label ms-2" for="cofmSwitch">{{ masterForm.cofmyn ? '확정' : '미확정' }}</label>
 								</div>
 							</td>
 						</tr>
@@ -182,20 +182,20 @@ const searchForm = reactive({
 	toymd: today,
 	deptcd: '',
 	deptnm: '',
-	SLIPKIND: '000',
-	SLIPYN: 'N'
+	slipkind: '000',
+	slipyn: 'N'
 })
 
 // 📝 마스터 데이터
 const masterForm = reactive({
 	slipymd: '',
-	SLIPNO: '',
-	EMPNM: '',
-	acctymD: today,
+	slipno: '',
+	empnm: '',
+	acctymd: today,
 	dbamt: 0,
 	cramt: 0,
 	remark: '',
-	COFMYN: false,
+	cofmyn: false,
 	deptcd: '',
 	deptnm: '',
 	clsymd: '00000000'
@@ -213,7 +213,7 @@ const loadInitData = async () => {
 		const resCls = await api.post('/api/ha00/HA00_010S_STR', { gubun: 'P1', cmpycd: authStore.cmpycd })
 		if (resCls.data) masterForm.clsymd = resCls.data.clsymd || '00000000'
 
-		const resKind = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', search: '180' })
+		const resKind = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '180' })
 		slipKindOptions.value = resKind.data || []
 	} catch (e) { console.error('초기 데이터 로드 실패') }
 }
@@ -223,11 +223,11 @@ const fetchSlips = async () => {
 		const res = await api.post('/api/hasl/HASL_020U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
+			slipymd: searchForm.frymd.replace(/-/g, ''),
+			acctymd: searchForm.toymd.replace(/-/g, ''),
 			deptcd: searchForm.deptcd,
-			SLIPKIND: searchForm.SLIPKIND,
-			SLIPYN: searchForm.SLIPYN
+			slipkind: searchForm.slipkind,
+			slipyn: searchForm.slipyn
 		})
 		mainGrid?.setData(res.data || [])
 		vAlert('조회되었습니다.')
@@ -235,12 +235,12 @@ const fetchSlips = async () => {
 }
 
 const save = async () => {
-	if (!masterForm.SLIPNO) return vAlert('처리할 전표를 선택하십시오.')
-	const acctYmdRaw = masterForm.acctymD.replace(/-/g, '')
+	if (!masterForm.slipno) return vAlert('처리할 전표를 선택하십시오.')
+	const acctYmdRaw = masterForm.acctymd.replace(/-/g, '')
 	if (acctYmdRaw <= masterForm.clsymd) {
 		return vAlert('회계 마감된 일자입니다. 마감일 이후로 설정하십시오.')
 	}
-	if (searchForm.SLIPYN === 'N' && masterForm.COFMYN) {
+	if (searchForm.slipyn === 'N' && masterForm.cofmyn) {
 		if (masterForm.dbamt !== masterForm.cramt) {
 			return vAlert('전표의 차대 금액이 일치하지 않습니다.')
 		}
@@ -250,10 +250,10 @@ const save = async () => {
 			actkind: 'U0',
 			cmpycd: authStore.cmpycd,
 			slipymd: masterForm.slipymd.replace(/-/g, ''),
-			SLIPNO: masterForm.SLIPNO,
-			acctymD: acctYmdRaw,
+			slipno: masterForm.slipno,
+			acctymd: acctYmdRaw,
 			deptcd: masterForm.deptcd,
-			COFMYN: masterForm.COFMYN ? 'Y' : 'N',
+			cofmyn: masterForm.cofmyn ? 'Y' : 'N',
 			usernm: authStore.usernm,
 			userid: authStore.userid
 		})
@@ -266,16 +266,16 @@ const initialize = () => {
 	resetForm(searchForm)
 	searchForm.frymd = firstDay
 	searchForm.toymd = today
-	searchForm.SLIPYN = 'N'
+	searchForm.slipyn = 'N'
 	resetForm(masterForm)
-	masterForm.acctymD = today
+	masterForm.acctymd = today
 	mainGrid?.clearData()
 }
 
 const goSlipDetail = () => {
 	router.push({
 		path: '/HASL/HASL010U',
-		query: { deptcd: masterForm.deptcd, slipymd: masterForm.slipymd.replace(/-/g, ''), SLIPNO: masterForm.SLIPNO }
+		query: { deptcd: masterForm.deptcd, slipymd: masterForm.slipymd.replace(/-/g, ''), slipno: masterForm.slipno }
 	})
 }
 
@@ -303,19 +303,19 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
 				{
-					title: "전표번호", field: "SLIP_KEY", width: 130,
+					title: "전표번호", field: "slip_key", width: 130,
 					formatter: (cell) => {
 						const d = cell.getData()
-						return `${d.slipymd}-${d.SLIPNO}`
+						return `${d.slipymd}-${d.slipno}`
 					}
 				},
 				{ title: "적요", field: "remark", hozAlign: "left", minWidth: 250 },
 				{ title: "발행부서", field: "deptnm", width: 120 },
-				{ title: "발행인", field: "EMPNM", width: 100 },
+				{ title: "발행인", field: "empnm", width: 100 },
 				{ title: "차변금액", field: "dbamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "대변금액", field: "cramt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{
-					title: "확정", field: "acctymD", width: 60,
+					title: "확정", field: "acctymd", width: 60,
 					formatter: (cell) => {
 						const val = cell.getValue()
 						return val && val !== '00000000' ? '✔' : ''
@@ -326,11 +326,11 @@ onMounted(() => {
 				const d = row.getData()
 				Object.assign(masterForm, d)
 				if (d.slipymd) masterForm.slipymd = `${d.slipymd.substring(0, 4)}-${d.slipymd.substring(4, 6)}-${d.slipymd.substring(6, 8)}`
-				if (d.acctymD && d.acctymD !== '00000000') {
-					masterForm.acctymD = `${d.acctymD.substring(0, 4)}-${d.acctymD.substring(4, 6)}-${d.acctymD.substring(6, 8)}`
+				if (d.acctymd && d.acctymd !== '00000000') {
+					masterForm.acctymd = `${d.acctymd.substring(0, 4)}-${d.acctymd.substring(4, 6)}-${d.acctymd.substring(6, 8)}`
 					masterForm.COFMYN = true
 				} else {
-					masterForm.acctymD = today
+					masterForm.acctymd = today
 					masterForm.COFMYN = false
 				}
 			}

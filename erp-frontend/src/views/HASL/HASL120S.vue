@@ -62,17 +62,17 @@
 							<th class="text-center border-end border-top">사용부서</th>
 							<td class="bg-white border-end border-top">
 								<div class="input-group input-group-sm">
-									<input v-model="searchForm.deptcd_H" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
-									<input v-model="searchForm.deptnm_H" type="text" class="form-control" @keydown.enter="openHelp('DEPT')" />
+									<input v-model="searchForm.deptcd_h" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
+									<input v-model="searchForm.deptnm_h" type="text" class="form-control" @keydown.enter="openHelp('DEPT')" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
 								</div>
 							</td>
 							<th class="text-center border-end border-top">전표금액</th>
 							<td class="bg-white border-top">
 								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.SLIPAMT_F" type="number" class="form-control form-control-sm text-end" placeholder="최소" />
+									<input v-model="searchForm.slipamt_f" type="number" class="form-control form-control-sm text-end" placeholder="최소" />
 									<span class="text-muted">~</span>
-									<input v-model="searchForm.SLIPAMT_T" type="number" class="form-control form-control-sm text-end" placeholder="최대" />
+									<input v-model="searchForm.slipamt_t" type="number" class="form-control form-control-sm text-end" placeholder="최대" />
 								</div>
 							</td>
 						</tr>
@@ -121,10 +121,10 @@ const searchForm = reactive({
 	toymd: today,
 	acctcd: '',
 	acctnm: '',
-	deptcd_H: authStore.deptcd,
-	deptnm_H: authStore.deptnm,
-	SLIPAMT_F: '',
-	SLIPAMT_T: ''
+	deptcd_h: authStore.deptcd,
+	deptnm_h: authStore.deptnm,
+	slipamt_f: '',
+	slipamt_t: ''
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -137,9 +137,9 @@ const search = async () => {
 			frymd: searchForm.frymd.replace(/-/g, ''),
 			toymd: searchForm.toymd.replace(/-/g, ''),
 			acctcd: searchForm.acctcd,
-			deptcd: searchForm.deptcd_H,
-			SLIPAMT_F: searchForm.SLIPAMT_F,
-			SLIPAMT_T: searchForm.SLIPAMT_T
+			deptcd: searchForm.deptcd_h,
+			slipamt_f: searchForm.slipamt_f,
+			slipamt_t: searchForm.slipamt_t
 		})
 		mainGrid?.setData(res.data || [])
 		vAlert('조회되었습니다.')
@@ -150,8 +150,8 @@ const initialize = () => {
 	resetForm(searchForm)
 	searchForm.frymd = firstDay
 	searchForm.toymd = today
-	searchForm.deptcd_H = authStore.deptcd
-	searchForm.deptnm_H = authStore.deptnm
+	searchForm.deptcd_h = authStore.deptcd
+	searchForm.deptnm_h = authStore.deptnm
 	mainGrid?.clearData()
 }
 
@@ -160,7 +160,7 @@ const excel = () => mainGrid?.download("xlsx", `전표조회_${today}.xlsx`)
 const goSlipDetail = (slipYmd: string, slipNo: string) => {
 	router.push({
 		path: '/HASL/HASL110U',
-		query: { slipymd: slipYmd.replace(/-/g, ''), SLIPNO: slipNo }
+		query: { slipymd: slipYmd.replace(/-/g, ''), slipno: slipNo }
 	})
 }
 
@@ -179,9 +179,9 @@ function openHelp(type: string) {
 	} else if (type === 'DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm_H },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm_h },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
-			onConfirm: (d: any) => { searchForm.deptcd_H = d.deptcd; searchForm.deptnm_H = d.deptnm }
+			onConfirm: (d: any) => { searchForm.deptcd_h = d.deptcd; searchForm.deptnm_h = d.deptnm }
 		})
 	}
 	modalVisible.value = true
@@ -195,23 +195,23 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{
-					title: "전표번호", field: "SLIP_KEY", width: 140, hozAlign: "center",
+					title: "전표번호", field: "slipno", width: 140, hozAlign: "center",
 					formatter: (cell) => {
 						const val = cell.getValue() || ''
 						return `<span class="text-primary text-decoration-underline cursor-pointer fw-bold">${val}</span>`
 					},
 					cellClick: (e, cell) => {
 						const d = cell.getData()
-						if (d.slipymd && d.SLIPNO) goSlipDetail(d.slipymd, d.SLIPNO)
+						if (d.acctymd && d.slipno) goSlipDetail(d.acctymd, d.slipno)
 					}
 				},
 				{ title: "행", field: "srowno", width: 40, hozAlign: "center" },
 				{ title: "계정코드", field: "acctcd", width: 80, hozAlign: "center" },
 				{ title: "계정명", field: "acctnm", width: 150, hozAlign: "left" },
-				{ title: "적요", field: "remark", minWidth: 200, hozAlign: "left" },
-				{ title: "거래처", field: "custnm", width: 150, hozAlign: "left" },
+				{ title: "적요", field: "descnm", minWidth: 200, hozAlign: "left" },
+				{ title: "거래처", field: "subnm", width: 150, hozAlign: "left" },
 				{ title: "관리번호", field: "mgtno", width: 120, hozAlign: "center" },
-				{ title: "사용부서", field: "USEdeptnm", width: 120, hozAlign: "center" },
+				{ title: "사용부서", field: "deptnm", width: 120, hozAlign: "center" },
 				{ title: "차변", field: "dbamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "대변", field: "cramt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
 			]

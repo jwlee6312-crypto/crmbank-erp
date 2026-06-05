@@ -134,7 +134,7 @@ let mainGrid: Tabulator | null = null
 
 const fetchOptions = async () => {
 	try {
-		const res = await api.post('/api/comm/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd, search: ' ' })
+		const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd, search: ' ' })
 		taxUnitOptions.value = res.data || []
 	} catch (e) { console.error(e) }
 }

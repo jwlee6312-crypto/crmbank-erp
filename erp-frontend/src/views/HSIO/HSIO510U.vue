@@ -371,10 +371,10 @@ const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) ||
 const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val;
 
 onMounted(async () => {
-  api.post('/api/comm/HP00_000S_STR', { gubun: 'cl', cmpycd: authStore.cmpycd }).then(r => { if (r.data?.length) masterData.clsymd = r.data[0].clsymd });
-  api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' }).then(r => { if (r.data?.length) masterData.pricegbn = r.data[0].pricegbn || '1' });
-  api.post('/api/comm/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd }).then(r => { taxUnitOptions.value = (r.data || []).map((i:any)=>({taxunit:String(i.taxunit||i.code).trim(), unitnm:String(i.unitnm||i.cdnm).trim()})); if(taxUnitOptions.value.length) masterData.taxunit = taxUnitOptions.value[0].taxunit; });
-  api.post('/api/comm/HA00_00P_STR', { gubun: 'E0', gbncd: '120', cmpycd: authStore.cmpycd }).then(r => vatTypeOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.codecd||i.code).trim(), codenm:String(i.codenm||i.cdnm).trim()})));
+  api.post('/api/hp00/HP00_000S_STR', { gubun: 'cl', cmpycd: authStore.cmpycd }).then(r => { if (r.data?.length) masterData.clsymd = r.data[0].clsymd });
+  api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' }).then(r => { if (r.data?.length) masterData.pricegbn = r.data[0].pricegbn || '1' });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd }).then(r => { taxUnitOptions.value = (r.data || []).map((i:any)=>({taxunit:String(i.taxunit||i.code).trim(), unitnm:String(i.unitnm||i.cdnm).trim()})); if(taxUnitOptions.value.length) masterData.taxunit = taxUnitOptions.value[0].taxunit; });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '120', cmpycd: authStore.cmpycd }).then(r => vatTypeOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.codecd||i.code).trim(), codenm:String(i.codenm||i.cdnm).trim()})));
   nextTick(() => initGrids())
 })
 </script>

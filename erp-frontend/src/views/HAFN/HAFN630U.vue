@@ -187,7 +187,7 @@ const search = async () => {
 
 		const data = (res.data || []).map((row: any) => ({
 			slipymd: row.col0,
-			SLIPNO: row.col1,
+			slipno: row.col1,
 			srowno: row.col2,
 			remark: row.col3,
 			custcd: row.col4,
@@ -238,7 +238,7 @@ const save = async () => {
 				AMOUNT: row.payamt,
 				custcd: row.custcd,
 				USEdeptcd: voucherForm.deptcd,
-				SSLIPNO: `${row.slipymd}${row.SLIPNO}${row.srowno}`
+				Sslipno: `${row.slipymd}${row.slipno}${row.srowno}`
 			})
 		})
 
@@ -247,7 +247,7 @@ const save = async () => {
 			MASTER: {
 				cmpycd: authStore.cmpycd,
 				slipymd: searchForm.PAyyMD.replace(/-/g, ''),
-				acctymD: searchForm.PAyyMD.replace(/-/g, ''),
+				acctymd: searchForm.PAyyMD.replace(/-/g, ''),
 				deptcd: voucherForm.deptcd,
 				business: voucherForm.remark,
 				SLIPGU: '020'
@@ -257,8 +257,8 @@ const save = async () => {
 
 		const res = await api.post('/api/hasl/HASL_110U_SAVE', payload)
 		vAlert('전표가 발행되었습니다.')
-		if (res.data.SLIPNO) {
-			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=020&slipymd=${payload.MASTER.slipymd}&SLIPNO=${res.data.SLIPNO}&deptcd=${voucherForm.deptcd}`)
+		if (res.data.slipno) {
+			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=020&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
 		}
 		search()
 	} catch (e) { vAlertError('저장 실패') }
@@ -306,8 +306,8 @@ onMounted(() => {
 			columns: [
 				{ title: "선택", field: "SELECT", width: 40, hozAlign: "center", formatter: "tickCross", editor: true, cellClick: (e, cell) => { cell.setValue(!cell.getValue()); updateTotal() } },
 				{
-					title: "발생전표", field: "SLIP_KEY", width: 130, hozAlign: "center",
-					formatter: (c) => { const d = c.getData(); return `${d.slipymd}-${d.SLIPNO}-${d.srowno}` }
+					title: "발생전표", field: "slip_key", width: 130, hozAlign: "center",
+					formatter: (c) => { const d = c.getData(); return `${d.slipymd}-${d.slipno}-${d.srowno}` }
 				},
 				{ title: "적요", field: "remark", minWidth: 200 },
 				{ title: "기간", field: "PERIOD", width: 150, hozAlign: "center" },

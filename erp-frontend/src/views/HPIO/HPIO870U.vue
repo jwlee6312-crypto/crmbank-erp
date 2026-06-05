@@ -219,7 +219,7 @@ const fetchLineOptions = async () => {
 async function fetchList() {
   try {
     const res = await api.post('/api/hpio/HPIO_870U_STR', {
-      actkind: 'S1', cmpycd: authStore.cmpycd, OUTymdfr: searchData.outymdfr, OUTymdto: searchData.outymdto, linecd: searchData.linecd, SLIPYN: searchData.slipyn
+      actkind: 'S1', cmpycd: authStore.cmpycd, OUTymdfr: searchData.outymdfr, OUTymdto: searchData.outymdto, linecd: searchData.linecd, slipyn: searchData.slipyn
     });
     grid1?.setData(res.data.map((i: any) => ({ ...i, io_disp: `${i.ioym}-${i.iono}` })));
     vAlert('조회되었습니다.');

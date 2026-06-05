@@ -170,7 +170,7 @@ const handleSearch = async () => {
 
 onMounted(async () => {
 	try {
-		const { data } = await api.get('/api/comm/HP00_000S_STR', {
+		const { data } = await api.get('/api/hp00/HP00_000S_STR', {
 			params: { gubun: 'CL', cmpycd: authStore.cmpycd }
 		})
 		if (data?.length > 0) clsInfo.wclsym = data[0].wclsym || ''

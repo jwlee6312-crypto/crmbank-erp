@@ -205,11 +205,11 @@ const initGrids = () => {
 const fetchInitialNames = async () => {
     try {
         if (searchForm.deptcd) {
-            const dRes = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, col0: 'D0', col2: searchForm.deptcd });
+            const dRes = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, col0: 'D0', col2: searchForm.deptcd });
             if (dRes.data?.length) searchForm.deptnm = dRes.data[0].col0 || dRes.data[0].COL0;
         }
         if (searchForm.custcd) {
-            const cRes = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, col0: 'C0', col2: searchForm.custcd });
+            const cRes = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, col0: 'C0', col2: searchForm.custcd });
             if (cRes.data?.length) searchForm.custnm = cRes.data[0].col0 || cRes.data[0].COL0;
         }
     } catch (e) {}

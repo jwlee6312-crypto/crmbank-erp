@@ -87,11 +87,11 @@
 					<tbody>
 						<tr>
 							<th class="bg-light-subtle border-end py-2">현금</th>
-							<td class="border-end text-end px-2">{{ formatNumber(summary.BEFOCASH) }}</td>
-							<td class="border-end text-end px-2">{{ formatNumber(summary.CURRDBCASH) }}</td>
-							<td class="border-end text-end px-2">{{ formatNumber(summary.CURRCRCASH) }}</td>
-							<td class="border-end text-end px-2 fw-bold text-primary">{{ formatNumber(summary.CURRJANCASH) }}</td>
-							<td class="border-end px-2">{{ summary.SLIPCNT }} 건</td>
+							<td class="border-end text-end px-2">{{ formatNumber(summary.befocash) }}</td>
+							<td class="border-end text-end px-2">{{ formatNumber(summary.currdbcash) }}</td>
+							<td class="border-end text-end px-2">{{ formatNumber(summary.currcrcash) }}</td>
+							<td class="border-end text-end px-2 fw-bold text-primary">{{ formatNumber(summary.currjancash) }}</td>
+							<td class="border-end px-2">{{ summary.slipcnt }} 건</td>
 							<td class="px-2 text-start text-muted italic">정상 조회되었습니다.</td>
 						</tr>
 					</tbody>
@@ -124,11 +124,11 @@ const searchForm = reactive({
 
 // 💰 시재 요약 정보
 const summary = reactive({
-	BEFOCASH: 0,
-	CURRDBCASH: 0,
-	CURRCRCASH: 0,
-	CURRJANCASH: 0,
-	SLIPCNT: 0
+	befocash: 0,
+	currdbcash: 0,
+	currcrcash: 0,
+	currjancash: 0,
+	slipcnt: 0
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -147,14 +147,14 @@ const search = async () => {
 		if (data.length >= 2) {
 			// Row 0: Cash summary
 			const row0 = data[0]
-			summary.BEFOCASH = Number(row0.col2 || row0.Bjanamt || 0)
-			summary.CURRDBCASH = Number(row0.col0 || row0.dbamt || 0)
-			summary.CURRCRCASH = Number(row0.col1 || row0.cramt || 0)
-			summary.CURRJANCASH = summary.BEFOCASH + summary.CURRDBCASH - summary.CURRCRCASH
+			summary.befocash = Number(row0.col2 || row0.bjanamt || 0)
+			summary.currdbcash = Number(row0.col0 || row0.dbamt || 0)
+			summary.currcrcash = Number(row0.col1 || row0.cramt || 0)
+			summary.currjancash = summary.befocash + summary.currdbcash - summary.currcrcash
 
 			// Row 1: Slip count
 			const row1 = data[1]
-			summary.SLIPCNT = Number(row1.col0 || row1.dbamt || 0)
+			summary.slipcnt = Number(row1.col0 || row1.dbamt || 0)
 
 			// Rows 2+: Main details
 			const details = data.slice(2).map((row: any) => ({
@@ -163,7 +163,7 @@ const search = async () => {
 				cramt: Number(row.col1 || row.cramt || 0),
 				acctcd: row.col2 || row.acctcd,
 				acctnm: row.col3 || row.acctnm,
-				IS_TOTAL: row.col2 === '9999999'
+				is_total: row.col2 === '9999999'
 			}))
 
 			mainGrid?.setData(details)
@@ -180,11 +180,11 @@ const search = async () => {
 }
 
 const resetSummary = () => {
-	summary.BEFOCASH = 0
-	summary.CURRDBCASH = 0
-	summary.CURRCRCASH = 0
-	summary.CURRJANCASH = 0
-	summary.SLIPCNT = 0
+	summary.befocash = 0
+	summary.currdbcash = 0
+	summary.currcrcash = 0
+	summary.currjancash = 0
+	summary.slipcnt = 0
 }
 
 const formatNumber = (val: number) => {
@@ -220,7 +220,7 @@ onMounted(() => {
 					title: "계정과목 (Account)", field: "acctnm", widthGrow: 1, hozAlign: "center",
 					formatter: (cell) => {
 						const d = cell.getData()
-						if (d.IS_TOTAL) return `<strong>${cell.getValue()}</strong>`
+						if (d.is_total) return `<strong>${cell.getValue()}</strong>`
 						if (searchForm.actkind === 'S0' && d.acctcd) {
 							return `<span class="text-primary text-decoration-underline cursor-pointer">${cell.getValue()}</span>`
 						}
@@ -239,7 +239,7 @@ onMounted(() => {
 			],
 			rowFormatter: (row) => {
 				const d = row.getData()
-				if (d.IS_TOTAL) {
+				if (d.is_total) {
 					row.getElement().style.backgroundColor = "#f0f7ff"
 					row.getElement().style.fontWeight = "bold"
 				}

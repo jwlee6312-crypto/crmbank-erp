@@ -137,7 +137,7 @@ const save = async () => {
     // 🔄 선택된 각 항목에 대해 순차적으로 프로시저 호출 (ASP 패턴)
     for (const item of selected) {
       const slipYmd = item.SLIPYMD || item.slipymd
-      const slipNo = item.SLIPNO || item.slipno
+      const slipNo = item.slipno || item.slipno
       const uDeptCd = item.UDEPTCD || item.udeptcd || searchForm.DEPTCD
 
       // 🚀 Step 1. 자동 전표 승인 취소 (ASP: HASL_020U_STR)
@@ -147,10 +147,10 @@ const save = async () => {
           CMPYCD: authStore.CMPYCD,
           SLIPYMD: slipYmd,
           ACCTYMD: slipYmd,
-          SLIPNO: slipNo,
+          slipno: slipNo,
           DEPTCD: uDeptCd,
           SLIPKIND: '031',
-          SLIPYN: 'Y',
+          slipyn: 'Y',
           COFMYN: 'N', // 승인 취소
           UPDEMP: authStore.USERID
         })
@@ -164,7 +164,7 @@ const save = async () => {
         IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
         DEPTCD: uDeptCd,
         SLIPYMD: slipYmd,
-        SLIPNO: slipNo,
+        slipno: slipNo,
         UPDEMP: authStore.USERID
       }
 
@@ -200,7 +200,7 @@ onMounted(async () => {
   // 전표 환경 설정 체크 (ASP: HA00_010S_STR 'P1')
   try {
     const resSet = await api.post('/api/ha00/HA00_010S_STR', { CMPYCD: authStore.CMPYCD, GBN: 'P1' })
-    if (resSet.data?.length > 0) autoSlip.value = resSet.data[0].SLIPYN || 'N'
+    if (resSet.data?.length > 0) autoSlip.value = resSet.data[0].slipyn || 'N'
   } catch (e) {}
 
   if (mainGridRef.value) {
@@ -212,7 +212,7 @@ onMounted(async () => {
         { title: "전표일자", field: "SLIPYMD", width: 110, formatter: (c) => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
-        { title: "전표번호", field: "SLIPNO", width: 100, cssClass: "fw-bold text-primary" },
+        { title: "전표번호", field: "slipno", width: 100, cssClass: "fw-bold text-primary" },
         { title: "부서명", field: "DEPTNM", width: 120 },
         { title: "비용종류", field: "COSTNM", width: 150 },
         { title: "PO No.", field: "FILENO", width: 180 },

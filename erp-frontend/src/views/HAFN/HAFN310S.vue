@@ -46,7 +46,7 @@
 						<tr>
 							<th class="text-center border-end">종 목</th>
 							<td class="bg-white border-end">
-								<select v-model="searchForm.BONDKIND" class="form-select form-select-sm" style="max-width: 200px;">
+								<select v-model="searchForm.bondkind" class="form-select form-select-sm" style="max-width: 200px;">
 									<option value="000">전체</option>
 									<option v-for="item in bondKindOptions" :key="item.codecd" :value="item.codecd">{{ item.codenm }}</option>
 								</select>
@@ -92,7 +92,7 @@ const today = new Date().toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	BONDKIND: '000',
+	bondkind: '000',
 	ymD: today
 })
 
@@ -122,7 +122,7 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hafn/HAFN_310S_STR', {
 			cmpycd: authStore.cmpycd,
-			BONDKIND: searchForm.BONDKIND,
+			bondkind: searchForm.bondkind,
 			ymD: searchForm.ymD.replace(/-/g, '')
 		})
 
@@ -149,14 +149,14 @@ const search = async () => {
 const initialize = () => {
 	resetForm(searchForm)
 	searchForm.ymD = today
-	searchForm.BONDKIND = '000'
+	searchForm.bondkind = '000'
 	mainGrid?.clearData()
 }
 
 const excel = () => mainGrid?.download("xlsx", `유가증권명세서_${searchForm.ymD}.xlsx`)
 
 const print = () => {
-	const params = `ymD=${searchForm.ymD}&BONDKIND=${searchForm.BONDKIND}`
+	const params = `ymD=${searchForm.ymD}&bondkind=${searchForm.bondkind}`
 	window.open(`/api/hafn/HAFN_310P?${params}`, 'SecuritiesPrint', 'width=1000,height=800,scrollbars=yes')
 }
 

@@ -145,15 +145,15 @@ const search = async () => {
 
 			return {
 				...row,
-				SLIPNO: row.col0 || row.SLIPNO,
+				slipno: row.col0 || row.slipno,
 				srowno: row.col1 || row.srowno,
-				acctymD: row.col2 || row.acctymD,
+				acctymd: row.col2 || row.acctymd,
 				acctnm: row.col3 || row.acctnm,
 				acctcd: row.col4 || row.acctcd,
 				remark: row.col13 || row.remark,
 				dbamt: Number(row.col8 || row.dbamt || 0),
 				cramt: Number(row.COL9 || row.cramt || 0),
-				DETAIL_STR: details.join(' | ')
+				detail_str: details.join(' | ')
 			}
 		})
 
@@ -184,7 +184,7 @@ const goSlipDetail = (slipNo: string) => {
 	const no = slipNo.split('-')[1] || slipNo.substring(8)
 	router.push({
 		path: '/HASL/HASL110U',
-		query: { slipymd: ymd, SLIPNO: no }
+		query: { slipymd: ymd, slipno: no }
 	})
 }
 
@@ -211,7 +211,7 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
-			groupBy: "SLIPNO", // 전표번호로 그룹핑
+			groupBy: "slipno", // 전표번호로 그룹핑
 			groupHeader: function(value, count, data, group) {
 				return `<span class="text-primary fw-bold cursor-pointer" onclick="window.dispatchEvent(new CustomEvent('go-slip', {detail: '${value}'}))">전표번호: ${value}</span> <span class="ms-3 small text-muted">(${count}개 항목)</span>`
 			},
@@ -224,11 +224,11 @@ onMounted(() => {
 					title: "적요 / 세부내역", field: "remark", minWidth: 300,
 					formatter: (cell) => {
 						const d = cell.getData()
-						return `<div>${d.remark}</div><div class="small text-secondary fw-normal mt-1" style="font-size: 11px;">${d.DETAIL_STR}</div>`
+						return `<div>${d.remark}</div><div class="small text-secondary fw-normal mt-1" style="font-size: 11px;">${d.detail_str}</div>`
 					}
 				},
 				{
-					title: "회계일", field: "acctymD", width: 90, hozAlign: "center",
+					title: "회계일", field: "acctymd", width: 90, hozAlign: "center",
 					formatter: (cell) => {
 						const v = cell.getValue()
 						return v && v.length === 8 ? `${v.substring(2, 4)}.${v.substring(4, 6)}.${v.substring(6, 8)}` : v

@@ -50,7 +50,7 @@
 									<span class="erp-label me-2">배송담당</span>
 									<div class="input-group input-group-sm flex-nowrap" style="max-width: 300px;">
 										<input v-model="searchForm.TRNEMP" type="text" class="form-control text-center bg-white" style="max-width: 80px;" readonly />
-										<input v-model="searchForm.TRNEMPNM" type="text" class="form-control" placeholder="담당자 선택" @keyup.enter="openHelp('TRNEMP')" />
+										<input v-model="searchForm.TRNempnm" type="text" class="form-control" placeholder="담당자 선택" @keyup.enter="openHelp('TRNEMP')" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('TRNEMP')"><i class="bi bi-search"></i></button>
 									</div>
 								</div>
@@ -107,7 +107,7 @@ const { resetForm } = useFormReset()
 // 13. 모든 변수명 대문자 고수
 const searchForm = reactive({
 	TRNEMP: authStore.userid,
-	TRNEMPNM: authStore.usernm,
+	TRNempnm: authStore.usernm,
 	OUtymd: new Date().toISOString().substring(0, 10)
 })
 
@@ -133,7 +133,7 @@ const search = async () => {
 const initialize = () => {
 	resetForm(searchForm);
 	searchForm.TRNEMP = authStore.userid;
-	searchForm.TRNEMPNM = authStore.usernm;
+	searchForm.TRNempnm = authStore.usernm;
 	searchForm.OUtymd = new Date().toISOString().substring(0, 10);
 	mainGrid?.clearData(); rowCount.value = 0; totalQty.value = 0;
 }
@@ -150,7 +150,7 @@ function openHelp(type: string) {
 			title: '배송담당자 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'cdnm',
 			data: { gubun: 'U1', cmpycd: authStore.cmpycd },
 			columns: [{ title: '코드', field: 'CODE', width: 100 }, { title: '성명', field: 'cdnm', width: 200 }],
-			onConfirm: (d: any) => { searchForm.TRNEMP = d.CODE; searchForm.TRNEMPNM = d.cdnm }
+			onConfirm: (d: any) => { searchForm.TRNEMP = d.CODE; searchForm.TRNempnm = d.cdnm }
 		})
 	}
 	modalVisible.value = true

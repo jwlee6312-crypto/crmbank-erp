@@ -186,7 +186,7 @@ const search = async () => {
 			vatamt: Number(row.col5 || 0),
 			totamt: Number(row.col6 || 0),
 			TAX_REF: row.col7, // taxym(6) + '-' + taxno(4)
-			SLIP_REF: row.col8, // slipymd(8) + '-' + SLIPNO(3) + '-' + srowno(3)
+			SLIP_REF: row.col8, // slipymd(8) + '-' + slipno(3) + '-' + srowno(3)
 			typenm: row.COL9,
 			elcyn: row.elcyn,
 			SLIPGU: row.SLIPGU,
@@ -282,7 +282,7 @@ onMounted(() => {
 						tabStore.addTab({
 							name: d.SLIPGU === '010' ? '회계전표관리' : '일반전표관리',
 							path: path,
-							params: { slipymd: parts[0], SLIPNO: parts[1], deptcd: d.deptcd }
+							params: { slipymd: parts[0], slipno: parts[1], deptcd: d.deptcd }
 						})
 					}
 				}

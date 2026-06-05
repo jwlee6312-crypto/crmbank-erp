@@ -103,7 +103,7 @@ const modalProps = ref<any>({})
 const loadInitData = async () => {
 	try {
 		const [cls, accts] = await Promise.all([
-			api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }),
+			api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }),
 			api.post('/api/hfba/SELECT_ACCT_LIST', { cmpycd: authStore.cmpycd })
 		])
         if (cls.data?.length > 0) {

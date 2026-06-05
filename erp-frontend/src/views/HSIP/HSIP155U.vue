@@ -141,7 +141,7 @@ const save = async () => {
           IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
           DEPTCD: item.UDEPTCD || item.udeptcd || searchForm.DEPTCD,
           SLIPYMD: slipYmd,
-          SLIPNO: item.SLIPNO || item.slipno,
+          slipno: item.slipno || item.slipno,
           UPDEMP: authStore.USERID
         }
 
@@ -153,7 +153,7 @@ const save = async () => {
           throw new Error(resData.MSG || '취소 처리 중 업무 오류가 발생했습니다.')
         }
       } else if (sendYn === 'Y') {
-          console.warn(`전표번호 ${item.SLIPNO}는 이미 전송된 자료이므로 건너뜁니다.`);
+          console.warn(`전표번호 ${item.slipno}는 이미 전송된 자료이므로 건너뜁니다.`);
       }
     }
 
@@ -186,7 +186,7 @@ onMounted(() => {
         { title: "전표일자", field: "SLIPYMD", width: 110, formatter: (c) => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
-        { title: "전표번호", field: "SLIPNO", width: 100, cssClass: "fw-bold text-primary" },
+        { title: "전표번호", field: "slipno", width: 100, cssClass: "fw-bold text-primary" },
         { title: "부서명", field: "DEPTNM", width: 120 },
         { title: "비용종류", field: "COSTNM", width: 150 },
         { title: "PO No.", field: "FILENO", width: 180 },

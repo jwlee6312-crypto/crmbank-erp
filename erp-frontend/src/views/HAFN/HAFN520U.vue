@@ -197,9 +197,9 @@ const save = async () => {
 				remark: `만기 지급어음(${row.BILLNO}:${row.endymd_F})`,
 				AMOUNT: row.billamt,
 				USEdeptcd: voucherForm.deptcd,
-				USEdeptnm: voucherForm.deptnm,
+				usedeptnm: voucherForm.deptnm,
 				custcd: row.custcd,
-				SUBNM: row.custnm,
+				subnm: row.custnm,
 				mgtno: row.BILLNO,
 				typeacct: '060' // 지급어음 유형
 			})
@@ -214,7 +214,7 @@ const save = async () => {
 			remark: '만기 지급어음 지급',
 			AMOUNT: totalSelectedAmount.value,
 			USEdeptcd: voucherForm.deptcd,
-			USEdeptnm: voucherForm.deptnm,
+			usedeptnm: voucherForm.deptnm,
 			mgtno: voucherForm.mgtno
 		})
 
@@ -223,7 +223,7 @@ const save = async () => {
 			MASTER: {
 				cmpycd: authStore.cmpycd,
 				slipymd: voucherForm.slipymd.replace(/-/g, ''),
-				acctymD: voucherForm.slipymd.replace(/-/g, ''),
+				acctymd: voucherForm.slipymd.replace(/-/g, ''),
 				deptcd: voucherForm.deptcd,
 				business: '만기 지급어음 지불 건',
 				SLIPGU: '010'
@@ -235,8 +235,8 @@ const save = async () => {
 		const res = await api.post('/api/hasl/HASL_110U_SAVE', payload)
 		vAlert('전표가 발행되었습니다.')
 
-		if (res.data && res.data.SLIPNO) {
-			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=010&slipymd=${payload.MASTER.slipymd}&SLIPNO=${res.data.SLIPNO}&deptcd=${voucherForm.deptcd}`)
+		if (res.data && res.data.slipno) {
+			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=010&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
 		}
 
 		search()

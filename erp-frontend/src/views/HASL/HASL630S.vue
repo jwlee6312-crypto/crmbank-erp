@@ -145,7 +145,7 @@ const search = async () => {
 			...row,
 			mgtno: row.col0 || row.mgtno,
 			mgtnm: row.col1 || row.mgtnm,
-			Bjanamt: Number(row.col2 || row.Bjanamt || 0),
+			bjanamt: Number(row.col2 || row.bjanamt || 0),
 			dbamt: Number(row.col3 || row.dbamt || 0),
 			cramt: Number(row.col4 || row.cramt || 0),
 			Cjanamt: Number(row.col5 || row.Cjanamt || 0)
@@ -241,7 +241,7 @@ onMounted(async () => {
 					}
 				},
 				{
-					title: "이월액", field: "Bjanamt", width: 130, hozAlign: "right",
+					title: "이월액", field: "bjanamt", width: 130, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				},

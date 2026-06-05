@@ -204,7 +204,7 @@ const fetchLineOptions = async () => {
 async function fetchList() {
   try {
     const res = await api.post('/api/hpio/HPIO_850S_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, OUTymdfr: searchData.outymdfr, OUTymdto: searchData.outymdto, linecd: searchData.linecd, SLIPYN: searchData.slipyn
+      actkind: 'S0', cmpycd: authStore.cmpycd, OUTymdfr: searchData.outymdfr, OUTymdto: searchData.outymdto, linecd: searchData.linecd, slipyn: searchData.slipyn
     });
     grid1?.setData(res.data.map((i: any) => ({ ...i, io_disp: `${i.ioym}-${i.iono}` })));
     rowCount.value = res.data.length;

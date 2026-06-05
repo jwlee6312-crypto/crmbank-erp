@@ -102,7 +102,7 @@ const search = async () => {
 
 		const data = (res.data || []).map((row: any) => ({
 			ACTDATE: row.col0,
-			SLIPNO: row.col1,
+			slipno: row.col1,
 			bigo: row.col2,
 			AMT: Number(row.col3 || 0)
 		}))
@@ -143,7 +143,7 @@ onMounted(() => {
 			height: '100%',
 			columns: [
 				{ title: "일자", field: "ACTDATE", width: 100, hozAlign: "center" },
-				{ title: "전표번호", field: "SLIPNO", width: 150, hozAlign: "center" },
+				{ title: "전표번호", field: "slipno", width: 150, hozAlign: "center" },
 				{ title: "적요", field: "bigo", width: 300 },
 				{ title: "금액", field: "AMT", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" }
 			]

@@ -137,7 +137,7 @@ async function save() {
   if (!confirm('선택한 외부 매입 전표들을 정말로 취소하시겠습니까?')) return
 
   try {
-    const resset = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
+    const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
     const autoslip = resset.data?.[0]?.slipyn || 'n'
 
     for (const item of items) {

@@ -169,7 +169,7 @@ const initGrid = () => {
       { title: "전표번호", field: "slip_no_full", width: 150, hozAlign: "center", cssClass: "fw-bold text-primary",
         cellClick: (e, cell) => {
             const d = cell.getData();
-            router.push({ name: 'HASL110U', query: { slipymd: d.SLIPYMD, slipno: d.SLIPNO } });
+            router.push({ name: 'HASL110U', query: { slipymd: d.SLIPYMD, slipno: d.slipno } });
         }
       },
       { title: "적 요", field: "REMARK", widthGrow: 2, hozAlign: "left" },
@@ -203,7 +203,7 @@ async function executeClosing() {
             const vals = Object.values(i);
             return {
                 SLIPYMD: vals[0],
-                SLIPNO: vals[1],
+                slipno: vals[1],
                 slip_no_full: `${vals[0]}-${vals[1]}`,
                 REMARK: vals[2],
                 AMT_DR: vals[3],

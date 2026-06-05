@@ -118,44 +118,44 @@ const search = async () => {
 		const processedData: any[] = []
 
 		if (rawData.length > 0) {
-			// ASP 로직 이식: 첫 번째 행은 전기이월/시작잔액
+			// ALIAS 적용: acctymd, descnm, dbamt, cramt, cnt, dbcr
 			let carryRow = rawData[0]
-			let dbMmTot = Number(carryRow.col2 || 0)
-			let crMmTot = Number(carryRow.col3 || 0)
-			let dbcr = carryRow.col5 // 'D' or 'C'
+			let dbMmTot = Number(carryRow.dbamt || 0)
+			let crMmTot = Number(carryRow.cramt || 0)
+			let dbcr = carryRow.dbcr // 'D' or 'C'
 			let janAmt = dbcr === 'D' ? (dbMmTot - crMmTot) : (crMmTot - dbMmTot)
 
 			processedData.push({
-				acctymD: '',
-				descnm: carryRow.col1,
+				acctymd: '',
+				descnm: carryRow.descnm,
 				dbamt: dbMmTot,
 				cramt: crMmTot,
 				janamt: janAmt,
-				IS_S.mmARY: true
+				is_summary: true
 			})
 
 			// 데이터 루프 및 월계/누계 삽입
 			let i = 1
 			while (i < rawData.length) {
-				let currentYm = String(rawData[i].col0).substring(0, 6)
+				let currentYm = String(rawData[i].acctymd).substring(0, 6)
 				let dbMmAmt = 0
 				let crMmAmt = 0
 
-				while (i < rawData.length && String(rawData[i].col0).substring(0, 6) === currentYm) {
+				while (i < rawData.length && String(rawData[i].acctymd).substring(0, 6) === currentYm) {
 					let row = rawData[i]
-					let db = Number(row.col2 || 0)
-					let cr = Number(row.col3 || 0)
+					let db = Number(row.dbamt || 0)
+					let cr = Number(row.cramt || 0)
 
 					if (dbcr === 'D') janAmt += (db - cr)
 					else janAmt += (cr - db)
 
 					processedData.push({
-						acctymD: row.col0,
-						descnm: row.col1,
+						acctymd: row.acctymd,
+						descnm: row.descnm,
 						dbamt: db,
 						cramt: cr,
 						janamt: janAmt,
-						IS_DATA: true
+						is_data: true
 					})
 
 					dbMmAmt += db
@@ -165,12 +165,12 @@ const search = async () => {
 
 				// 월계 추가
 				processedData.push({
-					acctymD: '',
+					acctymd: '',
 					descnm: '월   계',
 					dbamt: dbMmAmt,
 					cramt: crMmAmt,
 					janamt: null,
-					IS_MONTHLY: true
+					is_monthly: true
 				})
 
 				dbMmTot += dbMmAmt
@@ -178,12 +178,12 @@ const search = async () => {
 
 				// 누계 추가
 				processedData.push({
-					acctymD: '',
+					acctymd: '',
 					descnm: '누   계',
 					dbamt: dbMmTot,
 					cramt: crMmTot,
 					janamt: janAmt,
-					IS_TOTAL: true
+					is_total: true
 				})
 			}
 		}
@@ -237,7 +237,7 @@ onMounted(async () => {
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{
-					title: "일자", field: "acctymD", width: 100, hozAlign: "center",
+					title: "일자", field: "acctymd", width: 100, hozAlign: "center",
 					formatter: (cell) => {
 						const v = cell.getValue()
 						return v && v.length === 8 ? `${v.substring(2, 4)}.${v.substring(4, 6)}.${v.substring(6, 8)}` : ''
@@ -247,14 +247,14 @@ onMounted(async () => {
 					title: "적요", field: "descnm", widthGrow: 2,
 					formatter: (cell) => {
 						const d = cell.getData()
-						if (d.IS_DATA) {
+						if (d.is_data) {
 							return `<span class="text-primary text-decoration-underline cursor-pointer">${cell.getValue()}</span>`
 						}
 						return cell.getValue()
 					},
 					cellClick: (e, cell) => {
 						const d = cell.getData()
-						if (d.IS_DATA) goDetail(d.acctymD)
+						if (d.is_data) goDetail(d.acctymd)
 					}
 				},
 				{
@@ -272,11 +272,11 @@ onMounted(async () => {
 			],
 			rowFormatter: (row) => {
 				const d = row.getData()
-				if (d.IS_MONTHLY || d.IS_TOTAL || d.IS_S.mmARY) {
+				if (d.is_monthly || d.is_total || d.is_summary) {
 					row.getElement().style.backgroundColor = "#f8f9fa"
 					row.getElement().style.fontWeight = "bold"
 				}
-				if (d.IS_TOTAL) {
+				if (d.is_total) {
 					row.getElement().style.borderBottom = "2px solid #dee2e6"
 				}
 			}

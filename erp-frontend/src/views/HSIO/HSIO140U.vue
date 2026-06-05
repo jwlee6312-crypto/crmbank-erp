@@ -124,10 +124,10 @@ async function handleCancel() {
   if (!items || items.length === 0) return vAlertError('취소할 전표를 선택하세요.')
 
   for (const item of items) {
-    if (item.cfmyn === 'Y') return vAlertError(`확정처리된 전표입니다. 취소할 수 없습니다. [전표:${item.slipymd}-${item.SLIPNO}]`);
+    if (item.cfmyn === 'Y') return vAlertError(`확정처리된 전표입니다. 취소할 수 없습니다. [전표:${item.slipymd}-${item.slipno}]`);
     const slipYm = String(item.jsanymD || '').substring(0, 6);
-    if (clsInfo.sclsym && slipYm <= clsInfo.sclsym) return vAlertError(`영업정보가 마감되었습니다. [전표:${item.slipymd}-${item.SLIPNO}]`);
-    if (item.jsanymD <= clsInfo.clsymd) return vAlertError(`회계정보가 마감되었습니다. [전표:${item.slipymd}-${item.SLIPNO}]`);
+    if (clsInfo.sclsym && slipYm <= clsInfo.sclsym) return vAlertError(`영업정보가 마감되었습니다. [전표:${item.slipymd}-${item.slipno}]`);
+    if (item.jsanymD <= clsInfo.clsymd) return vAlertError(`회계정보가 마감되었습니다. [전표:${item.slipymd}-${item.slipno}]`);
   }
 
   if (!confirm('선택한 전표들을 취소하시겠습니까?')) return
@@ -179,11 +179,11 @@ onMounted(async () => {
       columnDefaults: { headerSort: false, headerHozAlign: "center" },
       columns: [
         { title: '선택', field: 'procyn', hozAlign: 'center', width: 60, formatter: 'tickCross', formatterParams: { crossElement: false }, editor: true, cellClick: (e, cell) => cell.setValue(cell.getValue() === true ? null : true) },
-        { title: '전표번호', field: 'SLIPNO_FULL', width: 150, hozAlign: 'center', cssClass: 'fw-bold text-primary cursor-pointer',
-          mutatorData: (v, d) => d.slipymd && d.SLIPNO ? `${d.slipymd}-${d.SLIPNO}` : '',
+        { title: '전표번호', field: 'slipno_FULL', width: 150, hozAlign: 'center', cssClass: 'fw-bold text-primary cursor-pointer',
+          mutatorData: (v, d) => d.slipymd && d.slipno ? `${d.slipymd}-${d.slipno}` : '',
           cellClick: (e, cell) => {
             const d = cell.getRow().getData();
-            window.open(`../HASL/HASL_SLIP_PRINT.asp?SLIPGU=010&slipymd=${d.slipymd}&SLIPNO=${d.SLIPNO}&deptcd=${d.Udeptcd}`, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes');
+            window.open(`../HASL/HASL_SLIP_PRINT.asp?SLIPGU=010&slipymd=${d.slipymd}&slipno=${d.slipno}&deptcd=${d.Udeptcd}`, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes');
           }
         },
         { title: '발행부서', field: 'deptnm', width: 140, hozAlign: 'left' },

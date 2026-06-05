@@ -64,7 +64,7 @@
 								</td>
 								<th>확정여부</th>
 								<td>
-									<select v-model="searchForm.SLIPYN" class="form-select form-select-sm">
+									<select v-model="searchForm.slipyn" class="form-select form-select-sm">
 										<option value="Y">확정</option>
 										<option value="N">미확정</option>
 									</select>
@@ -131,7 +131,7 @@ const searchForm = reactive<any>({
   OUTymdfr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
   OUTymdto: now.toISOString().substring(0, 10),
   custcd: '', custnm: '',
-  SLIPYN: 'N'
+  slipyn: 'N'
 })
 
 const selectedInfo = ref('');
@@ -153,7 +153,7 @@ async function fetchCustList() {
       actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '100',
       OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
       OUTymdto: searchForm.OUTymdto.replace(/-/g, ''),
-      whcd: searchForm.whcd, custcd: searchForm.custcd, SLIPYN: searchForm.SLIPYN
+      whcd: searchForm.whcd, custcd: searchForm.custcd, slipyn: searchForm.slipyn
     });
     poGrid?.setData(res.data.data || []);
     itemGrid?.clearData();
@@ -178,7 +178,7 @@ async function fetchDetail(row: any) {
 
 function initialize() {
   resetForm(searchForm);
-  searchForm.whcd = '000'; searchForm.SLIPYN = 'N';
+  searchForm.whcd = '000'; searchForm.slipyn = 'N';
   searchForm.OUTymdfr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
   searchForm.OUTymdto = now.toISOString().substring(0, 10);
   poGrid?.clearData(); itemGrid?.clearData(); selectedInfo.value = '';

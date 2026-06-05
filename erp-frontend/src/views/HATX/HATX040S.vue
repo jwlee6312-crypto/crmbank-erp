@@ -269,7 +269,7 @@ onMounted(() => {
 						tabStore.addTab({
 							name: d.SLIPGU === '010' ? '회계전표관리' : '일반전표관리',
 							path: path,
-							params: { slipymd: parts[0], SLIPNO: parts[1], deptcd: d.deptcd }
+							params: { slipymd: parts[0], slipno: parts[1], deptcd: d.deptcd }
 						})
 					}
 				}

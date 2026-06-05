@@ -208,7 +208,7 @@ onMounted(() => {
 					}
 				},
 				{
-					title: "전표", field: "SLIPYN", width: 80, formatter: (cell) => cell.getValue() === 'Y' ? '발행' : '미발행'
+					title: "전표", field: "slipyn", width: 80, formatter: (cell) => cell.getValue() === 'Y' ? '발행' : '미발행'
 				},
 				{ title: "현금", field: "CASHAMT", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "예금", field: "BANKAMT", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },

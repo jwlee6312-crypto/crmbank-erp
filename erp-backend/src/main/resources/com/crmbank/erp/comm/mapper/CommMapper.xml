@@ -39,17 +39,7 @@
         exec haaa_010u_str #{actkind}, #{cdtype}, #{codecd}, #{codenm}, #{dspord}, #{remark}, #{useyn}, #{userid}
     </select>
 
-    <select id="HS00_000S_STR" resultType="map">
-        exec hs00_000s_str #{gubun}, #{cmpycd}, #{gbncd}, #{code}
-    </select>
-
-    <select id="HP00_000S_STR" resultType="map">
-        exec hp00_000s_str #{gubun}, #{cmpycd}, #{gbncd}, #{code}
-    </select>
-
-    <select id="GET_CODE_LIST" resultType="map">
-        select cdtype, codecd, codenm, remark, dspord, useyn from haba900t_tbl where cdtype = #{cdtype} and useyn = 'y' order by dspord
-    </select>
+    <!-- 💡 시스템 공통 인프라 쿼리 -->
     <select id="GET_TOP_MENU_LIST" resultType="map">
         select codecd, codenm from haba900t_tbl where cdtype = '320' and useyn = 'y' order by dspord
     </select>

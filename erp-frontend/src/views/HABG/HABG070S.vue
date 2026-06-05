@@ -138,7 +138,7 @@ const initialize = () => {
 }
 
 const print = () => {
-	const params = `bugtyy=${searchForm.bugtyy}&deptcd_H=${searchForm.deptcd}&deptnm_H=${searchForm.deptnm}`
+	const params = `bugtyy=${searchForm.bugtyy}&deptcd_h=${searchForm.deptcd}&deptnm_h=${searchForm.deptnm}`
 	window.open(`/api/habg/HABG_070P?${params}`, 'BudgetAllocationPrint', 'width=1000,height=800,scrollbars=yes')
 }
 

@@ -129,7 +129,7 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end border-top">증권종류</th>
 							<td class="bg-white border-end border-top px-2 py-1">
-								<select v-model="masterForm.BONDKIND" class="form-select form-select-sm">
+								<select v-model="masterForm.bondkind" class="form-select form-select-sm">
 									<option value="000">선 택</option>
 									<option v-for="opt in bondKindOptions" :key="opt.CD" :value="opt.CD">{{ opt.NM }}</option>
 								</select>
@@ -201,7 +201,7 @@ const masterForm = reactive({
 	issuamt: 0,
 	puchamt: 0,
 	rate: 0,
-	BONDKIND: '000',
+	bondkind: '000',
 	remark: '',
 	useyn: 'Y'
 })
@@ -244,8 +244,8 @@ const search = async () => {
 			issuamt: Number(r.col8 || 0),
 			puchamt: Number(r.COL9 || 0),
 			rate: Number(r.col10 || 0),
-			BONDKIND_NM: r.col11,
-			BONDKIND: r.col12,
+			bondkind_NM: r.col11,
+			bondkind: r.col12,
 			useyn: r.col13,
 			remark: r.col14
 		}))
@@ -272,7 +272,7 @@ const save = async () => {
 		const res = await api.post('/api/haba/HABA_120U_STR', payload)
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('정상으로 작업이 되었습니다.')
 			search()
@@ -289,7 +289,7 @@ const initialize = () => {
 	masterForm.custgbn = searchForm.custgbn
 	masterForm.puchqty = 1
 	masterForm.useyn = 'Y'
-	masterForm.BONDKIND = '000'
+	masterForm.bondkind = '000'
 }
 
 // 팝업 설정
@@ -347,7 +347,7 @@ onMounted(() => {
 				},
 				{ title: "매수", field: "puchqty", width: 60, hozAlign: "center" },
 				{ title: "이율", field: "rate", width: 70, hozAlign: "right", formatter: (c) => c.getValue() + "%" },
-				{ title: "종류", field: "BONDKIND_NM", width: 100, hozAlign: "center" },
+				{ title: "종류", field: "bondkind_NM", width: 100, hozAlign: "center" },
 				{ title: "비고", field: "remark", minWidth: 150 },
 				{ title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross" }
 			],

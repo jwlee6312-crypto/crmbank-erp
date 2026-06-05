@@ -154,7 +154,7 @@ const initGrid = () => {
     rowFormatter: (row) => {
         const data = row.getData();
         if (data.TYPE === '달성율') row.getElement().style.backgroundColor = "#f9f6e7";
-        if (data.IS_TOTAL) {
+        if (data.is_total) {
             row.getElement().style.backgroundColor = "#dfd9bd";
             row.getElement().style.fontWeight = "bold";
         }
@@ -191,13 +191,13 @@ async function search() {
       })
 
       if (displayData.length > 0) {
-          const tpRow: any = { itemnm: '합 계', TYPE: '계획', TOTAL: pTotals[0], IS_TOTAL: true }
+          const tpRow: any = { itemnm: '합 계', TYPE: '계획', TOTAL: pTotals[0], is_total: true }
           pTotals.slice(1).forEach((v, i) => tpRow[.mm${String(i+1).padStart(2, '0')}`] = v); displayData.push(tpRow)
 
-          const tsRow: any = { itemnm: '', TYPE: '실적', TOTAL: sTotals[0], IS_TOTAL: true }
+          const tsRow: any = { itemnm: '', TYPE: '실적', TOTAL: sTotals[0], is_total: true }
           sTotals.slice(1).forEach((v, i) => tsRow[.mm${String(i+1).padStart(2, '0')}`] = v); displayData.push(tsRow)
 
-          const trRow: any = { itemnm: '', TYPE: '달성율', TOTAL: pTotals[0] !== 0 ? (sTotals[0] / pTotals[0] * 100) : 0, IS_TOTAL: true }
+          const trRow: any = { itemnm: '', TYPE: '달성율', TOTAL: pTotals[0] !== 0 ? (sTotals[0] / pTotals[0] * 100) : 0, is_total: true }
           pTotals.slice(1).forEach((p, i) => { const s = sTotals[i+1]; trRow[.mm${String(i+1).padStart(2, '0')}`] = p !== 0 ? (s / p * 100) : 0 }); displayData.push(trRow)
       }
       grid.setData(displayData)

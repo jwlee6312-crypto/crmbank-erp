@@ -22,13 +22,14 @@ public class Hs00Controller {
     private final Hs00Mapper hs00Mapper;
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
-        // 💡 [소문자 표준화] session key: "user_session"
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
             params.putIfAbsent("cmpycd", user.getCmpycd());
+            params.putIfAbsent("userid", user.getUserid());
         }
-        // 💡 파라미터 NULL 방지 로직 추가 (빈 값 주입)
+        // 💡 HS00_000S_STR 명세(@iGUBUN, @iCMPYCD, @iGBNCD, @iCODE, @iCODENM, @iETCVAL) 6개 변수 보장
         params.putIfAbsent("gubun", "");
+        params.putIfAbsent("cmpycd", "");
         params.putIfAbsent("gbncd", "");
         params.putIfAbsent("code", "");
         params.putIfAbsent("codenm", "");
@@ -49,17 +50,24 @@ public class Hs00Controller {
 
     private ResponseEntity<List<Map<String, Object>>> execute(String procedure, Map<String, Object> params, HttpSession session) {
         injectSession(params, session);
-        // 📋 6개 파라미터 전체 로그 출력
+        // 📋 SSMS 실행용 로그 출력 (6개 변수 규격)
         log.info("📋 [HS00] SSMS 실행용: {}", buildSsmsLog(procedure, params));
         
-        if ("HS00_000S_STR".equalsIgnoreCase(procedure)) {
-            return ResponseEntity.ok(hs00Mapper.HS00_000S_STR(params));
+        try {
+            List<Map<String, Object>> result;
+            if ("HS00_000S_STR".equalsIgnoreCase(procedure)) {
+                result = hs00Mapper.HS00_000S_STR(params);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("❌ [HS00] 에러: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
-        return ResponseEntity.notFound().build();
     }
 
     private String buildSsmsLog(String procedure, Map<String, Object> params) {
-        // 💡 XML 규격에 맞춘 6개 키 정의
         String[] keys = {"gubun", "cmpycd", "gbncd", "code", "codenm", "etcval"};
         String values = java.util.Arrays.stream(keys)
                 .map(key -> {

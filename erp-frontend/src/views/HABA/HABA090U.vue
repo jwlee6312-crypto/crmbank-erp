@@ -151,7 +151,7 @@ const search = async () => {
 		const res = await api.post('/api/haba/HABA_090U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			mgtnm_h: searchForm.mgtnm_h
+			mgtnm: searchForm.mgtnm_h
 		})
 
 		const processedData = (res.data || []).map((r: any) => ({
@@ -182,7 +182,7 @@ const save = async () => {
 		const res = await api.post('/api/haba/HABA_090U_STR', payload)
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('정상으로 작업이 되었습니다.')
 			search()

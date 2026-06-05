@@ -171,8 +171,8 @@ let grid: Tabulator | null = null;
 async function fetchOptions() {
   try {
     const [resSa, resVat] = await Promise.all([
-      api.post('/api/comm/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd }),
-      api.post('/api/comm/HA00_00P_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '120' })
+      api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd }),
+      api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '120' })
     ])
     saOptions.value = resSa.data;
     vatOptions.value = resVat.data;
@@ -216,7 +216,7 @@ async function save() {
 
   try {
     // 1. 자동전표 설정 체크 (ASP: HA00_010S_STR 'P1')
-    const resset = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
+    const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
     const autoslip = resset.data?.[0]?.slipyn || 'n'
     const slipymd = formData.pubymd.replace(/-/g, '')
     const acctymd = (autoslip === 'y' || autoslip === 'Y') ? slipymd : ''

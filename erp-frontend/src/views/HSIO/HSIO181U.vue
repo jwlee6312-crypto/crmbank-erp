@@ -124,8 +124,8 @@ const initGrid = () => {
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerSort: false },
         {
-          title: "전표번호", field: "SLIPNO_DISP", width: 180, hozAlign: "center",
-          formatter: (cell) => `<a class="text-primary fw-bold text-decoration-none">${cell.getData().slipymd}-${cell.getData().SLIPNO}</a>`,
+          title: "전표번호", field: "slipno_DISP", width: 180, hozAlign: "center",
+          formatter: (cell) => `<a class="text-primary fw-bold text-decoration-none">${cell.getData().slipymd}-${cell.getData().slipno}</a>`,
           cellClick: (e, cell) => printSlip(cell.getData())
         },
         { title: "발행부서", field: "deptnm", width: 180 },
@@ -185,7 +185,7 @@ const deleteData = async () => {
         ioymdto: searchData.ioymdto,
         Udeptcd: item.deptcd,
         slipymd: item.slipymd,
-        SLIPNO: item.SLIPNO
+        slipno: item.slipno
       })
     }
     vAlert('전표 취소가 완료되었습니다.')
@@ -204,7 +204,7 @@ const initialize = () => {
 }
 
 const printSlip = (row: any) => {
-  const url = `../HASL/HASL_SLIP_PRINT_OUT.asp?SLIPGU=010&slipymd=${row.slipymd}&SLIPNO=${row.SLIPNO}&deptcd=${row.deptcd}`
+  const url = `../HASL/HASL_SLIP_PRINT_OUT.asp?SLIPGU=010&slipymd=${row.slipymd}&slipno=${row.slipno}&deptcd=${row.deptcd}`
   window.open(url, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
 }
 
@@ -237,7 +237,7 @@ onMounted(async () => {
     }
   })
   api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'P1' }).then(r => {
-    if (r.data?.length) autoSlipInfo.value = r.data[0].SLIPYN || 'N'
+    if (r.data?.length) autoSlipInfo.value = r.data[0].slipyn || 'N'
   })
 
   nextTick(() => initGrid())

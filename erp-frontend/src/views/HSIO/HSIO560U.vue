@@ -293,10 +293,10 @@ function openHelp(type: string) {
 }
 
 onMounted(async () => {
-  api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } })
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } })
      .then(r => { if (r.data?.length) { masterData.clsymd = r.data[0].clsymd; masterData.sclsym = r.data[0].sclsym; } })
 
-  api.get('/api/comm/HA00_00P_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
      .then(r => whOptions.value = r.data.map((i:any)=>({code: i.code || i.whcd, cdnm: i.cdnm || i.whnm})));
 
   nextTick(initGrid);

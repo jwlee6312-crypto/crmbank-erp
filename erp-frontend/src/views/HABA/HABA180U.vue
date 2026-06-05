@@ -377,7 +377,7 @@ const save = async () => {
 		const res = await api.post('/api/haba/HABA_180U_STR', payload)
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('저장되었습니다.')
 			search()

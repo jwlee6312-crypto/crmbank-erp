@@ -104,7 +104,7 @@
                   </td>
                   <th>배송담당</th>
                   <td>
-                    <input :value="masterData.TRNEMPNM" type="text" class="form-control form-control-sm bg-light text-center" readonly />
+                    <input :value="masterData.TRNempnm" type="text" class="form-control form-control-sm bg-light text-center" readonly />
                   </td>
                 </tr>
               </tbody>
@@ -153,7 +153,7 @@ const searchForm = reactive({
 })
 
 const masterData = reactive<any>({
-  custcd: '', custnm: '', whcd: '', whnm: '', ioymd: '', ADDRES: '', TRNEMPNM: '', ioym: '', iono: '',
+  custcd: '', custnm: '', whcd: '', whnm: '', ioymd: '', ADDRES: '', TRNempnm: '', ioym: '', iono: '',
   clsymd: '', sclsym: ''
 })
 

@@ -251,7 +251,7 @@ async function issueSlip() {
     })
 
     const resM = mRes.data?.[0]
-    const slipno = resM?.slipno || resM?.SLIPNO
+    const slipno = resM?.slipno || resM?.slipno
 
     if (slipno) {
       // 2. 전표 상세 매핑 (U0) - 루프 처리
@@ -287,7 +287,7 @@ async function issueSlip() {
       vAlert('정상적으로 발행되었습니다.')
 
       // 전표 인쇄 팝업 (ASP 로직 반영)
-      const printUrl = `../HASL/HASL_SLIP_PRINT_OUT.asp?SLIPGU=010&SLIPYMD=${slipymd}&SLIPNO=${slipno}&DEPTCD=${registerData.deptcd}`
+      const printUrl = `../HASL/HASL_SLIP_PRINT_OUT.asp?SLIPGU=010&SLIPYMD=${slipymd}&slipno=${slipno}&DEPTCD=${registerData.deptcd}`
       window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
 
       search()

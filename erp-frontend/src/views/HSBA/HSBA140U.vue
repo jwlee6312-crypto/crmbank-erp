@@ -118,7 +118,7 @@
                 </td>
                 <th class="required bg-light text-center">결제조건</th>
                 <td>
-                  <select v-model="formData.PAYCOND" class="form-select">
+                  <select v-model="formData.paycond" class="form-select">
                     <option value="">-- 선택 --</option>
                     <option v-for="opt in comboOptions.pay" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
@@ -169,7 +169,7 @@ const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 // [1] 데이터 모델링
 const searchParams = reactive({ iogbn: '100' })
 const formData = reactive<any>({
-  actkind: 'A0', iogbn: '100', custcd: '', custnm: '', NACD: '', SHIPPORT: '', ARVPORT: '', CURRCD: '', PAYCOND: '', PRICOND: '', useyn: 'Y'
+  actkind: 'A0', iogbn: '100', custcd: '', custnm: '', NACD: '', SHIPPORT: '', ARVPORT: '', CURRCD: '', paycond: '', PRICOND: '', useyn: 'Y'
 })
 
 const comboOptions = reactive<any>({ na: [], ship: [], arv: [], curr: [], pay: [], pri: [] })
@@ -188,7 +188,7 @@ const initGrid = () => {
       { title: "선적항", field: "shipportnm", width: 120 },
       { title: "도착항", field: "arvportnm", width: 120 },
       { title: "통화단위", field: "currnm", width: 100 },
-      { title: "결제조건", field: "PAYCONDNM", width: 120 },
+      { title: "결제조건", field: "paycondNM", width: 120 },
       { title: "가격조건", field: "PRICONDNM", width: 120 }
     ]
   })

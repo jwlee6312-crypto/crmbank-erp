@@ -183,11 +183,11 @@ const save = async () => {
       }
 
       // 🚀 Step 1: 전표번호 채번 (A0)
-      const resA = await api.post('/api/hsip/HSIP_145U_STR', { ...baseParams, ACTKIND: 'A0', SLIPNO: '' })
-      const slipNo = resA.data?.[0]?.SLIPNO || resA.data?.[0]?.slipno
+      const resA = await api.post('/api/hsip/HSIP_145U_STR', { ...baseParams, ACTKIND: 'A0', slipno: '' })
+      const slipNo = resA.data?.[0]?.slipno || resA.data?.[0]?.slipno
 
       // 🚀 Step 2: 정산 저장 (U0)
-      const resU = await api.post('/api/hsip/HSIP_145U_STR', { ...baseParams, ACTKIND: 'U0', SLIPNO: slipNo })
+      const resU = await api.post('/api/hsip/HSIP_145U_STR', { ...baseParams, ACTKIND: 'U0', slipno: slipNo })
 
       const resData = resU.data?.[0]
       if (resData && (resData.FILENO === '00000000' || resData.fileno === '00000000')) {

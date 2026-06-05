@@ -173,7 +173,7 @@ const saveData = async () => {
         slipymd: formData.slipymd
       })
 
-      const slipNo = resA0.data?.[0]?.SLIPNO || ''
+      const slipNo = resA0.data?.[0]?.slipno || ''
 
       // 2. 전표 정보 업데이트 (U0)
       const resU0 = await api.post('/api/hsio/HSIO_171U_STR', {
@@ -185,7 +185,7 @@ const saveData = async () => {
         HALAMT: item.HALAMT,
         deptcd: formData.deptcd,
         slipymd: formData.slipymd,
-        SLIPNO: slipNo
+        slipno: slipNo
       })
 
       if (resU0.data?.[0]?.RTN_CD && resU0.data[0].RTN_CD !== '00000000') {

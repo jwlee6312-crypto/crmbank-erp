@@ -128,7 +128,7 @@ const fetchIssuedList = async () => {
 		mainGrid?.setData(res.data.map((i: any) => ({
             ...i,
             slipymd: i.slipymd || i.SLIPYMD,
-            slipno: i.slipno || i.SLIPNO,
+            slipno: i.slipno || i.slipno,
             udeptcd: i.udeptcd || i.UDEPTCD || i.deptcd || i.DEPTCD,
             spyamt: i.spyamt || i.SPYAMT,
             vatamt: i.vatamt || i.VATAMT,
@@ -150,7 +150,7 @@ const handleCancelSlip = async () => {
 	if (!confirm('선택한 전표를 삭제(취소) 하시겠습니까?')) return
 	try {
         // 1. 자동전표 여부 확인 (gbn: 'p1')
-        const resset = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
+        const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
         const autoslip = (resset.data?.[0]?.slipyn || 'n').toLowerCase()
 
 		for (const item of selected) {
@@ -256,7 +256,7 @@ onMounted(async () => {
 				  formatter: (cell) => {
 					  const d = cell.getData();
                       const slipymd = d.slipymd || d.SLIPYMD;
-                      const slipno = d.slipno || d.SLIPNO;
+                      const slipno = d.slipno || d.slipno;
 					  return slipymd && slipno ? `${slipymd}-${slipno}` : '';
 				  }
 				},

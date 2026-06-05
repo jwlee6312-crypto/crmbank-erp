@@ -218,7 +218,7 @@ const save = async () => {
 
   try {
     // 1. 마감 체크 (ASP 로직 이식)
-    const resCls = await api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } });
+    const resCls = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } });
     if (resCls.data?.length > 0) {
         const sclsym = resCls.data[0].sclsym;
         if (sclsym && ioymd.substring(0, 6) <= sclsym) {
@@ -297,7 +297,7 @@ function handleOpenHelp(type: string) {
 const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val;
 
 onMounted(async () => {
-  api.post('/api/comm/HA00_00P_STR', { gubun: 'W0', cmpycd: authStore.cmpycd }).then(r => {
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'W0', cmpycd: authStore.cmpycd }).then(r => {
     whOptions.value = (r.data || []).map((i:any)=>({code: i.code || i.whcd, cdnm: i.cdnm || i.whnm}));
   });
   nextTick(() => { initGrids(); fetchCustList(); });

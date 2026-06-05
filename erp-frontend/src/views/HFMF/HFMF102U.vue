@@ -192,7 +192,7 @@ const initGrids = () => {
 const loadInitData = async () => {
   try {
     const [cls, divOpts] = await Promise.all([
-      api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }),
+      api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }),
       api.post('/api/hfba/SELECT_DIVIDE_LIST', { cdkd: '1040' })
     ])
     clsInfo.wclsym = cls.data[0]?.wclsym || ''

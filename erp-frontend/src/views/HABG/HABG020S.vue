@@ -123,7 +123,7 @@ const excel = () => {
 }
 
 const print = () => {
-	const params = `bugtyy=${searchForm.bugtyy}&deptcd_H=${searchForm.deptcd}&deptnm_H=${searchForm.deptnm}&PRTGU=1`
+	const params = `bugtyy=${searchForm.bugtyy}&deptcd_h=${searchForm.deptcd}&deptnm_h=${searchForm.deptnm}&PRTGU=1`
 	window.open(`/api/habg/HABG_020P?${params}`, 'BudgetPrint', 'width=800,height=800,scrollbars=yes')
 }
 

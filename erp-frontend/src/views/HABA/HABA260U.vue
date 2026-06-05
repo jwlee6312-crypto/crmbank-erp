@@ -152,7 +152,7 @@ const searchForm = reactive({
 const masterForm = reactive({
 	actkind: 'I1',
 	slipymd: '',
-	SLIPNO: '',
+	slipno: '',
 	srowno: '',
 	acctcd: '',
 	UNpayamt: 0,
@@ -195,7 +195,7 @@ const search = async () => {
 			symd: searchForm.symd.replace(/-/g, ''),
 			EymD: searchForm.EymD.replace(/-/g, ''),
 			slipymd: '',
-			SLIPNO: '',
+			slipno: '',
 			srowno: '',
 			acctcd: searchForm.acctcd ? searchForm.acctcd.substring(3) : '',
 			pubymd: ''
@@ -218,7 +218,7 @@ const save = async () => {
 			symd: searchForm.symd.replace(/-/g, ''),
 			EymD: searchForm.EymD.replace(/-/g, ''),
 			slipymd: masterForm.slipymd.replace(/-/g, ''),
-			SLIPNO: masterForm.SLIPNO,
+			slipno: masterForm.slipno,
 			srowno: masterForm.srowno,
 			acctcd: masterForm.acctcd ? masterForm.acctcd.substring(3) : '',
 			pubymd: masterForm.pubymd.replace(/-/g, ''),
@@ -233,7 +233,7 @@ const save = async () => {
 		const res = await api.post('/api/haba/HABA_260U_STR', payload)
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('정상으로 저장 되었습니다.')
 			search()
@@ -270,7 +270,7 @@ onMounted(async () => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "발생일", field: "acctymD", width: 110, hozAlign: "center", formatter: (cell) => formatDate(cell.getValue()) },
+				{ title: "발생일", field: "acctymd", width: 110, hozAlign: "center", formatter: (cell) => formatDate(cell.getValue()) },
 				{ title: "적요", field: "remark", minWidth: 250 },
 				{ title: "미지급비용", field: "AMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "기간", field: "stdymd", width: 220, hozAlign: "center", formatter: (cell) => {
@@ -283,10 +283,10 @@ onMounted(async () => {
 				const d = row.getData()
 				masterForm.actkind = 'U1'
 				masterForm.slipymd = formatDate(d.slipymd)
-				masterForm.SLIPNO = d.SLIPNO
+				masterForm.slipno = d.slipno
 				masterForm.srowno = d.srowno
 				masterForm.acctcd = d.TYPESUB + d.acctcd
-				masterForm.pubymd = formatDate(d.acctymD)
+				masterForm.pubymd = formatDate(d.acctymd)
 				masterForm.UNpayamt = Number(d.AMT)
 				masterForm.frymd = formatDate(d.stdymd)
 				masterForm.toymd = formatDate(d.endymd)

@@ -180,7 +180,7 @@ const search = async () => {
 						acctnm: row.col1,
 						TOTAL: rowMonthlySum,
 						...Object.fromEntries(monthlyValues.map((v, idx) => [`M${idx + 1}`, v])),
-						IS_DATA: true
+						is_data: true
 					})
 					i++
 				}
@@ -201,7 +201,7 @@ const search = async () => {
 				acctnm: '합   계',
 				TOTAL: totalSum[0],
 				...Object.fromEntries(totalSum.slice(1).map((v, idx) => [`M${idx + 1}`, v])),
-				IS_TOTAL: true
+				is_total: true
 			})
 		}
 
@@ -270,7 +270,7 @@ onMounted(() => {
 			rowFormatter: (row) => {
 				const d = row.getData()
 				if (d.IS_SUBTOTAL) row.getElement().style.backgroundColor = "#fcfcfc"
-				if (d.IS_TOTAL) {
+				if (d.is_total) {
 					row.getElement().style.backgroundColor = "#f0f7ff"
 					row.getElement().style.fontWeight = "bold"
 				}

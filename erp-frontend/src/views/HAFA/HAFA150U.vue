@@ -80,7 +80,7 @@
 									</div>
 								</td>
 								<th class="required">발행일자</th>
-								<td><input v-model="issuingForm.acctymD" type="date" class="form-control" /></td>
+								<td><input v-model="issuingForm.acctymd" type="date" class="form-control" /></td>
 								<td class="px-3">
 									<div class="d-flex justify-content-end gap-2">
 										<div class="d-flex align-items-center bg-light border rounded px-2 py-1">
@@ -134,7 +134,7 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({ yy: String(currentYear),.mm: currentMonth })
-const issuingForm = reactive({ deptcd: authStore.deptcd || '', deptnm: authStore.deptnm || '', acctymD: new Date().toISOString().slice(0, 10) })
+const issuingForm = reactive({ deptcd: authStore.deptcd || '', deptnm: authStore.deptnm || '', acctymd: new Date().toISOString().slice(0, 10) })
 const summary = reactive({ totalAmt: 0, issuingAmt: 0 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
@@ -144,7 +144,7 @@ const formatMoney = (val: any) => Number(val || 0).toLocaleString()
 async function search() {
 	try {
 		const res = await api.post('/api/hafa/HAFA_150U_STR', { cmpycd: authStore.cmpycd, baseym: searchForm.yy + searchForm.mm })
-		const data = (res.data || []).map((row: any) => ({ Udeptcd: row.col0, Udeptnm: row.col1, acctcd: row.col2, acctnm: row.col3, costtype: row.col4, costtypeNM: row.col5, dprsamt: Number(row.col6 || 0), Cacctcd: row.col7, Macctcd: row.COL9, Sacctcd: row.col11, slipymd: row.col13, SLIPNO: row.col14, srowno: row.col15 }))
+		const data = (res.data || []).map((row: any) => ({ Udeptcd: row.col0, Udeptnm: row.col1, acctcd: row.col2, acctnm: row.col3, costtype: row.col4, costtypeNM: row.col5, dprsamt: Number(row.col6 || 0), Cacctcd: row.col7, Macctcd: row.COL9, Sacctcd: row.col11, slipymd: row.col13, slipno: row.col14, srowno: row.col15 }))
 		summary.totalAmt = data.reduce((acc: number, cur: any) => acc + cur.dprsamt, 0)
 		summary.issuingAmt = 0; mainGrid?.setData(data); vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 중 오류 발생') }
@@ -156,7 +156,7 @@ async function save() {
 	if (!issuingForm.deptcd) return vAlertError('발행부서를 선택하세요.')
 	if (!confirm('선택한 항목들에 대해 감가상각 전표를 자동 발행하시겠습니까?')) return
 	try {
-		await api.post('/api/hafa/HAFA_150U_SAVE', { cmpycd: authStore.cmpycd, yy: searchForm.yy,.mm: searchForm.mm, deptcd: issuingForm.deptcd, acctymD: issuingForm.acctymD.replace(/-/g, ''), items: selectedRows, userid: authStore.userid })
+		await api.post('/api/hafa/HAFA_150U_SAVE', { cmpycd: authStore.cmpycd, yy: searchForm.yy,.mm: searchForm.mm, deptcd: issuingForm.deptcd, acctymd: issuingForm.acctymd.replace(/-/g, ''), items: selectedRows, userid: authStore.userid })
 		vAlert('전표가 정상적으로 발행되었습니다.'); search()
 	} catch (e) { vAlertError('전표 발행 중 오류 발생') }
 }
@@ -164,7 +164,7 @@ async function save() {
 function initialize() {
 	searchForm.yy = String(currentYear); searchForm.mm = currentMonth;
 	issuingForm.deptcd = authStore.deptcd || ''; issuingForm.deptnm = authStore.deptnm || '';
-	issuingForm.acctymD = new Date().toISOString().slice(0, 10);
+	issuingForm.acctymd = new Date().toISOString().slice(0, 10);
 	mainGrid?.clearData(); summary.totalAmt = 0; summary.issuingAmt = 0;
 }
 
@@ -191,14 +191,14 @@ onMounted(() => {
 				{ title: "계정과목명", field: "acctnm", width: 150, cssClass: "fw-bold" },
 				{ title: "비용구분", field: "costtypeNM", width: 100, hozAlign: "center" },
 				{ title: "감가상각액", field: "dprsamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
-				{ title: "전표번호", field: "SLIPNO", width: 160, hozAlign: "center",
+				{ title: "전표번호", field: "slipno", width: 160, hozAlign: "center",
 					formatter: (cell) => {
 						const d = cell.getData(); if (!d.slipymd || d.slipymd === '00000000') return '';
-						return `<span class="text-primary text-decoration-underline cursor-pointer">${d.slipymd}-${d.SLIPNO}</span>`;
+						return `<span class="text-primary text-decoration-underline cursor-pointer">${d.slipymd}-${d.slipno}</span>`;
 					},
 					cellClick: (e, cell) => {
-						const d = cell.getData(); if (!d.SLIPNO) return;
-						tabStore.addTab({ name: '일반전표관리', path: '/HASL/HASL110U', params: { slipymd: d.slipymd, SLIPNO: d.SLIPNO } });
+						const d = cell.getData(); if (!d.slipno) return;
+						tabStore.addTab({ name: '일반전표관리', path: '/HASL/HASL110U', params: { slipymd: d.slipymd, slipno: d.slipno } });
 					}
 				}
 			]

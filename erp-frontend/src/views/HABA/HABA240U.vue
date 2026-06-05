@@ -177,7 +177,7 @@ const searchForm = reactive({
 // 📝 마스터 데이터
 const masterForm = reactive({
 	actkind: 'I1',
-	SLIPNO: '',
+	slipno: '',
 	srowno: '',
 	acctcd: '',
 	acctnm: '',
@@ -220,7 +220,7 @@ const search = async () => {
 			frymd: searchForm.frymd.replace(/-/g, ''),
 			toymd: searchForm.toymd.replace(/-/g, ''),
 			slipymd: '',
-			SLIPNO: '',
+			slipno: '',
 			srowno: '',
 			acctcd: searchForm.acctcd
 		})
@@ -242,7 +242,7 @@ const save = async () => {
 			frymd: searchForm.frymd.replace(/-/g, ''),
 			toymd: searchForm.toymd.replace(/-/g, ''),
 			slipymd: masterForm.slipymd.replace(/-/g, ''),
-			SLIPNO: masterForm.SLIPNO,
+			slipno: masterForm.slipno,
 			srowno: masterForm.srowno,
 			acctcd: masterForm.acctcd,
 			custcd: masterForm.custcd,
@@ -257,7 +257,7 @@ const save = async () => {
 		const res = await api.post('/api/haba/HABA_240U_STR', payload)
 
 		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].RET_MSG)
+			vAlertError(res.data[0].ret_msg)
 		} else {
 			vAlert('정상으로 저장 되었습니다.')
 			search()
@@ -368,7 +368,7 @@ onMounted(() => {
 				masterForm.reqymd = formatDate(d.col10)
 				masterForm.remark = d.col11
 				masterForm.useyn = d.col12
-				masterForm.SLIPNO = d.col1
+				masterForm.slipno = d.col1
 				masterForm.srowno = d.col2
 			}
 		})

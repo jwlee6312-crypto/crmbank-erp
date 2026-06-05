@@ -183,7 +183,7 @@ const handleGenerateSlip = async () => {
 	if (!confirm('전표를 발행하시겠습니까?')) return
 	try {
         // 1. 자동전표 여부 확인 (gbn: 'p1')
-        const resset = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
+        const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
         const autoslip = (resset.data?.[0]?.slipyn || 'n').toLowerCase()
         const acctymd = autoslip === 'y' ? slipymd : ''
         const business = `${slipymd.substring(0, 4)}년 ${slipymd.substring(4, 6)}월 상품 매출 건`
@@ -253,7 +253,7 @@ const handleGenerateSlip = async () => {
 		vAlert('전표가 발행되었습니다.')
 
         // 전표 인쇄 팝업 (ASP 로직 반영)
-        const printUrl = `../HASL/HASL_SLIP_PRINT.asp?SLIPGU=010&SLIPYMD=${slipymd}&SLIPNO=${slipno}&DEPTCD=${formData.deptcd}`
+        const printUrl = `../HASL/HASL_SLIP_PRINT.asp?SLIPGU=010&SLIPYMD=${slipymd}&slipno=${slipno}&DEPTCD=${formData.deptcd}`
         window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
 
 		fetchUnissuedList()

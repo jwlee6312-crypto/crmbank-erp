@@ -143,13 +143,13 @@ const search = async () => {
 			let janAmt = dbcr === 'D' ? (dbMmTot - crMmTot) : (crMmTot - dbMmTot)
 
 			processedData.push({
-				acctymD: '',
+				acctymd: '',
 				descnm: carryRow.col1,
-				SLIPNO: '',
+				slipno: '',
 				dbamt: dbMmTot,
 				cramt: crMmTot,
 				janamt: janAmt,
-				IS_S.mmARY: true
+				is_summary: true
 			})
 
 			let i = 1
@@ -172,7 +172,7 @@ const search = async () => {
 					if (row.col3) details.push(String(row.col3).trim()) // custnm
 					if (row.col7) details.push(String(row.col7).trim()) // mgtno
 					if (row.col5) details.push(String(row.col5).trim()) // bugtnm
-					if (row.col6) details.push(String(row.col6).trim()) // PRJNM
+					if (row.col6) details.push(String(row.col6).trim()) // prjnm
 
 					// 관리항목 12-17
 					for (let idx = 12; idx <= 17; idx++) {
@@ -190,14 +190,14 @@ const search = async () => {
 					}
 
 					processedData.push({
-						acctymD: row.col0,
+						acctymd: row.col0,
 						descnm: row.col1 + (row.col11 && String(row.col11).trim() !== '' ? ` (${row.col11})` : ''),
-						SLIPNO: row.col2,
+						slipno: row.col2,
 						dbamt: db,
 						cramt: cr,
 						janamt: janAmt,
-						DETAIL_STR: details.join(' | '),
-						IS_DATA: true
+						detail_str: details.join(' | '),
+						is_data: true
 					})
 
 					dbMmAmt += db
@@ -207,12 +207,12 @@ const search = async () => {
 
 				// 월계
 				processedData.push({
-					acctymD: '',
+					acctymd: '',
 					descnm: '월   계',
 					dbamt: dbMmAmt,
 					cramt: crMmAmt,
 					janamt: null,
-					IS_MONTHLY: true
+					is_monthly: true
 				})
 
 				dbMmTot += dbMmAmt
@@ -220,12 +220,12 @@ const search = async () => {
 
 				// 누계
 				processedData.push({
-					acctymD: '',
+					acctymd: '',
 					descnm: '누   계',
 					dbamt: dbMmTot,
 					cramt: crMmTot,
 					janamt: janAmt,
-					IS_TOTAL: true
+					is_total: true
 				})
 			}
 		}
@@ -283,7 +283,7 @@ const goSlipDetail = (slipNo: string) => {
 	const no = slipNo.substring(9)
 	router.push({
 		path: '/HASL/HASL110U',
-		query: { slipymd: ymd, SLIPNO: no }
+		query: { slipymd: ymd, slipno: no }
 	})
 }
 
@@ -295,7 +295,7 @@ onMounted(async () => {
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{
-					title: "일자", field: "acctymD", width: 90, hozAlign: "center",
+					title: "일자", field: "acctymd", width: 90, hozAlign: "center",
 					formatter: (cell) => {
 						const v = cell.getValue()
 						return v && v.length === 8 ? `${v.substring(2, 4)}.${v.substring(4, 6)}.${v.substring(6, 8)}` : ''
@@ -305,14 +305,14 @@ onMounted(async () => {
 					title: "적요 / 세부내역", field: "descnm", widthGrow: 2.5,
 					formatter: (cell) => {
 						const d = cell.getData()
-						if (d.IS_DATA) {
-							return `<div>${cell.getValue()}</div><div class="small text-secondary fw-normal mt-1" style="font-size: 11px;">${d.DETAIL_STR}</div>`
+						if (d.is_data) {
+							return `<div>${cell.getValue()}</div><div class="small text-secondary fw-normal mt-1" style="font-size: 11px;">${d.detail_str}</div>`
 						}
 						return cell.getValue()
 					}
 				},
 				{
-					title: "전표번호", field: "SLIPNO", width: 120, hozAlign: "center",
+					title: "전표번호", field: "slipno", width: 120, hozAlign: "center",
 					formatter: (cell) => {
 						const v = cell.getValue()
 						return v ? `<span class="text-primary text-decoration-underline cursor-pointer">${v}</span>` : ''
@@ -336,11 +336,11 @@ onMounted(async () => {
 			],
 			rowFormatter: (row) => {
 				const d = row.getData()
-				if (d.IS_MONTHLY || d.IS_TOTAL || d.IS_S.mmARY) {
+				if (d.is_monthly || d.is_total || d.is_summary) {
 					row.getElement().style.backgroundColor = "#f8f9fa"
 					row.getElement().style.fontWeight = "bold"
 				}
-				if (d.IS_TOTAL) {
+				if (d.is_total) {
 					row.getElement().style.borderBottom = "2px solid #dee2e6"
 				}
 			}

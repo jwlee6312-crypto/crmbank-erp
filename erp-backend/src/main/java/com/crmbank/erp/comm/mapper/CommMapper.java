@@ -12,7 +12,6 @@ public interface CommMapper {
     Map<String, Object> GET_MENU_CONFIG(Map<String, Object> param);
     List<Map<String, Object>> GET_TOP_MENU_LIST();
     List<Map<String, Object>> GET_LEFT_MENU_LIST(@Param("upmucd") String upmucd);
-    List<Map<String, Object>> GET_CODE_LIST(@Param("cdtype") String cdType);
 
     void INSERT_LOGIN_HISTORY(Map<String, Object> param);
     void DELETE_USER_CONN(Map<String, Object> param);

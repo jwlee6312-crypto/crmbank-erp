@@ -47,9 +47,9 @@
 							<th class="text-center border-end">프로젝트</th>
 							<td class="bg-white border-end px-2">
 								<div class="input-group input-group-sm">
-									<input v-model="searchForm.PRJCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="searchForm.PRJNM" type="text" class="form-control" placeholder="프로젝트 선택" @keydown.enter="openHelp('search_PRJ')" />
-									<button class="btn btn-outline-secondary px-2" @click="openHelp('search_PRJ')"><i class="bi bi-search"></i></button>
+									<input v-model="searchForm.prjcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+									<input v-model="searchForm.prjnm" type="text" class="form-control" placeholder="프로젝트 선택" @keydown.enter="openHelp('SEARCH_PRJ')" />
+									<button class="btn btn-outline-secondary px-2" @click="openHelp('SEARCH_PRJ')"><i class="bi bi-search"></i></button>
 								</div>
 							</td>
 							<td class="bg-white px-3 text-muted small">
@@ -77,11 +77,11 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end">프로젝트</th>
 							<td class="bg-white border-end px-2 py-1">
-								<input v-model="masterForm.PRJCD" type="text" class="form-control form-control-sm text-center" maxlength="4" :readonly="masterForm.actkind === 'U'" />
+								<input v-model="masterForm.prjcd" type="text" class="form-control form-control-sm text-center" maxlength="4" :readonly="masterForm.actkind === 'U'" />
 							</td>
 							<th class="text-center bg-light-subtle border-end border-top">프로젝트명</th>
 							<td class="bg-white border-end border-top px-2 py-1">
-								<input v-model="masterForm.PRJNM" type="text" class="form-control form-control-sm" maxlength="50" />
+								<input v-model="masterForm.prjnm" type="text" class="form-control form-control-sm" maxlength="50" />
 							</td>
 							<th class="text-center bg-light-subtle border-end border-top">완료여부</th>
 							<td class="bg-white border-top px-3">
@@ -154,15 +154,15 @@ const today = new Date().toISOString().substring(0, 10)
 
 // 🔍 검색 데이터
 const searchForm = reactive({
-	PRJCD: '',
-	PRJNM: ''
+	prjcd: '',
+	prjnm: ''
 })
 
 // 📝 마스터 데이터
 const masterForm = reactive({
 	actkind: 'A',
-	PRJCD: '',
-	PRJNM: '',
+	prjcd: '',
+	prjnm: '',
 	frymd: today,
 	toymd: today,
 	remark: '',
@@ -176,21 +176,21 @@ let detailGrid: Tabulator | null = null
 const formatYmd = (v: string) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v
 
 const search = async () => {
-	if (!searchForm.PRJCD) return vAlert('프로젝트를 선택하시기 바랍니다.')
+	if (!searchForm.prjcd) return vAlert('프로젝트를 선택하시기 바랍니다.')
 	try {
 		// 1. 마스터 조회
 		const resMaster = await api.post('/api/haba/HABA_070U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			PRJCD: searchForm.PRJCD
+			prjcd: searchForm.prjcd
 		})
 
 		if (resMaster.data && resMaster.data.length > 0) {
 			const m = resMaster.data[0]
 			Object.assign(masterForm, {
 				actkind: 'U',
-				PRJCD: m.PRJCD,
-				PRJNM: m.PRJNM,
+				prjcd: m.prjcd,
+				prjnm: m.prjnm,
 				frymd: formatYmd(m.frymd),
 				toymd: formatYmd(m.toymd),
 				remark: m.bigo,
@@ -203,7 +203,7 @@ const search = async () => {
 		const resDetail = await api.post('/api/haba/HABA_071U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			PRJCD: searchForm.PRJCD
+			prjcd: searchForm.prjcd
 		})
 
 		const processedDetails = (resDetail.data || []).map((r: any) => ({
@@ -222,8 +222,8 @@ const search = async () => {
 }
 
 const save = async () => {
-	if (!masterForm.PRJCD) return vAlert('프로젝트 코드를 입력하시기 바랍니다.')
-	if (!masterForm.PRJNM) return vAlert('프로젝트 명을 입력하시기 바랍니다.')
+	if (!masterForm.prjcd) return vAlert('프로젝트 코드를 입력하시기 바랍니다.')
+	if (!masterForm.prjnm) return vAlert('프로젝트 명을 입력하시기 바랍니다.')
 	if (!masterForm.frymd || !masterForm.toymd) return vAlert('일자를 입력하시기 바랍니다.')
 
 	try {
@@ -238,7 +238,7 @@ const save = async () => {
 		}
 
 		const resMaster = await api.post('/api/haba/HABA_070U_STR', masterPayload)
-		if (resMaster.data?.[0]?.ret_yn === 'Y') return vAlertError(resMaster.data[0].RET_MSG)
+		if (resMaster.data?.[0]?.ret_yn === 'Y') return vAlertError(resMaster.data[0].ret_msg)
 
 		// 2. 디테일 저장
 		const gridData = detailGrid?.getData() || []
@@ -249,7 +249,7 @@ const save = async () => {
 			const detailPayload = {
 				actkind: kind + '0',
 				cmpycd: authStore.cmpycd,
-				PRJCD: masterForm.PRJCD,
+				prjcd: masterForm.prjcd,
 				rowno: row.rowno || '',
 				userid: row.userid,
 				Sfrymd: (row.Sfrymd || '').replace(/-/g, ''),
@@ -271,7 +271,7 @@ const deleteData = async () => {
 		const res = await api.post('/api/haba/HABA_070U_STR', {
 			actkind: 'D0',
 			cmpycd: authStore.cmpycd,
-			PRJCD: masterForm.PRJCD
+			prjcd: masterForm.prjcd
 		})
 		vAlert('삭제되었습니다.')
 		initialize()
@@ -285,8 +285,8 @@ const initialize = () => {
 	masterForm.toymd = today
 	masterForm.useyn = 'Y'
 	detailGrid?.setData([])
-	searchForm.PRJCD = ''
-	searchForm.PRJNM = ''
+	searchForm.prjcd = ''
+	searchForm.prjnm = ''
 }
 
 const addRow = () => {
@@ -303,11 +303,11 @@ function openHelp(type: string, row?: any) {
 	if (type === 'search_prj') {
 		Object.assign(modalProps, {
 			title: '프로젝트 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'P0', cmpycd: authStore.cmpycd, search: searchForm.PRJNM },
-			columns: [{ title: '코드', field: 'PRJCD', width: 100 }, { title: '프로젝트명', field: 'PRJNM', width: 250 }],
+			data: { gubun: 'P0', cmpycd: authStore.cmpycd, search: searchForm.prjnm },
+			columns: [{ title: '코드', field: 'prjcd', width: 100 }, { title: '프로젝트명', field: 'prjnm', width: 250 }],
 			onConfirm: (d: any) => {
-				searchForm.PRJCD = d.PRJCD;
-				searchForm.PRJNM = d.PRJNM;
+				searchForm.prjcd = d.prjcd;
+				searchForm.prjnm = d.prjnm;
 				search();
 			}
 		})
@@ -363,7 +363,7 @@ onMounted(() => {
 									await api.post('/api/haba/HABA_071U_STR', {
 										actkind: 'D0',
 										cmpycd: authStore.cmpycd,
-										PRJCD: masterForm.PRJCD,
+										prjcd: masterForm.prjcd,
 										rowno: d.rowno,
 										MGR_userid: authStore.userid
 									})

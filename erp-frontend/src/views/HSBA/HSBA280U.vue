@@ -98,7 +98,7 @@
               <tr>
                 <th class="required">결제조건</th>
                 <td>
-                  <select v-model="masterData.PAYCOND" class="form-select form-select-sm">
+                  <select v-model="masterData.paycond" class="form-select form-select-sm">
                     <option value="">-- 결제조건 선택 --</option>
                     <option v-for="opt in comboOptions.pay" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
@@ -158,7 +158,7 @@ const { resetForm } = useFormReset()
 // 1. 상태 관리
 const searchData = reactive({ iogbn: '200' })
 const masterData = reactive<any>({
-  actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200', custcd: '', custnm: '', NACD: '', SHIPPORT: '', ARVPORT: '', CURRCD: '', PAYCOND: '', PRICOND: '', useyn: 'Y'
+  actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200', custcd: '', custnm: '', NACD: '', SHIPPORT: '', ARVPORT: '', CURRCD: '', paycond: '', PRICOND: '', useyn: 'Y'
 })
 
 const comboOptions = reactive<any>({ na: [], ship: [], arv: [], curr: [], pay: [], pri: [] })
@@ -176,7 +176,7 @@ const initGrid = () => {
       { title: "선적항", field: "shipportnm", width: 120 },
       { title: "도착항", field: "arvportnm", width: 120 },
       { title: "통화단위", field: "currnm", width: 100 },
-      { title: "결제조건", field: "PAYCONDNM", width: 120 },
+      { title: "결제조건", field: "paycondNM", width: 120 },
       { title: "가격조건", field: "PRICONDNM", width: 120 },
       {
         title: "사용", field: "useyn", width: 60, hozAlign: "center",

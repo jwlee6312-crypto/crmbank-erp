@@ -178,7 +178,7 @@ const handleGenerateSlip = async () => {
 
   try {
     // 🚀 1. 마감 체크
-    const rescl = await api.get('/api/comm/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } })
+    const rescl = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } })
     if (rescl.data?.length > 0) {
       const cl = rescl.data[0];
       if (slipymd <= (cl.clsymd || '')) throw new Error(`회계시스템이 마감되었습니다(${cl.clsymd}).`);
@@ -187,7 +187,7 @@ const handleGenerateSlip = async () => {
 
     // 🚀 2. 자동 전표 설정 체크
     let autoslip = 'n'
-    const resset = await api.post('/api/comm/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
+    const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
     if (resset.data?.length > 0) autoslip = resset.data[0].slipyn || 'n'
     const acctymd = autoslip === 'y' ? slipymd : ''
 
@@ -284,7 +284,7 @@ watch(() => [targetTotalAmt.value, slipForm.vatamt], () => {
 
 onMounted(async () => {
   try {
-    const resvat = await api.get('/api/comm/HS00_000S_STR', { params: { gubun: 'e2', cmpycd: authStore.cmpycd, gbncd: '021' } })
+    const resvat = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'e2', cmpycd: authStore.cmpycd, gbncd: '021' } })
     vatOptions.value = resvat.data
   } catch (e) {}
 

@@ -161,7 +161,7 @@ const activeItemCount = ref(0)
 
 async function fetchClosingInfo() {
   try {
-    const res = await api.post('/api/comm/HS00_000S_STR', { gubun: 'CL', cmpycd: authStore.cmpycd })
+    const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'CL', cmpycd: authStore.cmpycd })
     if (res.data && res.data.length > 0) {
       formData.pclsym = res.data[0].pclsym || '';
       formData.sclsym = res.data[0].sclsym || '';
@@ -242,7 +242,7 @@ async function save() {
     }
 
     const resMst = await api.post('/api/hsio/HSIO_131U_STR', masterParams)
-    const slipno = resMst.data?.[0]?.slipno || resMst.data?.[0]?.SLIPNO
+    const slipno = resMst.data?.[0]?.slipno || resMst.data?.[0]?.slipno
 
     if (!slipno || slipno === '00000000') throw new Error('전표 마스터 생성 실패');
 

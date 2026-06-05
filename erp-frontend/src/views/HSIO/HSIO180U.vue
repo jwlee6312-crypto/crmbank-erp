@@ -124,10 +124,10 @@ const initGrid = () => {
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerSort: false },
         {
-          title: "전표번호", field: "SLIPNO_DISP", width: 180, hozAlign: "center",
+          title: "전표번호", field: "slipno_DISP", width: 180, hozAlign: "center",
           formatter: (cell) => {
             const d = cell.getData()
-            return `<a class="text-primary fw-bold text-decoration-none">${d.slipymd}-${d.SLIPNO}</a>`
+            return `<a class="text-primary fw-bold text-decoration-none">${d.slipymd}-${d.slipno}</a>`
           },
           cellClick: (e, cell) => printSlip(cell.getData())
         },
@@ -188,7 +188,7 @@ const deleteData = async () => {
         ioymdto: searchData.ioymdto,
         Udeptcd: item.deptcd,
         slipymd: item.slipymd,
-        SLIPNO: item.SLIPNO,
+        slipno: item.slipno,
         AUTOSLIP: autoSlipInfo.value
       })
     }
@@ -208,7 +208,7 @@ const initialize = () => {
 }
 
 const printSlip = (row: any) => {
-  const url = `../HASL/HASL_SLIP_PRINT.asp?SLIPGU=010&slipymd=${row.slipymd}&SLIPNO=${row.SLIPNO}&deptcd=${row.deptcd}`
+  const url = `../HASL/HASL_SLIP_PRINT.asp?SLIPGU=010&slipymd=${row.slipymd}&slipno=${row.slipno}&deptcd=${row.deptcd}`
   window.open(url, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
 }
 
@@ -240,7 +240,7 @@ onMounted(async () => {
     }
   })
   api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'P1' }).then(r => {
-    if (r.data?.length) autoSlipInfo.value = r.data[0].SLIPYN || 'N'
+    if (r.data?.length) autoSlipInfo.value = r.data[0].slipyn || 'N'
   })
 
   nextTick(() => initGrid())
