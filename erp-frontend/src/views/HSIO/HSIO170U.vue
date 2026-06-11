@@ -169,7 +169,7 @@ const fetchDetail = async (row: any) => {
  * 🚀 저장 로직 (ASP 패턴: 마스터 전표 생성 -> 상세 루프 업데이트)
  */
 const save = async () => {
-  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'y') || []
+  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'Y') || []
   if (items.length === 0) return vAlertError('발행할 항목을 선택하세요.')
 
   if (!confirm('선택한 항목들에 대해 전표를 발행하시겠습니까?')) return
@@ -179,7 +179,7 @@ const save = async () => {
 
     // 🚀 Step 1. 전표 마스터 생성
     const resMst = await api.post('/api/hasl/HASL_010U_STR', {
-      actkind: 'a', cmpycd: authStore.cmpycd, slipymd: slipYmd,
+      actkind: 'A', cmpycd: authStore.cmpycd, slipymd: slipYmd,
       deptcd: formData.deptcd, empnm: authStore.usernm,
       slipkind: '030', business: '기타입고 매입 정산 건', updemp: authStore.userid
     })
@@ -190,7 +190,7 @@ const save = async () => {
     for (const item of items) {
       // 수입 데이터에 전표번호 연결
       await api.post('/api/hsio/HSIO_170U_STR', {
-        actkind: 'u0', cmpycd: authStore.cmpycd, iogbn: '100',
+        actkind: 'U0', cmpycd: authStore.cmpycd, iogbn: '100',
         ioym: item.ioym, iono: item.iono, iorowno: item.iorowno,
         slipymd: slipYmd, slipno: slipno, updemp: authStore.userid
       })
@@ -203,8 +203,8 @@ const save = async () => {
 
 const toggleAllRows = () => {
   const rows = itemGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'n' : 'y' }))
+  const allSelected = rows.every(r => r.getData().procyn === 'Y')
+  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
 }
 
 function initialize() {

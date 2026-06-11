@@ -34,7 +34,7 @@
                 </td>
                 <th class="required" style="width: 100px;">판매일자</th>
                 <td>
-                  <input v-model="uiymD" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                  <input v-model="uiymd" type="date" class="form-control form-control-sm" style="width: 150px;" />
                 </td>
               </tr>
             </tbody>
@@ -81,12 +81,12 @@ const initymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '
 const searchData = reactive({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  ymD: initymd.replace(/-/g, '')
+  ymd: initymd.replace(/-/g, '')
 })
 
-const uiymD = computed({
-  get: () => formatDateString(searchData.ymD, '-'),
-  set: (v) => searchData.ymD = v.replace(/-/g, '')
+const uiymd = computed({
+  get: () => formatDateString(searchData.ymd, '-'),
+  set: (v) => searchData.ymd = v.replace(/-/g, '')
 })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -104,16 +104,16 @@ const initGrid = () => {
     columns: [
       { title: "거 래 처 명", field: "custnm", minWidth: 200, cssClass: "fw-bold border-end" },
       {
-        title: "전월이월액", field: "DFAMT", width: 200, hozAlign: "right",
+        title: "전월이월액", field: "DFamt", width: 200, hozAlign: "right",
         formatter: "money", formatterParams: { precision: 0 },
         bottomCalc: "sum", bottomCalcFormatter: "money"
       },
       // 판매현황 그룹
       {
-        title: "판매현황(VAT포함)",
+        title: "판매현황(vat포함)",
         columns: [
           {
-            title: "당일판매금액", field: "SDAMT", width: 200, hozAlign: "right",
+            title: "당일판매금액", field: "SDamt", width: 200, hozAlign: "right",
             formatter: (cell) => {
                 const val = cell.getValue();
                 return val !== 0 ? `<span class="text-primary text-decoration-underline cursor-pointer">${formatNumber(val)}</span>` : "0";
@@ -122,7 +122,7 @@ const initGrid = () => {
             cellClick: (e, cell) => { if(cell.getValue() !== 0) navigateToDetail('SD', cell.getData()) }
           },
           {
-            title: "당월판매금액", field: "SMAMT", width: 200, hozAlign: "right",
+            title: "당월판매금액", field: "SMamt", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
@@ -133,12 +133,12 @@ const initGrid = () => {
         title: "입 금 현 황",
         columns: [
           {
-            title: "당일입금액", field: "IDAMT", width: 200, hozAlign: "right",
+            title: "당일입금액", field: "IDamt", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
           {
-            title: "당월입금액", field: "IMAMT", width: 200, hozAlign: "right",
+            title: "당월입금액", field: "IMamt", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
@@ -161,13 +161,13 @@ async function search() {
     const res = await api.post('/api/hsst/HSST_120S_STR', {
       cmpycd: authStore.cmpycd,
       deptcd: searchData.deptcd,
-      ymD: searchData.ymD
+      ymd: searchData.ymd
     })
     if (grid.value) {
       const mappedData = res.data.map((i: any) => {
-          const df = Number(i.DFAMT) || 0;
-          const sm = Number(i.SMAMT) || 0;
-          const im = Number(i.IMAMT) || 0;
+          const df = Number(i.DFamt) || 0;
+          const sm = Number(i.SMamt) || 0;
+          const im = Number(i.IMamt) || 0;
           return {
               ...i,
               Jnamt: df + sm - im // ASP 계산 로직: 전월이월 + 당월판매 - 당월입금
@@ -187,12 +187,12 @@ const navigateToDetail = (type: string, row: any) => {
 }
 
 function print() {
-  window.open(`/api/report/HSST_120P?deptcd=${searchData.deptcd}&ymD=${searchData.ymD}&PRTGU=Print`, 'print', 'width=700,height=650')
+  window.open(`/api/report/HSST_120P?deptcd=${searchData.deptcd}&ymd=${searchData.ymd}&PRTGU=Print`, 'print', 'width=700,height=650')
 }
 
 function initialize() {
   resetForm(searchData)
-  searchData.ymD = initymd.replace(/-/g, '')
+  searchData.ymd = initymd.replace(/-/g, '')
   searchData.deptcd = authStore.deptcd
   searchData.deptnm = authStore.deptnm
   grid.value?.clearData()
@@ -208,7 +208,7 @@ function openHelp(type: string) {
       title: '부서 선택',
       path: '/api/ha00/HA00_00P_STR',
       defaultField: 'deptnm',
-      data: { gubun: 'D0', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd },
       columns: [
         { title: '코드', field: 'deptcd', width: 80 },
         { title: '부서명', field: 'deptnm', width: 180 }

@@ -43,7 +43,7 @@
 						<tr>
 							<th class="text-center border-end">기준일자</th>
 							<td class="bg-white border-end">
-								<input v-model="searchForm.PAyyMD" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+								<input v-model="searchForm.payymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 							</td>
 							<th class="text-center border-end">계정과목</th>
 							<td class="bg-white">
@@ -95,8 +95,8 @@
 							<th class="text-center border-end bg-light-subtle">상대계정</th>
 							<td class="bg-white border-end px-2">
 								<div class="input-group input-group-sm">
-									<input v-model="voucherForm.Sacctcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="voucherForm.Sacctnm" type="text" class="form-control" placeholder="비용계정 선택" @keydown.enter="openHelp('ACCT')" />
+									<input v-model="voucherForm.sacctcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+									<input v-model="voucherForm.sacctnm" type="text" class="form-control" placeholder="비용계정 선택" @keydown.enter="openHelp('ACCT')" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('ACCT')"><i class="bi bi-search"></i></button>
 								</div>
 							</td>
@@ -136,7 +136,7 @@ const today = new Date().toISOString().substring(0, 10)
 
 // 🔍 검색 데이터
 const searchForm = reactive({
-	PAyyMD: today,
+	payymd: today,
 	acctcd: ''
 })
 
@@ -146,8 +146,8 @@ const acctOptions = ref<any[]>([])
 const voucherForm = reactive({
 	deptcd: authStore.deptcd,
 	deptnm: authStore.deptnm,
-	Sacctcd: '',
-	Sacctnm: '',
+	sacctcd: '',
+	sacctnm: '',
 	remark: '',
 	clsymd: '00000000'
 })
@@ -181,7 +181,7 @@ const search = async () => {
 		const res = await api.post('/api/hafn/HAFN_630U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			PAyyMD: searchForm.PAyyMD.replace(/-/g, ''),
+			payymd: searchForm.payymd.replace(/-/g, ''),
 			acctcd: searchForm.acctcd
 		})
 
@@ -191,10 +191,10 @@ const search = async () => {
 			srowno: row.col2,
 			remark: row.col3,
 			custcd: row.col4,
-			PERIOD: `${formatYmdShort(row.col6)} ~ ${formatYmdShort(row.col7)}`,
-			TOTAL_AMT: Number(row.col8 || 0),
-			REPAY_AMT: Number(row.COL9 || 0),
-			JAN_AMT: Number(row.col10 || 0),
+			period: `${formatYmdShort(row.col6)} ~ ${formatYmdShort(row.col7)}`,
+			total_amt: Number(row.col8 || 0),
+			repay_amt: Number(row.COL9 || 0),
+			jan_amt: Number(row.col10 || 0),
 			payamt: Number(row.col11 || 0), // 당기 상계액
 			SELECT: true
 		}))
@@ -211,8 +211,8 @@ const updateTotal = () => {
 }
 
 const save = async () => {
-	if (searchForm.PAyyMD.replace(/-/g, '') <= voucherForm.clsymd) return vAlert('회계 마감된 일자입니다.')
-	if (!voucherForm.Sacctcd) return vAlert('상대계정(비용)을 선택하십시오.')
+	if (searchForm.payymd.replace(/-/g, '') <= voucherForm.clsymd) return vAlert('회계 마감된 일자입니다.')
+	if (!voucherForm.sacctcd) return vAlert('상대계정(비용)을 선택하십시오.')
 	if (!voucherForm.remark) return vAlert('적요를 입력하십시오.')
 
 	if (!confirm('선택한 내역으로 상계 전표를 발행하시겠습니까?')) return
@@ -222,23 +222,23 @@ const save = async () => {
 
 		// 1. 차변 (Debits): 비용 계정 (상대계정)
 		details.push({
-			upkind: 'A', DBCR: 'D',
-			acctcd: voucherForm.Sacctcd,
+			upkind: 'A', dbcr: 'D',
+			acctcd: voucherForm.sacctcd,
 			remark: voucherForm.remark,
-			AMOUNT: totalSelectedAmt.value,
-			USEdeptcd: voucherForm.deptcd
+			amount: totalSelectedAmt.value,
+			usedeptcd: voucherForm.deptcd
 		})
 
 		// 2. 대변 (Credits): 선급비용 계정들
 		selectedRows.value.forEach(row => {
 			details.push({
-				upkind: 'A', DBCR: 'C',
+				upkind: 'A', dbcr: 'C',
 				acctcd: searchForm.acctcd,
 				remark: voucherForm.remark,
-				AMOUNT: row.payamt,
+				amount: row.payamt,
 				custcd: row.custcd,
-				USEdeptcd: voucherForm.deptcd,
-				Sslipno: `${row.slipymd}${row.slipno}${row.srowno}`
+				usedeptcd: voucherForm.deptcd,
+				sslipno: `${row.slipymd}${row.slipno}${row.srowno}`
 			})
 		})
 
@@ -246,11 +246,11 @@ const save = async () => {
 			actkind: 'A',
 			MASTER: {
 				cmpycd: authStore.cmpycd,
-				slipymd: searchForm.PAyyMD.replace(/-/g, ''),
-				acctymd: searchForm.PAyyMD.replace(/-/g, ''),
+				slipymd: searchForm.payymd.replace(/-/g, ''),
+				acctymd: searchForm.payymd.replace(/-/g, ''),
 				deptcd: voucherForm.deptcd,
 				business: voucherForm.remark,
-				SLIPGU: '020'
+				slipgu: '020'
 			},
 			DETAILS: details
 		}
@@ -258,7 +258,7 @@ const save = async () => {
 		const res = await api.post('/api/hasl/HASL_110U_SAVE', payload)
 		vAlert('전표가 발행되었습니다.')
 		if (res.data.slipno) {
-			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=020&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
+			window.open(`/api/hasl/HASL_SLIP_PRINT?slipgu=020&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
 		}
 		search()
 	} catch (e) { vAlertError('저장 실패') }
@@ -267,7 +267,7 @@ const save = async () => {
 const initialize = () => {
 	resetForm(searchForm)
 	resetForm(voucherForm)
-	searchForm.PAyyMD = today
+	searchForm.payymd = today
 	voucherForm.deptcd = authStore.deptcd
 	voucherForm.deptnm = authStore.deptnm
 	loadInitData()
@@ -282,7 +282,7 @@ function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: voucherForm.deptnm },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: voucherForm.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { voucherForm.deptcd = d.deptcd; voucherForm.deptnm = d.deptnm }
 		})
@@ -291,7 +291,7 @@ function openHelp(type: string) {
 			title: '비용계정 선택', path: '/api/ha00/HA00_00P_STR',
 			data: { gubun: 'A0', search: '62', cmpycd: authStore.cmpycd }, // 비용계정 600번대 위주 조회
 			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }],
-			onConfirm: (d: any) => { voucherForm.Sacctcd = d.acctcd; voucherForm.Sacctnm = d.acctnm }
+			onConfirm: (d: any) => { voucherForm.sacctcd = d.acctcd; voucherForm.sacctnm = d.acctnm }
 		})
 	}
 	modalVisible.value = true
@@ -310,10 +310,10 @@ onMounted(() => {
 					formatter: (c) => { const d = c.getData(); return `${d.slipymd}-${d.slipno}-${d.srowno}` }
 				},
 				{ title: "적요", field: "remark", minWidth: 200 },
-				{ title: "기간", field: "PERIOD", width: 150, hozAlign: "center" },
-				{ title: "선급비용", field: "TOTAL_AMT", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "상계액(누계)", field: "REPAY_AMT", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "잔액", field: "JAN_AMT", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "기간", field: "period", width: 150, hozAlign: "center" },
+				{ title: "선급비용", field: "total_amt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "상계액(누계)", field: "repay_amt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "잔액", field: "jan_amt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "금차상계액", field: "payamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-warning-subtle fw-bold" }
 			]
 		})

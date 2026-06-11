@@ -22,8 +22,8 @@
       <div class="btn-group-erp d-flex gap-1 pe-2">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-save" @click="save" :disabled="form_02.sts === 'y' || isClosed">저장</button>
-        <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!form_02.reqno || form_02.reqno === '0000' || form_02.sts === 'y' || isClosed">전체삭제</button>
+        <button class="btn-erp btn-save" @click="save" :disabled="form_02.sts === 'Y' || isClosed">저장</button>
+        <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!form_02.reqno || form_02.reqno === '0000' || form_02.sts === 'Y' || isClosed">전체삭제</button>
       </div>
     </div>
 
@@ -80,17 +80,17 @@
                     <td colspan="3">
                       <div class="input-group input-group-sm">
                         <input v-model="form_02.deptnm" class="form-control" readonly />
-                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('DEPT')" :disabled="form_02.sts === 'y' || isClosed"><i class="bi bi-search"></i></button>
+                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('DEPT')" :disabled="form_02.sts === 'Y' || isClosed"><i class="bi bi-search"></i></button>
                       </div>
                     </td>
                     <th class="bg-light text-center">요청번호</th>
                     <td><input v-model="form_02.reqno" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="0000" /></td>
                     <th class="required bg-light text-center">요청일자</th>
-                    <td><input v-model="form_02.reqymd" type="date" class="form-control" :readonly="form_02.sts === 'y' || isClosed" /></td>
+                    <td><input v-model="form_02.reqymd" type="date" class="form-control" :readonly="form_02.sts === 'Y' || isClosed" /></td>
                   </tr>
                   <tr>
                     <th class="bg-light text-center">특이사항</th>
-                    <td colspan="7"><input v-model="form_02.remark" class="form-control" :readonly="form_02.sts === 'y' || isClosed" /></td>
+                    <td colspan="7"><input v-model="form_02.remark" class="form-control" :readonly="form_02.sts === 'Y' || isClosed" /></td>
                   </tr>
                 </tbody>
               </table>
@@ -102,8 +102,8 @@
             <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
               <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>요청 품목 리스트</span>
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" :disabled="form_02.sts === 'y' || isClosed" style="font-size: 11px;">+ 행추가</button>
-                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" :disabled="form_02.sts === 'y' || isClosed" style="font-size: 11px;">- 행삭제</button>
+                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" :disabled="form_02.sts === 'Y' || isClosed" style="font-size: 11px;">+ 행추가</button>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" :disabled="form_02.sts === 'Y' || isClosed" style="font-size: 11px;">- 행삭제</button>
               </div>
             </div>
             <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -140,9 +140,9 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const form_01 = reactive({ fromdt: firstDay, todt: today, schitemnm: '' })
 const form_02 = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd, reqym: today.substring(0, 7).replace('-', ''), reqno: '0000',
+  actkind: 'S0', cmpycd: authStore.cmpycd, reqym: today.substring(0, 7).replace('-', ''), reqno: '0000',
   deptcd: authStore.deptcd, deptnm: authStore.deptnm, reqymd: today, req_userid: authStore.userid,
-  inymd: today, remark: '', sts: 'n', totsum: 0
+  inymd: today, remark: '', sts: 'N', totsum: 0
 })
 
 const closingInfo = reactive({ sclsym: '' })
@@ -179,7 +179,7 @@ const initGrids = () => {
           if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
           return '';
       }},
-      { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary', cellClick: (e, cell) => { if(!isClosed.value && form_02.sts !== 'y') handleOpenHelp('ITEM', cell.getRow()) } },
+      { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary', cellClick: (e, cell) => { if(!isClosed.value && form_02.sts !== 'Y') handleOpenHelp('ITEM', cell.getRow()) } },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
       { title: "수량", field: "reqqty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
       { title: "단가", field: "price", width: 110, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
@@ -197,7 +197,7 @@ const calcRow = (row: any) => {
 
 async function search() {
   try {
-    const res = await api.post('/api/hsio/HSIO_010U_STR', { actkind: 's0', cmpycd: authStore.cmpycd, frymd: form_01.fromdt.replace(/-/g, ''), toymd: form_01.todt.replace(/-/g, ''), itemnm: form_01.schitemnm });
+    const res = await api.post('/api/hsio/HSIO_010U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, frymd: form_01.fromdt.replace(/-/g, ''), toymd: form_01.todt.replace(/-/g, ''), itemnm: form_01.schitemnm });
     grid1?.setData(res.data); vAlert('조회되었습니다.');
   } catch (e: any) { vAlertError('조회 실패'); }
 }
@@ -206,7 +206,7 @@ async function fetchDetail(row: any) {
   const fYmd = (d: string) => d && d.length === 8 ? `${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6, 8)}` : today;
   Object.assign(form_02, { ...row, reqymd: fYmd(row.reqymd) });
   try {
-    const res = await api.post('/api/hsio/HSIO_011U_STR', { actkind: 's1', cmpycd: authStore.cmpycd, reqym: row.reqym, reqno: row.reqno });
+    const res = await api.post('/api/hsio/HSIO_011U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, reqym: row.reqym, reqno: row.reqno });
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
   } catch (e: any) { vAlertError('상세 로드 실패'); }
 }
@@ -216,8 +216,8 @@ async function save() {
   const details = grid2?.getData().filter((r: any) => r._status) || [];
   try {
     const payload = {
-      hsio010u: { ...form_02, actkind: form_02.reqno === '0000' ? 'a0' : 'u0', updemp: authStore.userid },
-      hsio011u: details.map((d: any) => ({ ...d, actkind: d._status === '입력' ? 'a0' : (d._status === '삭제' ? 'd0' : 'u0'), updemp: authStore.userid }))
+      hsio010u: { ...form_02, actkind: form_02.reqno === '0000' ? 'A0' : 'U0', updemp: authStore.userid },
+      hsio011u: details.map((d: any) => ({ ...d, actkind: d._status === '입력' ? 'A0' : (d._status === '삭제' ? 'D0' : 'U0'), updemp: authStore.userid }))
     };
     await api.post('/api/hsio/HSIO_010U_SAVE', payload);
     vAlert('저장되었습니다.'); initialize(); search();
@@ -232,12 +232,12 @@ const handleOpenHelp = (type: string, target?: any) => {
 const handleRowAction = (row: any) => { const d = row.getData(); if (d._state === 'NEW') row.delete(); else row.update({ _status: d._status === '삭제' ? '' : '삭제' }); }
 const deleteSelectedRows = () => { const sel = grid2?.getSelectedRows(); if (sel?.length) sel.forEach(row => handleRowAction(row)); }
 const addRow = () => grid2?.addRow({ reqqty: 0, price: 0, amtsum: 0, _status: '입력', _state: 'NEW' }, true);
-const initialize = () => { resetForm(form_02); form_02.reqno = '0000'; form_02.reqymd = today; form_02.sts = 'n'; form_02.deptcd = authStore.deptcd; form_02.deptnm = authStore.deptnm; grid1?.clearData(); grid2?.clearData(); }
+const initialize = () => { resetForm(form_02); form_02.reqno = '0000'; form_02.reqymd = today; form_02.sts = 'N'; form_02.deptcd = authStore.deptcd; form_02.deptnm = authStore.deptnm; grid1?.clearData(); grid2?.clearData(); }
 
 async function handleFullDelete() {
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_010U_STR', { ...form_02, actkind: 'd0' });
+    await api.post('/api/hsio/HSIO_010U_STR', { ...form_02, actkind: 'D0' });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }

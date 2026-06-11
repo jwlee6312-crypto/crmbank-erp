@@ -95,7 +95,7 @@
                                 <label class="fw-bold text-secondary mb-1" style="font-size: 0.7rem;">응대 결과 <span class="text-danger">*</span></label>
                                 <select v-model="FORM.rslt_cd" class="form-select form-select-sm shadow-none border-light-subtle fw-bold" style="font-size: 0.75rem;">
                                     <option value="">결과를 선택하세요</option>
-                                    <option v-for="code in RESULT_CODES" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
+                                    <option v-for="code in result_codeS" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
                                 </select>
                             </div>
 
@@ -143,13 +143,13 @@ const authStore = useAuthStore()
 
 const GRID_DATA = ref<any[]>([])
 const SELECTED_ITEM = ref<any>(null)
-const RESULT_CODES = ref<any[]>([])
+const result_codeS = ref<any[]>([])
 const IS_SAVING = ref(false)
 const FORM = reactive({ rslt_cd: '', remark: '', user_nm: '', userid: '' })
-const METRICS = reactive<any>({ INBOUND_TOTAL: 0, INBOUND_ANSWERED: 0, INBOUND_ABANDONED: 0 })
+const METRICS = reactive<any>({ INBOUND_total: 0, INBOUND_ANSWERED: 0, INBOUND_ABANDONED: 0 })
 
 const METRIC_CONFIG = {
-    INBOUND_TOTAL: { label: '오늘의 총 인입', icon: 'bi-telephone-inbound', color: 'primary' },
+    INBOUND_total: { label: '오늘의 총 인입', icon: 'bi-telephone-inbound', color: 'primary' },
     INBOUND_ANSWERED: { label: '응대 완료 건', icon: 'bi-check2-all', color: 'success' },
     INBOUND_ABANDONED: { label: '미연결 / 포기', icon: 'bi-telephone-x', color: 'danger' }
 }
@@ -166,7 +166,7 @@ const fetch_pending_list = async () => {
 
         METRICS.INBOUND_ABANDONED = GRID_DATA.value.length;
         METRICS.INBOUND_ANSWERED = Math.max(12, Math.floor(Math.random() * 20) + 10);
-        METRICS.INBOUND_TOTAL = METRICS.INBOUND_ANSWERED + METRICS.INBOUND_ABANDONED;
+        METRICS.INBOUND_total = METRICS.INBOUND_ANSWERED + METRICS.INBOUND_ABANDONED;
     } catch (e) { vAlertError('데이터 조회 실패'); }
 }
 
@@ -192,7 +192,7 @@ const make_call = () => {
 }
 
 onMounted(async () => {
-    try { RESULT_CODES.value = await fetchCrmSelectData('920'); } catch (e) {}
+    try { result_codeS.value = await fetchCrmSelectData('920'); } catch (e) {}
 
     TABLE_INSTANCE = new Tabulator(PENDING_TABLE_REF.value!, {
         layout: "fitColumns",

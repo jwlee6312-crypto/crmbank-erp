@@ -24,20 +24,20 @@
           <div class="d-flex align-items-center gap-3">
             <div class="input-group input-group-sm flex-nowrap" style="width: 180px;">
               <span class="input-group-text fw-bold border-0 bg-transparent">종류</span>
-              <select v-model="searchParams.Qcustgbn" class="form-select border-0 bg-white" @change="search">
+              <select v-model="searchParams.qcustgbn" class="form-select border-0 bg-white" @change="search">
                 <option value="000">전체</option>
                 <option v-for="opt in options.custGbn" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
               </select>
             </div>
             <div class="input-group input-group-sm flex-nowrap" style="width: 180px;">
               <span class="input-group-text fw-bold border-0 bg-transparent">상태</span>
-              <select v-model="searchParams.Qstatus" class="form-select border-0 bg-white" @change="search">
+              <select v-model="searchParams.qstatus" class="form-select border-0 bg-white" @change="search">
                 <option v-for="opt in options.status" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
               </select>
             </div>
             <div class="input-group input-group-sm flex-nowrap" style="width: 300px;">
               <span class="input-group-text fw-bold border-0 bg-transparent">거래처명</span>
-              <input v-model="searchParams.Qcustnm" type="text" class="form-control border-0 bg-white" placeholder="거래처명 입력..." @keyup.enter="search" />
+              <input v-model="searchParams.qcustnm" type="text" class="form-control border-0 bg-white" placeholder="거래처명 입력..." @keyup.enter="search" />
               <button class="btn btn-dark btn-sm" @click="search"><i class="bi bi-search"></i></button>
             </div>
           </div>
@@ -101,7 +101,7 @@
                   </div>
                 </td>
                 <th>FAX번호</th>
-                <td><input v-model="masterData.FAXNO" type="text" class="form-control form-control-sm" maxlength="30" /></td>
+                <td><input v-model="masterData.faxno" type="text" class="form-control form-control-sm" maxlength="30" /></td>
               </tr>
               <tr>
                 <th>매입단가</th>
@@ -230,10 +230,10 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
 // 1. 상태 관리
-const searchParams = reactive({ Qcustgbn: '000', Qstatus: '010', Qcustnm: '' })
+const searchParams = reactive({ qcustgbn: '000', qstatus: '010', qcustnm: '' })
 const masterData = reactive<any>({
   actkind: 'I0', cmpycd: authStore.cmpycd, custcd: '', custno: '', custnm: '', custgbn: '010',
-  bossnm: '', legalno: '', custkind: '', custtype: '', telno: '', FAXNO: '', postno: '', address: '',
+  bossnm: '', legalno: '', custkind: '', custtype: '', telno: '', faxno: '', postno: '', address: '',
   iogbn: '010', inprcgbn: '190', outprcgbn: '200', hdamt: 0, rcvdd: 0, gigbcd: '305',
   agrpcd: '000', bgrpcd: '000', cgrpcd: '000', area: '000', cdamdang: '', ctelno: '', cemail: '',
   remark: '', status: '010', banknm: '', gujoa: '', fndymd: '', stdymd: '', clsymd: '99991231',
@@ -260,7 +260,7 @@ const initGrid = () => {
       { title: "사업자번호", field: "custno", width: 130, hozAlign: "center" },
       { title: "대표자", field: "bossnm", width: 100 },
       { title: "연락처", field: "telno", width: 130, hozAlign: "left" },
-      { title: "상태", field: "statusNM", width: 80 },
+      { title: "상태", field: "statusnm", width: 80 },
       { title: "외부CD", field: "outcustcd", width: 90 },
       { title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
     ]
@@ -293,8 +293,8 @@ async function fetchOptions() {
 async function search() {
   try {
     const res = await api.post('/api/hsba/HSBA_070U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, custgbn: searchParams.Qcustgbn === '000' ? '000' : searchParams.Qcustgbn,
-      status: searchParams.Qstatus, custnm: searchParams.Qcustnm, updemp: authStore.userid
+      actkind: 'S0', cmpycd: authStore.cmpycd, custgbn: searchParams.qcustgbn === '000' ? '000' : searchParams.qcustgbn,
+      status: searchParams.qstatus, custnm: searchParams.qcustnm, updemp: authStore.userid
     })
     grid.value?.setData(res.data); activeItemCount.value = res.data.length
   } catch (e) { vAlertError('조회 실패') }
@@ -330,13 +330,13 @@ function openPostcode() {
 const modalVisible = ref(false); const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 function openHelp(type: string) {
   let config: any = {}
-  if (type === 'AGRP') config = { title: '대분류 선택', path: '/api/hs00/HS00_000S_STR', data: { gubun: 'G0' }, field: 'Agrpnm', columns: [{ title: '코드', field: 'agrpcd', width: 80 }, { title: '분류명', field: 'Agrpnm', width: 180 }] }
-  else if (type === 'BGRP') config = { title: '중분류 선택', path: '/api/hs00/HS00_000S_STR', data: { gubun: 'G1', code: masterData.agrpcd }, field: 'Bgrpnm', columns: [{ title: '코드', field: 'bgrpcd', width: 80 }, { title: '분류명', field: 'Bgrpnm', width: 180 }] }
+  if (type === 'AGRP') config = { title: '대분류 선택', path: '/api/hs00/HS00_000S_STR', data: { gubun: 'G0' }, field: 'agrpnm', columns: [{ title: '코드', field: 'agrpcd', width: 80 }, { title: '분류명', field: 'agrpnm', width: 180 }] }
+  else if (type === 'BGRP') config = { title: '중분류 선택', path: '/api/hs00/HS00_000S_STR', data: { gubun: 'G1', code: masterData.agrpcd }, field: 'bgrpnm', columns: [{ title: '코드', field: 'bgrpcd', width: 80 }, { title: '분류명', field: 'bgrpnm', width: 180 }] }
   else if (type === 'CUST') config = { title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'C4' }, field: 'custnm', columns: [{ title: '코드', field: 'custcd', width: 100 }, { title: '거래처명', field: 'custnm', width: 200 }] }
   if (!config.path) return
   Object.assign(modalProps, { title: config.title, path: config.path, defaultField: config.field, data: { ...config.data, cmpycd: authStore.cmpycd }, columns: config.columns, onConfirm: (data: any) => {
-    if (type === 'AGRP') { masterData.agrpcd = (data.agrpcd || data.code || '').trim(); masterData.Agrpnm = (data.Agrpnm || data.cdnm || '').trim(); }
-    else if (type === 'BGRP') { masterData.bgrpcd = (data.bgrpcd || data.code || '').trim(); masterData.Bgrpnm = (data.Bgrpnm || data.cdnm || '').trim(); }
+    if (type === 'AGRP') { masterData.agrpcd = (data.agrpcd || data.code || '').trim(); masterData.agrpnm = (data.agrpnm || data.cdnm || '').trim(); }
+    else if (type === 'BGRP') { masterData.bgrpcd = (data.bgrpcd || data.code || '').trim(); masterData.bgrpnm = (data.bgrpnm || data.cdnm || '').trim(); }
     else if (type === 'CUST') { masterData.IN_custcd = (data.custcd || data.code || '').trim(); masterData.IN_custnm = (data.custnm || data.cdnm || '').trim(); }
   }})
   modalVisible.value = true

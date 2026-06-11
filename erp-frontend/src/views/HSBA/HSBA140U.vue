@@ -88,14 +88,14 @@
                 </td>
                 <th class="required bg-light">국&nbsp;&nbsp;&nbsp;&nbsp;가</th>
                 <td>
-                  <select v-model="formData.NACD" class="form-select">
+                  <select v-model="formData.nacd" class="form-select">
                     <option value="">-- 선택 --</option>
                     <option v-for="opt in comboOptions.na" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required bg-light text-center">선 적 항</th>
                 <td>
-                  <select v-model="formData.SHIPPORT" class="form-select">
+                  <select v-model="formData.shipport" class="form-select">
                     <option value="">-- 선택 --</option>
                     <option v-for="opt in comboOptions.ship" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
@@ -104,14 +104,14 @@
               <tr>
                 <th class="required bg-light text-center">도 착 항</th>
                 <td>
-                  <select v-model="formData.ARVPORT" class="form-select">
+                  <select v-model="formData.arvport" class="form-select">
                     <option value="">-- 선택 --</option>
                     <option v-for="opt in comboOptions.arv" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required bg-light">통화단위</th>
                 <td>
-                  <select v-model="formData.CURRCD" class="form-select">
+                  <select v-model="formData.currcd" class="form-select">
                     <option value="">-- 선택 --</option>
                     <option v-for="opt in comboOptions.curr" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
@@ -125,7 +125,7 @@
                 </td>
                 <th class="required bg-light text-center">가격조건</th>
                 <td>
-                  <select v-model="formData.PRICOND" class="form-select">
+                  <select v-model="formData.pricond" class="form-select">
                     <option value="">-- 선택 --</option>
                     <option v-for="opt in comboOptions.pri" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
@@ -169,7 +169,7 @@ const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 // [1] 데이터 모델링
 const searchParams = reactive({ iogbn: '100' })
 const formData = reactive<any>({
-  actkind: 'A0', iogbn: '100', custcd: '', custnm: '', NACD: '', SHIPPORT: '', ARVPORT: '', CURRCD: '', paycond: '', PRICOND: '', useyn: 'Y'
+  actkind: 'A0', iogbn: '100', custcd: '', custnm: '', nacd: '', shipport: '', arvport: '', currcd: '', paycond: '', pricond: '', useyn: 'Y'
 })
 
 const comboOptions = reactive<any>({ na: [], ship: [], arv: [], curr: [], pay: [], pri: [] })
@@ -184,12 +184,12 @@ const initGrid = () => {
     columnDefaults: { headerSort: false, headerHozAlign: "center", vertAlign: "middle" },
     columns: [
       { title: "거래처", field: "custnm", minWidth: 200, hozAlign: "left", cssClass: "fw-bold text-primary" },
-      { title: "국가", field: "NANM", width: 100 },
+      { title: "국가", field: "nanm", width: 100 },
       { title: "선적항", field: "shipportnm", width: 120 },
       { title: "도착항", field: "arvportnm", width: 120 },
       { title: "통화단위", field: "currnm", width: 100 },
-      { title: "결제조건", field: "paycondNM", width: 120 },
-      { title: "가격조건", field: "PRICONDNM", width: 120 }
+      { title: "결제조건", field: "paycondnm", width: 120 },
+      { title: "가격조건", field: "pricondnm", width: 120 }
     ]
   })
 
@@ -205,7 +205,7 @@ async function fetchOptions() {
     const [r1, r2, r3, r4, r5, r6] = await Promise.all([
       getOpt('305'), getOpt('308'), getOpt('309'), getOpt('310'), getOpt('312'), getOpt('314')
     ])
-    const map = (r: any) => r.data.map((i: any) => ({ codecd: String(i.CODE || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
+    const map = (r: any) => r.data.map((i: any) => ({ codecd: String(i.code || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
     comboOptions.na = map(r1); comboOptions.ship = map(r2); comboOptions.arv = map(r3);
     comboOptions.curr = map(r4); comboOptions.pay = map(r5); comboOptions.pri = map(r6);
   } catch (e) {}

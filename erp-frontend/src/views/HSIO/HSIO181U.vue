@@ -100,7 +100,7 @@ const searchData = reactive({
 })
 
 const closingInfo = reactive({ clsymd: '', sclsym: '' })
-const autoSlipInfo = ref('N')
+const autoslipinfo = ref('N')
 
 const ioymdfr = computed({ get: () => formatDateString(searchData.ioymdfr, '-'), set: (v) => searchData.ioymdfr = v.replace(/-/g, '') })
 const ioymdto = computed({ get: () => formatDateString(searchData.ioymdto, '-'), set: (v) => searchData.ioymdto = v.replace(/-/g, '') })
@@ -124,30 +124,30 @@ const initGrid = () => {
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerSort: false },
         {
-          title: "전표번호", field: "slipno_DISP", width: 180, hozAlign: "center",
+          title: "전표번호", field: "slipno_disp", width: 180, hozAlign: "center",
           formatter: (cell) => `<a class="text-primary fw-bold text-decoration-none">${cell.getData().slipymd}-${cell.getData().slipno}</a>`,
           cellClick: (e, cell) => printSlip(cell.getData())
         },
         { title: "발행부서", field: "deptnm", width: 180 },
         { title: "거래처", field: "custnm", width: 250 },
-        { title: "할인금액", field: "HALAMT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" },
+        { title: "할인금액", field: "halamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" },
       ],
     })
 
     grid.on("rowSelectionChanged", () => {
       const selectedData = grid?.getSelectedData() || []
       selectedCount.value = selectedData.length
-      totalHalAmt.value = selectedData.reduce((acc, row) => acc + Number(row.HALAMT || 0), 0)
+      totalHalAmt.value = selectedData.reduce((acc, row) => acc + Number(row.halamt || 0), 0)
     })
   }
 }
 
 // 마감 및 취소 가능 여부 체크 로직
 const checkCanCancel = (row: any) => {
-  const halYm = String(row.HALymD || '').substring(0, 6)
+  const halYm = String(row.halymd || '').substring(0, 6)
   if (halYm <= closingInfo.sclsym) return "영업정보가 마감된 자료입니다."
-  if (row.HALymD <= closingInfo.clsymd) return "회계정보가 마감된 자료입니다."
-  if (row.cfmyn === 'Y' && autoSlipInfo.value === 'N') return "확정처리된 전표입니다."
+  if (row.halymd <= closingInfo.clsymd) return "회계정보가 마감된 자료입니다."
+  if (row.cfmyn === 'Y' && autoslipinfo.value === 'N') return "확정처리된 전표입니다."
   return true
 }
 
@@ -183,7 +183,7 @@ const deleteData = async () => {
         userid: authStore.userid,
         ioymdfr: searchData.ioymdfr,
         ioymdto: searchData.ioymdto,
-        Udeptcd: item.deptcd,
+        deptcd: item.deptcd,
         slipymd: item.slipymd,
         slipno: item.slipno
       })
@@ -204,7 +204,7 @@ const initialize = () => {
 }
 
 const printSlip = (row: any) => {
-  const url = `../HASL/HASL_SLIP_PRINT_OUT.asp?SLIPGU=010&slipymd=${row.slipymd}&slipno=${row.slipno}&deptcd=${row.deptcd}`
+  const url = `../HASL/HASL_SLIP_PRINT_OUT.asp?slipgu=010&slipymd=${row.slipymd}&slipno=${row.slipno}&deptcd=${row.deptcd}`
   window.open(url, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
 }
 
@@ -215,7 +215,7 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
   Object.assign(modalProps, {
     title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-    data: { gubun: 'D0', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+    data: { gubun: 'D0', cmpycd: authStore.cmpycd },
     columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 200 }],
     onConfirm: (data: any) => {
       searchData.deptcd = data.deptcd
@@ -237,7 +237,7 @@ onMounted(async () => {
     }
   })
   api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'P1' }).then(r => {
-    if (r.data?.length) autoSlipInfo.value = r.data[0].slipyn || 'N'
+    if (r.data?.length) autoslipinfo.value = r.data[0].slipyn || 'N'
   })
 
   nextTick(() => initGrid())

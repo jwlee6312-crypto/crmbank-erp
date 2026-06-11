@@ -23,7 +23,7 @@
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="handleSearch">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
-        <button class="btn-erp btn-delete" @click="deleteData" :disabled="formData.mode === 'n'">삭제</button>
+        <button class="btn-erp btn-delete" @click="deleteData" :disabled="formData.mode === 'N'">삭제</button>
       </div>
     </div>
 
@@ -43,7 +43,7 @@
               <tr>
                 <th class="text-center bg-light required">계정코드</th>
                 <td>
-                  <input v-model="formData.acct" class="form-control fw-bold text-primary" maxlength="8" :readonly="formData.mode === 'u'" placeholder="코드 입력" />
+                  <input v-model="formData.acct" class="form-control fw-bold text-primary" maxlength="8" :readonly="formData.mode === 'U'" placeholder="코드 입력" />
                 </td>
                 <th class="text-center bg-light required">계정과목명</th>
                 <td>
@@ -110,7 +110,7 @@ const { modalVisible, modalProps } = useCommonHelp()
 
 // [1] 데이터 모델링 (소문자 원칙)
 const formData = reactive<any>({
-  acct: '', acct_o: '', acctnm: '', bigo: '', acntgbn: '1000', useyn: 'Y', mode: 'n'
+  acct: '', acct_o: '', acctnm: '', bigo: '', acntgbn: '1000', useyn: 'Y', mode: 'N'
 })
 
 const tableRef = ref<HTMLDivElement | null>(null)
@@ -145,7 +145,7 @@ const handleSearch = async () => {
 }
 
 function fetchDetail(row: any) {
-  Object.assign(formData, { ...row, acct_o: row.acct, mode: 'u' });
+  Object.assign(formData, { ...row, acct_o: row.acct, mode: 'U' });
 }
 
 const save = async () => {
@@ -153,7 +153,7 @@ const save = async () => {
   if (!confirm('저장하시겠습니까?')) return
 
   try {
-    const actkind = formData.mode === 'u' ? 'U0' : 'A0'
+    const actkind = formData.mode === 'U' ? 'U0' : 'A0'
     await api.post('/api/hfba/FBA2010U_STR', {
       ...formData, actkind: actkind, cmpycd: authStore.cmpycd, userid: authStore.userid
     })
@@ -164,7 +164,7 @@ const save = async () => {
 }
 
 const deleteData = async () => {
-  if (formData.mode === 'n') return
+  if (formData.mode === 'N') return
   if (!confirm('정말 삭제하시겠습니까?')) return
   try {
     await api.post('/api/hfba/FBA2010U_STR', {
@@ -178,7 +178,7 @@ const deleteData = async () => {
 
 const initialize = () => {
   resetForm(formData);
-  Object.assign(formData, { acct: '', acct_o: '', acctnm: '', bigo: '', acntgbn: '1000', useyn: 'Y', mode: 'n' });
+  Object.assign(formData, { acct: '', acct_o: '', acctnm: '', bigo: '', acntgbn: '1000', useyn: 'Y', mode: 'N' });
   grid?.deselectRow();
 }
 

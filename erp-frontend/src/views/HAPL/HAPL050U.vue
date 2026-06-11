@@ -180,7 +180,7 @@ const initGrids = () => {
 const loadInitData = async () => {
   try {
     const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, col0: '200', col1: '200' });
-    divideOptions.value = (res.data || []).map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm || i.CODENM }));
+    divideOptions.value = (res.data || []).map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm || i.codenm }));
     if (divideOptions.value.length > 0) searchForm.divcd = divideOptions.value[0].code;
   } catch (e) { console.error(e) }
 }

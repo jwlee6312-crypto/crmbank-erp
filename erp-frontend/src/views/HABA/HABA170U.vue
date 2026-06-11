@@ -44,9 +44,9 @@
 							<th class="text-center border-end">어음번호</th>
 							<td class="bg-white border-end px-2">
 								<div class="d-flex align-items-center gap-2">
-									<input v-model="searchForm.BILLNO" type="text" class="form-control form-control-sm" maxlength="12" placeholder="시작 번호" @keydown.enter="search" />
+									<input v-model="searchForm.billno" type="text" class="form-control form-control-sm" maxlength="12" placeholder="시작 번호" @keydown.enter="search" />
 									<span class="text-muted small">~</span>
-									<input v-model="searchForm.BILLNO_TO" type="text" class="form-control form-control-sm" maxlength="12" placeholder="종료 번호" @keydown.enter="search" />
+									<input v-model="searchForm.billno_TO" type="text" class="form-control form-control-sm" maxlength="12" placeholder="종료 번호" @keydown.enter="search" />
 								</div>
 							</td>
 							<td class="bg-white px-3 text-muted small">
@@ -75,7 +75,7 @@
 							<th class="text-center bg-light-subtle border-end">어음번호</th>
 							<td class="bg-white border-end px-2 py-1">
 								<div class="d-flex align-items-center gap-2">
-									<input v-model="masterForm.BILLNO" type="text" class="form-control form-control-sm" maxlength="12" />
+									<input v-model="masterForm.billno" type="text" class="form-control form-control-sm" maxlength="12" />
 									<span class="text-nowrap fw-bold">부터</span>
 								</div>
 							</td>
@@ -98,7 +98,7 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end border-top">발 행 인</th>
 							<td class="bg-white border-end border-top px-2 py-1">
-								<input v-model="masterForm.ISSUMAN" type="text" class="form-control form-control-sm" maxlength="20" />
+								<input v-model="masterForm.issuman" type="text" class="form-control form-control-sm" maxlength="20" />
 							</td>
 							<th class="text-center bg-light-subtle border-end border-top">삭제여부</th>
 							<td colspan="3" class="bg-white border-top px-3">
@@ -143,20 +143,20 @@ const { resetForm } = useFormReset()
 
 // 🔍 검색 데이터
 const searchForm = reactive({
-	BILLNO: '',
-	BILLNO_TO: ''
+	billno: '',
+	billno_TO: ''
 })
 
 // 📝 마스터 데이터
 const masterForm = reactive({
 	actkind: '',
 	BILLGU: '100',
-	BILLNO: '',
-	BILLNO_TO: '', // Hidden in ASP detail but used in logic
+	billno: '',
+	billno_TO: '', // Hidden in ASP detail but used in logic
 	BILLCNT: 1,
 	bankcd: '',
 	banknm: '',
-	ISSUMAN: '',
+	issuman: '',
 	useyn: 'Y'
 })
 
@@ -171,15 +171,15 @@ const search = async () => {
 			actkind: 'S1',
 			cmpycd: authStore.cmpycd,
 			BILLGU: masterForm.BILLGU,
-			BILLNO: searchForm.BILLNO,
-			BILLNO_TO: searchForm.BILLNO_TO
+			billno: searchForm.billno,
+			billno_TO: searchForm.billno_TO
 		})
 
 		const processedData = (res.data || []).map((r: any) => ({
-			BILLNO: r.col0,
+			billno: r.col0,
 			bankcd: r.col1,
 			banknm: r.col2,
-			ISSUMAN: r.col3,
+			issuman: r.col3,
 			REGDATE: formatYmd(r.col4),
 			wonamt: Number(r.col5 || 0),
 			BILLGU_NM: r.col7,
@@ -192,10 +192,10 @@ const search = async () => {
 }
 
 const save = async () => {
-	if (!masterForm.BILLNO) return vAlert('어음번호를 정확히 입력하세요.')
+	if (!masterForm.billno) return vAlert('어음번호를 정확히 입력하세요.')
 	if (isNaN(masterForm.BILLCNT) || masterForm.BILLCNT < 1) return vAlert('등록매수를 확인해 주십시요.')
 	if (!masterForm.banknm) return vAlert('발행은행을 기재해 주십시요.')
-	if (!masterForm.ISSUMAN) return vAlert('발행인을 기재해 주십시요.')
+	if (!masterForm.issuman) return vAlert('발행인을 기재해 주십시요.')
 
 	try {
 		const payload = {
@@ -248,9 +248,9 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "어음번호", field: "BILLNO", width: 180, hozAlign: "center" },
+				{ title: "어음번호", field: "billno", width: 180, hozAlign: "center" },
 				{ title: "발행은행", field: "banknm", minWidth: 200 },
-				{ title: "발행인", field: "ISSUMAN", width: 120, hozAlign: "center" },
+				{ title: "발행인", field: "issuman", width: 120, hozAlign: "center" },
 				{ title: "등록일", field: "REGDATE", width: 100, hozAlign: "center" },
 				{ title: "금 액", field: "wonamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "형태", field: "BILLGU_NM", width: 100, hozAlign: "center" },
@@ -259,10 +259,10 @@ onMounted(() => {
 			rowClick: (e, row) => {
 				const d = row.getData()
 				masterForm.actkind = 'U1'
-				masterForm.BILLNO = d.BILLNO
+				masterForm.billno = d.billno
 				masterForm.bankcd = d.bankcd
 				masterForm.banknm = d.banknm
-				masterForm.ISSUMAN = d.ISSUMAN
+				masterForm.issuman = d.issuman
 				masterForm.useyn = d.useyn
 				masterForm.BILLCNT = 1
 			}

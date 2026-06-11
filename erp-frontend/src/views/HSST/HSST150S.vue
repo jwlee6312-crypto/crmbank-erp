@@ -120,7 +120,7 @@ const searchForm = reactive({
 })
 
 const rowCount = ref(0)
-const totals = reactive({ SMAMT: 0, SYAMT: 0 })
+const totals = reactive({ SMamt: 0, SYamt: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const search = async () => {
@@ -135,8 +135,8 @@ const search = async () => {
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
-		totals.SMAMT = data.reduce((acc: number, cur: any) => acc + (Number(cur.SMAMT) || 0), 0)
-		totals.SYAMT = data.reduce((acc: number, cur: any) => acc + (Number(cur.SYAMT) || 0), 0)
+		totals.SMamt = data.reduce((acc: number, cur: any) => acc + (Number(cur.SMamt) || 0), 0)
+		totals.SYamt = data.reduce((acc: number, cur: any) => acc + (Number(cur.SYamt) || 0), 0)
 
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -147,7 +147,7 @@ const initialize = () => {
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
 	searchForm.fymd = firstDay; searchForm.tymd = today;
 	mainGrid?.clearData(); rowCount.value = 0;
-	totals.SMAMT = 0; totals.SYAMT = 0;
+	totals.SMamt = 0; totals.SYamt = 0;
 }
 
 const excel = () => mainGrid?.download("xlsx", "품목분류별판매현황.xlsx")
@@ -177,14 +177,14 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 80 },
 			columns: [
 				{
-					title: "대분류", field: "Agrpnm", minWidth: 150, hozAlign: "left", cssClass: "fw-bold text-primary cursor-pointer",
+					title: "대분류", field: "agrpnm", minWidth: 150, hozAlign: "left", cssClass: "fw-bold text-primary cursor-pointer",
 					cellClick: (e, cell) => {
 						const d = cell.getData();
 						router.push({ path: '/HSST/HSST160S', query: { fymd: searchForm.fymd, tymd: searchForm.tymd, deptcd: searchForm.deptcd, astkind: d.astkind, agrpcd: d.agrpcd } });
 					}
 				},
 				{
-					title: "중분류", field: "Bgrpnm", minWidth: 150, hozAlign: "left", cssClass: "text-dark cursor-pointer",
+					title: "중분류", field: "bgrpnm", minWidth: 150, hozAlign: "left", cssClass: "text-dark cursor-pointer",
 					cellClick: (e, cell) => {
 						const d = cell.getData();
 						router.push({ path: '/HSST/HSST160S', query: { fymd: searchForm.fymd, tymd: searchForm.tymd, deptcd: searchForm.deptcd, astkind: d.astkind, agrpcd: d.agrpcd, bgrpcd: d.bgrpcd } });
@@ -193,17 +193,17 @@ onMounted(() => {
 				{
 					title: "당월 실적 (Current Month)",
 					columns: [
-						{ title: "매출액", field: "SMAMT", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "VMAMT", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "TMAMT", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-primary fw-bold" }
+						{ title: "매출액", field: "SMamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "VMamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "TMamt", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-primary fw-bold" }
 					]
 				},
 				{
 					title: "누계 실적 (Cumulative)",
 					columns: [
-						{ title: "매출액", field: "SYAMT", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "VYAMT", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "TYAMT", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-warning fw-bold" }
+						{ title: "매출액", field: "SYamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "VYamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "TYamt", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-warning fw-bold" }
 					]
 				}
 			]

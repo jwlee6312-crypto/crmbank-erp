@@ -155,7 +155,7 @@ const initialize = () => {
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
 	searchForm.yy = currentyy; searchForm.mm = currentmm;
 	mainGrid?.clearData(); rowCount.value = 0;
-	Object.assign(totals, { amtsum: 0, COstsUM: 0, PROFSUM: 0, amtsum_T: 0, COstsUM_T: 0, PROFSUM_T: 0 });
+	Object.assign(totals, { amtsum: 0, COstsUM: 0, profsum: 0, amtsum_T: 0, COstsUM_T: 0, profsum_T: 0 });
 }
 
 const excel = () => mainGrid?.download("xlsx", "매출총이익명세서.xlsx")
@@ -196,7 +196,7 @@ onMounted(() => {
 					columns: [
 						{ title: "매출액", field: "salsamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
 						{ title: "매출원가", field: "salscost", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매총이익", field: "salsprof", hozAlign: "right", width: 150, formatter: "money", mutatorData: (v,d) => (Number(d.SALSAMT)||0) - (Number(d.SALSCOST)||0), cssClass: "text-info fw-bold" },
+						{ title: "매총이익", field: "salsprof", hozAlign: "right", width: 150, formatter: "money", mutatorData: (v,d) => (Number(d.salsamt)||0) - (Number(d.SALSCOST)||0), cssClass: "text-info fw-bold" },
 						{ title: "이익률(%)", field: "prof_rate", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
 							const s = Number(d.salsamt)||0;
 							return s !== 0 ? ((s - (Number(d.salscost)||0)) / s * 100) : 0;
@@ -208,7 +208,7 @@ onMounted(() => {
 					columns: [
 						{ title: "매출액", field: "salsamt_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
 						{ title: "매출원가", field: "salscost_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매총이익", field: "salsprof_t", hozAlign: "right", width: 150, formatter: "money", mutatorData: (v,d) => (Number(d.SALSAMT_T)||0) - (Number(d.SALSCOST_T)||0), cssClass: "text-warning fw-bold" },
+						{ title: "매총이익", field: "salsprof_t", hozAlign: "right", width: 150, formatter: "money", mutatorData: (v,d) => (Number(d.salsamt_T)||0) - (Number(d.SALSCOST_T)||0), cssClass: "text-warning fw-bold" },
 						{ title: "이익률(%)", field: "prof_rate_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
 							const s = Number(d.salsamt_t)||0;
 							return s !== 0 ? ((s - (Number(d.salscost_t)||0)) / s * 100) : 0;

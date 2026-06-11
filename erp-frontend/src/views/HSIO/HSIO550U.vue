@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 주문출고처리 (HSIO550U)
 	작성일자	: 2025.02.24
-	설명        : 발주 내역을 기반으로 출고 처리 (ASP 패턴 기반 순차 저장 로직 및 소문자 통일)
+	설명        : 발주 내역을 기반으로 출고 처리 (창고 로직 표준화 적용)
 	=============================================================
 -->
 
@@ -11,14 +11,14 @@
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-truck me-2 text-primary" style="font-size: 16px;"></i>
         영업정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         출고관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">주문출고처리 (HSIO550U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
+      <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchCustList">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
@@ -31,7 +31,7 @@
         <span class="fw-bold small text-secondary">출고창고:</span>
         <select v-model="searchParam.whcd" class="form-select form-select-sm" style="width: 120px;">
           <option value="">전체</option>
-          <option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+          <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
         </select>
       </div>
       <div class="d-flex align-items-center gap-2">
@@ -78,8 +78,7 @@
                   <th class="required bg-light text-center">출고창고</th>
                   <td>
                     <select v-model="masterData.whcd" class="form-select">
-                      <option value="">-- 선택 --</option>
-                      <option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+                      <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
                     </select>
                   </td>
                   <th class="required bg-light text-center">출고일자</th>
@@ -143,10 +142,10 @@ const now = new Date()
 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
 const initymd = now.toISOString().substring(0, 10)
 
-// [1] 데이터 모델링 (소문자 통일)
+// [1] 데이터 모델링
 const searchParam = reactive({ whcd: '', frymd: firstDay, toymd: initymd })
 const masterData = reactive<any>({
-  cmpycd: authStore.cmpycd, ioymd: initymd, whcd: '100', custcd: '', custnm: '',
+  cmpycd: authStore.cmpycd, ioymd: initymd, whcd: '', custcd: '', custnm: '',
   address: '', trancd: '', trannm: '', remark: '', trnemp: '', area: ''
 })
 
@@ -184,6 +183,24 @@ const initGrids = () => {
 }
 
 // [3] 로직 처리
+const fetchWhOptions = async () => {
+  try {
+    const resWh = await api.get('/api/hs00/HS00_000S_STR', {
+      params: { gubun: 'W0', cmpycd: authStore.cmpycd }
+    })
+    whOptions.value = (resWh.data || []).map((i: any) => ({
+      whcd: String(i.whcd || '').trim(),
+      whnm: String(i.whnm || '').trim()
+    }))
+
+    if (whOptions.value.length > 0) {
+      masterData.whcd = whOptions.value[0].whcd
+    }
+  } catch (e) {
+    whOptions.value = []
+  }
+}
+
 const fetchCustList = async () => {
   try {
     const res = await api.post('/api/hsio/HSIO_550U_STR', {
@@ -201,23 +218,19 @@ const fetchDetails = async (row: any) => {
         actkind: 'S1', cmpycd: authStore.cmpycd, custcd: row.custcd, whcd: searchParam.whcd,
         iogbn: '200', ioymdfr: searchParam.frymd.replace(/-/g, ''), ioymdto: searchParam.toymd.replace(/-/g, '')
     });
-    const detailData = (res.data || []).map((i: any) => ({ ...i, ioqty: i.janqty, procyn: 'y' }));
+    const detailData = (res.data || []).map((i: any) => ({ ...i, ioqty: i.janqty, procyn: 'Y' }));
     detailGrid?.setData(detailData);
   } catch (e) { vAlertError('상세 조회 실패') }
 }
 
-/**
- * 🚀 저장 로직 (ASP 패턴: 마감체크 -> 마스터 채번 -> 상세 루프)
- */
 const save = async () => {
-  const items = detailGrid?.getData().filter((r: any) => r.procyn === 'y' && Number(r.ioqty) > 0) || [];
+  const items = detailGrid?.getData().filter((r: any) => r.procyn === 'Y' && Number(r.ioqty) > 0) || [];
   if (!items.length) return vAlertError('출고 수량을 입력하세요.');
   if (!masterData.whcd) return vAlertError('출고 창고를 선택하세요.');
 
   const ioymd = masterData.ioymd.replace(/-/g, '');
 
   try {
-    // 1. 마감 체크 (ASP 로직 이식)
     const resCls = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } });
     if (resCls.data?.length > 0) {
         const sclsym = resCls.data[0].sclsym;
@@ -226,9 +239,8 @@ const save = async () => {
         }
     }
 
-    if (!confirm('출고 작업을 진행하시겠습니까?')) return;
+    if (!confirm('출고 작업을 진행하시겠습니까?')) return
 
-    // 상세 내역 금액 계산 및 총합계 산출 (ASP 로직 이식)
     const detailItems = items.map((item: any) => {
         const ordQty = Number(item.ordqty) || 1;
         const outQty = Number(item.ioqty) || 0;
@@ -239,14 +251,13 @@ const save = async () => {
 
     const totalAmtSum = detailItems.reduce((acc, cur) => acc + cur.outamt, 0);
 
-    // 2. 마스터 저장 (Step 1)
     const masterParams = {
-        actkind: 'a0', cmpycd: authStore.cmpycd, iogbn: '200',
+        actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200',
         ioymdfr: searchParam.frymd.replace(/-/g, ''), ioymdto: searchParam.toymd.replace(/-/g, ''),
         custcd: masterData.custcd, deptcd: authStore.deptcd, ioym: '', iono: '', ioymd: ioymd,
         iotype: '100', whcd: masterData.whcd, area: masterData.area || '', userid: authStore.userid,
         trnemp: masterData.trnemp || '', trancd: masterData.trancd || '', addres: masterData.address || '',
-        remark: masterData.remark || '', cfmyn: 'y', amtsum: totalAmtSum, updemp: authStore.userid
+        remark: masterData.remark || '', cfmyn: 'Y', amtsum: totalAmtSum, updemp: authStore.userid
     }
     const resMst = await api.post('/api/hsio/HSIO_550U_STR', masterParams);
     const mstData = resMst.data?.[0];
@@ -255,17 +266,16 @@ const save = async () => {
         throw new Error(mstData.iono || '마스터 저장 오류');
     }
 
-    const keyIoym = mstData?.ioym; const keyIono = mstData?.iono;
+    const keyioym = mstData?.ioym; const keyiono = mstData?.iono;
 
-    // 3. 상세 내역 루프 저장 (Step 2)
     for (const item of detailItems) {
         const detailParams = {
-            actkind: 'a0', cmpycd: authStore.cmpycd, iogbn: '200', ioym: keyIoym, iono: keyIono,
+            actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200', ioym: keyioym, iono: keyiono,
             iorowno: '', deptcd: item.deptcd || authStore.deptcd, custcd: masterData.custcd,
             whcd: masterData.whcd, area: masterData.area || '', userid: item.ordemp || authStore.userid,
             ioymd: ioymd, iotype: '100', itemcd: item.itemcd, itsize: item.itsize, unit: item.unit,
             ioqty: item.outqty, ioamt: item.outamt, iovat: item.outvat, balym: item.ordym, balno: item.ordno,
-            browno: item.orowno, cfmyn: 'y', updemp: authStore.userid
+            browno: item.orowno, cfmyn: 'Y', updemp: authStore.userid
         }
         const resDtl = await api.post('/api/hsio/HSIO_551U_STR', detailParams);
         if (resDtl.data?.[0]?.ioym === '000000') {
@@ -280,12 +290,13 @@ const save = async () => {
 
 const toggleAllRows = () => {
   const rows = detailGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'n' : 'y' }))
+  const allSelected = rows.every(r => r.getData().procyn === 'Y')
+  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
 }
 
 function initialize() {
   resetForm(masterData); masterData.ioymd = initymd;
+  if (whOptions.value.length > 0) masterData.whcd = whOptions.value[0].whcd;
   custGrid?.clearData(); detailGrid?.clearData();
 }
 
@@ -297,9 +308,7 @@ function handleOpenHelp(type: string) {
 const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val;
 
 onMounted(async () => {
-  api.post('/api/ha00/HA00_00P_STR', { gubun: 'W0', cmpycd: authStore.cmpycd }).then(r => {
-    whOptions.value = (r.data || []).map((i:any)=>({code: i.code || i.whcd, cdnm: i.cdnm || i.whnm}));
-  });
+  await fetchWhOptions();
   nextTick(() => { initGrids(); fetchCustList(); });
 })
 </script>

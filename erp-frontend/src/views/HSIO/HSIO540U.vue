@@ -118,7 +118,7 @@ const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | 
 const fetchIssuedList = async () => {
 	try {
 		const res = await api.post('/api/hsio/HSIO_540U_STR', {
-			actkind: 's0',
+			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
             gubun: '200',
 			ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
@@ -127,14 +127,14 @@ const fetchIssuedList = async () => {
 		})
 		mainGrid?.setData(res.data.map((i: any) => ({
             ...i,
-            slipymd: i.slipymd || i.SLIPYMD,
-            slipno: i.slipno || i.slipno,
-            udeptcd: i.udeptcd || i.UDEPTCD || i.deptcd || i.DEPTCD,
-            spyamt: i.spyamt || i.SPYAMT,
-            vatamt: i.vatamt || i.VATAMT,
-            custcd: i.custcd || i.CUSTCD,
-            custnm: i.custnm || i.CUSTNM,
-            vattypenm: i.vattypenm || i.VATTYPENM
+            slipymd: i.slipymd,
+            slipno: i.slipno,
+            deptcd: i.deptcd,
+            spyamt: i.spyamt,
+            vatamt: i.vatamt,
+            custcd: i.custcd,
+            custnm: i.custnm,
+            vattypenm: i.vattypenm
         })))
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -151,27 +151,27 @@ const handleCancelSlip = async () => {
 	try {
         // 1. 자동전표 여부 확인 (gbn: 'p1')
         const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
-        const autoslip = (resset.data?.[0]?.slipyn || 'n').toLowerCase()
+        const autoslip = (resset.data?.[0]?.slipyn || 'N').toLowerCase()
 
 		for (const item of selected) {
             const slipymd = (item.slipymd || '').replace(/-/g, '')
             const slipno = item.slipno
-            const udeptcd = item.udeptcd
+            const deptcd = item.deptcd
 
             if (!slipymd || slipymd === '00000000') continue;
 
             // 2. 자동전표인 경우 확정 취소 (ASP: HASL_020U_STR 'A0')
-            if (autoslip === 'y') {
+            if (autoslip === 'Y') {
                 await api.post('/api/hasl/HASL_020U_STR', {
-                    actkind: 'a0',
+                    actkind: 'A0',
                     cmpycd: authStore.cmpycd,
                     slipymd: slipymd,
                     acctymd: slipymd,
                     slipno: slipno,
-                    deptcd: udeptcd,
+                    deptcd: deptcd,
                     slipkind: '040',
-                    slipyn: 'y',
-                    cofmyn: 'n',
+                    slipyn: 'Y',
+                    cofmyn: 'N',
                     empnm: authStore.usernm,
                     updemp: authStore.userid
                 })
@@ -179,19 +179,19 @@ const handleCancelSlip = async () => {
 
             // 3. 정산 내역 전표 정보 삭제 (ASP: HSIO_540U_STR 'D0')
 			const res = await api.post('/api/hsio/HSIO_540U_STR', {
-				actkind: 'd0',
+				actkind: 'D0',
 				cmpycd: authStore.cmpycd,
                 gubun: '200',
 				ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
 				ioymdto: searchForm.ioymdto.replace(/-/g, ''),
-                udeptcd: udeptcd,
+                deptcd: deptcd,
                 slipymd: slipymd,
                 slipno: slipno,
 				userid: authStore.userid
 			})
 
             const resData = res.data?.[0]
-            if (resData && (resData.result === 'y' || resData.erryn === 'y' || resData.RESULT === 'Y' || resData.ERRYN === 'Y')) {
+            if (resData && (resData.result === 'Y' || resData.erryn === 'Y' || resData.RESULT === 'Y' || resData.ERRYN === 'Y')) {
                 throw new Error(resData.msg || resData.MSG || '전표 취소 중 업무 오류 발생')
             }
 		}
@@ -226,7 +226,7 @@ function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-			data: { gubun: 'd0', cmpycd: authStore.cmpycd },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
 		})
@@ -235,7 +235,7 @@ function openHelp(type: string) {
 }
 
 onMounted(async () => {
-	api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } }).then(r => {
+	api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
 		if (r.data?.length) {
             const d = r.data[0]
 			closingInfo.clsymd = String(d.clsymd || d.CLSYMD || '');

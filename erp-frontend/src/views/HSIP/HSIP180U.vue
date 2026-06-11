@@ -118,7 +118,7 @@ const fetchList = async () => {
   }
   try {
     const res = await api.post('/api/hsip/HSIP_180U_STR', {
-      ...searchForm, actkind: 's0', cmpycd: authStore.cmpycd
+      ...searchForm, actkind: 'S0', cmpycd: authStore.cmpycd
     })
     mainGrid?.setData(res.data || [])
     vAlert('조회되었습니다.')
@@ -137,7 +137,7 @@ const save = async () => {
   try {
     for (const item of selected) {
       const params = {
-        actkind: 'u0',
+        actkind: 'U0',
         cmpycd: authStore.cmpycd,
         fileno: searchForm.fileno,
         shipseq: searchForm.shipseq,
@@ -153,7 +153,7 @@ const save = async () => {
       const resData = res.data?.[0]
 
       // ASP 에러 체크 패턴 적용 (소문자 체크)
-      if (resData && (resData.erryn === 'y' || resData.status === 'y')) {
+      if (resData && (resData.erryn === 'Y' || resData.status === 'Y')) {
         throw new Error(resData.msg || '저장 중 업무 오류가 발생했습니다.')
       }
     }

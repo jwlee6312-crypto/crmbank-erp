@@ -183,7 +183,7 @@ const modalVisible = ref(false)
 const modalProps = reactive<ModalProps>({
 	title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
 	columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
-	data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: '' },
+	data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: '' },
 	onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm },
 	type: 'table'
 })
@@ -210,7 +210,7 @@ onMounted(() => {
 						router.push({
 							path: '/HSST/HSST110S',
 							query: {
-								SELGBN: '2',
+								selgbn: '2',
 								frymd: firstDay,
 								toymd: d.lastdd,
 								deptcd: searchForm.deptcd,

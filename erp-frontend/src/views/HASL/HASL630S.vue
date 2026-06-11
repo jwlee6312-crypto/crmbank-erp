@@ -47,12 +47,12 @@
 							<span class="erp-label"><i class="bi bi-dot"></i>관리번호</span>
 							<div class="d-flex align-items-center gap-1">
 								<div class="input-group input-group-sm" style="width: 220px;">
-									<input v-model="searchForm.mgtnoFR" type="text" class="form-control" @keydown.enter="openHelp('MGTFR')" placeholder="시작 관리번호" />
+									<input v-model="searchForm.mgtnofr" type="text" class="form-control" @keydown.enter="openHelp('MGTFR')" placeholder="시작 관리번호" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('MGTFR')"><i class="bi bi-search"></i></button>
 								</div>
 								<span>~</span>
 								<div class="input-group input-group-sm" style="width: 220px;">
-									<input v-model="searchForm.mgtnoTO" type="text" class="form-control" @keydown.enter="openHelp('MGTTO')" placeholder="종료 관리번호" />
+									<input v-model="searchForm.mgtnoto" type="text" class="form-control" @keydown.enter="openHelp('MGTTO')" placeholder="종료 관리번호" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('MGTTO')"><i class="bi bi-search"></i></button>
 								</div>
 							</div>
@@ -109,10 +109,10 @@ const searchForm = reactive({
 	acctcd: (route.query.acctcd as string) || '',
 	acctnm: '',
 	mgtgbn: '', // 계정에 따른 관리항목 구분
-	mgtnoFR: '',
-	mgtnmFR: '',
-	mgtnoTO: '',
-	mgtnmTO: '',
+	mgtnofr: '',
+	mgtnmfr: '',
+	mgtnoto: '',
+	mgtnmto: '',
 	frymd: (route.query.frymd as string) || firstDay,
 	toymd: (route.query.toymd as string) || today
 })
@@ -136,8 +136,8 @@ const search = async () => {
 			frymd: searchForm.frymd.replace(/-/g, ''),
 			toymd: searchForm.toymd.replace(/-/g, ''),
 			acctcd: searchForm.acctcd,
-			mgtnoFR: searchForm.mgtnoFR,
-			mgtnoTO: searchForm.mgtnoTO,
+			mgtnofr: searchForm.mgtnofr,
+			mgtnoto: searchForm.mgtnoto,
 			gubun: '2'
 		})
 
@@ -148,7 +148,7 @@ const search = async () => {
 			bjanamt: Number(row.col2 || row.bjanamt || 0),
 			dbamt: Number(row.col3 || row.dbamt || 0),
 			cramt: Number(row.col4 || row.cramt || 0),
-			Cjanamt: Number(row.col5 || row.Cjanamt || 0)
+			cjanamt: Number(row.col5 || row.cjanamt || 0)
 		}))
 
 		mainGrid?.setData(data)
@@ -172,12 +172,12 @@ function openHelp(type: 'ACCT' | 'MGTFR' | 'MGTTO') {
 			onConfirm: (d: any) => {
 				searchForm.acctcd = d.acctcd
 				searchForm.acctnm = d.acctnm
-				searchForm.mgtgbn = d.TYPEMGT || ''
+				searchForm.mgtgbn = d.typemgt || d.TYPEMGT || '' // 대소문자 대응
 				// 계정 변경 시 관리번호 초기화
-				searchForm.mgtnoFR = ''
-				searchForm.mgtnmFR = ''
-				searchForm.mgtnoTO = ''
-				searchForm.mgtnmTO = ''
+				searchForm.mgtnofr = ''
+				searchForm.mgtnmfr = ''
+				searchForm.mgtnoto = ''
+				searchForm.mgtnmto = ''
 			}
 		})
 	} else {
@@ -187,16 +187,27 @@ function openHelp(type: 'ACCT' | 'MGTFR' | 'MGTTO') {
 		}
 		const isFr = type === 'MGTFR'
 		Object.assign(modalProps, {
-			title: '관리번호 선택', path: '/api/ha00/HA00_05P_STR', defaultField: 'col0',
-			data: { mgtgbn: searchForm.mgtgbn, acctcd: searchForm.acctcd, cmpycd: authStore.cmpycd, search: isFr ? searchForm.mgtnoFR : searchForm.mgtnoTO },
-			columns: [{ title: '관리번호', field: 'col0', width: 150 }, { title: '명칭/적요', field: 'col1', width: 250 }],
+			title: '관리번호 선택',
+			path: '/api/ha00/HA00_00P_STR', // HASL560S와 동일한 경로
+			defaultField: 'mgtno',
+			data: {
+				gubun: 'M0',
+				cmpycd: authStore.cmpycd,
+				gbncd: searchForm.mgtgbn,
+				code: isFr ? searchForm.mgtnofr : searchForm.mgtnoto,
+				remark: searchForm.acctcd
+			},
+			columns: [
+				{ title: '관리번호', field: 'mgtno', width: 150 },
+				{ title: '명칭/적요', field: 'mgtnm', width: 250 }
+			],
 			onConfirm: (d: any) => {
 				if (isFr) {
-					searchForm.mgtnoFR = d.col0
-					searchForm.mgtnmFR = d.col1
+					searchForm.mgtnofr = d.mgtno
+					searchForm.mgtnmfr = d.mgtnm
 				} else {
-					searchForm.mgtnoTO = d.col0
-					searchForm.mgtnmTO = d.col1
+					searchForm.mgtnoto = d.mgtno
+					searchForm.mgtnmto = d.mgtnm
 				}
 			}
 		})
@@ -206,7 +217,7 @@ function openHelp(type: 'ACCT' | 'MGTFR' | 'MGTTO') {
 
 const print = () => {
 	if (!searchForm.acctcd) return vAlertError('계정과목을 선택하세요.')
-	const params = `acctcd=${searchForm.acctcd}&acctnm=${searchForm.acctnm}&mgtnoFR=${searchForm.mgtnoFR}&mgtnoTO=${searchForm.mgtnoTO}&frymd=${searchForm.frymd.replace(/-/g, '')}&toymd=${searchForm.toymd.replace(/-/g, '')}&PRTGU=1`
+	const params = `acctcd=${searchForm.acctcd}&acctnm=${searchForm.acctnm}&mgtnofr=${searchForm.mgtnofr}&mgtnoto=${searchForm.mgtnoto}&frymd=${searchForm.frymd.replace(/-/g, '')}&toymd=${searchForm.toymd.replace(/-/g, '')}&PRTGU=1`
 	window.open(`/api/hasl/HASL_630P?${params}`, 'ManagementStatementPrint', 'width=800,height=800,scrollbars=yes')
 }
 
@@ -256,7 +267,7 @@ onMounted(async () => {
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				},
 				{
-					title: "잔액", field: "Cjanamt", width: 130, hozAlign: "right",
+					title: "잔액", field: "cjanamt", width: 130, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				}

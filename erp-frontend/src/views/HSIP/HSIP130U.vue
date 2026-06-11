@@ -272,7 +272,7 @@ function openHelp(type: string, cell?: any) {
   } else if (type === 'COST') {
     openCommonHelp('COMMON', (d) => {
       cell.getRow().update({
-        costcd: d.CODE,
+        costcd: d.code,
         costnm: d.cdnm,
         state: cell.getRow().getData().rowno ? 'U' : 'C'
       })

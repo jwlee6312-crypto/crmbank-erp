@@ -147,8 +147,8 @@ const handleExecute = async () => {
 			vAlertError(d.MESSAGE || d.message)
 		} else {
 			Object.assign(resultInfo, {
-				amt_bf: d.AMT_BF || d.amt_bf || '0',
-				amt_af: d.AMT_AF || d.amt_af || '0',
+				amt_bf: d.amt_BF || d.amt_bf || '0',
+				amt_af: d.amt_AF || d.amt_af || '0',
 				enddt: new Date().toLocaleTimeString()
 			})
 			vAlert(d.MESSAGE || d.message || '배부작업이 완료되었습니다.')

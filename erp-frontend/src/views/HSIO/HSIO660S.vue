@@ -125,7 +125,7 @@ const search = async () => {
 		const data = res.data || []
 		mainGrid?.setData(data)
 		rowCount.value = data.length
-		totalQty.value = data.reduce((acc: number, cur: any) => acc + (Number(cur.QTY) || 0), 0)
+		totalQty.value = data.reduce((acc: number, cur: any) => acc + (Number(cur.qty) || 0), 0)
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
@@ -149,8 +149,8 @@ function openHelp(type: string) {
 		Object.assign(modalProps, {
 			title: '배송담당자 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'cdnm',
 			data: { gubun: 'U1', cmpycd: authStore.cmpycd },
-			columns: [{ title: '코드', field: 'CODE', width: 100 }, { title: '성명', field: 'cdnm', width: 200 }],
-			onConfirm: (d: any) => { searchForm.TRNEMP = d.CODE; searchForm.TRNempnm = d.cdnm }
+			columns: [{ title: '코드', field: 'code', width: 100 }, { title: '성명', field: 'cdnm', width: 200 }],
+			onConfirm: (d: any) => { searchForm.TRNEMP = d.code; searchForm.TRNempnm = d.cdnm }
 		})
 	}
 	modalVisible.value = true
@@ -168,12 +168,12 @@ onMounted(() => {
 				{ title: "규격", field: "itsize", width: 150, hozAlign: "left" },
 				{ title: "단위", field: "unit", width: 80 },
 				{ title: "배송지역", field: "areaNM", width: 180 },
-				{ title: "수량", field: "QTY", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: (c:any)=>c.getData().QTYPNT || 0 } },
+				{ title: "수량", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: (c:any)=>c.getData().qtypnt || 0 } },
 				{ title: "비고", field: "remark", minWidth: 200, hozAlign: "left" }
 			],
 			groupBy: "itemnm", // ASP의 소계 로직을 위해 품목별 그룹화 적용
 			groupHeader: function(value, count, data, group){
-				return value + " (합계: " + data.reduce((a, b) => a + Number(b.QTY), 0).toLocaleString() + " 건)";
+				return value + " (합계: " + data.reduce((a, b) => a + Number(b.qty), 0).toLocaleString() + " 건)";
 			},
 		})
 	}

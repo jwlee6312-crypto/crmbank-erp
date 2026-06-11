@@ -207,7 +207,7 @@ onMounted(() => {
         { title: '규격', field: 'itsize', width: 150 },
         { title: '단위', field: 'unit', width: 60, hozAlign: 'center' },
         { title: '요청량', field: 'reqqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
-        { title: '단가', field: 'IMprice', hozAlign: 'right', width: 100, formatter: 'money' },
+        { title: '단가', field: 'imprice', hozAlign: 'right', width: 100, formatter: 'money' },
         { title: '금액', field: 'reqamt', hozAlign: 'right', width: 120, formatter: 'money' },
         { title: '발주량', field: 'balqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-primary' },
         { title: '미발주량', field: 'janqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-danger fw-bold',

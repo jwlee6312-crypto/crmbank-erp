@@ -39,9 +39,9 @@
 						<div class="d-flex align-items-center">
 							<span class="erp-label"><i class="bi bi-dot"></i>어음번호</span>
 							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchForm.BILLNO" type="text" class="form-control form-control-sm" style="width: 150px;" maxlength="14" @keydown.enter="search" />
+								<input v-model="searchForm.billno" type="text" class="form-control form-control-sm" style="width: 150px;" maxlength="14" @keydown.enter="search" />
 								<span>~</span>
-								<input v-model="searchForm.BILLNO_TO" type="text" class="form-control form-control-sm" style="width: 150px;" maxlength="14" @keydown.enter="search" />
+								<input v-model="searchForm.billno_TO" type="text" class="form-control form-control-sm" style="width: 150px;" maxlength="14" @keydown.enter="search" />
 							</div>
 						</div>
 					</div>
@@ -65,15 +65,15 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end">어음번호</th>
 							<td class="bg-white border-end px-2 py-1">
-								<input v-model="masterForm.BILLNO" type="text" class="form-control form-control-sm" maxlength="14" :readonly="masterForm.actkind === 'U1'" />
+								<input v-model="masterForm.billno" type="text" class="form-control form-control-sm" maxlength="14" :readonly="masterForm.actkind === 'U1'" />
 							</td>
 							<th class="text-center bg-light-subtle border-end">발행은행</th>
 							<td class="bg-white border-end px-2 py-1">
-								<input v-model="masterForm.ISSUBANK" type="text" class="form-control form-control-sm" />
+								<input v-model="masterForm.issubank" type="text" class="form-control form-control-sm" />
 							</td>
 							<th class="text-center bg-light-subtle border-end">발행인</th>
 							<td class="bg-white px-2 py-1">
-								<input v-model="masterForm.ISSUMAN" type="text" class="form-control form-control-sm" maxlength="20" />
+								<input v-model="masterForm.issuman" type="text" class="form-control form-control-sm" maxlength="20" />
 							</td>
 						</tr>
 						<tr>
@@ -102,7 +102,7 @@
 							</td>
 							<th class="text-center bg-light-subtle border-end">어음유형</th>
 							<td class="bg-white border-end px-2 py-1">
-								<select v-model="masterForm.BILLTYPE" class="form-select form-select-sm">
+								<select v-model="masterForm.billtype" class="form-select form-select-sm">
 									<option v-for="opt in billTypeOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
 								</select>
 							</td>
@@ -166,21 +166,21 @@ const { resetForm } = useFormReset()
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	BILLNO: '',
-	BILLNO_TO: ''
+	billno: '',
+	billno_TO: ''
 })
 
 // 📝 마스터 데이터
 const masterForm = reactive({
 	actkind: 'I1',
-	BILLNO: '',
-	ISSUBANK: '',
-	ISSUMAN: '',
+	billno: '',
+	issubank: '',
+	issuman: '',
 	stdymd: '',
 	endymd: '',
 	billamt: 0,
 	BILLKIND: '',
-	BILLTYPE: '',
+	billtype: '',
 	BUDOYN: 'N',
 	custcd: '',
 	custnm: '',
@@ -203,7 +203,7 @@ const fetchOptions = async () => {
 		// 어음유형 (160)
 		const resType = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', cmpycd: ' ', search: '160' })
 		billTypeOptions.value = resType.data?.map((i: any) => ({ value: i.col0, text: i.col1 })) || []
-		if (billTypeOptions.value.length > 0) masterForm.BILLTYPE = billTypeOptions.value[0].value
+		if (billTypeOptions.value.length > 0) masterForm.billtype = billTypeOptions.value[0].value
 	} catch (e) { console.error('Options Load Failed', e) }
 }
 
@@ -212,8 +212,8 @@ const search = async () => {
 		const res = await api.post('/api/haba/HABA_150U_STR', {
 			actkind: 'S1',
 			cmpycd: authStore.cmpycd,
-			BILLNO: searchForm.BILLNO,
-			BILLNO_TO: searchForm.BILLNO_TO
+			billno: searchForm.billno,
+			billno_TO: searchForm.billno_TO
 		})
 		mainGrid?.setData(res.data || [])
 		if (res.data?.length > 0) vAlert('조회되었습니다.')
@@ -222,9 +222,9 @@ const search = async () => {
 }
 
 const save = async () => {
-	if (!masterForm.BILLNO) return vAlert('어음번호를 입력하세요.')
-	if (!masterForm.ISSUBANK) return vAlert('발행은행을 입력하세요.')
-	if (!masterForm.ISSUMAN) return vAlert('발행인을 입력하세요.')
+	if (!masterForm.billno) return vAlert('어음번호를 입력하세요.')
+	if (!masterForm.issubank) return vAlert('발행은행을 입력하세요.')
+	if (!masterForm.issuman) return vAlert('발행인을 입력하세요.')
 	if (!masterForm.stdymd) return vAlert('발행일자를 입력하세요.')
 	if (!masterForm.endymd) return vAlert('만기일자를 입력하세요.')
 	if (!masterForm.billamt) return vAlert('어음금액을 입력하세요.')
@@ -234,17 +234,17 @@ const save = async () => {
 		const payload = {
 			actkind: masterForm.actkind,
 			cmpycd: authStore.cmpycd,
-			BILLNO: masterForm.BILLNO,
-			BILLNO_TO: '',
+			billno: masterForm.billno,
+			billno_TO: '',
 			BILLKIND: masterForm.BILLKIND,
-			ISSUBANK: masterForm.ISSUBANK,
-			ISSUMAN: masterForm.ISSUMAN,
+			issubank: masterForm.issubank,
+			issuman: masterForm.issuman,
 			stdymd: masterForm.stdymd.replace(/-/g, ''),
 			endymd: masterForm.endymd.replace(/-/g, ''),
 			billamt: masterForm.billamt,
 			custcd: masterForm.custcd,
 			BUDOYN: masterForm.BUDOYN,
-			BILLTYPE: masterForm.BILLTYPE,
+			billtype: masterForm.billtype,
 			useyn: masterForm.useyn,
 			userid: authStore.userid
 		}
@@ -266,7 +266,7 @@ const initialize = () => {
 	masterForm.BUDOYN = 'N'
 	masterForm.useyn = 'Y'
 	if (billKindOptions.value.length > 0) masterForm.BILLKIND = billKindOptions.value[0].value
-	if (billTypeOptions.value.length > 0) masterForm.BILLTYPE = billTypeOptions.value[0].value
+	if (billTypeOptions.value.length > 0) masterForm.billtype = billTypeOptions.value[0].value
 }
 
 // 팝업 설정
@@ -317,14 +317,14 @@ onMounted(async () => {
 			rowClick: (e, row) => {
 				const d = row.getData()
 				masterForm.actkind = 'U1'
-				masterForm.BILLNO = d.col0
-				masterForm.ISSUBANK = d.col1
-				masterForm.ISSUMAN = d.col2
+				masterForm.billno = d.col0
+				masterForm.issubank = d.col1
+				masterForm.issuman = d.col2
 				masterForm.stdymd = formatDate(d.col3)
 				masterForm.endymd = formatDate(d.col4)
 				masterForm.billamt = Number(d.col5)
 				masterForm.BILLKIND = d.col6
-				masterForm.BILLTYPE = d.col8
+				masterForm.billtype = d.col8
 				masterForm.BUDOYN = d.col10
 				masterForm.custcd = d.col11
 				masterForm.custnm = d.col12

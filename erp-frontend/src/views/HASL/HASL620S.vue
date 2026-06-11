@@ -3,7 +3,7 @@
 	프로그램명	: 증감잔액명세서-거래처
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 특정 계정과목에 대해 거래처별 이월액, 증가액, 감소액 및 기말 잔액을 조회
+	설명        : 특정 계정과목에 대해 거래처별 이월액, 증가액, 감소액 및 기말 잔액을 조회 (HA00_00P_STR 이식)
 	=============================================================
 -->
 
@@ -47,14 +47,14 @@
 							<span class="erp-label"><i class="bi bi-dot"></i>거&nbsp;래&nbsp;처</span>
 							<div class="d-flex align-items-center gap-1">
 								<div class="input-group input-group-sm" style="width: 220px;">
-									<input v-model="searchForm.custcdFR" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="searchForm.custnmFR" type="text" class="form-control" @keydown.enter="openHelp('CUSTFR')" placeholder="시작 거래처" />
+									<input v-model="searchForm.custcdfr" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+									<input v-model="searchForm.custnmfr" type="text" class="form-control" @keydown.enter="openHelp('CUSTFR')" placeholder="시작 거래처" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('CUSTFR')"><i class="bi bi-search"></i></button>
 								</div>
 								<span>~</span>
 								<div class="input-group input-group-sm" style="width: 220px;">
-									<input v-model="searchForm.custcdTO" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="searchForm.custnmTO" type="text" class="form-control" @keydown.enter="openHelp('CUSTTO')" placeholder="종료 거래처" />
+									<input v-model="searchForm.custcdto" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+									<input v-model="searchForm.custnmto" type="text" class="form-control" @keydown.enter="openHelp('CUSTTO')" placeholder="종료 거래처" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('CUSTTO')"><i class="bi bi-search"></i></button>
 								</div>
 							</div>
@@ -110,10 +110,10 @@ const searchForm = reactive({
 	acctcd: '',
 	acctnm: '',
 	custgbn: '', // 계정에 따른 거래처 구분
-	custcdFR: '',
-	custnmFR: '',
-	custcdTO: '',
-	custnmTO: '',
+	custcdfr: '',
+	custnmfr: '',
+	custcdto: '',
+	custnmto: '',
 	frymd: firstDay,
 	toymd: today
 })
@@ -137,20 +137,23 @@ const search = async () => {
 			frymd: searchForm.frymd.replace(/-/g, ''),
 			toymd: searchForm.toymd.replace(/-/g, ''),
 			acctcd: searchForm.acctcd,
-			custcdFR: searchForm.custcdFR,
-			custcdTO: searchForm.custcdTO,
+			custcdfr: searchForm.custcdfr,
+			custcdto: searchForm.custcdto,
 			gubun: '2' // ASP 파라미터 "2"
 		})
 
-		const data = (res.data || []).map((row: any) => ({
-			...row,
-			custcd: row.col0 || row.custcd,
-			custnm: row.col1 || row.custnm,
-			bjanamt: Number(row.col2 || row.bjanamt || 0),
-			dbamt: Number(row.col3 || row.dbamt || 0),
-			cramt: Number(row.col4 || row.cramt || 0),
-			Cjanamt: Number(row.col5 || row.Cjanamt || 0)
-		}))
+		const data = (res.data || []).map((row: any) => {
+            const item = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
+            return {
+                ...item,
+                custcd: item.col0 || item.custcd,
+                custnm: item.col1 || item.custnm,
+                bjanamt: Number(item.col2 || item.bjanamt || 0),
+                dbamt: Number(item.col3 || item.dbamt || 0),
+                cramt: Number(item.col4 || item.cramt || 0),
+                cjanamt: Number(item.col5 || item.cjanamt || 0)
+            }
+        })
 
 		mainGrid?.setData(data)
 		if (data.length > 0) vAlert('조회되었습니다.')
@@ -168,17 +171,15 @@ function openHelp(type: 'ACCT' | 'CUSTFR' | 'CUSTTO') {
 	if (type === 'ACCT') {
 		Object.assign(modalProps, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'acctnm',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: searchForm.acctnm },
-			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }, { title: '거래처구분', field: 'TYPESUB', visible: false }],
+			data: { gubun: 'A0', cmpycd: authStore.cmpycd, gbncd: '', code: searchForm.acctnm },
+			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }, { title: '거래처구분', field: 'typesub', visible: false }],
 			onConfirm: (d: any) => {
-				searchForm.acctcd = d.acctcd
-				searchForm.acctnm = d.acctnm
-				searchForm.custgbn = d.TYPESUB || ''
+                const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v]))
+				searchForm.acctcd = item.acctcd
+				searchForm.acctnm = item.acctnm
+				searchForm.custgbn = item.typesub || ''
 				// 계정 변경 시 거래처 초기화
-				searchForm.custcdFR = ''
-				searchForm.custnmFR = ''
-				searchForm.custcdTO = ''
-				searchForm.custnmTO = ''
+				searchForm.custcdfr = ''; searchForm.custnmfr = ''; searchForm.custcdto = ''; searchForm.custnmto = ''
 			}
 		})
 	} else {
@@ -188,16 +189,17 @@ function openHelp(type: 'ACCT' | 'CUSTFR' | 'CUSTTO') {
 		}
 		const isFr = type === 'CUSTFR'
 		Object.assign(modalProps, {
-			title: '거래처 선택', path: '/api/ha00/HA00_03P_STR', defaultField: 'col1',
-			data: { custgbn: searchForm.custgbn || '010', cmpycd: authStore.cmpycd, search: isFr ? searchForm.custnmFR : searchForm.custnmTO },
-			columns: [{ title: '코드', field: 'col0', width: 100 }, { title: '거래처명', field: 'col1', width: 250 }],
+			title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'custnm',
+			data: { gubun: 'c4', cmpycd: authStore.cmpycd, gbncd: '', code: isFr ? searchForm.custnmfr : searchForm.custnmto },
+			columns: [{ title: '코드', field: 'custcd', width: 100 }, { title: '거래처명', field: 'custnm', width: 250 }],
 			onConfirm: (d: any) => {
+                const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v]))
 				if (isFr) {
-					searchForm.custcdFR = d.col0
-					searchForm.custnmFR = d.col1
+					searchForm.custcdfr = item.custcd
+					searchForm.custnmfr = item.custnm
 				} else {
-					searchForm.custcdTO = d.col0
-					searchForm.custnmTO = d.col1
+					searchForm.custcdto = item.custcd
+					searchForm.custnmto = item.custnm
 				}
 			}
 		})
@@ -207,7 +209,7 @@ function openHelp(type: 'ACCT' | 'CUSTFR' | 'CUSTTO') {
 
 const print = () => {
 	if (!searchForm.acctcd) return vAlertError('계정과목을 선택하세요.')
-	const params = `acctcd=${searchForm.acctcd}&acctnm=${searchForm.acctnm}&custcdFR=${searchForm.custcdFR}&custnmFR=${searchForm.custnmFR}&custcdTO=${searchForm.custcdTO}&custnmTO=${searchForm.custnmTO}&frymd=${searchForm.frymd.replace(/-/g, '')}&toymd=${searchForm.toymd.replace(/-/g, '')}&PRTGU=1`
+	const params = `acctcd=${searchForm.acctcd}&acctnm=${searchForm.acctnm}&custcdfr=${searchForm.custcdfr}&custnmfr=${searchForm.custnmfr}&custcdto=${searchForm.custcdto}&custnmto=${searchForm.custnmto}&frymd=${searchForm.frymd.replace(/-/g, '')}&toymd=${searchForm.toymd.replace(/-/g, '')}&PRTGU=1`
 	window.open(`/api/hasl/HASL_620P?${params}`, 'CustomerStatementPrint', 'width=800,height=800,scrollbars=yes')
 }
 
@@ -257,7 +259,7 @@ onMounted(() => {
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				},
 				{
-					title: "잔액", field: "Cjanamt", width: 130, hozAlign: "right",
+					title: "잔액", field: "cjanamt", width: 130, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				}

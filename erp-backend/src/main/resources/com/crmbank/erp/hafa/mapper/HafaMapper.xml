@@ -41,7 +41,20 @@
         exec hafa_120s_str #{cmpycd}, #{baseym}
     </select>
 
-    <!-- 월별 감가상각명세서 헤더 조회 -->
+    <select id="HAFA_130S_STR" resultType="map">
+        exec hafa_130s_str #{cmpycd}, #{ym}
+    </select>
+
+    <select id="HAFA_150U_STR" resultType="map">
+        exec hafa_150u_str #{cmpycd}, #{ym}
+    </select>
+
+    <select id="HAFA_900U_STR" resultType="map">
+        exec hafa_900u_str #{actkind}, #{cmpycd}, #{acctcd}, #{cacctcd}, #{cacctnm},
+        #{macctcd}, #{macctnm}, #{sacctcd}, #{sacctnm}, #{useyn}, #{updemp}
+    </select>
+
+     <!-- 월별 감가상각명세서 헤더 조회 -->
     <select id="HA00_150S_STR" resultType="map">
         exec ha00_150s_str #{cmpycd}, #{baseym}
     </select>
@@ -49,16 +62,6 @@
     <!-- 월별 감가상각명세서 조회 -->
     <select id="HAFA_140S_STR" resultType="map">
         exec hafa_140s_str #{cmpycd}, #{baseym}, #{acctcd}
-    </select>
-
-    <!-- 자산 선택 도움말 -->
-    <select id="HELP_ASETCD_LTD_STR" resultType="map">
-        exec help_asetcd_ltd_str #{cmpycd}, #{acctcd}, #{search}
-    </select>
-
-    <!-- 상각율 선택 도움말 -->
-    <select id="HELP_ASETRATE_LTD_STR" resultType="map">
-        exec help_asetrate_ltd_str #{dprstype}, #{legalyy}, #{search}
     </select>
 
 </mapper>

@@ -92,7 +92,7 @@
                 </td>
                 <th class="required" style="width: 100px;">미 수 금</th>
                 <td>
-                  <input v-model="masterData.amt" type="text" class="form-control form-control-sm text-end fw-bold" @input="formatInput('AMT')" />
+                  <input v-model="masterData.amt" type="text" class="form-control form-control-sm text-end fw-bold" @input="formatInput('amt')" />
                 </td>
               </tr>
             </tbody>
@@ -297,7 +297,7 @@ function openHelp(type: string) {
 
   Object.assign(modalProps, {
     title, path: '/api/ha00/HA00_00P_STR', defaultField: field,
-    data: { gubun: gubun, cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+    data: { gubun: gubun, cmpycd: authStore.cmpycd },
     columns: gubun === 'D0'
       ? [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }]
       : [{ title: '코드', field: 'custcd', width: 100 }, { title: '거래처명', field: 'custnm', minWidth: 200 }],

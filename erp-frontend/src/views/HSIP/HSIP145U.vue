@@ -157,7 +157,7 @@ const save = async () => {
   try {
     // 🔄 선택된 각 항목에 대해 순차적으로 프로시저 호출
     for (const item of selected) {
-      // 💡 COSTCD에 따른 SLIPKIND 분기 (ASP 로직)
+      // 💡 COSTCD에 따른 slipkind 분기 (ASP 로직)
       const slipKind = item.COSTCD === '200' ? '031' : '030'
 
       const baseParams = {
@@ -170,13 +170,13 @@ const save = async () => {
         DOCNO: item.DOCNO,
         CROWNO: item.ROWNO || item.crowno,
         JSANYMD: formData.PUBYMD.replace(/-/g, ''),
-        SPYAMT: item.COSTAMT || item.costamt,
-        VATAMT: item.VATAMT || 0,
+        spyamt: item.costamt || item.costamt,
+        vatamt: item.vatamt || 0,
         CUSTCD: item.CUSTCD,
         TAXUNIT: item.TAXUNIT || '10',
-        VATTYPE: item.VATTYPE || '10',
+        vattype: item.vattype || '10',
         SLIPYMD: formData.PUBYMD.replace(/-/g, ''),
-        SLIPKIND: slipKind,
+        slipkind: slipKind,
         HDEPTCD: item.DEPTCD || authStore.deptcd,
         BUSINESS: formData.FILENO + "-" + (item.BIGO || ''),
         UPDEMP: authStore.USERID
@@ -232,13 +232,13 @@ onMounted(() => {
         { title: "발생일자", field: "PUBYMD", width: 110, formatter: (c) => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
-        { title: "비용금액", field: "COSTAMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
-        { title: "부가세", field: "VATAMT", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+        { title: "비용금액", field: "costamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+        { title: "부가세", field: "vatamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
         { title: "적요", field: "BIGO", minWidth: 200, widthGrow: 1, hozAlign: "left" }
       ]
     })
     mainGrid.on('cellEdited', () => {
-      totalCostAmt.value = mainGrid?.getData().filter((r:any) => r.PROCYN === 'Y').reduce((acc, cur:any) => acc + (Number(cur.COSTAMT) || 0), 0) || 0
+      totalCostAmt.value = mainGrid?.getData().filter((r:any) => r.PROCYN === 'Y').reduce((acc, cur:any) => acc + (Number(cur.costamt) || 0), 0) || 0
     })
   }
 })

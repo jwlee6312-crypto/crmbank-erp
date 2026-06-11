@@ -148,7 +148,7 @@ const fetchOptions = async () => {
       api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'J0', cmpycd: authStore.cmpycd, gbncd: '100' } })
     ]);
     whOptions.value = wh.data;
-    astOptions.value = ast.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
+    astOptions.value = ast.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
     if (astOptions.value.length > 0) searchForm.astkind = astOptions.value[0].code;
   } catch (e) {}
 }

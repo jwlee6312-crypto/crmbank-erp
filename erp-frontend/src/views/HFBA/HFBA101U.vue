@@ -22,7 +22,7 @@
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchGroups">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
-        <button class="btn-erp btn-delete" @click="deleteData" :disabled="formData.mode === 'n'">삭제</button>
+        <button class="btn-erp btn-delete" @click="deleteData" :disabled="formData.mode === 'N'">삭제</button>
       </div>
     </div>
 
@@ -48,7 +48,7 @@
                 </td>
                 <th class="text-center bg-light required">코 드</th>
                 <td>
-                  <input v-model="formData.code" class="form-control fw-bold text-primary" maxlength="10" :readonly="formData.mode === 'u'" placeholder="코드 입력" />
+                  <input v-model="formData.code" class="form-control fw-bold text-primary" maxlength="10" :readonly="formData.mode === 'U'" placeholder="코드 입력" />
                 </td>
                 <th class="text-center bg-light required">코드명</th>
                 <td>
@@ -126,7 +126,7 @@ const { modalVisible, modalProps } = useCommonHelp()
 
 // [1] 데이터 모델링 (소문자 원칙)
 const formData = reactive<any>({
-  cdkd: '0000', code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'n'
+  cdkd: '0000', code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'N'
 })
 
 const cdkdOptions = ref<any[]>([])
@@ -212,7 +212,7 @@ const onProcessSelect = (data: any) => {
 }
 
 const fetchDetailRow = (row: any) => {
-  Object.assign(formData, { ...row, mode: 'u' });
+  Object.assign(formData, { ...row, mode: 'U' });
 }
 
 const onCdkdChange = () => {
@@ -225,7 +225,7 @@ const save = async () => {
   if (!confirm('저장하시겠습니까?')) return
 
   try {
-    const actkind = formData.mode === 'u' ? 'U0' : 'A0'
+    const actkind = formData.mode === 'U' ? 'U0' : 'A0'
     await api.post('/api/hfba/FBA1010U_STR', {
       ...formData, actkind: actkind, cmpycd: authStore.cmpycd, userid: authStore.userid
     })
@@ -236,7 +236,7 @@ const save = async () => {
 }
 
 const deleteData = async () => {
-  if (formData.mode === 'n') return
+  if (formData.mode === 'N') return
   if (!confirm('정말 삭제하시겠습니까?')) return
   try {
     await api.post('/api/hfba/FBA1010U_STR', {
@@ -251,13 +251,13 @@ const deleteData = async () => {
 
 const resetInputOnly = () => {
     const currentCdkd = formData.cdkd;
-    Object.assign(formData, { cdkd: currentCdkd, code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'n' });
+    Object.assign(formData, { cdkd: currentCdkd, code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'N' });
     grid2?.deselectRow();
 }
 
 const initialize = () => {
   resetForm(formData);
-  Object.assign(formData, { cdkd: '0000', code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'n' });
+  Object.assign(formData, { cdkd: '0000', code: '', cdnm: '', remark: '', dispord: 0, useyn: 'Y', mode: 'N' });
   grid1?.clearData(); grid2?.clearData();
   fetchGroups();
 }

@@ -112,8 +112,8 @@ onMounted(() => {
             }
         },
 				{ title: '전월누계', field: 'BEFosum', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '당월', field: 'CURRAMT', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-light fw-bold text-primary' },
-				{ title: '당월누계', field: 'CURRSUM', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } }
+				{ title: '당월', field: 'CURRamt', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-light fw-bold text-primary' },
+				{ title: '당월누계', field: 'currsum', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } }
 			]
 		})
 	}

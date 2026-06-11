@@ -193,15 +193,15 @@ async function search() {
   if (!searchData.deptcd) return vAlertError('판매부서를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_590U_STR', {
-      actkind: 's0', cmpycd: authStore.cmpycd, gubun: '200',
+      actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '200',
       ioymdfr: searchData.ioymdfr, ioymdto: searchData.ioymdto,
       deptcd: searchData.deptcd, salsemp: searchData.salsemp === '000' ? '' : searchData.salsemp
     })
     if (grid.value) {
       grid.value.setData(res.data.map((i: any) => {
-        const ioqty = (Number(i.qty || i.QTY) || 0) - (Number(i.jqty || i.JQTY) || 0)
-        const ioamt = (Number(i.amt || i.AMT) || 0) - (Number(i.jamt || i.JAMT) || 0)
-        const iovat = (Number(i.vat || i.VAT) || 0) - (Number(i.jvat || i.JVAT) || 0)
+        const ioqty = (Number(i.qty || i.qty) || 0) - (Number(i.jqty || i.Jqty) || 0)
+        const ioamt = (Number(i.amt || i.amt) || 0) - (Number(i.jamt || i.jamt) || 0)
+        const iovat = (Number(i.vat || i.vat) || 0) - (Number(i.jvat || i.Jvat) || 0)
         return { ...i, procyn: true, ioqty, ioamt, iovat, iosum: ioamt + iovat }
       }))
       allSelected.value = true
@@ -234,7 +234,7 @@ async function save() {
 
       for (const item of selected) {
         await api.post('/api/hsio/HSIO_590U_STR', {
-          actkind: 'u0',
+          actkind: 'U0',
           cmpycd: authStore.cmpycd,
           gubun: '200',
           ioymdfr: ioymdfr,
@@ -274,7 +274,7 @@ function openHelp(type: string) {
   if (type === 'SEARCH_DEPT') {
     Object.assign(modalProps, {
       title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm', large: false,
-      data: { gubun: 'd0', cmpycd: authStore.cmpycd },
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd },
       columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
       onConfirm: (data: any) => { searchData.deptcd = data.deptcd; searchData.deptnm = data.deptnm }
     })
@@ -296,8 +296,8 @@ onMounted(async () => {
   api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'sd', cmpycd: authStore.cmpycd, limitoffset: 0, limitrows: 999 } }).then(r => {
     if (r.data) empOptions.value = r.data.map((i: any) => ({ codecd: i.userid, codenm: i.usernm }))
   })
-  api.post('/api/ha00/HA00_00P_STR', { gubun: 'sa', cmpycd: authStore.cmpycd }).then(r => { taxUnitOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.taxunit||Object.values(i)[0]).trim(), codenm:String(i.unitnm||Object.values(i)[1]).trim()})); if(taxUnitOptions.value.length) registerData.taxunit = taxUnitOptions.value[0].codecd; });
-  api.post('/api/ha00/HA00_00P_STR', { gubun: 'e0', gbncd: '120', cmpycd: authStore.cmpycd }).then(r => vatTypeOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.codecd||Object.values(i)[0]).trim(), codenm:String(i.codenm||Object.values(i)[1]).trim()})));
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd }).then(r => { taxUnitOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.taxunit||Object.values(i)[0]).trim(), codenm:String(i.unitnm||Object.values(i)[1]).trim()})); if(taxUnitOptions.value.length) registerData.taxunit = taxUnitOptions.value[0].codecd; });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '120', cmpycd: authStore.cmpycd }).then(r => vatTypeOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.codecd||Object.values(i)[0]).trim(), codenm:String(i.codenm||Object.values(i)[1]).trim()})));
 
   nextTick(() => initGrid())
 })

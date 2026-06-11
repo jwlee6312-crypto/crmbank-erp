@@ -112,13 +112,13 @@ watch(() => props.visible, async (val) => {
         { title: '단위', field: 'unitnm', width: 60, hozAlign: 'center', cssClass: 'compact-cell' },
         {
           title: '재고',
-          field: 'QTY',
+          field: 'qty',
           width: 80,
           hozAlign: 'right',
           cssClass: 'compact-cell fw-bold text-dark',
           formatter: (c:any) => new Intl.NumberFormat().format(Number(c.getValue()) || 0)
         },
-        { title: '구분', field: 'astkindNM', width: 85, hozAlign: 'center', cssClass: 'compact-cell smaller-text' }
+        { title: '구분', field: 'astkindnm', width: 85, hozAlign: 'center', cssClass: 'compact-cell smaller-text' }
       ]
     })
 

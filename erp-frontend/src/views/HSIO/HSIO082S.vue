@@ -68,7 +68,7 @@
                 </td>
                 <th class="text-center bg-light">입고여부</th>
                 <td>
-                  <select v-model="searchParam.IPGOYN" class="form-select form-select-sm w-50">
+                  <select v-model="searchParam.ipgoyn" class="form-select form-select-sm w-50">
                     <option value="Y">전체</option>
                     <option value="N">미입고</option>
                   </select>
@@ -125,14 +125,14 @@ const searchParam = reactive({
   ordym: '',
   ordno: '',
   userid: '',
-  IPGOYN: 'Y',
+  ipgoyn: 'Y',
   remark: ''
 })
 
 const gridElement = ref<HTMLElement | null>(null);
 const grid = ref<Tabulator | null>(null);
 const activeItemCount = ref(0)
-const totals = reactive({ qty: 0, amt: 0, vat: 0, inQty: 0 })
+const totals = reactive({ qty: 0, amt: 0, vat: 0, inqty: 0 })
 const empOptions = ref<any[]>([])
 
 const initGrid = () => {
@@ -150,16 +150,16 @@ const initGrid = () => {
         router.push({ path, query: { BALym: d.BALym, balno: d.balno } });
       }},
       { title: "담당자", field: "usernm", width: 90, hozAlign: "center" },
-      { title: "주문번호", field: "ORDER_NO", width: 120, formatter: (c) => {
+      { title: "주문번호", field: "order_no", width: 120, formatter: (c) => {
         const d = c.getData(); return d.ordym ? `${d.ordym}-${d.ordno}` : '';
       }},
       { title: "품목코드", field: "itemcd", width: 100 },
       { title: "품목명", field: "itemnm", minWidth: 180 },
       { title: "규격", field: "itsize", width: 120 },
-      { title: "발주량", field: "balqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().QTYPNT || 0 } },
+      { title: "발주량", field: "balqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().qtypnt || 0 } },
       { title: "공급가", field: "balamt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       { title: "부가세", field: "balvat", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "입고량", field: "inqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().QTYPNT || 0 } },
+      { title: "입고량", field: "inqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().qtypnt || 0 } },
       { title: "미입고량", field: "janqty", width: 80, hozAlign: "right", cssClass: "text-danger fw-bold", formatter: (c) => {
         const d = c.getData(); return formatNumber((Number(d.balqty) || 0) - (Number(d.inqty) || 0));
       }}
@@ -172,7 +172,7 @@ const updateTotals = (data: any[]) => {
   totals.qty = data.reduce((acc, i) => acc + (Number(i.balqty) || 0), 0);
   totals.amt = data.reduce((acc, i) => acc + (Number(i.balamt) || 0), 0);
   totals.vat = data.reduce((acc, i) => acc + (Number(i.balvat) || 0), 0);
-  totals.inQty = data.reduce((acc, i) => acc + (Number(i.inqty) || 0), 0);
+  totals.inqty = data.reduce((acc, i) => acc + (Number(i.inqty) || 0), 0);
 }
 
 const modalVisible = ref(false);
@@ -188,7 +188,7 @@ async function fetchList() {
       ordno: searchParam.ordno,
       custcd: searchParam.custcd,
       userid: searchParam.userid,
-      IPGOYN: searchParam.IPGOYN,
+      ipgoyn: searchParam.ipgoyn,
       remark: searchParam.remark
     });
     if (grid.value) {
@@ -203,7 +203,7 @@ function initialize() {
   resetForm(searchParam);
   Object.assign(searchParam, {
     frymd: formatDateStr(firstDay), toymd: formatDateStr(now),
-    custcd: '', custnm: '', ordym: '', ordno: '', userid: '', IPGOYN: 'Y', remark: ''
+    custcd: '', custnm: '', ordym: '', ordno: '', userid: '', ipgoyn: 'Y', remark: ''
   });
   grid.value?.clearData();
   updateTotals([]);

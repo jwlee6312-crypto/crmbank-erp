@@ -52,7 +52,7 @@
             <tbody>
               <tr>
                 <th class="required">단위코드</th>
-                <td><input v-model="formData.unit" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="4" :disabled="formData.actkind === 'U'" placeholder="CODE" /></td>
+                <td><input v-model="formData.unit" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="4" :disabled="formData.actkind === 'U'" placeholder="code" /></td>
                 <th class="required">단위명</th>
                 <td><input v-model="formData.unitnm" type="text" class="form-control form-control-sm" maxlength="20" /></td>
                 <th>비고</th>

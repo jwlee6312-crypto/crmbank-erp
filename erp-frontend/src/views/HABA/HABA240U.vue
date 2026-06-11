@@ -105,7 +105,7 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end">지불조건</th>
 							<td class="bg-white border-end px-2 py-1">
-								<select v-model="masterForm.PAYCNDT" class="form-select form-select-sm">
+								<select v-model="masterForm.paycndt" class="form-select form-select-sm">
 									<option v-for="opt in payConditionOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
 								</select>
 							</td>
@@ -185,7 +185,7 @@ const masterForm = reactive({
 	custnm: '',
 	slipymd: today,
 	Upayamt: 0,
-	PAYCNDT: '',
+	paycndt: '',
 	reqymd: '',
 	remark: '',
 	useyn: 'Y'
@@ -247,7 +247,7 @@ const save = async () => {
 			acctcd: masterForm.acctcd,
 			custcd: masterForm.custcd,
 			Upayamt: masterForm.Upayamt,
-			PAYCNDT: masterForm.PAYCNDT,
+			paycndt: masterForm.paycndt,
 			reqymd: masterForm.reqymd.replace(/-/g, ''),
 			remark: masterForm.remark,
 			useyn: masterForm.useyn,
@@ -298,7 +298,7 @@ function openHelp(type: string) {
 		Object.assign(modalProps, {
 			title: '계정과목 선택',
 			path: '/api/ha00/HA00_00P_STR',
-			data: { GBN: 'CRS', cmpycd: authStore.cmpycd, acctgbn: '010', search: searchVal },
+			data: { gbn: 'CRS', cmpycd: authStore.cmpycd, acctgbn: '010', search: searchVal },
 			columns: [
 				{ title: '코드', field: 'col0', width: 100, hozAlign: 'center' },
 				{ title: '계정명', field: 'col1', width: 250 }
@@ -364,7 +364,7 @@ onMounted(() => {
 				masterForm.custnm = d.col6
 				masterForm.slipymd = formatDate(d.col0)
 				masterForm.Upayamt = Number(d.col7)
-				masterForm.PAYCNDT = d.COL9
+				masterForm.paycndt = d.COL9
 				masterForm.reqymd = formatDate(d.col10)
 				masterForm.remark = d.col11
 				masterForm.useyn = d.col12

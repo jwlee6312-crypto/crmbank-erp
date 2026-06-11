@@ -149,7 +149,7 @@ const initGrids = () => {
         { title: "양품율(%)", field: "JUNGrate", width: 100, hozAlign: "right", editor: "number" },
         { title: "표준시간", field: "STDWORKHH", width: 100, hozAlign: "right", editor: "number" },
         { title: "일가동시간", field: "GADTMDD", width: 100, hozAlign: "right", editor: "number" },
-        { title: "일생산량", field: "PQTYDD", width: 100, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } }
+        { title: "일생산량", field: "pqtydd", width: 100, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } }
       ],
     })
   }
@@ -181,7 +181,7 @@ async function save() {
       await api.post('/api/hpba/HPBA_200U_STR', {
         actkind: actkind, cmpycd: authStore.cmpycd, userid: authStore.userid, itemcd: selectedItem.itemcd, linecd: searchData.linecd, astkind: searchData.astkind,
         progcd: row.progcd, itsize: selectedItem.itsize, unit: selectedItem.unit, dspord: row.dspord || 0, GADrate: row.GADrate || 0, JUNGrate: row.JUNGrate || 0,
-        STDWORKHH: row.STDWORKHH || 0, GADTMDD: row.GADTMDD || 0, PQTYDD: row.PQTYDD || 0, CAPAHH: 0, PQTYTT: 0
+        STDWORKHH: row.STDWORKHH || 0, GADTMDD: row.GADTMDD || 0, pqtydd: row.pqtydd || 0, CAPAHH: 0, pqtytt: 0
       })
     }
     vAlert('정상적으로 저장되었습니다.'); fetchProcesses(selectedItem.itemcd)

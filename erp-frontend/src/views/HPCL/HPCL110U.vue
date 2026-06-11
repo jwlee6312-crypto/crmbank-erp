@@ -114,7 +114,7 @@ const initGrids = () => {
       { title: "제품명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold" },
       { title: "규격", field: "itsize", width: 150 },
       { title: "단위", field: "unit", width: 80, hozAlign: "center" },
-      { title: "수량", field: "inqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().QTYPNT||0 } },
+      { title: "수량", field: "inqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().qtypnt||0 } },
       { title: "단가", field: "price", width: 120, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 2 }, cssClass: "bg-light-yellow fw-bold" },
       { title: "금액", field: "Inamt", width: 130, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-blue fw-bold" }
     ],

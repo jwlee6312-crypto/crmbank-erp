@@ -117,14 +117,14 @@ const initGrid = () => {
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerSort: false },
         { title: "거래처", field: "custnm", width: 300 },
         { title: "매입부서", field: "deptnm", width: 250 },
-        { title: "매입할인액", field: "HALAMT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold text-primary" },
+        { title: "매입할인액", field: "halamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold text-primary" },
       ],
     })
 
     grid.on("rowSelectionChanged", () => {
       const selectedData = grid?.getSelectedData() || []
       selectedCount.value = selectedData.length
-      totalHalAmt.value = selectedData.reduce((acc, row) => acc + Number(row.HALAMT || 0), 0)
+      totalHalAmt.value = selectedData.reduce((acc, row) => acc + Number(row.halamt || 0), 0)
     })
   }
 }
@@ -168,7 +168,7 @@ const saveData = async () => {
         userid: authStore.userid,
         jsanym: searchData.jsanym,
         custcd: item.custcd,
-        HALAMT: item.HALAMT,
+        halamt: item.halamt,
         deptcd: formData.deptcd,
         slipymd: formData.slipymd
       })
@@ -182,7 +182,7 @@ const saveData = async () => {
         userid: authStore.userid,
         jsanym: searchData.jsanym,
         custcd: item.custcd,
-        HALAMT: item.HALAMT,
+        halamt: item.halamt,
         deptcd: formData.deptcd,
         slipymd: formData.slipymd,
         slipno: slipNo
@@ -216,7 +216,7 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
   Object.assign(modalProps, {
     title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-    data: { gubun: 'D0', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+    data: { gubun: 'D0', cmpycd: authStore.cmpycd },
     columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 200 }],
     onConfirm: (data: any) => {
       formData.deptcd = data.deptcd

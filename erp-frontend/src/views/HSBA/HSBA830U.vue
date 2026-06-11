@@ -76,7 +76,7 @@
                 </td>
                 <th class="required" style="width: 100px;">미지급금</th>
                 <td>
-                  <input v-model="masterData.amt" type="text" class="form-control form-control-sm text-end fw-bold" @input="formatInput('AMT')" />
+                  <input v-model="masterData.amt" type="text" class="form-control form-control-sm text-end fw-bold" @input="formatInput('amt')" />
                 </td>
               </tr>
             </tbody>
@@ -201,7 +201,7 @@ async function search() {
       })
       grid.value.setData(mappedData)
       activeItemCount.value = mappedData.length
-      totalPayableSum.value = mappedData.reduce((acc: number, cur: any) => acc + cur.AMT, 0)
+      totalPayableSum.value = mappedData.reduce((acc: number, cur: any) => acc + cur.amt, 0)
     }
   } catch (e) { vAlertError('조회 실패') }
 }

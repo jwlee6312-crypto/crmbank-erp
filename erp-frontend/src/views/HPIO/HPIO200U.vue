@@ -176,7 +176,7 @@ const onLineChange = () => fetchList()
 async function fetchList() {
   if (!searchForm.linecd) return
   try {
-    const res = await api.post('/api/hpio/HPIO_200U_STR', { actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, lotymd: searchForm.lotymd });
+    const res = await api.post('/api/hpio/HPIO_200U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, lotymd: searchForm.lotymd });
     grid?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
     vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }
@@ -189,7 +189,7 @@ const saveData = async () => {
 
   try {
     for (const item of details) {
-      const actkind = item._status === '입력' ? 'a0' : (item._status === '삭제' ? 'd0' : 'u0')
+      const actkind = item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0')
       await api.post('/api/hpio/HPIO_200U_STR', {
         actkind, cmpycd: authStore.cmpycd, userid: authStore.userid,
         linecd: searchForm.linecd, lotymd: searchForm.lotymd,

@@ -39,22 +39,22 @@
             <tbody>
               <tr>
                 <th class="required">유형코드</th>
-                <td><input v-model="formData.TATYPE" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="3" :readonly="formData.actkind === 'U0'" placeholder="CODE" /></td>
+                <td><input v-model="formData.tatype" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="3" :readonly="formData.actkind === 'U0'" placeholder="code" /></td>
                 <th class="required">유형명칭</th>
-                <td><input v-model="formData.TAtypenm" type="text" class="form-control form-control-sm" maxlength="50" /></td>
+                <td><input v-model="formData.tatypenm" type="text" class="form-control form-control-sm" maxlength="50" /></td>
                 <th class="required">차변계정</th>
                 <td>
                   <div class="input-group input-group-sm">
-                    <input v-model="formData.Dacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-                    <input v-model="formData.Dacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('D')" />
+                    <input v-model="formData.dacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+                    <input v-model="formData.dacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('D')" />
                     <button class="btn btn-outline-secondary btn-sm px-1" @click="openAccountHelp('D')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">대변계정</th>
                 <td>
                   <div class="input-group input-group-sm">
-                    <input v-model="formData.Cacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-                    <input v-model="formData.Cacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('C')" />
+                    <input v-model="formData.cacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+                    <input v-model="formData.cacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('C')" />
                     <button class="btn btn-outline-secondary btn-sm px-1" @click="openAccountHelp('C')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -105,7 +105,7 @@ const { resetForm } = useFormReset()
 const deleteCheck = ref(false)
 const formData = reactive({
   actkind: 'A0', cmpycd: authStore.cmpycd, userid: authStore.user_id,
-  TATYPE: '', TAtypenm: '', Dacctcd: '', Dacctnm: '', Cacctcd: '', Cacctnm: '',
+  tatype: '', tatypenm: '', dacctcd: '', dacctnm: '', cacctcd: '', cacctnm: '',
   updemp: authStore.user_id
 })
 
@@ -118,22 +118,22 @@ const initGrid = () => {
     layout: "fitColumns", height: "100%", pagination: "local", paginationSize: 15,
     placeholder: "조회된 데이터가 없습니다.", columnDefaults: { headerSort: false, headerHozAlign: "center" },
     columns: [
-      { title: "유형코드", field: "CODE", width: 100, hozAlign: "center", cssClass: "fw-bold bg-light" },
+      { title: "유형코드", field: "code", width: 100, hozAlign: "center", cssClass: "fw-bold bg-light" },
       { title: "타계정 유형명", field: "cdnm", width: 200, cssClass: "text-primary fw-bold" },
-      { title: "차변코드", field: "Dacctcd", width: 100, hozAlign: "center" },
-      { title: "차변계정명", field: "Dacctnm", widthGrow: 1 },
-      { title: "대변코드", field: "Cacctcd", width: 100, hozAlign: "center" },
-      { title: "대변계정명", field: "Cacctnm", widthGrow: 1 }
+      { title: "차변코드", field: "dacctcd", width: 100, hozAlign: "center" },
+      { title: "차변계정명", field: "dacctnm", widthGrow: 1 },
+      { title: "대변코드", field: "cacctcd", width: 100, hozAlign: "center" },
+      { title: "대변계정명", field: "cacctnm", widthGrow: 1 }
     ]
   })
   grid.value.on("rowClick", (e, row) => {
     const data = row.getData()
-    formData.TATYPE = data.CODE
-    formData.TAtypenm = data.cdnm
-    formData.Dacctcd = data.Dacctcd
-    formData.Dacctnm = data.Dacctnm
-    formData.Cacctcd = data.Cacctcd
-    formData.Cacctnm = data.Cacctnm
+    formData.tatype = data.code
+    formData.tatypenm = data.cdnm
+    formData.dacctcd = data.dacctcd
+    formData.dacctnm = data.dacctnm
+    formData.cacctcd = data.cacctcd
+    formData.cacctnm = data.cacctnm
     formData.actkind = 'U0'
     deleteCheck.value = false
   })
@@ -143,7 +143,7 @@ const initGrid = () => {
 async function search() {
   try {
     const res = await api.post('/api/hsba/HSBA_721U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, TATYPE: '', Dacctcd: '', Cacctcd: '', userid: authStore.user_id
+      actkind: 'S0', cmpycd: authStore.cmpycd, tatype: '', dacctcd: '', cacctcd: '', userid: authStore.user_id
     })
     if (grid.value) {
       grid.value.setData(res.data || [])
@@ -153,8 +153,8 @@ async function search() {
 }
 
 async function save() {
-  if (!formData.TATYPE || !formData.TAtypenm) return vAlertError('유형 코드와 명칭은 필수입니다.')
-  if (!formData.Dacctcd || !formData.Cacctcd) return vAlertError('차변/대변 계정을 모두 선택하십시오.')
+  if (!formData.tatype || !formData.tatypenm) return vAlertError('유형 코드와 명칭은 필수입니다.')
+  if (!formData.dacctcd || !formData.cacctcd) return vAlertError('차변/대변 계정을 모두 선택하십시오.')
 
   if (!confirm('설정 정보를 저장하시겠습니까?')) return
 
@@ -190,16 +190,16 @@ function openAccountHelp(mode: 'D' | 'C') {
     data: { gubun: 'AC', ACCT: gbn, cmpycd: authStore.cmpycd },
     defaultField: 'cdnm',
     columns: [
-      { title: '코드', field: 'CODE', width: 100 },
+      { title: '코드', field: 'code', width: 100 },
       { title: '계정명', field: 'cdnm', width: 200 }
     ],
     onConfirm: (selected: any) => {
       if (mode === 'D') {
-        formData.Dacctcd = selected.CODE
-        formData.Dacctnm = selected.cdnm
+        formData.dacctcd = selected.code
+        formData.dacctnm = selected.cdnm
       } else {
-        formData.Cacctcd = selected.CODE
-        formData.Cacctnm = selected.cdnm
+        formData.cacctcd = selected.code
+        formData.cacctnm = selected.cdnm
       }
     }
   })

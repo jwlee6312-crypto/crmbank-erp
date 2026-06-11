@@ -184,14 +184,14 @@ async function search() {
   if (!searchData.deptcd) return vAlertError('판매부서를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_531U_STR', {
-      actkind: 's0', cmpycd: authStore.cmpycd, gubun: '200',
+      actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '200',
       ioymdfr: searchData.ioymdfr, ioymdto: searchData.ioymdto,
       deptcd: searchData.deptcd, salsemp: searchData.salsemp === '000' ? '' : searchData.salsemp
     })
     if (grid.value) {
       grid.value.setData(res.data.map((i: any) => ({
         ...i,
-        jsanymd: i.jsanymd || i.jsanymD,
+        jsanymd: i.jsanymd || i.jsanymd,
         procyn: false,
         jsansum: Number(i.spyamt || 0) + Number(i.vatamt || 0)
       })))
@@ -228,12 +228,12 @@ async function issueSlip() {
 
     // 1. 전표 마스터 발행 (A0) - ASP 패턴: A0로 먼저 번호를 땀
     const mRes = await api.post('/api/hsio/HSIO_531U_STR', {
-      actkind: 'a0',
+      actkind: 'A0',
       cmpycd: authStore.cmpycd,
       gubun: '200',
       ioymdfr: ioymdfr,
       ioymdto: ioymdto,
-      udeptcd: '', // 마스터 발행 시에는 빈값
+      deptcd: '', // 마스터 발행 시에는 빈값
       jsanym: '',
       jsanno: '',
       jsanymd: '',
@@ -257,15 +257,15 @@ async function issueSlip() {
       // 2. 전표 상세 매핑 (U0) - 루프 처리
       for (const item of selected) {
         const dRes = await api.post('/api/hsio/HSIO_531U_STR', {
-          actkind: 'u0',
+          actkind: 'U0',
           cmpycd: authStore.cmpycd,
           gubun: '200',
           ioymdfr: ioymdfr,
           ioymdto: ioymdto,
-          udeptcd: item.udeptcd || item.deptcd,
+          deptcd: item.deptcd || item.deptcd,
           jsanym: item.jsanym,
           jsanno: item.jsanno,
-          jsanymd: (item.jsanymd || item.jsanymD || '').replace(/-/g, ''),
+          jsanymd: (item.jsanymd || item.jsanymd || '').replace(/-/g, ''),
           spyamt: String(item.spyamt || '0').replace(/,/g, ''),
           vatamt: String(item.vatamt || '0').replace(/,/g, ''),
           custcd: item.custcd,
@@ -279,7 +279,7 @@ async function issueSlip() {
           userid: authStore.userid
         })
         const resD = dRes.data?.[0]
-        if (resD && (resD.result === 'y' || resD.erryn === 'y' || resD.RESULT === 'Y' || resD.ERRYN === 'Y')) {
+        if (resD && (resD.result === 'Y' || resD.erryn === 'Y' || resD.RESULT === 'Y' || resD.ERRYN === 'Y')) {
           throw new Error(resD.msg || resD.MSG || '전표 상세 저장 중 업무 오류 발생')
         }
       }
@@ -287,7 +287,7 @@ async function issueSlip() {
       vAlert('정상적으로 발행되었습니다.')
 
       // 전표 인쇄 팝업 (ASP 로직 반영)
-      const printUrl = `../HASL/HASL_SLIP_PRINT_OUT.asp?SLIPGU=010&SLIPYMD=${slipymd}&slipno=${slipno}&DEPTCD=${registerData.deptcd}`
+      const printUrl = `../HASL/HASL_SLIP_PRINT_OUT.asp?slipgu=010&SLIPYMD=${slipymd}&slipno=${slipno}&DEPTCD=${registerData.deptcd}`
       window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
 
       search()
@@ -315,7 +315,7 @@ function openHelp(type: string) {
   if (type.includes('DEPT')) {
     Object.assign(modalProps, {
       title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm', large: false,
-      data: { gubun: 'd0', cmpycd: authStore.cmpycd },
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd },
       columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
       onConfirm: (data: any) => {
         if (type === 'SEARCH_DEPT') { searchData.deptcd = data.deptcd; searchData.deptnm = data.deptnm }

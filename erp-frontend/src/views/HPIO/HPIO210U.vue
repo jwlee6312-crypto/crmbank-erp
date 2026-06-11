@@ -214,7 +214,7 @@ const onProcessSelect = async (prog: any) => {
 
   try {
     // 주문 정보 동기화 로직 (필요 시)
-    const resS1 = await api.post('/api/hpio/HPIO_210U_STR', { actkind: 's1', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: prog.code })
+    const resS1 = await api.post('/api/hpio/HPIO_210U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: prog.code })
     if (resS1.data && resS1.data.length > 0) {
       const d = resS1.data[0]
       searchForm.ordym = d.ordym || searchForm.ordym
@@ -228,7 +228,7 @@ const fetchGridData = async () => {
   if (!selectedProg.progcd) return
   try {
     const res = await api.post('/api/hpio/HPIO_210U_STR', {
-      actkind: 's0', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd
+      actkind: 'S0', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd
     })
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })))
     vAlert('조회되었습니다.')
@@ -242,7 +242,7 @@ const saveData = async () => {
 
   try {
     for (const item of details) {
-      const actkind = item._status === '입력' ? 'a0' : (item._status === '삭제' ? 'd0' : 'u0')
+      const actkind = item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0')
       await api.post('/api/hpio/HPIO_210U_STR', {
         actkind, cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd,
         lotymd: (item.lotymd || searchForm.prodymd), lotno: item.lotno || '', itemcd: item.itemcd, itsize: item.itsize || '', unit: item.unit || '',

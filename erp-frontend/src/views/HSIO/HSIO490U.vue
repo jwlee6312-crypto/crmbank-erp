@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 매출반품등록 (HSIO490U)
 	작성일자	: 2025.02.24
-	설명        : 영업 매출반품 마스터/상세 관리 (HSOD100U 디자인 UI + HSIO580U 좌측그리드 이식)
+	설명        : 영업 매출반품 마스터/상세 관리 (창고 로직 표준화 적용)
 	=============================================================
 -->
 
@@ -57,7 +57,7 @@
       <!-- [하단] 투-그리드 레이아웃 영역 -->
       <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
 
-        <!-- ⬅️ 좌측: 반품 목록 (HSIO580U 스타일) -->
+        <!-- ⬅️ 좌측: 반품 목록 -->
         <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 350px; min-width: 350px;">
           <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">반품 목록</div>
           <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -110,7 +110,7 @@
                     <th class="required bg-light text-center">입고창고</th>
                     <td>
                       <select v-model="form_02.whcd" class="form-select" :disabled="isClosed">
-                        <option v-for="item in whcdData" :key="item.CODE" :value="item.CODE">{{ item.cdnm }}</option>
+                        <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
                       </select>
                     </td>
                     <th class="bg-light text-center">특이사항</th>
@@ -146,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, onUnmounted } from 'vue'
+import { reactive, ref, onMounted, computed, onUnmounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -172,14 +172,14 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 // [1] 데이터 모델링
 const form_01 = reactive({ fromdt: firstDay, todt: today, schcustnm: '' })
 const form_02 = reactive<any>({
-  deptcd: authStore.deptCode, deptnm: authStore.deptName,
+  deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   iono: '', ioymd: today,
-  custcd: '', custnm: '', whcd: '100', userid: authStore.userId,
+  custcd: '', custnm: '', whcd: '', userid: authStore.userid,
   remark: '', totsum: 0
 })
 
 const closingInfo = reactive({ sclsym: '' })
-const whcdData = ref<any[]>([])
+const whOptions = ref<any[]>([])
 const userData = ref<any[]>([])
 
 // [2] 그리드 관리
@@ -247,6 +247,24 @@ const initGrids = () => {
 }
 
 // [3] 로직 처리
+const fetchWhOptions = async () => {
+  try {
+    const resWh = await api.get('/api/hs00/HS00_000S_STR', {
+      params: { gubun: 'W0', cmpycd: authStore.cmpycd }
+    })
+    whOptions.value = (resWh.data || []).map((i: any) => ({
+      whcd: String(i.whcd || '').trim(),
+      whnm: String(i.whnm || '').trim()
+    }))
+
+    if (whOptions.value.length > 0) {
+      form_02.whcd = whOptions.value[0].whcd
+    }
+  } catch (e) {
+    whOptions.value = []
+  }
+}
+
 const setGridDataWithPadding = (data: any[]) => {
   const displayData = data.map(i => ({ ...i, _STATE: 'EXIST' }));
   while (displayData.length < MIN_ROWS) {
@@ -346,8 +364,10 @@ function deleteSelectedRows() {
 
 function initialize() {
   resetForm(form_02);
-  form_02.deptcd = authStore.deptCode; form_02.deptnm = authStore.deptName;
-  form_02.ioymd = today; form_02.whcd = '100'; form_02.userid = authStore.userId;
+  form_02.deptcd = authStore.deptcd; form_02.deptnm = authStore.deptnm;
+  form_02.ioymd = today;
+  if (whOptions.value.length > 0) form_02.whcd = whOptions.value[0].whcd;
+  form_02.userid = authStore.userid;
   form_02.totsum = 0;
   grid1?.clearData(); setGridDataWithPadding([]);
 }
@@ -363,14 +383,13 @@ async function handleFullDelete() {
 }
 
 onMounted(async () => {
-  api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '030', CODE: '', codenm: '' }).then(r => {
-    whcdData.value = r.data.status === 200 ? r.data.data : r.data;
-  });
+  await fetchWhOptions();
   api.get('/api/user').then(res => { userData.value = res.data; });
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym;
   });
-  initGrids(); initialize();
+  nextTick(initGrids);
+  initialize();
 })
 
 onUnmounted(() => { searchStore.removeTab(route.name as string) });

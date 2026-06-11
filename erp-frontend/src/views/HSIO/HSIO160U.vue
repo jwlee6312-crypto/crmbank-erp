@@ -40,24 +40,24 @@
                 </td>
                 <th class="required">정산일자</th>
                 <td>
-                  <input v-model="uijsanymD" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                  <input v-model="uijsanymd" type="date" class="form-control form-control-sm" style="width: 150px;" />
                 </td>
               </tr>
               <tr>
                 <th class="bg-light-blue">할인금액</th>
                 <td>
-                  <input v-model.number="inputData.DIVSUM" type="number" class="form-control form-control-sm text-end fw-bold text-primary" style="width: 150px;" @input="applyAllocation" />
+                  <input v-model.number="inputData.divsum" type="number" class="form-control form-control-sm text-end fw-bold text-primary" style="width: 150px;" @input="applyAllocation" />
                 </td>
                 <th class="bg-light-blue">배부기준</th>
                 <td colspan="3">
                   <div class="d-flex gap-3 align-items-center mt-1">
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" v-model="inputData.divgbn" value="AMT" id="gbnAmt" @change="applyAllocation">
+                      <input class="form-check-input" type="radio" v-model="inputData.divgbn" value="amt" id="gbnAmt" @change="applyAllocation">
                       <label class="form-check-label small fw-bold" for="gbnAmt">금액기준</label>
                     </div>
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" v-model="inputData.divgbn" value="QTY" id="gbnQty" @change="applyAllocation">
-                      <label class="form-check-label small fw-bold" for="gbnQty">수량기준</label>
+                      <input class="form-check-input" type="radio" v-model="inputData.divgbn" value="qty" id="gbnqty" @change="applyAllocation">
+                      <label class="form-check-label small fw-bold" for="gbnqty">수량기준</label>
                     </div>
                     <span class="text-muted small ms-3"><i class="bi bi-info-circle me-1"></i> 할인금액 입력 시 선택된 항목들에 자동 배부됩니다.</span>
                   </div>
@@ -108,21 +108,21 @@ const searchData = reactive({
   jsanym: initym,
   custcd: '',
   custnm: '',
-  jsanymD: initymd
+  jsanymd: initymd
 })
 
 const inputData = reactive({
-  DIVSUM: 0,
-  divgbn: 'AMT'
+  divsum: 0,
+  divgbn: 'amt'
 })
 
 const uijsanym = computed({
   get: () => searchData.jsanym ? `${searchData.jsanym.substring(0, 4)}-${searchData.jsanym.substring(4, 6)}` : '',
   set: (v) => searchData.jsanym = v.replace(/-/g, '')
 })
-const uijsanymD = computed({
-  get: () => formatDateString(searchData.jsanymD, '-'),
-  set: (v) => searchData.jsanymD = v.replace(/-/g, '')
+const uijsanymd = computed({
+  get: () => formatDateString(searchData.jsanymd, '-'),
+  set: (v) => searchData.jsanymd = v.replace(/-/g, '')
 })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -144,7 +144,7 @@ const initGrid = () => {
         { title: "규격", field: "itemsIZE", width: 200 },
         { title: "수량", field: "ioqty", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         { title: "공급가", field: "ioamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "할인금액", field: "HALAMT", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
+        { title: "할인금액", field: "halamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
         { title: "입고부서", field: "deptnm", width: 250 },
         { title: "전표발행", field: "slipymd", width: 150, hozAlign: "center", formatter: (c) => c.getValue() > "00000000" ? "발행" : "" },
       ],
@@ -168,14 +168,14 @@ const calculateTotals = () => {
 // ASP의 Div_Total_Calc 구현
 const applyAllocation = () => {
   const selectedRows = grid?.getSelectedRows() || []
-  if (selectedRows.length === 0 || inputData.DIVSUM <= 0) {
-    grid?.getData().forEach(row => grid?.updateData([{ id: row.id, HALAMT: 0 }]))
+  if (selectedRows.length === 0 || inputData.divsum <= 0) {
+    grid?.getData().forEach(row => grid?.updateData([{ id: row.id, halamt: 0 }]))
     totals.hal = 0
     return
   }
 
-  const divSum = inputData.DIVSUM
-  const isAmtBasis = inputData.divgbn === 'AMT'
+  const divSum = inputData.divsum
+  const isAmtBasis = inputData.divgbn === 'amt'
   const totalBasis = isAmtBasis ? totals.amt : totals.qty
 
   if (totalBasis === 0) return
@@ -196,13 +196,13 @@ const applyAllocation = () => {
     }
 
     allocatedSum += halAmt
-    updates.push({ ...data, HALAMT: halAmt })
+    updates.push({ ...data, halamt: halAmt })
   })
 
   // 선택되지 않은 행들은 0으로 초기화
   grid?.getData().forEach(row => {
     if (!selectedRows.find(r => r.getData().iorowno === row.iorowno)) {
-      updates.push({ ...row, HALAMT: 0 })
+      updates.push({ ...row, halamt: 0 })
     }
   })
 
@@ -224,10 +224,10 @@ const fetchList = async () => {
     const dataWithId = res.data.map((item: any, idx: number) => ({ ...item, id: idx }))
     grid?.setData(dataWithId)
 
-    // 기존에 할인이 등록된 행(HALAMT > 0) 자동 선택
+    // 기존에 할인이 등록된 행(halamt > 0) 자동 선택
     nextTick(() => {
       grid?.getRows().forEach(row => {
-        if (Number(row.getData().HALAMT) > 0) {
+        if (Number(row.getData().halamt) > 0) {
           row.select()
         }
       })
@@ -242,7 +242,7 @@ const fetchList = async () => {
 const saveData = async () => {
   const selectedData = grid?.getSelectedData() || []
   if (selectedData.length === 0) return vAlertError('저장할 항목을 선택하세요.')
-  if (totals.hal !== inputData.DIVSUM) return vAlertError('배부된 할인금액 합계가 입력한 할인금액과 일치하지 않습니다.')
+  if (totals.hal !== inputData.divsum) return vAlertError('배부된 할인금액 합계가 입력한 할인금액과 일치하지 않습니다.')
 
   // 전표 발행 체크
   if (selectedData.some(item => item.slipymd > "00000000")) {
@@ -254,7 +254,7 @@ const saveData = async () => {
   try {
     // ASP 로직처럼 루프를 돌며 개별 저장하거나, 백엔드에서 리스트 처리가 가능하면 일괄 전송
     for (const item of selectedData) {
-      const halRate = inputData.divgbn === 'AMT'
+      const halrate = inputData.divgbn === 'amt'
                       ? (Number(item.ioamt) / totals.amt)
                       : (Number(item.ioqty) / totals.qty)
 
@@ -263,7 +263,7 @@ const saveData = async () => {
         cmpycd: authStore.cmpycd,
         userid: authStore.userid,
         jsanym: searchData.jsanym,
-        jsanymD: searchData.jsanymD,
+        jsanymd: searchData.jsanymd,
         custcd: searchData.custcd,
         divgbn: inputData.divgbn,
         // 개별 아이템 정보
@@ -275,8 +275,8 @@ const saveData = async () => {
         itemcd: item.itemcd,
         ioqty: item.ioqty,
         ioamt: item.ioamt,
-        HALAMT: item.HALAMT,
-        HALrate: halRate.toFixed(8)
+        halamt: item.halamt,
+        halrate: halrate.toFixed(8)
       })
     }
     vAlert('정상적으로 저장되었습니다.')
@@ -316,8 +316,8 @@ const initialize = () => {
   searchData.jsanym = initym
   searchData.custcd = ''
   searchData.custnm = ''
-  searchData.jsanymD = initymd
-  inputData.DIVSUM = 0
+  searchData.jsanymd = initymd
+  inputData.divsum = 0
   grid?.clearData()
   calculateTotals()
 }
@@ -329,7 +329,7 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
   Object.assign(modalProps, {
     title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'custnm',
-    data: { gubun: 'C4', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+    data: { gubun: 'C4', cmpycd: authStore.cmpycd },
     columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 200 }],
     onConfirm: (data: any) => {
       searchData.custcd = data.custcd

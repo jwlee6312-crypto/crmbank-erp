@@ -2,53 +2,51 @@
 	프로그램명	: 감가상각계산
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 해당 월의 변동자산에 대한 감가상각 계산 처리 (디자인 표준화 적용)
+	설명        : 해당 월의 변동자산에 대한 감가상각 계산 처리 (표준 디자인 적용)
 	=============================================================
 -->
 
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="erp-container">
-		<!-- 🚀 1. 상단 액션 바 (표준 규격 및 함수명 통일) -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+	<div class="erp-container d-flex flex-column h-100 bg-white">
+		<!-- 🚀 1. 상단 액션 바 -->
+		<div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+			<div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-calculator me-2 text-primary" style="font-size: 18px;"></i>
-				고정자산 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				고정자산 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				월말처리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
 				<span class="text-primary fw-bolder">감가상각계산 (HAFA090U)</span>
 			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-save" @click="save">
-					<i class="bi bi-play-circle-fill"></i> 계산실행
-				</button>
+			<div class="btn-group-erp d-flex gap-1 pe-3">
+				<button class="btn-erp btn-save" @click="save">계산실행</button>
 			</div>
 		</div>
 
 		<!-- 💡 2. 메인 컨텐츠 영역 -->
-		<div class="flex-grow-1 overflow-auto p-4 d-flex justify-content-center align-items-start">
-			<div class="card border shadow-sm bg-white overflow-hidden" style="max-width: 600px; width: 100%; border-radius: 8px;">
+		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper align-items-center justify-content-center">
+			<div class="card border shadow-sm bg-white overflow-hidden" style="max-width: 600px; width: 100%;">
 				<div class="card-header bg-white py-2 px-3 border-bottom text-center">
-					<h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-gear-fill me-2 text-primary"></i>감가상각 계산 조건 설정</h6>
+					<span class="fw-bold small text-dark"><i class="bi bi-gear-fill me-2 text-primary"></i>감가상각 계산 조건 설정</span>
 				</div>
 				<div class="card-body p-0 bg-white">
-					<!-- 표준 erp-table-full을 이용한 조건 입력 -->
-					<table class="erp-table-full border-0">
+					<table class="erp-table-full">
 						<colgroup>
 							<col style="width: 120px;" /><col />
 						</colgroup>
 						<tbody>
 							<tr>
-								<th class="required">대상연도</th>
+								<th class="required bg-light text-center">대상연도</th>
 								<td class="px-3">
-									<select v-model="form.yy" class="form-select" style="width: 150px;">
+									<select v-model="form.yy" class="form-select form-select-sm" style="width: 150px;">
 										<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년도</option>
 									</select>
 								</td>
 							</tr>
 							<tr>
-								<th class="required">대 상 월</th>
+								<th class="required bg-light text-center">대 상 월</th>
 								<td class="px-3">
-									<select v-model="form.mm" class="form-select" style="width: 120px;">
+									<select v-model="form.mm" class="form-select form-select-sm" style="width: 120px;">
 										<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
 									</select>
 								</td>
@@ -56,8 +54,8 @@
 						</tbody>
 					</table>
 				</div>
-				<div class="card-body p-4">
-					<div class="alert alert-info border-0 shadow-sm small py-3 px-4 m-0" style="background-color: #f0f9ff; color: #0369a1;">
+				<div class="card-body p-4 bg-white">
+					<div class="alert alert-info border-0 shadow-sm small py-3 px-4 m-0">
 						<div class="d-flex mb-2">
 							<i class="bi bi-info-circle-fill me-2 fs-5"></i>
 							<span>해당 월의 변동자산에 대한 감가상각을 일괄 계산합니다.</span>
@@ -123,3 +121,6 @@ async function save() {
 	}
 }
 </script>
+
+<style scoped>
+</style>

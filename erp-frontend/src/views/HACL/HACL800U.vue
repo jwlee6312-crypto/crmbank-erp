@@ -144,6 +144,7 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
 const now = new Date()
 const currentYear = now.getFullYear()
+
 const currentMonth = String(now.getMonth() + 1).padStart(2, '0')
 
 const formData = reactive({
@@ -173,8 +174,8 @@ const initGrid = () => {
         }
       },
       { title: "적 요", field: "REMARK", widthGrow: 2, hozAlign: "left" },
-      { title: "차 변", field: "AMT_DR", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "대 변", field: "AMT_CR", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
+      { title: "차 변", field: "amt_dr", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "대 변", field: "amt_cr", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
     ]
   })
 }
@@ -206,8 +207,8 @@ async function executeClosing() {
                 slipno: vals[1],
                 slip_no_full: `${vals[0]}-${vals[1]}`,
                 REMARK: vals[2],
-                AMT_DR: vals[3],
-                AMT_CR: vals[4]
+                amt_dr: vals[3],
+                amt_cr: vals[4]
             }
         })
         await nextTick()

@@ -171,7 +171,7 @@ const initGrid = () => {
       { title: "거래처명", field: "custnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold" },
       {
         title: "전송여부", field: "cofmyn", width: 80, hozAlign: "center",
-        formatter: (c) => c.getValue() === 'y' || c.getValue() === 'Y' ? '<span class="badge bg-success">완료</span>' : '<span class="badge bg-secondary">미전송</span>'
+        formatter: (c) => c.getValue() === 'Y' || c.getValue() === 'Y' ? '<span class="badge bg-success">완료</span>' : '<span class="badge bg-secondary">미전송</span>'
       },
       { title: "전표번호", field: "slip_full", width: 160, hozAlign: "center", cssClass: "fw-bold text-primary" }
     ]
@@ -198,7 +198,7 @@ async function search() {
   if (!searchdata.deptcd) return vAlertError('입금부서를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_325U_STR', {
-      actkind: 's', cmpycd: authStore.cmpycd,
+      actkind: 'S', cmpycd: authStore.cmpycd,
       deptcd: searchdata.deptcd, imymdfr: searchdata.imymdfr.replace(/-/g, ''),
       imymdto: searchdata.imymdto.replace(/-/g, ''), salsemp: searchdata.salsemp
     })
@@ -217,7 +217,7 @@ async function search() {
  * 🚀 전표 발행 로직 (ASP 패턴 이식: a(채번) -> u(저장) 순차 호출)
  */
 async function issueSlip() {
-  const selected = grid?.getData().filter((i: any) => i.selected && i.cofmyn !== 'y' && i.cofmyn !== 'Y') || []
+  const selected = grid?.getData().filter((i: any) => i.selected && i.cofmyn !== 'Y' && i.cofmyn !== 'Y') || []
   if (selected.length === 0) return vAlertError('발행할 대상을 선택하세요. (이미 완료된 항목 제외)')
 
   const slipymd = slipmaster.slipymd.replace(/-/g, '')
@@ -246,13 +246,13 @@ async function issueSlip() {
             updemp: authStore.userid
         }
 
-        // 1. 전표번호 채번 (actkind: 'a')
-        const resA = await api.post('/api/hsio/HSIO_325U_STR', { ...baseParams, actkind: 'a', slipno: '' })
+        // 1. 전표번호 채번 (actkind: 'A')
+        const resA = await api.post('/api/hsio/HSIO_325U_STR', { ...baseParams, actkind: 'A', slipno: '' })
         const slipno = resA.data?.[0]?.slipno || resA.data?.[0]?.slipno
         if (!slipno || slipno === '000000') throw new Error('전표 번호 채번 실패')
 
-        // 2. 실제 정산 저장 (actkind: 'u')
-        const resU = await api.post('/api/hsio/HSIO_325U_STR', { ...baseParams, actkind: 'u', slipno: slipno })
+        // 2. 실제 정산 저장 (actkind: 'U')
+        const resU = await api.post('/api/hsio/HSIO_325U_STR', { ...baseParams, actkind: 'U', slipno: slipno })
         if (resU.data?.[0]?.jsanym === '000000' || resU.data?.[0]?.JSANYM === '000000') {
             throw new Error('전표 저장 중 오류 발생')
         }
@@ -271,7 +271,7 @@ async function deleteSlip() {
   try {
     for (const item of selected) {
       await api.post('/api/hsio/HSIO_325U_STR', {
-        actkind: 'd', cmpycd: authStore.cmpycd, deptcd: item.deptcd,
+        actkind: 'D', cmpycd: authStore.cmpycd, deptcd: item.deptcd,
         imym: item.imym, imno: item.imno, slipymd: item.slipymd, slipno: item.slipno,
         userid: authStore.userid
       })

@@ -104,8 +104,8 @@ let mainGrid: Tabulator | null = null
 const loadInitData = async () => {
 	try {
 		// 입출구분 (340)
-		const resIo = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', search: '340' })
-		ioGbnOptions.value = (resIo.data || []).map((r: any) => ({ CD: r.col0, NM: r.col1 }))
+		const resIo = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '340' })
+		ioGbnOptions.value = (resIo.data || []).map((r: any) => ({ CD: r.codecd, NM: r.codenm }))
 	} catch (e) {
 		console.error('초기 데이터 로드 실패')
 	}
@@ -130,8 +130,8 @@ const search = async () => {
 
 			return {
 				...r,
-				custno_F: formattedNo,
-				BANK_ACC: `${r.banknm || ''} ${r.gujoa || ''}`.trim()
+				custno_f: formattedNo,
+				bank_acc: `${r.banknm || ''} ${r.gujoa || ''}`.trim()
 			}
 		})
 
@@ -183,7 +183,7 @@ onMounted(() => {
 				},
 				{ title: "구분", field: "iogbnNM", width: 80, hozAlign: "center" },
 				{ title: "종류", field: "custgbnM", width: 80, hozAlign: "center" },
-				{ title: "사업자번호", field: "custno_F", width: 110, hozAlign: "center" },
+				{ title: "사업자번호", field: "custno_f", width: 110, hozAlign: "center" },
 				{ title: "대표자", field: "bossnm", width: 80, hozAlign: "center" },
 				{ title: "업태", field: "custtype", width: 120 },
 				{ title: "종목", field: "custkind", width: 120 },
@@ -192,8 +192,8 @@ onMounted(() => {
 				{ title: "매출단가", field: "outprcgbnM", width: 80, hozAlign: "center" },
 				{ title: "여신한도", field: "hdamt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "여신기한", field: "rcvdd", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "은행/계좌", field: "BANK_ACC", width: 150 },
-				{ title: "상태", field: "statusNM", width: 70, hozAlign: "center" }
+				{ title: "은행/계좌", field: "bank_acc", width: 150 },
+				{ title: "상태", field: "statusnm", width: 70, hozAlign: "center" }
 			]
 		})
 	}

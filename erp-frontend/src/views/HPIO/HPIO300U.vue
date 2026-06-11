@@ -211,7 +211,7 @@ const initGrids = () => {
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.CODE, linenm: i.cdnm }));
+    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
   } catch (e) { console.error(e) }
 }
 
@@ -234,7 +234,7 @@ const onProcessSelect = (prog: any) => {
 const fetchPerfData = async () => {
   try {
     const res = await api.post('/api/hpio/HPIO_300U_STR', {
-      actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, ordymd: searchForm.ordymd
+      actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, ordymd: searchForm.ordymd
     })
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '', prdqty_o: i.prdqty || 0 })))
     grid3?.clearData(); selectedProduct.itemcd = ''; selectedProduct.itemnm = ''
@@ -246,7 +246,7 @@ const fetchMaterialData = async (product: any) => {
   Object.assign(selectedProduct, product)
   try {
     const res = await api.post('/api/hpio/HPIO_301U_STR', {
-      actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, proymd: product.proymd, itemcd: product.itemcd
+      actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, proymd: product.proymd, itemcd: product.itemcd
     })
     grid3?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })))
   } catch (e) { vAlertError('자재 조회 실패') }
@@ -259,7 +259,7 @@ const savePerformance = async () => {
 
   try {
     for (const item of details) {
-      const actkind = !item.prdqty_o || Number(item.prdqty_o) === 0 ? 'a0' : (item._status === '삭제' ? 'd0' : 'u0')
+      const actkind = !item.prdqty_o || Number(item.prdqty_o) === 0 ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0')
       await api.post('/api/hpio/HPIO_300U_STR', {
         ...item, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, userid: authStore.userid
       })
@@ -275,7 +275,7 @@ const saveMaterials = async () => {
 
   try {
     for (const item of details) {
-      const actkind = item._status === '입력' ? 'a' : (item._status === '삭제' ? 'd' : 'u')
+      const actkind = item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U')
       await api.post('/api/hpio/HPIO_301U_STR', {
         ...item, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, userid: authStore.userid
       })

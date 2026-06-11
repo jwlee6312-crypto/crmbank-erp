@@ -139,7 +139,7 @@ const save = async () => {
           CMPYCD: authStore.CMPYCD,
           IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
           IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
-          DEPTCD: item.UDEPTCD || item.udeptcd || searchForm.DEPTCD,
+          DEPTCD: item.UDEPTCD || item.deptcd || searchForm.DEPTCD,
           SLIPYMD: slipYmd,
           slipno: item.slipno || item.slipno,
           UPDEMP: authStore.USERID
@@ -190,7 +190,7 @@ onMounted(() => {
         { title: "부서명", field: "DEPTNM", width: 120 },
         { title: "비용종류", field: "COSTNM", width: 150 },
         { title: "PO No.", field: "FILENO", width: 180 },
-        { title: "비용금액", field: "SPYAMT", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
+        { title: "비용금액", field: "spyamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
         { title: "전송여부", field: "SENDYN", width: 80, formatter: "tickCross" },
         { title: "상세 적요", field: "BIGO", minWidth: 200, widthGrow: 1, hozAlign: "left" }
       ]

@@ -217,14 +217,14 @@ async function save() {
   try {
     // 1. 자동전표 설정 체크 (ASP: HA00_010S_STR 'P1')
     const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
-    const autoslip = resset.data?.[0]?.slipyn || 'n'
+    const autoslip = resset.data?.[0]?.slipyn || 'N'
     const slipymd = formData.pubymd.replace(/-/g, '')
-    const acctymd = (autoslip === 'y' || autoslip === 'Y') ? slipymd : ''
+    const acctymd = (autoslip === 'Y' || autoslip === 'Y') ? slipymd : ''
     const business = slipymd.substring(0, 4) + "년 " + slipymd.substring(4, 6) + "월 매입 건"
 
     // 2. 전표 MASTER 생성 (ASP: HASL_010U_STR)
     const resmst = await api.post('/api/hasl/HASL_010U_STR', {
-        actkind: 'a',
+        actkind: 'A',
         cmpycd: authStore.cmpycd,
         slipymd: slipymd,
         slipno: '',
@@ -242,12 +242,12 @@ async function save() {
     // 3. 정산 내역 루프 돌며 전표번호 업데이트 (ASP: HSIO_130U_STR)
     for (const item of items) {
         const detailparams = {
-            actkind: 'u0',
+            actkind: 'U0',
             cmpycd: authStore.cmpycd,
             iogbn: '100',
             ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
             ioymdto: searchForm.ioymdto.replace(/-/g, ''),
-            udeptcd: item.udeptcd || item.deptcd || formData.deptcd,
+            deptcd: item.deptcd || item.deptcd || formData.deptcd,
             jsanym: item.jsanym,
             jsanno: item.jsanno,
             jsanymd: (item.jsanymd || '').replace(/-/g, ''),
@@ -264,7 +264,7 @@ async function save() {
         }
         const resdetail = await api.post('/api/hsio/HSIO_130U_STR', detailparams)
         const resdata = resdetail.data?.[0]
-        if (resdata && (resdata.status === 'y' || resdata.erryn === 'y' || resdata.status === 'Y' || resdata.erryn === 'Y')) {
+        if (resdata && (resdata.status === 'Y' || resdata.erryn === 'Y' || resdata.status === 'Y' || resdata.erryn === 'Y')) {
             throw new Error(resdata.msg || '상세 내역 저장 중 오류 발생')
         }
     }

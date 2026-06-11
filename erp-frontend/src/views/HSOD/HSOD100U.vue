@@ -188,12 +188,12 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 // [1] 데이터 모델링 (모두 소문자 원칙)
 const form_01 = reactive({ fromdt: firstDay, todt: today, schcustnm: '' })
 const form_02 = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   ordym: today.replace(/-/g, '').substring(0, 6), ordno: '0000',
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   ordymd: today, custcd: '', custnm: '', outymd: today,
   ordkind: '100', paycndt: '110', ordemp: authStore.userid,
-  remark: '', sts: 'n', totsum: 0, trancd: '', address: '', postno: '', d_address: ''
+  remark: '', sts: 'N', totsum: 0, trancd: '', address: '', postno: '', d_address: ''
 })
 
 const displayOrdNo = computed(() => (!form_02.ordno || form_02.ordno === '0000') ? '' : `${form_02.ordym}-${form_02.ordno}`)
@@ -247,7 +247,7 @@ const calcRow = (row: any) => {
 async function search() {
   try {
     const res = await api.post('/api/hsod/HSOD_100U_STR', {
-        actkind: 's1', cmpycd: authStore.cmpycd,
+        actkind: 'S1', cmpycd: authStore.cmpycd,
         ymdfr: form_01.fromdt.replace(/-/g, ''), ymdto: form_01.todt.replace(/-/g, ''),
         custnm: form_01.schcustnm, ordno: '0000', ordkind: '100', ordemp: authStore.userid
     });
@@ -260,7 +260,7 @@ async function fetchDetail(row: any) {
   const fYmd = (d: string) => d && d.length === 8 ? `${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6, 8)}` : today;
   Object.assign(form_02, { ...row, ordymd: fYmd(row.ordymd), outymd: fYmd(row.outymd) });
   try {
-    const res = await api.post('/api/hsod/HSOD_101U_STR', { actkind: 's0', cmpycd: authStore.cmpycd, ordym: row.ordym, ordno: row.ordno });
+    const res = await api.post('/api/hsod/HSOD_101U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, ordym: row.ordym, ordno: row.ordno });
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '', ordamt: Number(i.ordamt || i.amtsum || 0) })));
   } catch (e: any) { vAlertError('상세 로드 실패'); }
 }
@@ -271,8 +271,8 @@ async function save() {
   if (!details.length && form_02.ordno === '0000') return vAlertError('항목을 추가하세요.');
 
   try {
-    const mst = { ...form_02, actkind: form_02.ordno === '0000' ? 'a0' : 'u0', ordymd: form_02.ordymd.replace(/-/g, ''), outymd: form_02.outymd.replace(/-/g, ''), updemp: authStore.userid };
-    const dtl = details.map((d: any) => ({ ...d, actkind: d._status === '입력' ? 'a0' : (d._status === '삭제' ? 'd0' : 'u0'), updemp: authStore.userid }));
+    const mst = { ...form_02, actkind: form_02.ordno === '0000' ? 'A0' : 'U0', ordymd: form_02.ordymd.replace(/-/g, ''), outymd: form_02.outymd.replace(/-/g, ''), updemp: authStore.userid };
+    const dtl = details.map((d: any) => ({ ...d, actkind: d._status === '입력' ? 'A0' : (d._status === '삭제' ? 'D0' : 'U0'), updemp: authStore.userid }));
     await api.post('/api/hsod/HSOD_100U_SAVE', { mst, dtl });
     vAlert('저장되었습니다.'); search();
   } catch (e: any) { vAlertError('저장 오류'); }
@@ -288,12 +288,12 @@ const handleOpenHelp = (type: string, target?: any) => {
 const handleRowAction = (row: any) => { const d = row.getData(); if (d._state === 'NEW') row.delete(); else row.update({ _status: d._status === '삭제' ? '' : '삭제' }); }
 const deleteSelectedRows = () => { const sel = grid2?.getSelectedRows(); if (sel?.length) sel.forEach(row => handleRowAction(row)); }
 const addRow = () => grid2?.addRow({ ordqty: 0, price: 0, ordamt: 0, _status: '입력', _state: 'NEW' }, true);
-const initialize = () => { resetForm(form_02); Object.assign(form_02, { cmpycd: authStore.cmpycd, ordno: '0000', ordymd: today, ordym: today.replace(/-/g, '').substring(0, 6), outymd: today, sts: 'n', deptcd: authStore.deptcd, deptnm: authStore.deptnm, ordemp: authStore.userid, ordkind: '100', paycndt: '110' }); grid1?.clearData(); grid2?.clearData(); }
+const initialize = () => { resetForm(form_02); Object.assign(form_02, { cmpycd: authStore.cmpycd, ordno: '0000', ordymd: today, ordym: today.replace(/-/g, '').substring(0, 6), outymd: today, sts: 'N', deptcd: authStore.deptcd, deptnm: authStore.deptnm, ordemp: authStore.userid, ordkind: '100', paycndt: '110' }); grid1?.clearData(); grid2?.clearData(); }
 
 async function handleFullDelete() {
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsod/HSOD_100U_SAVE', { mst: { ...form_02, actkind: 'd0', ordymd: form_02.ordymd.replace(/-/g, ''), outymd: form_02.outymd.replace(/-/g, '') }, dtl: [] });
+    await api.post('/api/hsod/HSOD_100U_SAVE', { mst: { ...form_02, actkind: 'D0', ordymd: form_02.ordymd.replace(/-/g, ''), outymd: form_02.outymd.replace(/-/g, '') }, dtl: [] });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }

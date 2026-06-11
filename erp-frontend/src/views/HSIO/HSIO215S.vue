@@ -43,15 +43,15 @@
 								<td>
 									<select v-model="searchForm.whcd" class="form-select form-select-sm">
 										<option value="000">전체</option>
-										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</td>
 								<th class="required">입고일자</th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.OUTymdfr" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.outymdfr" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.OUTymdto" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.outymdto" type="date" class="form-control form-control-sm" />
 									</div>
 								</td>
 								<th>거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
@@ -128,8 +128,8 @@ const { resetForm } = useFormReset()
 const now = new Date()
 const searchForm = reactive<any>({
   whcd: '000',
-  OUTymdfr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  OUTymdto: now.toISOString().substring(0, 10),
+  outymdfr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
+  outymdto: now.toISOString().substring(0, 10),
   custcd: '', custnm: '',
   slipyn: 'N'
 })
@@ -151,8 +151,8 @@ async function fetchCustList() {
   try {
     const res = await api.post('/api/hsio/HSIO_215S_STR', {
       actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '100',
-      OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
-      OUTymdto: searchForm.OUTymdto.replace(/-/g, ''),
+      outymdfr: searchForm.outymdfr.replace(/-/g, ''),
+      outymdto: searchForm.outymdto.replace(/-/g, ''),
       whcd: searchForm.whcd, custcd: searchForm.custcd, slipyn: searchForm.slipyn
     });
     poGrid?.setData(res.data.data || []);
@@ -169,8 +169,8 @@ async function fetchDetail(row: any) {
     const res = await api.post('/api/hsio/HSIO_215S_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '100',
       whcd: searchForm.whcd, custcd: d.custcd, ioym: d.ioym, iono: d.iono,
-      OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
-      OUTymdto: searchForm.OUTymdto.replace(/-/g, '')
+      outymdfr: searchForm.outymdfr.replace(/-/g, ''),
+      outymdto: searchForm.outymdto.replace(/-/g, '')
     })
     itemGrid?.setData(res.data.data || [])
   } catch (e) { vAlertError('상세 내역 조회 실패') }
@@ -179,8 +179,8 @@ async function fetchDetail(row: any) {
 function initialize() {
   resetForm(searchForm);
   searchForm.whcd = '000'; searchForm.slipyn = 'N';
-  searchForm.OUTymdfr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
-  searchForm.OUTymdto = now.toISOString().substring(0, 10);
+  searchForm.outymdfr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
+  searchForm.outymdto = now.toISOString().substring(0, 10);
   poGrid?.clearData(); itemGrid?.clearData(); selectedInfo.value = '';
 }
 
@@ -190,7 +190,7 @@ const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 
 onMounted(async () => {
   api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
-     .then(r => whOptions.value = r.data.map((i:any)=>({CODE: i.CODE || i.whcd, cdnm: i.cdnm || i.whnm})));
+     .then(r => whOptions.value = r.data.map((i:any)=>({code: i.code || i.whcd, cdnm: i.cdnm || i.whnm})));
 
   if (poGridRef.value) {
     poGrid = new Tabulator(poGridRef.value, {
@@ -214,7 +214,7 @@ onMounted(async () => {
         { title: '수량', field: 'ioqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
         { title: '공급가', field: 'jsanamt', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 } },
         { title: '부가세', field: 'jsanvat', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 } },
-        { title: '합계', field: 'SUM_AMT', hozAlign: 'right', width: 130, formatter: 'money', cssClass: 'fw-bold bg-light',
+        { title: '합계', field: 'sum_amt', hozAlign: 'right', width: 130, formatter: 'money', cssClass: 'fw-bold bg-light',
           mutatorData: (v, d) => Number(d.jsanamt || 0) + Number(d.jsanvat || 0) }
       ]
     })

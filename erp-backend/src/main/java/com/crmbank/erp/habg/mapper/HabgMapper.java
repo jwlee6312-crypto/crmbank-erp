@@ -38,7 +38,4 @@ public interface HabgMapper {
 
     // 예산실적서 조회 (HABG_230S)
     List<Map<String, Object>> HABG_230S_STR(Map<String, Object> params);
-
-    // 예산구분 조회
-    Map<String, Object> GET_BGTYPE(Map<String, Object> params);
 }

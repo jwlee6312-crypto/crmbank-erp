@@ -224,7 +224,7 @@ const formData = reactive<any>({
 	gline1: '', gline2: '', gline3: '', gline4: '', gline5: '',
 	bgtype: '000', cardcust: '', mnfyn: 'N', stkgbn: '100',
 	stokyn: 'Y', pricegbn: '1', slipyn: 'N', yeosinyn: 'N', iocnfmyn: 'N',
-	balcnfmyn: 'n', outacctyn: 'n', logoimg: '', stampimg: ''
+	balcnfmyn: 'N', outacctyn: 'N', logoimg: '', stampimg: ''
 })
 
 const bgOptions = ref<any[]>([])

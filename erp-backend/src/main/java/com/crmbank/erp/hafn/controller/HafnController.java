@@ -1,5 +1,6 @@
 package com.crmbank.erp.hafn.controller;
 
+import com.crmbank.erp.comm.dto.ApiResponse;
 import com.crmbank.erp.comm.dto.UserSession;
 import com.crmbank.erp.hafn.mapper.HafnMapper;
 import com.crmbank.erp.hasl.mapper.HaslMapper;
@@ -33,44 +34,46 @@ public class HafnController {
     }
 
     @PostMapping("/{procedure}")
-    public ResponseEntity<Object> executeProcedure(
+    public Object executeProcedure(
             @PathVariable String procedure,
             @RequestBody Map<String, Object> params,
             HttpSession session) {
         
         injectSession(params, session);
-        String proc = procedure.toLowerCase();
+        String proc = procedure.toUpperCase();
         
-        if (proc.equals("hafn_610u_save") || proc.equals("hafn_620u_save") || proc.equals("hafn_630u_save")) {
+        // 🚀 복합 저장 로직 (ApiResponse 반환)
+        if (proc.equals("HAFN_610U_SAVE") || proc.equals("HAFN_620U_SAVE") || proc.equals("HAFN_630U_SAVE")) {
             return saveSlip110(params, session);
         }
 
         log.info("🚀 [hafn] {} 호출: {}", proc, params);
         
+        // 🚀 단순 조회 로직 (List 반환)
         switch (proc) {
-            case "hafn_010s_str": return ResponseEntity.ok(hafnMapper.hafn_010s_str(params));
-            case "hafn_110s_str": return ResponseEntity.ok(hafnMapper.hafn_110s_str(params));
-            case "hafn_120s_str": return ResponseEntity.ok(hafnMapper.hafn_120s_str(params));
-            case "hafn_210s_str": return ResponseEntity.ok(hafnMapper.hafn_210s_str(params));
-            case "hafn_310s_str": return ResponseEntity.ok(hafnMapper.hafn_310s_str(params));
-            case "hafn_410s_str": return ResponseEntity.ok(hafnMapper.hafn_410s_str(params));
-            case "hafn_420s_str": return ResponseEntity.ok(hafnMapper.hafn_420s_str(params));
-            case "hafn_430s_str": return ResponseEntity.ok(hafnMapper.hafn_430s_str(params));
-            case "hafn_510s_str": return ResponseEntity.ok(hafnMapper.hafn_510s_str(params));
-            case "hafn_520s_str": return ResponseEntity.ok(hafnMapper.hafn_520s_str(params));
-            case "hafn_610u_str": return ResponseEntity.ok(hafnMapper.hafn_610u_str(params));
-            case "hafn_620u_str": return ResponseEntity.ok(hafnMapper.hafn_620u_str(params));
-            case "hafn_630u_str": return ResponseEntity.ok(hafnMapper.hafn_630u_str(params));
-            case "hafn_670s_str": return ResponseEntity.ok(hafnMapper.hafn_670s_str(params));
-            case "hafn_690s_str": return ResponseEntity.ok(hafnMapper.hafn_690s_str(params));
+            case "HAFN_010S_STR": return hafnMapper.HAFN_010S_STR(params);
+            case "HAFN_110S_STR": return hafnMapper.HAFN_110S_STR(params);
+            case "HAFN_120S_STR": return hafnMapper.HAFN_120S_STR(params);
+            case "HAFN_210S_STR": return hafnMapper.HAFN_210S_STR(params);
+            case "HAFN_310S_STR": return hafnMapper.HAFN_310S_STR(params);
+            case "HAFN_410S_STR": return hafnMapper.HAFN_410S_STR(params);
+            case "HAFN_420S_STR": return hafnMapper.HAFN_420S_STR(params);
+            case "HAFN_430S_STR": return hafnMapper.HAFN_430S_STR(params);
+            case "HAFN_510S_STR": return hafnMapper.HAFN_510S_STR(params);
+            case "HAFN_520S_STR": return hafnMapper.HAFN_520S_STR(params);
+            case "HAFN_610U_STR": return hafnMapper.HAFN_610U_STR(params);
+            case "HAFN_620U_STR": return hafnMapper.HAFN_620U_STR(params);
+            case "HAFN_630U_STR": return hafnMapper.HAFN_630U_STR(params);
+            case "HAFN_670S_STR": return hafnMapper.HAFN_670S_STR(params);
+            case "HAFN_680S_STR": return hafnMapper.HAFN_680S_STR(params);
+            case "HAFN_690S_STR": return hafnMapper.HAFN_690S_STR(params);
             default:
-                log.warn("⚠️ 미등록 hafn 프로시저: {}", proc);
-                return ResponseEntity.notFound().build();
+                return null;
         }
     }
 
     @Transactional
-    public ResponseEntity<Object> saveSlip110(Map<String, Object> payload, HttpSession session) {
+    public ResponseEntity<ApiResponse<?>> saveSlip110(Map<String, Object> payload, HttpSession session) {
         try {
             Map<String, Object> master = (Map<String, Object>) payload.get("master");
             List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
@@ -79,10 +82,10 @@ public class HafnController {
             injectSession(master, session);
             master.put("actkind", actkind);
 
-            List<Map<String, Object>> masterresult = haslMapper.hasl_110u_str(master);
+            List<Map<String, Object>> masterresult = haslMapper.HASL_110U_STR(master);
             if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
             
-            String slipno = String.valueOf(masterresult.get(0).get("slipno"));
+            String slipno = String.valueOf(masterresult.get(0).get("SLIPNO") != null ? masterresult.get(0).get("SLIPNO") : masterresult.get(0).get("slipno"));
             String slipymd = String.valueOf(master.get("slipymd"));
 
             if (details != null) {
@@ -93,11 +96,11 @@ public class HafnController {
                     detail.put("acctymd", master.get("acctymd"));
                     detail.put("actkind", actkind);
 
-                    List<Map<String, Object>> detres = haslMapper.hasl_111u_str(detail);
+                    List<Map<String, Object>> detres = haslMapper.HASL_111U_STR(detail);
                     if (!detres.isEmpty()) {
                         Map<String, Object> resmap = detres.get(0);
-                        if ("y".equalsIgnoreCase(String.valueOf(resmap.get("ret_yn")))) {
-                            throw new RuntimeException(String.valueOf(resmap.get("ret_msg")));
+                        if ("Y".equalsIgnoreCase(String.valueOf(resmap.get("RET_YN") != null ? resmap.get("RET_YN") : resmap.get("ret_yn")))) {
+                            throw new RuntimeException(String.valueOf(resmap.get("RET_MSG") != null ? resmap.get("RET_MSG") : resmap.get("ret_msg")));
                         }
                     }
                 }
@@ -105,14 +108,10 @@ public class HafnController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("slipno", slipno);
-            response.put("status", "success");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(response, "성공적으로 저장되었습니다."));
 
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
         }
     }
 }

@@ -27,7 +27,7 @@
               <tr>
                 <th class="required" style="width: 100px;">기준일자</th>
                 <td style="width: 200px;">
-                  <input v-model="uiymD" type="date" class="form-control form-control-sm fw-bold" style="width: 150px;" />
+                  <input v-model="uiymd" type="date" class="form-control form-control-sm fw-bold" style="width: 150px;" />
                 </td>
                 <th class="required" style="width: 100px;">창&nbsp;&nbsp;&nbsp;&nbsp;고</th>
                 <td style="width: 180px;">
@@ -88,17 +88,17 @@ const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0
 
 // 1. 상태 관리
 const searchData = reactive({
-  ymD: initymd,
+  ymd: initymd,
   whcd: '000',
   astkind: '120'
 })
 
-const uiymD = computed({
-  get: () => formatDateString(searchData.ymD, '-'),
-  set: (v) => searchData.ymD = v.replace(/-/g, '')
+const uiymd = computed({
+  get: () => formatDateString(searchData.ymd, '-'),
+  set: (v) => searchData.ymd = v.replace(/-/g, '')
 })
 
-const totals = reactive({ AMTTOT: 0, QTYTOT: 0, NONTOT: 0 })
+const totals = reactive({ amttot: 0, qtytot: 0, NONTOT: 0 })
 const whOptions = ref<any[]>([])
 const assetOptions = ref<any[]>([])
 
@@ -145,17 +145,17 @@ const initGrid = () => {
             const d = cell.getData();
             if (Number(d.stock) === 0) return "";
             const diff = (Number(d.stkqty) || 0) - (Number(d.stock) || 0);
-            return formatNumberWithPnt(diff, Number(d.QTYPNT) || 0);
+            return formatNumberWithPnt(diff, Number(d.qtypnt) || 0);
         }
       },
-      { title: "재고금액", field: "STKAMT", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "재고금액", field: "stkamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       { title: "미입고량", field: "nonqty", width: 90, hozAlign: "right", formatter: (c) => formatQty(c) },
       {
-        title: "총 수량", field: "TOTALQTY", width: 100, hozAlign: "right",
+        title: "총 수량", field: "totalqty", width: 100, hozAlign: "right",
         formatter: (cell) => {
             const d = cell.getData();
             const total = (Number(d.stkqty) || 0) + (Number(d.nonqty) || 0);
-            return formatNumberWithPnt(total, Number(d.QTYPNT) || 0);
+            return formatNumberWithPnt(total, Number(d.qtypnt) || 0);
         },
         cssClass: "bg-light-blue fw-bold"
       }
@@ -165,7 +165,7 @@ const initGrid = () => {
 
 const formatQty = (cell: any) => {
     const data = cell.getData();
-    const pnt = Number(data.QTYPNT) || 0;
+    const pnt = Number(data.qtypnt) || 0;
     const val = Number(cell.getValue()) || 0;
     if (val === 0) return "";
     return formatNumberWithPnt(val, pnt);
@@ -187,11 +187,11 @@ async function fetchOptions() {
 }
 
 async function search() {
-  if (!searchData.ymD) return vAlertError('기준일자를 선택하세요.')
+  if (!searchData.ymd) return vAlertError('기준일자를 선택하세요.')
   try {
     const res = await api.post('/api/hsst/HSST_200S_STR', {
       cmpycd: authStore.cmpycd,
-      ymD: searchData.ymD,
+      ymd: searchData.ymd,
       whcd: searchData.whcd,
       astkind: searchData.astkind
     })
@@ -204,14 +204,14 @@ async function search() {
 }
 
 const calculateTotals = (data: any[]) => {
-    totals.AMTTOT = data.reduce((acc, cur) => acc + (Number(cur.STKAMT) || 0), 0)
-    totals.QTYTOT = data.reduce((acc, cur) => acc + (Number(cur.stkqty) || 0), 0)
+    totals.amttot = data.reduce((acc, cur) => acc + (Number(cur.stkamt) || 0), 0)
+    totals.qtytot = data.reduce((acc, cur) => acc + (Number(cur.stkqty) || 0), 0)
     totals.NONTOT = data.reduce((acc, cur) => acc + (Number(cur.nonqty) || 0), 0)
 }
 
 const navigateToHistory = (row: any) => {
     // 수불 상세 내역(HSIO650S)으로 이동
-    const firstDayOfMonth = searchData.ymD.substring(0, 6) + '01'
+    const firstDayOfMonth = searchData.ymd.substring(0, 6) + '01'
     router.push({
         path: '/HSIO650S',
         query: {
@@ -219,17 +219,17 @@ const navigateToHistory = (row: any) => {
             whcd: searchData.whcd,
             itemcd: row.itemcd,
             fymd: firstDayOfMonth,
-            tymd: searchData.ymD
+            tymd: searchData.ymd
         }
     })
 }
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { ymD: initymd, whcd: '000', astkind: '120' })
+  Object.assign(searchData, { ymd: initymd, whcd: '000', astkind: '120' })
   grid.value?.clearData()
   activeItemCount.value = 0
-  totals.AMTTOT = 0; totals.QTYTOT = 0; totals.NONTOT = 0;
+  totals.amttot = 0; totals.qtytot = 0; totals.NONTOT = 0;
 }
 
 function print(type: string) {

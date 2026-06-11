@@ -152,7 +152,7 @@ const search = async () => {
 			vatamt: Number(row.vatamt || 0),
 			totamt: Number(row.totamt || 0),
 			descnm: row.descnm,
-			DAMDANG: row.DAMDANG,
+			damdang: row.damdang,
 			telno: row.telno,
 			email: row.email,
 			taxym: row.taxym,
@@ -217,7 +217,7 @@ function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: searchForm.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm; search() }
 		})
@@ -247,7 +247,7 @@ onMounted(() => {
 				{ title: "부가세", field: "vatamt", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "합계", field: "totamt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" },
 				{ title: "적요", field: "descnm", width: 150 },
-				{ title: "담당자", field: "DAMDANG", width: 80 },
+				{ title: "담당자", field: "damdang", width: 80 },
 				{ title: "연락처", field: "telno", width: 100 },
 				{ title: "이메일", field: "email", width: 130 }
 			]

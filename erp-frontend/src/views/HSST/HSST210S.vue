@@ -53,7 +53,7 @@
 							<td>
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">기준일자</span>
-									<input v-model="searchForm.ymD" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="searchForm.ymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 									<span class="text-muted small ms-1">현재</span>
 								</div>
 							</td>
@@ -61,10 +61,10 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">거 래 처</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
-										<input v-model="searchForm.custnmFR" type="text" class="form-control form-control-sm" placeholder="시작" @keyup.enter="openHelp('CUST_FR')" />
+										<input v-model="searchForm.custnmfr" type="text" class="form-control form-control-sm" placeholder="시작" @keyup.enter="openHelp('CUST_FR')" />
 										<button class="btn btn-sm btn-outline-secondary px-1" @click="openHelp('CUST_FR')"><i class="bi bi-search"></i></button>
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.custnmTO" type="text" class="form-control form-control-sm" placeholder="종료" @keyup.enter="openHelp('CUST_TO')" />
+										<input v-model="searchForm.custnmto" type="text" class="form-control form-control-sm" placeholder="종료" @keyup.enter="openHelp('CUST_TO')" />
 										<button class="btn btn-sm btn-outline-secondary px-1" @click="openHelp('CUST_TO')"><i class="bi bi-search"></i></button>
 									</div>
 								</div>
@@ -108,7 +108,7 @@ const { resetForm } = useFormReset()
 const today = new Date().toISOString().substring(0, 10);
 const searchForm = reactive({
 	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-	ymD: today, custcdFR: '', custnmFR: '', custcdTO: '', custnmTO: ''
+	ymd: today, custcdfr: '', custnmfr: '', custcdto: '', custnmto: ''
 })
 
 const rowCount = ref(0)
@@ -133,14 +133,14 @@ const getColumnsConfig = (baseDate: string) => {
 			  const d = cell.getData();
 			  if (d.gubun_TYPE === '1') return (d.custcd || '') + ' ' + (d.custnm || '');
 			  if (d.gubun_TYPE === '2') return d.custnm || '';
-			  return d.DAMDANG || '';
+			  return d.damdang || '';
 		  }
 		},
 		{ title: "구분", field: "gubun_NM", width: 150, hozAlign: "center", cssClass: "bg-light border-end", frozen: true }
 	];
 	months.forEach((m, idx) => {
 		columns.push({
-			title: `${m.year}년 ${m.month}월`, field: `AMT_M${idx + 1}`,
+			title: `${m.year}년 ${m.month}월`, field: `amt_M${idx + 1}`,
 			hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 }
 		});
 	});
@@ -152,10 +152,10 @@ const search = async () => {
 	if (!searchForm.deptcd) return vAlertError('부서를 선택하세요.');
 	try {
 		const res = await api.post('/api/hsst/HSST_210S_STR', {
-			...searchForm, cmpycd: authStore.cmpycd, ymD: searchForm.ymD.replace(/-/g, '')
+			...searchForm, cmpycd: authStore.cmpycd, ymd: searchForm.ymd.replace(/-/g, '')
 		})
 		const data = res.data || []
-		mainGrid?.setColumns(getColumnsConfig(searchForm.ymD)); // 날짜 변경 대응
+		mainGrid?.setColumns(getColumnsConfig(searchForm.ymd)); // 날짜 변경 대응
 		mainGrid?.setData(data)
 		rowCount.value = Math.ceil(data.length / 3);
 		vAlert('조회되었습니다.')
@@ -165,7 +165,7 @@ const search = async () => {
 const initialize = () => {
 	resetForm(searchForm);
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
-	searchForm.ymD = today;
+	searchForm.ymd = today;
 	mainGrid?.clearData(); rowCount.value = 0;
 	mainGrid?.setColumns(getColumnsConfig(today));
 }
@@ -189,8 +189,8 @@ function openHelp(type: string) {
 			data: { gubun: 'C0', cmpycd: authStore.cmpycd },
 			columns: [{ title: '코드', field: 'custcd', width: 100 }, { title: '거래처명', field: 'custnm', width: 200 }],
 			onConfirm: (d: any) => {
-				if (type === 'CUST_FR') { searchForm.custcdFR = d.custcd; searchForm.custnmFR = d.custnm }
-				else { searchForm.custcdTO = d.custcd; searchForm.custnmTO = d.custnm }
+				if (type === 'CUST_FR') { searchForm.custcdfr = d.custcd; searchForm.custnmfr = d.custnm }
+				else { searchForm.custcdto = d.custcd; searchForm.custnmto = d.custnm }
 			}
 		})
 	}
@@ -202,7 +202,7 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
-			columns: getColumnsConfig(searchForm.ymD),
+			columns: getColumnsConfig(searchForm.ymd),
 			placeholder: "조회된 데이터가 없습니다."
 		})
 	}

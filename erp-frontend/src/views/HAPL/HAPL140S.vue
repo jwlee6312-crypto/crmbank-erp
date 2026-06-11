@@ -152,7 +152,7 @@ const search = async () => {
           acctcd: acctCd,
           acctnm: row.col1,
           rstyn: row.col5,
-          TOTAL_AMT: 0,
+          total_amt: 0,
           deptAmts: {}
         })
       }
@@ -162,11 +162,11 @@ const search = async () => {
 
       if (acctCd === "5100000") { // 매출액 기준
         salesTotalMap.set(deptCd, (salesTotalMap.get(deptCd) || 0) + amt)
-        salesTotalMap.set('TOTAL', (salesTotalMap.get('TOTAL') || 0) + amt)
+        salesTotalMap.set('total', (salesTotalMap.get('total') || 0) + amt)
       }
 
       acctObj.deptAmts[deptCd] = amt
-      acctObj.TOTAL_AMT += amt
+      acctObj.total_amt += amt
     })
 
     let i = 1, j = 1, k = 1
@@ -204,19 +204,19 @@ const search = async () => {
         if (code.substring(0, 2) !== nextRow.acctcd.substring(0, 2)) j = 1
       }
 
-      const totalSales = salesTotalMap.get('TOTAL') || 0
+      const totalSales = salesTotalMap.get('total') || 0
       const rowResult: any = {
         DISP_NM: dispName,
         IS_BOLD: isBold,
         INDENT: indent,
-        TOTAL_AMT: row.TOTAL_AMT,
-        TOTAL_rate: totalSales !== 0 ? (row.TOTAL_AMT / totalSales * 100).toFixed(1) : '0.0'
+        total_amt: row.total_amt,
+        total_rate: totalSales !== 0 ? (row.total_amt / totalSales * 100).toFixed(1) : '0.0'
       }
 
       departments.forEach((d: any) => {
         const dAmt = row.deptAmts[d.deptcd] || 0
         const dSales = salesTotalMap.get(d.deptcd) || 0
-        rowResult[`AMT_${d.deptcd}`] = dAmt
+        rowResult[`amt_${d.deptcd}`] = dAmt
         rowResult[`rate_${d.deptcd}`] = dSales !== 0 ? (dAmt / dSales * 100).toFixed(1) : '0.0'
       })
 
@@ -235,8 +235,8 @@ const search = async () => {
       {
         title: "합 계",
         columns: [
-          { title: "금 액", field: "TOTAL_AMT", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-          { title: "%", field: "TOTAL_rate", width: 60, hozAlign: "center" }
+          { title: "금 액", field: "total_amt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+          { title: "%", field: "total_rate", width: 60, hozAlign: "center" }
         ]
       }
     ]
@@ -245,7 +245,7 @@ const search = async () => {
       columns.push({
         title: d.deptnm,
         columns: [
-          { title: "금 액", field: `AMT_${d.deptcd}`, width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+          { title: "금 액", field: `amt_${d.deptcd}`, width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
           { title: "%", field: `rate_${d.deptcd}`, width: 55, hozAlign: "center" }
         ]
       })

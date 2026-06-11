@@ -202,7 +202,7 @@ onMounted(() => {
                 return `&nbsp;&nbsp;&nbsp;&nbsp;${acctnm}`;
             }
         },
-				{ title: '수량', field: 'PRQQTY', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '수량', field: 'prqqty', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '금액', field: 'totamt', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '단위당원가', field: 'price', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 2 }, cssClass: 'fw-bold text-primary bg-light' }
 			]

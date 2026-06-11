@@ -185,8 +185,8 @@ const initGrid = () => {
 
   grid.value.on("cellEdited", (cell: any) => {
     const row = cell.getRow(); const d = row.getData();
-    if (['reqqty', 'IMprice'].includes(cell.getField())) {
-      const amt = Math.floor((Number(d.reqqty) || 0) * (Number(d.IMprice) || 0));
+    if (['reqqty', 'imprice'].includes(cell.getField())) {
+      const amt = Math.floor((Number(d.reqqty) || 0) * (Number(d.imprice) || 0));
       row.update({ reqamt: amt, upkind: d.upkind === 'A' ? 'A' : 'U' });
     }
     updateTotals();
@@ -234,7 +234,7 @@ async function handleImportAnalysis() {
   } catch (e) { vAlertError('가져오기 실패') }
 }
 
-function addRow() { grid.value?.addRow({ upkind: 'A', reqqty: 0, IMprice: 0, reqamt: 0 }); updateTotals(); }
+function addRow() { grid.value?.addRow({ upkind: 'A', reqqty: 0, imprice: 0, reqamt: 0 }); updateTotals(); }
 
 async function save() {
   if (activeItemCount.value === 0) return vAlertError('저장할 품목이 없습니다.');

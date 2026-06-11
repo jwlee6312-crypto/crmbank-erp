@@ -1,5 +1,6 @@
 package com.crmbank.erp.hasl.controller;
 
+import com.crmbank.erp.comm.dto.ApiResponse;
 import com.crmbank.erp.comm.dto.UserSession;
 import com.crmbank.erp.hasl.mapper.HaslMapper;
 import jakarta.servlet.http.HttpSession;
@@ -24,17 +25,8 @@ public class HaslController {
 
     private final HaslMapper haslMapper;
 
-    private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user != null) {
-            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
-            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
-            params.put("updemp", user.getUserid());
-        }
-    }
-
     @PostMapping("/{procedure}")
-    public ResponseEntity<Object> executeProcedure(
+    public Object executeProcedure(
             @PathVariable String procedure,
             @RequestBody Map<String, Object> params,
             HttpSession session) {
@@ -42,43 +34,54 @@ public class HaslController {
         injectSession(params, session);
         String proc = procedure.trim().toLowerCase();
 
+        // 🚀 복합 저장 로직 (ApiResponse 반환)
         if (proc.equals("hasl_010u_save")) return saveSlip010(params, session);
         if (proc.equals("hasl_110u_save")) return saveSlip110(params, session);
 
+        // 🚀 단순 조회 로직 (List 반환)
         if (proc.equals("hasl_040s_str")) {
             String rawkeyword = String.valueOf(params.getOrDefault("keyword", "")).trim();
             if (!rawkeyword.isEmpty() && !rawkeyword.equalsIgnoreCase("null")) {
                 params.put("keywords", modernTokenize(rawkeyword));
             }
-            return ResponseEntity.ok(haslMapper.hasl_040s_str(params));
+            return haslMapper.HASL_040S_STR(params);
         }
 
         log.info("🚀 [hasl] procedure: {}, params: {}", proc, params);
         
         switch (proc) {
-            case "hasl_010u_str": return ResponseEntity.ok(haslMapper.hasl_010u_str(params));
-            case "hasl_011u_str": return ResponseEntity.ok(haslMapper.hasl_011u_str(params));
-            case "hasl_020u_str": return ResponseEntity.ok(haslMapper.hasl_020u_str(params));
-            case "hasl_110u_str": return ResponseEntity.ok(haslMapper.hasl_110u_str(params));
-            case "hasl_111u_str": return ResponseEntity.ok(haslMapper.hasl_111u_str(params));
-            case "hasl_030s_str": return ResponseEntity.ok(haslMapper.hasl_030s_str(params));
-            case "hasl_120s_str": return ResponseEntity.ok(haslMapper.hasl_120s_str(params));
-            case "hasl_130s_str": return ResponseEntity.ok(haslMapper.hasl_130s_str(params));
-            case "hasl_050u_master": return ResponseEntity.ok(haslMapper.hasl_050u_master(params));
-            case "hasl_050u_str": return ResponseEntity.ok(haslMapper.hasl_050u_str(params));
-            case "hasl_510s_str": return ResponseEntity.ok(haslMapper.hasl_510s_str(params));
-            case "hasl_520s_str": return ResponseEntity.ok(haslMapper.hasl_520s_str(params));
-            case "hasl_530s_str": return ResponseEntity.ok(haslMapper.hasl_530s_str(params));
-            case "hasl_540s_str": return ResponseEntity.ok(haslMapper.hasl_540s_str(params));
-            case "hasl_550s_str": return ResponseEntity.ok(haslMapper.hasl_550s_str(params));
-            case "hasl_560s_str": return ResponseEntity.ok(haslMapper.hasl_560s_str(params));
-            case "hasl_610s_str": return ResponseEntity.ok(haslMapper.hasl_610s_str(params));
-            case "get_slip_list": return ResponseEntity.ok(haslMapper.get_slip_list(params));
-            case "hasl_630s_str": return ResponseEntity.ok(haslMapper.hasl_630s_str(params));
-            case "hasl_710s_str": return ResponseEntity.ok(haslMapper.hasl_710s_str(params));
+            case "hasl_010u_str": return haslMapper.HASL_010U_STR(params);
+            case "hasl_011u_str": return haslMapper.HASL_011U_STR(params);
+            case "hasl_020u_str": return haslMapper.HASL_020U_STR(params);
+            case "hasl_030s_str": return haslMapper.HASL_030S_STR(params);
+            case "hasl_050u_master": return haslMapper.HASL_050U_MASTER(params);
+            case "hasl_050u_str": return haslMapper.HASL_050U_STR(params);
+            case "hasl_110u_str": return haslMapper.HASL_110U_STR(params);
+            case "hasl_111u_str": return haslMapper.HASL_111U_STR(params);
+            case "hasl_120s_str": return haslMapper.HASL_120S_STR(params);
+            case "hasl_130s_str": return haslMapper.HASL_130S_STR(params);
+            case "hasl_510s_str": return haslMapper.HASL_510S_STR(params);
+            case "hasl_520s_str": return haslMapper.HASL_520S_STR(params);
+            case "hasl_530s_str": return haslMapper.HASL_530S_STR(params);
+            case "hasl_540s_str": return haslMapper.HASL_540S_STR(params);
+            case "hasl_550s_str": return haslMapper.HASL_550S_STR(params);
+            case "hasl_560s_str": return haslMapper.HASL_560S_STR(params);
+            case "hasl_610s_str": return haslMapper.HASL_610S_STR(params);
+            case "hasl_620s_str": return haslMapper.HASL_620S_STR(params);
+            case "hasl_630s_str": return haslMapper.HASL_630S_STR(params);
+            case "hasl_710s_str": return haslMapper.HASL_710S_STR(params);
             default:
                 log.warn("❌ [hasl] Unregistered procedure: {}", proc);
-                return ResponseEntity.notFound().build();
+                return null;
+        }
+    }
+
+    private void injectSession(Map<String, Object> params, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user != null) {
+            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
+            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
+            params.put("updemp", user.getUserid());
         }
     }
 
@@ -102,14 +105,14 @@ public class HaslController {
     }
 
     @Transactional
-    public ResponseEntity<Object> saveSlip010(Map<String, Object> payload, HttpSession session) {
+    public ResponseEntity<ApiResponse<?>> saveSlip010(Map<String, Object> payload, HttpSession session) {
         try {
             Map<String, Object> master = (Map<String, Object>) payload.get("master");
             List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
             String actkind = (String) payload.get("actkind");
             injectSession(master, session);
             master.put("actkind", actkind);
-            List<Map<String, Object>> masterresult = haslMapper.hasl_010u_str(master);
+            List<Map<String, Object>> masterresult = haslMapper.HASL_010U_STR(master);
             if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
             String slipno = String.valueOf(masterresult.get(0).get("slipno"));
             String slipymd = String.valueOf(master.get("slipymd"));
@@ -119,28 +122,26 @@ public class HaslController {
                     detail.put("slipymd", slipymd); detail.put("slipno", slipno);
                     detail.put("acctymd", master.get("acctymd"));
                     detail.put("actkind", "d".equals(actkind) ? "d" : detail.getOrDefault("upkind", "a"));
-                    haslMapper.hasl_011u_str(detail);
+                    haslMapper.HASL_011U_STR(detail);
                 }
             }
             Map<String, Object> response = new HashMap<>();
-            response.put("slipno", slipno); response.put("status", "success");
-            return ResponseEntity.ok(response);
+            response.put("slipno", slipno);
+            return ResponseEntity.ok(ApiResponse.success(response, "성공적으로 저장되었습니다."));
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error"); error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
         }
     }
 
     @Transactional
-    public ResponseEntity<Object> saveSlip110(Map<String, Object> payload, HttpSession session) {
+    public ResponseEntity<ApiResponse<?>> saveSlip110(Map<String, Object> payload, HttpSession session) {
         try {
             Map<String, Object> master = (Map<String, Object>) payload.get("master");
             List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
             String actkind = (String) payload.get("actkind");
             injectSession(master, session);
             master.put("actkind", actkind);
-            List<Map<String, Object>> masterresult = haslMapper.hasl_110u_str(master);
+            List<Map<String, Object>> masterresult = haslMapper.HASL_110U_STR(master);
             if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
             String slipno = String.valueOf(masterresult.get(0).get("slipno"));
             String slipymd = String.valueOf(master.get("slipymd"));
@@ -150,16 +151,14 @@ public class HaslController {
                     detail.put("slipymd", slipymd); detail.put("slipno", slipno);
                     detail.put("acctymd", master.get("acctymd"));
                     detail.put("actkind", "d".equals(actkind) ? "d" : detail.getOrDefault("upkind", "a"));
-                    haslMapper.hasl_111u_str(detail);
+                    haslMapper.HASL_111U_STR(detail);
                 }
             }
             Map<String, Object> response = new HashMap<>();
-            response.put("slipno", slipno); response.put("status", "success");
-            return ResponseEntity.ok(response);
+            response.put("slipno", slipno);
+            return ResponseEntity.ok(ApiResponse.success(response, "성공적으로 저장되었습니다."));
         } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error"); error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
         }
     }
 }

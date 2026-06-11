@@ -128,8 +128,8 @@ function initialize() {
 function slipPrint(type: 'SLIP' | 'PUM', data: any) {
   const slipGu = '010';
   const url = type === 'SLIP'
-    ? `../HASL/HASL_SLIP_PRINT_OUT.asp?SLIPGU=${slipGu}&slipymd=${data.slipymd}&slipno=${data.slipno}&deptcd=${data.deptcd}`
-    : `../HSIR/HSIR_SLIP_PRINT.asp?SLIPGU=${slipGu}&slipymd=${data.slipymd}&slipno=${data.slipno}&deptcd=${data.deptcd}`;
+    ? `../HASL/HASL_SLIP_PRINT_OUT.asp?slipgu=${slipGu}&slipymd=${data.slipymd}&slipno=${data.slipno}&deptcd=${data.deptcd}`
+    : `../HSIR/HSIR_SLIP_PRINT.asp?slipgu=${slipGu}&slipymd=${data.slipymd}&slipno=${data.slipno}&deptcd=${data.deptcd}`;
   window.open(url, '전표인쇄', 'left=10,top=10,width=800,height=700,scrollbars=yes');
 }
 
@@ -145,7 +145,7 @@ onMounted(() => {
       layout: 'fitColumns', height: '100%',
       columnDefaults: { headerSort: false, headerHozAlign: "center", vertAlign: "middle" },
       columns: [
-        { title: '전표번호', field: 'slipno_FULL', width: 140, hozAlign: 'center', cssClass: 'fw-bold text-primary cursor-pointer',
+        { title: '전표번호', field: 'slipno_full', width: 140, hozAlign: 'center', cssClass: 'fw-bold text-primary cursor-pointer',
           mutatorData: (v, d) => d.slipymd && d.slipno ? `${d.slipymd}-${d.slipno}` : '',
           cellClick: (e, cell) => slipPrint('SLIP', cell.getRow().getData())
         },

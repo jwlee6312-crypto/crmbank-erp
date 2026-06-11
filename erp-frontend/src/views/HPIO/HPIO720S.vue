@@ -150,7 +150,7 @@ const fetchOptions = async () => {
       api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'J0', cmpycd: authStore.cmpycd, gbncd: '100' } })
     ]);
     whOptions.value = wh.data.map((i: any) => ({ whcd: i.whcd, whnm: i.whnm }));
-    astOptions.value = ast.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
+    astOptions.value = ast.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
     if (astOptions.value.length > 0) searchData.astkind = astOptions.value[0].code;
   } catch (e) {}
 }
@@ -159,7 +159,7 @@ async function fetchList() {
   if (!searchData.astkind) return vAlertError('재고자산을 선택하세요.')
   try {
     const res = await api.post('/api/hpio/HPIO_720S_STR', {
-      cmpycd: authStore.cmpycd, ymD: searchData.ymd, whcd: searchData.whcd, astkind: searchData.astkind
+      cmpycd: authStore.cmpycd, ymd: searchData.ymd, whcd: searchData.whcd, astkind: searchData.astkind
     })
     grid?.setData(res.data)
     rowCount.value = res.data.length

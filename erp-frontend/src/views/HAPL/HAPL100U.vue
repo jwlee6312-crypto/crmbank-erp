@@ -147,9 +147,9 @@ const handleExecute = async () => {
 			const mappedData = rawData.map((row: any) => ({
 				acctcd: row.col0,
 				acctnm: row.col1,
-				BEF_AMT: Number(row.col2 || 0),
-				AFT_AMT: Number(row.col3 || 0),
-				DIFF_AMT: Number(row.col4 || 0)
+				bef_amt: Number(row.col2 || 0),
+				aft_amt: Number(row.col3 || 0),
+				diff_amt: Number(row.col4 || 0)
 			}))
 
 			await nextTick()
@@ -179,9 +179,9 @@ const initErrorGrid = (data: any[]) => {
 		columns: [
 			{ title: "계정", field: "acctcd", width: 90, hozAlign: "center", headerHozAlign: "center" },
 			{ title: "계정명", field: "acctnm", widthGrow: 2, headerHozAlign: "center" },
-			{ title: "배부전금액", field: "BEF_AMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, headerHozAlign: "center" },
-			{ title: "배부후금액", field: "AFT_AMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, headerHozAlign: "center" },
-			{ title: "차 액", field: "DIFF_AMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger fw-bold", headerHozAlign: "center" }
+			{ title: "배부전금액", field: "bef_amt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, headerHozAlign: "center" },
+			{ title: "배부후금액", field: "aft_amt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, headerHozAlign: "center" },
+			{ title: "차 액", field: "diff_amt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger fw-bold", headerHozAlign: "center" }
 		]
 	})
 }

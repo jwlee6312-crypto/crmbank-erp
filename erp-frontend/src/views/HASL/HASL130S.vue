@@ -96,7 +96,9 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useRouter } from 'vue-router'
+import { addDynamicRoute as add_dynamic_route } from '@/router/dynamicRoute'
 import Modal from '@/components/Modal.vue'
+import AppAlert from '@/components/AppAlert.vue'
 import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
@@ -178,16 +180,6 @@ const print = () => {
 	window.open(`/api/hasl/HASL_130P?${params}`, 'JournalPrint', 'width=800,height=800,scrollbars=yes')
 }
 
-const goSlipDetail = (slipNo: string) => {
-	if (!slipNo) return
-	const ymd = slipNo.split('-')[0] || slipNo.substring(0, 8)
-	const no = slipNo.split('-')[1] || slipNo.substring(8)
-	router.push({
-		path: '/HASL/HASL110U',
-		query: { slipymd: ymd, slipno: no }
-	})
-}
-
 // 팝업 설정
 const modalVisible = ref(false)
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
@@ -206,18 +198,65 @@ function openHelp(type: string) {
 	modalVisible.value = true
 }
 
+/**
+ * 🚀 전표 이동
+ */
+const go_to_slip = (slipkey: string) => {
+	if (!slipkey) return;
+	let ymd = ""; let no = "";
+
+	if (slipkey.includes('-')) {
+		const parts = slipkey.split('-');
+		ymd = parts[0]; no = parts[1];
+	} else if (slipkey.length >= 11) {
+		ymd = slipkey.substring(0, 8); no = slipkey.substring(8);
+	} else return;
+
+	const pgmid = 'HASL110U'
+	add_dynamic_route(pgmid, '경리전표등록', 'HASL')
+
+	router.push({
+		path: `/${pgmid}`,
+		query: {
+			slipymd: ymd,
+			slipno: no,
+			deptcd: authStore.deptcd
+		}
+	})
+}
+
 onMounted(() => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
+			pagination: "local",
+			paginationSize: 50,
+			paginationSizeSelector: [20, 50, 100, 500],
+			paginationCounter: "rows",
 			groupBy: "slipno", // 전표번호로 그룹핑
 			groupHeader: function(value, count, data, group) {
 				return `<span class="text-primary fw-bold cursor-pointer" onclick="window.dispatchEvent(new CustomEvent('go-slip', {detail: '${value}'}))">전표번호: ${value}</span> <span class="ms-3 small text-muted">(${count}개 항목)</span>`
 			},
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "No", field: "srowno", width: 50, hozAlign: "center" },
+				{
+					title: "전표번호", field: "slipno", width: 150, cssClass: "fw-bold",
+					formatter: (cell) => {
+						const value = cell.getValue();
+						if (!value) return "";
+						const prevrow = cell.getRow().getPrevRow();
+						if (prevrow && prevrow.getData().slipno === value) {
+							return "";
+						}
+						return `<span class="text-primary cursor-pointer text-decoration-underline">${value}</span>`;
+					},
+					cellClick: (e, cell) => {
+						const value = cell.getData().slipno;
+						if(value) go_to_slip(String(value));
+					}
+				},
+				{ title: "행번호", field: "srowno", width: 65 },
 				{ title: "계정코드", field: "acctcd", width: 90, hozAlign: "center" },
 				{ title: "계정명", field: "acctnm", width: 150 },
 				{
@@ -245,13 +284,11 @@ onMounted(() => {
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				}
 			],
-			// 그룹 소계 표시를 위한 설정
 			groupClosedShowTableOnEmpty: true,
 		})
 
-		// 전표번호 클릭 이벤트 리스너
 		window.addEventListener('go-slip', ((e: CustomEvent) => {
-			goSlipDetail(e.detail)
+			go_to_slip(e.detail)
 		}) as EventListener)
 	}
 })
@@ -262,4 +299,5 @@ onMounted(() => {
 :deep(.tabulator-group) { background-color: #f8f9fa !important; border-top: 1px solid #dee2e6 !important; }
 :deep(.tabulator-group-handle) { display: none; }
 :deep(.tabulator-cell) { height: auto !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+.cursor-pointer { cursor: pointer; }
 </style>

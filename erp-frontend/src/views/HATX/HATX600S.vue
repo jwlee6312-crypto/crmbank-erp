@@ -44,7 +44,7 @@
 								<td>
 									<select v-model="searchForm.TAXUNIT" class="form-select form-select-sm">
 										<option value="000">전체</option>
-										<option v-for="opt in taxUnitOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CODENM }}</option>
+										<option v-for="opt in taxUnitOptions" :key="opt.code" :value="opt.code">{{ opt.codenm }}</option>
 									</select>
 								</td>
 								<th class="bg-light text-center">기    간</th>
@@ -130,7 +130,7 @@ const fetchOptions = async () => {
 	try {
 		const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd, search: ' ' })
 		taxUnitOptions.value = res.data || []
-		if (taxUnitOptions.value.length > 0) searchForm.TAXUNIT = taxUnitOptions.value[0].CODE
+		if (taxUnitOptions.value.length > 0) searchForm.TAXUNIT = taxUnitOptions.value[0].code
 	} catch (e) { console.error(e) }
 }
 
@@ -168,10 +168,10 @@ const search = async () => {
 		const listData = (resList.data || []).map((row: any) => ({
 			mgtno: row.MGTNO,
 			pubymd: row.PUBYMD, // 8 digits
-			currcd: row.CURRCD,
+			currcd: row.currcd,
 			frgnrate: Number(row.FRGNRATE || 0),
-			frgnamt: Number(row.FRGNAMT || 0),
-			supyamt: Number(row.SUPYAMT || 0)
+			frgnamt: Number(row.frgnamt || 0),
+			supyamt: Number(row.supyamt || 0)
 		}))
 		mainGrid?.setData(listData)
 
@@ -191,7 +191,7 @@ const print = () => {
 }
 
 const initialize = () => {
-	searchForm.TAXUNIT = taxUnitOptions.value.length > 0 ? taxUnitOptions.value[0].CODE : '000'
+	searchForm.TAXUNIT = taxUnitOptions.value.length > 0 ? taxUnitOptions.value[0].code : '000'
 	searchForm.YY = String(currentYear)
 	searchForm.FMM = currentMonth
 	searchForm.TMM = currentMonth

@@ -184,7 +184,7 @@ const modalVisible = ref(false)
 const modalProps = reactive<ModalProps>({
 	title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
 	columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
-	data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: '' },
+	data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: '' },
 	onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm },
 	type: 'table'
 })
@@ -201,7 +201,7 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
-			groupBy: "Agrpnm",
+			groupBy: "agrpnm",
 			groupHeader: (value, count, data, group) => {
 				return `<span class="fw-bold text-dark">${value}</span> <span class="badge bg-secondary ms-2">${count}건</span>`;
 			},

@@ -6,19 +6,20 @@ import java.util.Map;
 
 @Mapper
 public interface HafnMapper {
-    List<Map<String, Object>> hafn_010s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_110s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_120s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_210s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_310s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_410s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_420s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_430s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_510s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_520s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_610u_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_620u_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_630u_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_670s_str(Map<String, Object> params);
-    List<Map<String, Object>> hafn_690s_str(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_010S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_110S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_120S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_210S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_310S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_410S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_420S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_430S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_510S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_520S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_610U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_620U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_630U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_670S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_680S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HAFN_690S_STR(Map<String, Object> params);
 }

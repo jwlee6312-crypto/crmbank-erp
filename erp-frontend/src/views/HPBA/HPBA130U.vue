@@ -157,8 +157,8 @@ function openHelp(type: string) {
     Object.assign(modalProps, {
       title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'cdnm',
       data: { gubun: 'D0', cmpycd: authStore.cmpycd },
-      columns: [{ title: '코드', field: 'CODE', width: 80 }, { title: '부서명', field: 'cdnm', width: 200 }],
-      onConfirm: (data: any) => { formData.deptcd = data.CODE; formData.deptnm = data.cdnm }
+      columns: [{ title: '코드', field: 'code', width: 80 }, { title: '부서명', field: 'cdnm', width: 200 }],
+      onConfirm: (data: any) => { formData.deptcd = data.code; formData.deptnm = data.cdnm }
     }); modalVisible.value = true
   }
 }

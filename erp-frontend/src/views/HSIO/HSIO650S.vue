@@ -141,7 +141,7 @@ const initGrid = () => {
         formatter: (cell) => `<span class="text-primary cursor-pointer">${cell.getValue()}</span>`,
         cellClick: (e, cell) => navigateToOrigin(cell.getData())
       },
-      { title: "입출구분", field: "IOtypenm", width: 100, hozAlign: "center" },
+      { title: "입출구분", field: "iotypenm", width: 100, hozAlign: "center" },
       { title: "입고", field: "inqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
       { title: "출고", field: "OUtqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
       {
@@ -160,7 +160,7 @@ const initGrid = () => {
 
 const formatQty = (cell: any) => {
     const data = cell.getData();
-    const pnt = Number(data.QTYPNT) || 0;
+    const pnt = Number(data.qtypnt) || 0;
     return new Intl.NumberFormat(undefined, { minimumFractionDigits: pnt, maximumFractionDigits: pnt }).format(Number(cell.getValue()) || 0);
 }
 
@@ -190,16 +190,16 @@ async function search() {
       let totalOut = 0;
 
       const processedData = res.data.map((i: any) => {
-          const inQty = Number(i.inqty) || 0;
+          const inqty = Number(i.inqty) || 0;
           const outQty = Number(i.OUtqty) || 0;
-          currentStock = currentStock + inQty - outQty;
-          totalIn += inQty;
+          currentStock = currentStock + inqty - outQty;
+          totalIn += inqty;
           totalOut += outQty;
 
           return {
               ...i,
               IO_FULL: i.ioymd === '00000000' ? '' : `${i.ioym}-${i.iono}`,
-              remark: `${i.custnm || ''} / ${i.IOtypenm || ''}`,
+              remark: `${i.custnm || ''} / ${i.iotypenm || ''}`,
               stkqty: currentStock
           }
       })
@@ -214,21 +214,21 @@ async function search() {
 }
 
 const navigateToOrigin = (row: any) => {
-    const { iogbn, gubun, IOTYPE, ioym, iono, deptcd, OUtqty } = row;
+    const { iogbn, gubun, iotype, ioym, iono, deptcd, OUtqty } = row;
     if (!ioym || !iono) return;
 
     let routeName = '';
     // ASP 소스의 복잡한 분기 로직 이식
-    if (iogbn === "200" && gubun === "1" && IOTYPE === "100" && Number(OUtqty) > 0) routeName = 'HSIO500U';
-    else if (iogbn === "200" && gubun === "2" && IOTYPE === "100" && Number(OUtqty) > 0) routeName = 'HSOD200S';
-    else if (iogbn === "200" && gubun === "1" && IOTYPE === "100" && Number(OUtqty) < 0) routeName = 'HSIO490U';
-    else if (iogbn === "200" && Number(IOTYPE) >= 300 && Number(IOTYPE) < 390) routeName = 'HSIO570U';
-    else if (iogbn === "200" && IOTYPE === "390") routeName = 'HSIO730U';
-    else if (IOTYPE === "390") routeName = 'HSIO720U';
-    else if (iogbn === "200" && IOTYPE === "200") routeName = 'HSIO580U';
-    else if (iogbn === "100" && gubun === "1" && IOTYPE === "100") routeName = 'HSIO100U';
-    else if (iogbn === "100" && gubun === "2" && IOTYPE === "100") routeName = 'HSOD300S';
-    else if (iogbn === "100" && gubun === "1" && IOTYPE === "120") routeName = 'HSIO250U';
+    if (iogbn === "200" && gubun === "1" && iotype === "100" && Number(OUtqty) > 0) routeName = 'HSIO500U';
+    else if (iogbn === "200" && gubun === "2" && iotype === "100" && Number(OUtqty) > 0) routeName = 'HSOD200S';
+    else if (iogbn === "200" && gubun === "1" && iotype === "100" && Number(OUtqty) < 0) routeName = 'HSIO490U';
+    else if (iogbn === "200" && Number(iotype) >= 300 && Number(iotype) < 390) routeName = 'HSIO570U';
+    else if (iogbn === "200" && iotype === "390") routeName = 'HSIO730U';
+    else if (iotype === "390") routeName = 'HSIO720U';
+    else if (iogbn === "200" && iotype === "200") routeName = 'HSIO580U';
+    else if (iogbn === "100" && gubun === "1" && iotype === "100") routeName = 'HSIO100U';
+    else if (iogbn === "100" && gubun === "2" && iotype === "100") routeName = 'HSOD300S';
+    else if (iogbn === "100" && gubun === "1" && iotype === "120") routeName = 'HSIO250U';
 
     if (routeName) {
         router.push({
@@ -289,7 +289,7 @@ onMounted(async () => {
       initGrid()
       if (searchData.itemcd) {
           // HSIO640S에서 넘어온 경우 자동 조회
-          api.get('/api/ha00/HA00_010S_STR', { params: { gubun: 'I0', cmpycd: authStore.cmpycd, CODE: searchData.itemcd } }).then(r => {
+          api.get('/api/ha00/HA00_010S_STR', { params: { gubun: 'I0', cmpycd: authStore.cmpycd, code: searchData.itemcd } }).then(r => {
               if (r.data?.length) {
                   searchData.itemnm = r.data[0].itemnm;
                   searchData.itsize = r.data[0].itsize;

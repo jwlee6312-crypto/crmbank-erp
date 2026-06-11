@@ -126,7 +126,7 @@ _on_mounted(() => {
       columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
       columns: [
         { title: "no", field: "jurnno", width: 60 },
-        { title: "구분", field: "dbcr", width: 100, formatter: (cell: any) => cell.getValue().toLowerCase() === 'd' ? '<b class="text-primary">차변</b>' : '<b class="text-danger">대변</b>' },
+        { title: "구분", field: "dbcr", width: 100, formatter: (cell: any) => cell.getValue().toLowerCase() === 'D' ? '<b class="text-primary">차변</b>' : '<b class="text-danger">대변</b>' },
         { title: "계정코드", field: "acctcd", width: 120 },
         { title: "계정과목명", field: "acctnm", hozAlign: "left", minWidth: 200 },
         { title: "jurncd", field: "jurncd", visible: false }

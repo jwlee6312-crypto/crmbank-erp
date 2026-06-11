@@ -69,15 +69,15 @@ const initGrid = () => {
     columnDefaults: { headerSort: false },
     columns: [
       { title: "재고자산 유형", field: "cdnm", width: 150, hozAlign: "center", cssClass: "fw-bold bg-light", frozen: true },
-      { title: "코드", field: "CODE", visible: false },
+      { title: "코드", field: "code", visible: false },
 
       // 매입(Purchase) 그룹
       {
         title: "매입 (Purchase)",
         headerHozAlign: "center",
         columns: [
-          { title: "차변계정", field: "IMacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().IMacctcd ? `[${cell.getData().IMacctcd}] ${cell.getValue()}` : ""
+          { title: "차변계정", field: "Imacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().Imacctcd ? `[${cell.getData().Imacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchIM", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('IM', cell)
@@ -88,8 +88,8 @@ const initGrid = () => {
           { title: " ", field: "searchIP", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('IP', cell)
           },
-          { title: "선급부가세", field: "IVacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().IVacctcd ? `[${cell.getData().IVacctcd}] ${cell.getValue()}` : ""
+          { title: "선급부가세", field: "Ivacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().Ivacctcd ? `[${cell.getData().Ivacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchIV", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('IV', cell)
@@ -102,8 +102,8 @@ const initGrid = () => {
         title: "매출 (Sales)",
         headerHozAlign: "center",
         columns: [
-          { title: "차변계정", field: "OMacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().OMacctcd ? `[${cell.getData().OMacctcd}] ${cell.getValue()}` : ""
+          { title: "차변계정", field: "Omacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().Omacctcd ? `[${cell.getData().Omacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchOM", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('OM', cell)
@@ -114,8 +114,8 @@ const initGrid = () => {
           { title: " ", field: "searchOP", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('OP', cell)
           },
-          { title: "예수부가세", field: "OVacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().OVacctcd ? `[${cell.getData().OVacctcd}] ${cell.getValue()}` : ""
+          { title: "예수부가세", field: "Ovacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().Ovacctcd ? `[${cell.getData().Ovacctcd}] ${cell.getValue()}` : ""
           },
           { title: " ", field: "searchOV", width: 35, hozAlign: "center", formatter: accountSearchIcon,
             cellClick: (e, cell) => openAccountHelp('OV', cell)
@@ -147,20 +147,20 @@ async function handleBulkSave() {
   try {
     for (const row of data) {
       // ASP 로직: 하나라도 계정이 있으면 저장(A0), 모두 없으면 삭제(D0)
-      const hasAccount = row.IMacctcd || row.IPacctcd || row.IVacctcd || row.OMacctcd || row.OPacctcd || row.OVacctcd
+      const hasAccount = row.Imacctcd || row.IPacctcd || row.Ivacctcd || row.Omacctcd || row.OPacctcd || row.Ovacctcd
       const act = hasAccount ? 'A0' : 'D0'
 
       await api.post('/api/hsba/HSBA_700U_STR', {
         actkind: act,
         cmpycd: authStore.cmpycd,
-        astkind: row.CODE,
-        astkindNM: row.cdnm,
-        IMacctcd: row.IMacctcd || '',
+        astkind: row.code,
+        astkindnm: row.cdnm,
+        Imacctcd: row.Imacctcd || '',
         IPacctcd: row.IPacctcd || '',
-        IVacctcd: row.IVacctcd || '',
-        OMacctcd: row.OMacctcd || '',
+        Ivacctcd: row.Ivacctcd || '',
+        Omacctcd: row.Omacctcd || '',
         OPacctcd: row.OPacctcd || '',
-        OVacctcd: row.OVacctcd || '',
+        Ovacctcd: row.Ovacctcd || '',
         userid: authStore.user_id
       })
       successCount++
@@ -190,7 +190,7 @@ function openAccountHelp(type: string, cell: any) {
   Object.assign(modalProps, {
     title: '계정과목 선택',
     path: '/api/ha00/HA00_00P_STR',
-    data: { gubun: 'A0', gbncd: '', CODE: gbn, cmpycd: authStore.cmpycd },
+    data: { gubun: 'A0', gbncd: '', code: gbn, cmpycd: authStore.cmpycd },
     defaultField: 'acctnm',
     columns: [
       { title: '계정코드', field: 'acctcd', width: 100 },

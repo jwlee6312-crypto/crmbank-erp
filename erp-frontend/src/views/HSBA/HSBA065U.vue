@@ -57,7 +57,7 @@
                 </td>
                 <th class="text-center bg-light">조회대상</th>
                 <td>
-                  <select v-model="searchForm.SELGBN" class="form-select w-50" @change="fetchList">
+                  <select v-model="searchForm.selgbn" class="form-select w-50" @change="fetchList">
                     <option value="0">전체</option>
                     <option value="1">미등록</option>
                   </select>
@@ -101,7 +101,7 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-const searchForm = reactive({ SCH_astkind: '000', SCH_itemnm: '', SELGBN: '0' })
+const searchForm = reactive({ SCH_astkind: '000', SCH_itemnm: '', selgbn: '0' })
 const gridRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
 
@@ -109,7 +109,7 @@ async function fetchList() {
   try {
     const res = await api.post('/api/hsba/HSBA_065U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd,
-      SCH_astkind: searchForm.SCH_astkind, SCH_itemnm: searchForm.SCH_itemnm, SELGBN: searchForm.SELGBN
+      SCH_astkind: searchForm.SCH_astkind, SCH_itemnm: searchForm.SCH_itemnm, selgbn: searchForm.selgbn
     })
     grid?.setData(res.data.data || [])
     vAlert('조회되었습니다.')
@@ -136,7 +136,7 @@ const toggleAllRows = () => {
 
 function initialize() {
   resetForm(searchForm);
-  searchForm.SCH_astkind = '000'; searchForm.SELGBN = '0';
+  searchForm.SCH_astkind = '000'; searchForm.selgbn = '0';
   grid?.clearData();
 }
 

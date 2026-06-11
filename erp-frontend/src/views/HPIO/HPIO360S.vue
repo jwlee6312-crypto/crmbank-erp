@@ -165,7 +165,7 @@ const initGrids = () => {
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.CODE, linenm: i.cdnm }));
+    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
     if (lineOptions.value.length > 0) onLineChange();
   } catch (e) {}
 }
@@ -173,7 +173,7 @@ const fetchLineOptions = async () => {
 const onLineChange = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G6', cmpycd: authStore.cmpycd, linecd: searchData.linecd, code: '' } })
-    progOptions.value = res.data.map((i: any) => ({ progcd: i.code || i.CODE, prognm: i.cdnm }));
+    progOptions.value = res.data.map((i: any) => ({ progcd: i.code || i.code, prognm: i.cdnm }));
     if (progOptions.value.length > 0) searchData.progcd = progOptions.value[0].progcd;
   } catch (e) {}
 }

@@ -149,7 +149,7 @@ const initGrid = () => {
 
 const formatQty = (cell: any) => {
     const data = cell.getData();
-    const pnt = Number(data.QTYPNT) || 0;
+    const pnt = Number(data.qtypnt) || 0;
     return new Intl.NumberFormat(undefined, { minimumFractionDigits: pnt, maximumFractionDigits: pnt }).format(Number(cell.getValue()) || 0);
 }
 

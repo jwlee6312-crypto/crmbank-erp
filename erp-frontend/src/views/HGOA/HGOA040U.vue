@@ -63,7 +63,7 @@
                         <i class="bi bi-database-fill-gear me-1"></i>전체 질문 마스터
                     </div>
                     <div class="card-body p-0 bg-white flex-grow-1 position-relative">
-                        <div ref="TOTAL_TABLE_REF" class="tabulator-custom" />
+                        <div ref="total_TABLE_REF" class="tabulator-custom" />
                     </div>
                 </div>
             </div>
@@ -87,11 +87,11 @@ const SELECTED_COUNT = ref(0)
 
 const TYPE_LIST_REF = ref<HTMLDivElement | null>(null)
 const SELECTED_TABLE_REF = ref<HTMLDivElement | null>(null)
-const TOTAL_TABLE_REF = ref<HTMLDivElement | null>(null)
+const total_TABLE_REF = ref<HTMLDivElement | null>(null)
 
 let TYPE_LIST_INSTANCE: Tabulator | null = null
 let SELECTED_TABLE_INSTANCE: Tabulator | null = null
-let TOTAL_TABLE_INSTANCE: Tabulator | null = null
+let total_TABLE_INSTANCE: Tabulator | null = null
 
 onMounted(() => {
 	init_tables()
@@ -127,7 +127,7 @@ function init_tables() {
     })
     SELECTED_TABLE_INSTANCE.on("dataChanged", () => { SELECTED_COUNT.value = SELECTED_TABLE_INSTANCE?.getData().length || 0 })
 
-    TOTAL_TABLE_INSTANCE = new Tabulator(TOTAL_TABLE_REF.value!, {
+    total_TABLE_INSTANCE = new Tabulator(total_TABLE_REF.value!, {
         layout: 'fitColumns', height: '100%', selectable: true, columns: q_cols
     })
 }
@@ -142,7 +142,7 @@ async function search_types() {
 async function search_all_questions() {
     try {
         const { data } = await api.get('/crm/outbound/surv/mst/search')
-        TOTAL_TABLE_INSTANCE?.setData(data)
+        total_TABLE_INSTANCE?.setData(data)
     } catch (e) { console.error('질문마스터 조회 실패') }
 }
 
@@ -156,7 +156,7 @@ async function search_selected_questions(SURV_GB: string) {
 
 function add_from_master() {
     if (!SELECTED_SURV_GB.value) return vAlertError('설문유형을 먼저 선택하세요.')
-    const selected = TOTAL_TABLE_INSTANCE?.getSelectedData()
+    const selected = total_TABLE_INSTANCE?.getSelectedData()
     if (!selected || selected.length === 0) return
     const current_data = SELECTED_TABLE_INSTANCE?.getData() || []
     selected.forEach(item => {
@@ -164,7 +164,7 @@ function add_from_master() {
             SELECTED_TABLE_INSTANCE?.addRow({ ...item, sortCD: String(current_data.length + 1).padStart(3, '0') })
         }
     })
-    TOTAL_TABLE_INSTANCE?.deselectRow()
+    total_TABLE_INSTANCE?.deselectRow()
 }
 
 function remove_selected() {

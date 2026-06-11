@@ -44,9 +44,9 @@
                 <th style="width: 100px;">출고일자</th>
                 <td style="width: 300px;">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="uiOUTymdfr" type="date" class="form-control form-control-sm" />
+                    <input v-model="uioutymdfr" type="date" class="form-control form-control-sm" />
                     <span>~</span>
-                    <input v-model="uiOUTymdto" type="date" class="form-control form-control-sm" />
+                    <input v-model="uioutymdto" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th style="width: 100px;">확정여부</th>
@@ -127,8 +127,8 @@ const searchData = reactive({
   custnm: ''
 })
 
-const uiOUTymdfr = computed({ get: () => formatDateString(searchData.outymdfr, '-'), set: (v) => searchData.outymdfr = v.replace(/-/g, '') })
-const uiOUTymdto = computed({ get: () => formatDateString(searchData.outymdto, '-'), set: (v) => searchData.outymdto = v.replace(/-/g, '') })
+const uioutymdfr = computed({ get: () => formatDateString(searchData.outymdfr, '-'), set: (v) => searchData.outymdfr = v.replace(/-/g, '') })
+const uioutymdto = computed({ get: () => formatDateString(searchData.outymdto, '-'), set: (v) => searchData.outymdto = v.replace(/-/g, '') })
 
 const whOptions = ref<any[]>([])
 const selectedMasterInfo = ref<any>(null)

@@ -27,7 +27,7 @@
               <tr>
                 <th class="required">계획일자</th>
                 <td>
-                  <input v-model="uiymD" type="date" class="form-control form-control-sm" style="width: 150px;" @change="fetchList" />
+                  <input v-model="uiymd" type="date" class="form-control form-control-sm" style="width: 150px;" @change="fetchList" />
                 </td>
                 <th class="required">생산라인</th>
                 <td>
@@ -89,7 +89,7 @@ const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0
 
 // 1. 상태 관리
 const searchData = reactive({
-  ymD: initymd,
+  ymd: initymd,
   linecd: '',
   progcd: ''
 })
@@ -97,9 +97,9 @@ const searchData = reactive({
 const lineOptions = ref<any[]>([])
 const progOptions = ref<any[]>([])
 
-const uiymD = computed({
-  get: () => formatDateString(searchData.ymD, '-'),
-  set: (v) => { if (v) searchData.ymD = v.replace(/-/g, '') }
+const uiymd = computed({
+  get: () => formatDateString(searchData.ymd, '-'),
+  set: (v) => { if (v) searchData.ymd = v.replace(/-/g, '') }
 })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -110,7 +110,7 @@ const itemCount = ref(0)
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', {
-      params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', CODE: '' }
+      params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' }
     })
     lineOptions.value = res.data
   } catch (e) {
@@ -126,7 +126,7 @@ const fetchProgOptions = async (lineCd: string) => {
   }
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', {
-      params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: lineCd, CODE: '' }
+      params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: lineCd, code: '' }
     })
     progOptions.value = res.data
   } catch (e) {
@@ -175,7 +175,7 @@ const fetchList = async () => {
       cmpycd: authStore.cmpycd,
       linecd: searchData.linecd,
       progcd: searchData.progcd,
-      ymD: searchData.ymD
+      ymd: searchData.ymd
     })
     grid?.setData(res.data)
     itemCount.value = res.data.length
@@ -199,7 +199,7 @@ const saveData = async () => {
         userid: authStore.userid,
         linecd: searchData.linecd,
         progcd: searchData.progcd,
-        yymmDD: searchData.ymD,
+        yymmDD: searchData.ymd,
         itemcd: item.itemcd,
         itsize: item.itsize,
         unit: item.unit,
@@ -214,7 +214,7 @@ const saveData = async () => {
 }
 
 const initialize = () => {
-  searchData.ymD = initymd
+  searchData.ymd = initymd
   searchData.linecd = ''
   searchData.progcd = ''
   progOptions.value = []
@@ -223,7 +223,7 @@ const initialize = () => {
 }
 
 const exportExcel = () => {
-  grid?.download("xlsx", `일일생산계획_${searchData.ymD}.xlsx`, { title: "일일 생산 계획" })
+  grid?.download("xlsx", `일일생산계획_${searchData.ymd}.xlsx`, { title: "일일 생산 계획" })
 }
 
 const modalVisible = ref(false)

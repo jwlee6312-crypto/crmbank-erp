@@ -186,7 +186,7 @@ async function search() {
   if (!searchdata.deptcd) return vAlertError('판매부서를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_541U_STR', {
-      actkind: 's0', cmpycd: authStore.cmpycd, gubun: '200',
+      actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '200',
       ioymdfr: searchdata.ioymdfr, ioymdto: searchdata.ioymdto,
       deptcd: searchdata.deptcd
     })
@@ -200,8 +200,8 @@ async function search() {
               slipno,
               selected: false,
               slip_full: slipymd > '00000000' ? `${formatDate(slipymd, '-')}-${slipno}` : '',
-              jsansum: Number(i.spyamt || i.SPYAMT || 0) + Number(i.vatamt || i.VATAMT || 0),
-              udeptcd: i.udeptcd || i.UDEPTCD || i.deptcd || i.DEPTCD,
+              jsansum: Number(i.spyamt || i.spyamt || 0) + Number(i.vatamt || i.vatamt || 0),
+              deptcd: i.deptcd || i.UDEPTCD || i.deptcd || i.DEPTCD,
               sendyn: i.sendyn || i.SENDYN || 'N'
           }
       })
@@ -225,20 +225,20 @@ async function deleteSlips() {
     for (const item of selected) {
       const slipymd = (item.slipymd || '').replace(/-/g, '')
       const slipno = item.slipno
-      const udeptcd = item.udeptcd
+      const deptcd = item.deptcd
 
       // 1. 자동전표 여부 확인 후 확정 취소 (ASP: HASL_020U_STR 'A0')
       if (autoslip.value === 'Y') {
           await api.post('/api/hasl/HASL_020U_STR', {
-              actkind: 'a0',
+              actkind: 'A0',
               cmpycd: authStore.cmpycd,
               slipymd: slipymd,
               acctymd: slipymd,
               slipno: slipno,
-              deptcd: udeptcd,
+              deptcd: deptcd,
               slipkind: '040',
-              slipyn: 'y',
-              cofmyn: 'n',
+              slipyn: 'Y',
+              cofmyn: 'N',
               empnm: authStore.usernm,
               updemp: authStore.userid
           })
@@ -246,19 +246,19 @@ async function deleteSlips() {
 
       // 2. 정산 내역 전표 정보 삭제 (ASP: HSIO_541U_STR 'D0')
       const res = await api.post('/api/hsio/HSIO_541U_STR', {
-        actkind: 'd0',
+        actkind: 'D0',
         cmpycd: authStore.cmpycd,
         gubun: '200',
         ioymdfr: searchdata.ioymdfr,
         ioymdto: searchdata.ioymdto,
-        udeptcd: udeptcd,
+        deptcd: deptcd,
         slipymd: slipymd,
         slipno: slipno,
         userid: authStore.userid
       })
 
       const resData = res.data?.[0]
-      if (resData && (resData.result === 'y' || resData.erryn === 'y' || resData.RESULT === 'Y' || resData.ERRYN === 'Y')) {
+      if (resData && (resData.result === 'Y' || resData.erryn === 'Y' || resData.RESULT === 'Y' || resData.ERRYN === 'Y')) {
           throw new Error(resData.msg || resData.MSG || '전표 삭제 중 업무 오류 발생')
       }
     }
@@ -284,7 +284,7 @@ function openHelp(type: string) {
   if (type === 'SEARCH_DEPT') {
     Object.assign(modalProps, {
       title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm', large: false,
-      data: { gubun: 'd0', cmpycd: authStore.cmpycd },
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd },
       columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
       onConfirm: (data: any) => { searchdata.deptcd = data.deptcd; searchdata.deptnm = data.deptnm }
     })
@@ -305,7 +305,7 @@ onMounted(async () => {
   api.get('/api/ha00/HA00_010S_STR', { params: { gubun: 'p1', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) {
         const d = r.data[0]
-        autoslip.value = (d.slipyn || d.slipyn || 'N').toUpperCase()
+        autoslip.value = (d.slipyn || d.slipyn || 'N').toLowerCase()
     }
   })
   nextTick(() => initGrid())

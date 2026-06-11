@@ -126,13 +126,13 @@ onMounted(() => {
 			columns: [
 				{ title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
 				{ title: '계정과목', field: 'acctnm', width: 200, frozen: true, hozAlign: 'left', cssClass: 'fw-bold' },
-				{ title: '가공공정', field: 'AMT1', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '조립공정', field: 'AMT2', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '포장공정', field: 'AMT3', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '공정4', field: 'AMT4', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '공정5', field: 'AMT5', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '공정6', field: 'AMT6', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '공정7', field: 'AMT7', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '가공공정', field: 'amt1', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '조립공정', field: 'amt2', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '포장공정', field: 'amt3', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '공정4', field: 'amt4', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '공정5', field: 'amt5', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '공정6', field: 'amt6', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '공정7', field: 'amt7', hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '합계', field: 'sumamt', width: 120, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'fw-bold text-primary bg-light' }
 			]
 		})

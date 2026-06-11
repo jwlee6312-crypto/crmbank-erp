@@ -78,11 +78,11 @@
                 </td>
                 <th class="required">기초재고수량</th>
                 <td>
-                  <input v-model="masterData.QTY" type="text" class="form-control form-control-sm text-end" @input="formatInput('QTY')" />
+                  <input v-model="masterData.qty" type="text" class="form-control form-control-sm text-end" @input="formatInput('qty')" />
                 </td>
                 <th class="required">기초재고금액</th>
                 <td>
-                  <input v-model="masterData.AMT" type="text" class="form-control form-control-sm text-end" style="width: 150px;" @input="formatInput('AMT')" />
+                  <input v-model="masterData.amt" type="text" class="form-control form-control-sm text-end" style="width: 150px;" @input="formatInput('amt')" />
                 </td>
               </tr>
             </tbody>
@@ -141,8 +141,8 @@ const masterData = reactive<any>({
   itemnm: '',
   itsize: '',
   unit: '',
-  QTY: '0',
-  AMT: '0'
+  qty: '0',
+  amt: '0'
 })
 
 const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
@@ -164,18 +164,18 @@ const initGrid = () => {
       { title: "품목", field: "itemnm", minWidth: 250, cssClass: "fw-bold" },
       { title: "규격", field: "itsize", width: 150 },
       { title: "단위", field: "unit", width: 80, hozAlign: "center" },
-      { title: "기초재고수량", field: "QTY", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "기초재고수량", field: "qty", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       {
         title: "단가", field: "price", width: 120, hozAlign: "right",
         formatter: (cell) => {
             const data = cell.getData();
-            const qty = Number(data.QTY) || 0;
-            const amt = Number(data.AMT) || 0;
+            const qty = Number(data.qty) || 0;
+            const amt = Number(data.amt) || 0;
             const price = qty !== 0 ? Math.floor(amt / qty) : 0;
             return new Intl.NumberFormat().format(price);
         }
       },
-      { title: "재고금액", field: "AMT", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
+      { title: "재고금액", field: "amt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
     ]
   })
 
@@ -184,8 +184,8 @@ const initGrid = () => {
     Object.assign(masterData, data)
     masterData.yy = searchData.yy
     masterData.mm = searchData.mm
-    masterData.QTY = formatNumber(data.QTY)
-    masterData.AMT = formatNumber(data.AMT)
+    masterData.qty = formatNumber(data.qty)
+    masterData.amt = formatNumber(data.amt)
     masterData.actkind = 'U0'
   })
 }
@@ -199,8 +199,8 @@ async function search() {
       yy: searchData.yy,
       mm: searchData.mm,
       itemcd: '',
-      QTY: 0,
-      AMT: 0
+      qty: 0,
+      amt: 0
     })
     if (grid.value) {
       grid.value.setData(res.data)
@@ -211,8 +211,8 @@ async function search() {
 
 async function save() {
   if (!masterData.itemcd) return vAlertError('품목을 선택해 주십시요.')
-  if (Number(masterData.QTY.replace(/,/g, '')) === 0) return vAlertError('수량을 입력해 주십시요.')
-  if (Number(masterData.AMT.replace(/,/g, '')) === 0) return vAlertError('금액을 입력해 주십시요.')
+  if (Number(masterData.qty.replace(/,/g, '')) === 0) return vAlertError('수량을 입력해 주십시요.')
+  if (Number(masterData.amt.replace(/,/g, '')) === 0) return vAlertError('금액을 입력해 주십시요.')
 
   const confirmMsg = masterData.actkind === 'A0' ? '기초재고를 등록하시겠습니까?' : '기초재고 정보를 수정하시겠습니까?'
   if (!confirm(confirmMsg)) return
@@ -220,8 +220,8 @@ async function save() {
   try {
     const payload = {
       ...masterData,
-      QTY: masterData.QTY.replace(/,/g, ''),
-      AMT: masterData.AMT.replace(/,/g, ''),
+      qty: masterData.qty.replace(/,/g, ''),
+      amt: masterData.amt.replace(/,/g, ''),
       userid: authStore.userid
     }
     await api.post('/api/hsba/HSBA_800U_STR', payload)
@@ -238,8 +238,8 @@ function initialize() {
     cmpycd: authStore.cmpycd,
     yy: searchData.yy,
     mm: searchData.mm,
-    QTY: '0',
-    AMT: '0'
+    qty: '0',
+    amt: '0'
   })
 }
 

@@ -46,9 +46,9 @@
 							<th class="text-center border-end">만기일 범위</th>
 							<td class="bg-white">
 								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.ymD_FR" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="searchForm.ymd_fr" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 									<span class="text-muted">~</span>
-									<input v-model="searchForm.ymD_TO" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="searchForm.ymd_to" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 								</div>
 							</td>
 						</tr>
@@ -87,8 +87,8 @@ const today = now.toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	ymD_FR: firstDay,
-	ymD_TO: today
+	ymd_fr: firstDay,
+	ymd_to: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -100,19 +100,19 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hafn/HAFN_510S_STR', {
 			cmpycd: authStore.cmpycd,
-			ymD_FR: searchForm.ymD_FR.replace(/-/g, ''),
-			ymD_TO: searchForm.ymD_TO.replace(/-/g, '')
+			ymd_fr: searchForm.ymd_fr.replace(/-/g, ''),
+			ymd_to: searchForm.ymd_to.replace(/-/g, '')
 		})
 
 		const data = (res.data || []).map((row: any) => ({
-			DUEymD: formatYmdShort(row.col0),
-			BILLNO: row.col1,
-			ISSUBANK: row.col2,
-			ISSUMAN: row.col3,
-			stdymd: formatYmdShort(row.col4),
-			custnm: row.col5,
-			BILLTYPE: row.col6,
-			billamt: Number(row.col7 || 0)
+			dueymd: formatYmdShort(row.endymd),
+			billno: row.billno,
+			issubank: row.banknm,
+			issuman: row.issuman,
+			stdymd: formatYmdShort(row.stdymd),
+			custnm: row.custnm,
+			billtype: row.billtype_nm,
+			billamt: Number(row.billamt || 0)
 		}))
 
 		mainGrid?.setData(data)
@@ -122,15 +122,15 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.ymD_FR = firstDay
-	searchForm.ymD_TO = today
+	searchForm.ymd_fr = firstDay
+	searchForm.ymd_to = today
 	mainGrid?.clearData()
 }
 
 const excel = () => mainGrid?.download("xlsx", `지급어음명세서_${today}.xlsx`)
 
 const print = () => {
-	const params = `ymD_FR=${searchForm.ymD_FR}&ymD_TO=${searchForm.ymD_TO}`
+	const params = `ymd_fr=${searchForm.ymd_fr}&ymd_to=${searchForm.ymd_to}`
 	window.open(`/api/hafn/HAFN_510P?${params}`, 'NotesPayablePrint', 'width=1000,height=800,scrollbars=yes')
 }
 
@@ -139,30 +139,30 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
-			groupBy: "DUEymD", // 만기일별 그룹핑
+			groupBy: "dueymd", // 만기일별 그룹핑
 			groupHeader: function(value, count, data, group) {
-				const sumAMT = data.reduce((acc, curr) => acc + curr.billamt, 0)
+				const sumamt = data.reduce((acc, curr) => acc + curr.billamt, 0)
 				return `
 					<div class="d-flex justify-content-between w-100 pe-4">
 						<span class="fw-bold text-dark">만기일: ${value}</span>
 						<div class="small fw-bold">
-							<span class="mx-2 text-muted">소계: ${sumAMT.toLocaleString()}원 (${count}건)</span>
+							<span class="mx-2 text-muted">소계: ${sumamt.toLocaleString()}원 (${count}건)</span>
 						</div>
 					</div>
 				`
 			},
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "어음번호", field: "BILLNO", hozAlign: "center", width: 130 },
-				{ title: "발행은행", field: "ISSUBANK", width: 180 },
-				{ title: "발행인", field: "ISSUMAN", hozAlign: "center", width: 120 },
-				{ title: "발행일", field: "stdymd", hozAlign: "center", width: 100 },
-				{ title: "지급거래처", field: "custnm", minWidth: 200 },
-				{ title: "형태", field: "BILLTYPE", hozAlign: "center", width: 80 },
+				{ title: "어음번호", field: "billno", hozAlign: "center", width: 200 },
+				{ title: "발행은행", field: "issubank", width: 200 },
+				{ title: "발행인", field: "issuman", hozAlign: "center", width: 150 },
+				{ title: "발행일", field: "stdymd", hozAlign: "center", width: 150 },
+				{ title: "지급거래처", field: "custnm", minWidth: 250 },
+				{ title: "형태", field: "billtype", hozAlign: "center", width: 150 },
 				{
 					title: "금액", field: "billamt", hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
-					width: 130, cssClass: "fw-bold",
+					width: 150, cssClass: "fw-bold",
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				}
 			]

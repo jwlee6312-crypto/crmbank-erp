@@ -38,14 +38,14 @@
 							<span class="erp-label"><i class="bi bi-dot"></i>계정과목</span>
 							<div class="d-flex align-items-center gap-1">
 								<div class="input-group input-group-sm" style="width: 220px;">
-									<input v-model="searchForm.acctcdFR" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="searchForm.acctcdFRNM" type="text" class="form-control" @keydown.enter="openHelp('FR')" placeholder="시작 계정" />
+									<input v-model="searchForm.acctcdfr" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+									<input v-model="searchForm.acctcdfrnm" type="text" class="form-control" @keydown.enter="openHelp('FR')" placeholder="시작 계정" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('FR')"><i class="bi bi-search"></i></button>
 								</div>
 								<span>~</span>
 								<div class="input-group input-group-sm" style="width: 220px;">
-									<input v-model="searchForm.acctcdTO" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="searchForm.acctcdTONM" type="text" class="form-control" @keydown.enter="openHelp('TO')" placeholder="종료 계정" />
+									<input v-model="searchForm.acctcdto" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+									<input v-model="searchForm.acctcdtonm" type="text" class="form-control" @keydown.enter="openHelp('TO')" placeholder="종료 계정" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('TO')"><i class="bi bi-search"></i></button>
 								</div>
 							</div>
@@ -98,10 +98,10 @@ const today = now.toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	acctcdFR: '',
-	acctcdFRNM: '',
-	acctcdTO: '',
-	acctcdTONM: '',
+	acctcdfr: '',
+	acctcdfrnm: '',
+	acctcdto: '',
+	acctcdtonm: '',
 	frymd: firstDay,
 	toymd: today
 })
@@ -118,21 +118,21 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hasl/HASL_610S_STR', {
 			cmpycd: authStore.cmpycd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
-			acctcdFR: searchForm.acctcdFR,
-			acctcdTO: searchForm.acctcdTO,
+			ymdfr: searchForm.frymd.replace(/-/g, ''),
+			ymdto: searchForm.toymd.replace(/-/g, ''),
+			acctcdfr: searchForm.acctcdfr,
+			acctcdto: searchForm.acctcdto,
 			gubun: '2' // ASP 코드의 마지막 파라미터 "2" 반영
 		})
 
 		const data = (res.data || []).map((row: any) => ({
 			...row,
-			acctcd: row.col0 || row.acctcd,
-			acctnm: row.col1 || row.acctnm,
-			bjanamt: Number(row.col2 || row.bjanamt || 0),
-			dbamt: Number(row.col3 || row.dbamt || 0),
-			cramt: Number(row.col4 || row.cramt || 0),
-			Cjanamt: Number(row.col5 || row.Cjanamt || 0)
+			acctcd: row.acctcd,
+			acctnm: row.acctnm,
+			bjanamt: Number(row.bjanamt || 0),
+			dbamt: Number(row.dbamt || 0),
+			cramt: Number(row.cramt || 0),
+			cjanamt: Number(row.cjanamt || 0)
 		}))
 
 		mainGrid?.setData(data)
@@ -151,15 +151,15 @@ function openHelp(type: 'FR' | 'TO') {
 	const isFr = type === 'FR'
 	Object.assign(modalProps, {
 		title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'acctnm',
-		data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: isFr ? searchForm.acctcdFRNM : searchForm.acctcdTONM },
+		data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: isFr ? searchForm.acctcdfrnm : searchForm.acctcdtonm },
 		columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }],
 		onConfirm: (d: any) => {
 			if (isFr) {
-				searchForm.acctcdFR = d.acctcd
-				searchForm.acctcdFRNM = d.acctnm
+				searchForm.acctcdfr = d.acctcd
+				searchForm.acctcdfrnm = d.acctnm
 			} else {
-				searchForm.acctcdTO = d.acctcd
-				searchForm.acctcdTONM = d.acctnm
+				searchForm.acctcdto = d.acctcd
+				searchForm.acctcdtonm = d.acctnm
 			}
 		}
 	})
@@ -167,17 +167,27 @@ function openHelp(type: 'FR' | 'TO') {
 }
 
 const print = () => {
-	const params = `acctcdFR=${searchForm.acctcdFR}&acctcdFRNM=${searchForm.acctcdFRNM}&acctcdTO=${searchForm.acctcdTO}&acctcdTONM=${searchForm.acctcdTONM}&frymd=${searchForm.frymd.replace(/-/g, '')}&toymd=${searchForm.toymd.replace(/-/g, '')}&PRTGU=1`
+	const params = `acctcdfr=${searchForm.acctcdfr}&acctcdfrnm=${searchForm.acctcdfrnm}&acctcdto=${searchForm.acctcdto}&acctcdtonm=${searchForm.acctcdtonm}&frymd=${searchForm.frymd.replace(/-/g, '')}&toymd=${searchForm.toymd.replace(/-/g, '')}&PRTGU=1`
 	window.open(`/api/hasl/HASL_610P?${params}`, 'StatementPrint', 'width=800,height=800,scrollbars=yes')
 }
 
+// 🚀 상세 이동 (경로 수정 및 동적 라우트 등록)
 const goDetail = (acctCd: string) => {
 	if (!acctCd) return
+    const pgmid = 'HASL540S'
+    add_dynamic_route(pgmid, '보조원장', 'HASL')
+
 	router.push({
-		path: '/HASL/HASL540S',
-		query: { frymd: searchForm.frymd, toymd: searchForm.toymd, acctcd: acctCd }
+		path: `/${pgmid}`,
+		query: {
+            frymd: searchForm.frymd.replace(/-/g, ''),
+            toymd: searchForm.toymd.replace(/-/g, ''),
+            acctcd: search_form.acctcd.trim(),
+            acctnm: search_form.acctnm
+        }
 	})
 }
+
 
 onMounted(() => {
 	if (mainGridRef.value) {
@@ -186,29 +196,29 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "계정코드", field: "acctcd", width: 100, hozAlign: "center" },
+				{ title: "계정코드", field: "acctcd", width: 150, hozAlign: "center" },
 				{
 					title: "계정과목 명", field: "acctnm", widthGrow: 2,
 					formatter: (cell) => `<span class="text-primary text-decoration-underline cursor-pointer">${cell.getValue()}</span>`,
 					cellClick: (e, cell) => goDetail(cell.getData().acctcd)
 				},
 				{
-					title: "이월액", field: "bjanamt", width: 130, hozAlign: "right",
+					title: "이월액", field: "bjanamt", width: 200, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				},
 				{
-					title: "증가액", field: "dbamt", width: 130, hozAlign: "right",
+					title: "증가액", field: "dbamt", width: 200, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				},
 				{
-					title: "감소액", field: "cramt", width: 130, hozAlign: "right",
+					title: "감소액", field: "cramt", width: 200, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				},
 				{
-					title: "잔액", field: "Cjanamt", width: 130, hozAlign: "right",
+					title: "잔액", field: "cjanamt", width: 200, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
 				}

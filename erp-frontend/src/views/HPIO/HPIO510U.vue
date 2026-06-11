@@ -116,7 +116,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
 const masterData = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   ioym: today.replace(/-/g, '').substring(0, 6), iono: '',
   ioymd: today.replace(/-/g, ''),
@@ -149,7 +149,7 @@ const initGrids = () => {
       }},
       { title: "자재코드", field: "itemcd", width: 110, hozAlign: "center" },
       { title: "자재명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary', cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow()) },
-      { title: "유형", field: "iotypenm", width: 120, cellClick: (e, cell) => handleOpenHelp('IOTYPE', cell.getRow()) },
+      { title: "유형", field: "iotypenm", width: 120, cellClick: (e, cell) => handleOpenHelp('iotype', cell.getRow()) },
       { title: "규격", field: "itsize", width: 150 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
       { title: "수량", field: "ioqty", width: 100, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
@@ -173,7 +173,7 @@ const fetchWhOptions = async () => {
 async function fetchMaster() {
   if (!masterData.deptcd || !masterData.ioym || !masterData.iono) return vAlertError('조회 조건을 확인하세요.');
   try {
-    const res = await api.post('/api/hpio/HPIO_510U_STR', { actkind: 's', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono, deptcd: masterData.deptcd });
+    const res = await api.post('/api/hpio/HPIO_510U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono, deptcd: masterData.deptcd });
     if (res.data?.length) {
       Object.assign(masterData, res.data[0]);
       fetchDetails();
@@ -183,7 +183,7 @@ async function fetchMaster() {
 
 async function fetchDetails() {
   try {
-    const res = await api.post('/api/hpio/HPIO_511U_STR', { actkind: 's', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono });
+    const res = await api.post('/api/hpio/HPIO_511U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono });
     grid?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
   } catch (e) {}
 }
@@ -225,7 +225,7 @@ async function deleteData() {
 const handleOpenHelp = (type: string, row: any) => {
   if (type === 'DEPT') openHelp('DEPT', (d) => { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm });
   else if (type === 'ITEM') openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' }), { codegbn: 'B' });
-  else if (type === 'IOTYPE') openHelp('IOTYPE', (d) => row.update({ iotype: d.code, iotypenm: d.cdnm }), { cmpycd: authStore.cmpycd });
+  else if (type === 'iotype') openHelp('iotype', (d) => row.update({ iotype: d.code, iotypenm: d.cdnm }), { cmpycd: authStore.cmpycd });
   else if (type === 'IDEPT') openHelp('DEPT', (d) => row.update({ ideptcd: d.deptcd, ideptnm: d.deptnm }));
   else if (type === 'SCUST') openHelp('CUST', (d) => row.update({ scustcd: d.custcd, scustnm: d.custnm }));
 }

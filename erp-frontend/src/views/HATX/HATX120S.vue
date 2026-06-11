@@ -146,7 +146,7 @@ const search = async () => {
 		const ymfr = searchForm.YY + searchForm.FMM
 		const ymto = searchForm.YY + searchForm.TMM
 
-		// 1. 합계 정보 조회 (IOGBN: 41 for Purchase Sum, 31 for Sales Sum)
+		// 1. 합계 정보 조회 (iogbn: 41 for Purchase Sum, 31 for Sales Sum)
 		const iogbnSum = searchForm.GUBUN === '100' ? '41' : '31'
 		const resSum = await api.post('/api/hatx/HATX_110S_STR', {
 			cmpycd: authStore.cmpycd,
@@ -172,7 +172,7 @@ const search = async () => {
 		}
 		summaryGrid?.setData(sumData)
 
-		// 2. 상세 목록 조회 (IOGBN: 42 for Purchase List, 32 for Sales List)
+		// 2. 상세 목록 조회 (iogbn: 42 for Purchase List, 32 for Sales List)
 		const iogbnList = searchForm.GUBUN === '100' ? '42' : '32'
 		const resList = await api.post('/api/hatx/HATX_110S_STR', {
 			cmpycd: authStore.cmpycd,

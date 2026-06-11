@@ -104,7 +104,7 @@
                     <th class="required bg-light text-center">입고창고</th>
                     <td>
                       <select v-model="formData.whcd" class="form-select form-select-sm">
-                        <option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                        <option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                       </select>
                     </td>
                     <th class="bg-light text-center">Lot No.</th>
@@ -240,7 +240,7 @@ function initialize() {
 
 onMounted(async () => {
   api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
-     .then(r => whOptions.value = r.data.map((i:any)=>({CODE: i.CODE || i.whcd, cdnm: i.cdnm || i.whnm})));
+     .then(r => whOptions.value = r.data.map((i:any)=>({code: i.code || i.whcd, cdnm: i.cdnm || i.whnm})));
 
   if (poGridRef.value) {
     poGrid = new Tabulator(poGridRef.value, {

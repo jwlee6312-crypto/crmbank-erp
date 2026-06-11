@@ -221,7 +221,7 @@ const initGrids = () => {
     itemGrid.on("cellEdited", (cell) => {
         if (['jioqty', 'price', 'ioamt', 'iovat', 'procyn'].includes(cell.getField())) {
             if (['jioqty', 'price'].includes(cell.getField())) calcRow(cell.getRow());
-            else if (cell.getField() === 'ioamt') calcRow(cell.getRow(), 'AMT');
+            else if (cell.getField() === 'ioamt') calcRow(cell.getRow(), 'amt');
             updateTotals();
         }
     });
@@ -229,10 +229,10 @@ const initGrids = () => {
 }
 
 // [3] 로직 및 계산
-const calcRow = (row: Tabulator.RowComponent, type: string = 'QTY') => {
+const calcRow = (row: Tabulator.RowComponent, type: string = 'qty') => {
   const d = row.getData(); const prcGbn = masterData.pricegbn;
   let amt = Number(d.ioamt) || 0; let vat = Number(d.iovat) || 0;
-  if (type === 'QTY') {
+  if (type === 'qty') {
     if (prcGbn === '1') {
         amt = Math.round(Number(d.jioqty) * Number(d.price));
         vat = Math.round(amt * 0.1);
@@ -240,7 +240,7 @@ const calcRow = (row: Tabulator.RowComponent, type: string = 'QTY') => {
         amt = Math.round(Number(d.jioqty) * Number(d.price) * (10 / 11));
         vat = Math.round(Number(d.jioqty) * Number(d.price) * (1 / 11));
     }
-  } else if (type === 'AMT') {
+  } else if (type === 'amt') {
     vat = Math.floor(amt * 0.1);
     row.update({ price: Math.floor((prcGbn === '1' ? amt : amt + vat) / (Number(d.jioqty) || 1)) });
   }
@@ -248,15 +248,15 @@ const calcRow = (row: Tabulator.RowComponent, type: string = 'QTY') => {
 }
 
 const updateTotals = () => {
-  const data = itemGrid?.getData().filter((i: any) => i.procyn === 'y' || i.procyn === true) || []
+  const data = itemGrid?.getData().filter((i: any) => i.procyn === 'Y' || i.procyn === true) || []
   masterData.splamt = data.reduce((acc, cur) => acc + (Number(cur.ioamt) || 0), 0)
   masterData.vatamt = data.reduce((acc, cur) => acc + (Number(cur.iovat) || 0), 0)
 }
 
 const toggleAllRows = () => {
   const rows = itemGrid?.getRows(); if (!rows) return
-  const allSelectedValue = rows.every(r => r.getData().procyn === 'y')
-  rows.forEach(r => r.update({ procyn: allSelectedValue ? 'n' : 'y' }))
+  const allSelectedValue = rows.every(r => r.getData().procyn === 'Y')
+  rows.forEach(r => r.update({ procyn: allSelectedValue ? 'N' : 'Y' }))
   updateTotals()
 }
 
@@ -281,10 +281,10 @@ async function fetchSettlementItems() {
     })
     const data = (res.data || []).map((i: any) => {
       const ioQty = (Number(i.jsanqty) || 0) - (Number(i.jqty) || 0);
-      const ioAmt = (Number(i.jsanamt) || 0) - (Number(i.jamt) || 0);
-      const ioVat = (Number(i.jsanvat) || 0) - (Number(i.jvat) || 0);
-      let price = ioQty !== 0 ? (masterData.pricegbn === '1' ? ioAmt / ioQty : (ioAmt + ioVat) / ioQty) : 0
-      return { ...i, procyn: 'y', ioqty: ioQty, jioqty: ioQty, price: Math.round(price), ioamt: ioAmt, iovat: ioVat }
+      const ioamt = (Number(i.jsanamt) || 0) - (Number(i.jamt) || 0);
+      const iovat = (Number(i.jsanvat) || 0) - (Number(i.jvat) || 0);
+      let price = ioQty !== 0 ? (masterData.pricegbn === '1' ? ioamt / ioQty : (ioamt + iovat) / ioQty) : 0
+      return { ...i, procyn: 'Y', ioqty: ioQty, jioqty: ioQty, price: Math.round(price), ioamt: ioamt, iovat: iovat }
     })
     itemGrid?.setData(data); updateTotals()
   } catch (e) { vAlertError('정산 품목 조회 실패') }
@@ -295,7 +295,7 @@ async function fetchSettlementItems() {
  */
 async function saveSettlement() {
   if (!masterData.deptcd || !masterData.pubymd) return vAlertError('부서 및 발행일은 필수입니다.')
-  const details = itemGrid?.getData().filter((i: any) => i.procyn === 'y' || i.procyn === true)
+  const details = itemGrid?.getData().filter((i: any) => i.procyn === 'Y' || i.procyn === true)
   if (!details || details.length === 0) return vAlertError('정산할 품목을 선택하세요.')
 
   if (!confirm('정산 작업을 진행하시겠습니까?')) return
@@ -305,9 +305,9 @@ async function saveSettlement() {
     const ioymdto = searchData.ioymdto.replace(/-/g, '')
     const jsanymd = masterData.pubymd.replace(/-/g, '')
 
-    // 🚀 Step 1. 정산 MASTER 생성 (actkind: 'a0')
+    // 🚀 Step 1. 정산 MASTER 생성 (actkind: 'A0')
     const masterParams = {
-        actkind: 'a0', cmpycd: authStore.cmpycd, iogbn: '200',
+        actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200',
         ioymdfr: ioymdfr, ioymdto: ioymdto,
         custcd: selectedCust.custcd, deptcd: masterData.deptcd,
         ioym: '', iono: '', iorowno: '',
@@ -330,10 +330,10 @@ async function saveSettlement() {
     const keyJsanym = mstData?.jsanym || mstData?.JSANYM
     const keyJsanno = mstData?.jsanno || mstData?.JSANNO
 
-    // 🚀 Step 2. 상세 내역 루프 저장 (actkind: 'u0')
+    // 🚀 Step 2. 상세 내역 루프 저장 (actkind: 'U0')
     for (const item of details) {
       const detailParams = {
-        actkind: 'u0', cmpycd: authStore.cmpycd, iogbn: '200',
+        actkind: 'U0', cmpycd: authStore.cmpycd, iogbn: '200',
         ioymdfr: ioymdfr, ioymdto: ioymdto,
         custcd: selectedCust.custcd, deptcd: masterData.deptcd,
         ioym: item.ioym, iono: item.iono, iorowno: item.iorowno,

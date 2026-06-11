@@ -75,12 +75,12 @@
               <tr>
                 <th class="required bg-light">코드구분</th>
                 <td>
-                  <select v-model="masterData.CDGBN" class="form-select" :disabled="masterData.actkind === 'U0'">
+                  <select v-model="masterData.cdgbn" class="form-select" :disabled="masterData.actkind === 'U0'">
                     <option v-for="opt in groupOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="required bg-light">코&nbsp;&nbsp;&nbsp;&nbsp;드</th>
-                <td><input v-model="masterData.CODE" class="form-control text-center fw-bold" maxlength="3" :readonly="masterData.actkind === 'U0'" /></td>
+                <td><input v-model="masterData.code" class="form-control text-center fw-bold" maxlength="3" :readonly="masterData.actkind === 'U0'" /></td>
                 <th class="required bg-light">코&nbsp;드&nbsp;명</th>
                 <td><input v-model="masterData.cdnm" class="form-control" maxlength="30" /></td>
                 <th class="bg-light text-center">순서</th>
@@ -149,8 +149,8 @@ const { modalVisible, modalProps } = useCommonHelp()
 // [1] 데이터 모델링
 const searchParam = reactive({ SCH_TEXT: '', SCH_useyn: '' })
 const masterData = reactive<any>({
-  actkind: 'A0', cmpycd: authStore.cmpycd, CDGBN: '010',
-  CODE: '', cdnm: '', remark: '', dspord: '', useyn: 'Y'
+  actkind: 'A0', cmpycd: authStore.cmpycd, cdgbn: '010',
+  code: '', cdnm: '', remark: '', dspord: '', useyn: 'Y'
 })
 
 const groupOptions = ref<any[]>([])
@@ -174,9 +174,9 @@ const initGrids = () => {
 
     groupGrid.on("rowClick", (e, row) => {
       const data = row.getData()
-      masterData.CDGBN = data.CODE; selectedGroupName.value = data.cdnm
-      masterData.actkind = 'A0'; masterData.CODE = ''; masterData.cdnm = ''; masterData.remark = ''; masterData.dspord = ''; masterData.useyn = 'Y'
-      fetchCodes(data.CODE)
+      masterData.cdgbn = data.code; selectedGroupName.value = data.cdnm
+      masterData.actkind = 'A0'; masterData.code = ''; masterData.cdnm = ''; masterData.remark = ''; masterData.dspord = ''; masterData.useyn = 'Y'
+      fetchCodes(data.code)
     })
   }
 
@@ -185,7 +185,7 @@ const initGrids = () => {
       layout: "fitColumns", height: "100%", placeholder: "그룹을 선택하세요",
       columnDefaults: { headerSort: false, headerHozAlign: "center", vertAlign: "middle" },
       columns: [
-        { title: "코드", field: "CODE", width: 80, hozAlign: "center", cssClass: "fw-bold text-primary" },
+        { title: "코드", field: "code", width: 80, hozAlign: "center", cssClass: "fw-bold text-primary" },
         { title: "코드 명", field: "cdnm", minWidth: 200, widthGrow: 1 },
         { title: "비고", field: "remark", width: 200 },
         { title: "순서", field: "dspord", width: 60, hozAlign: "center" },
@@ -199,7 +199,7 @@ const initGrids = () => {
     codeGrid.on("rowClick", (e, row) => {
       const data = row.getData()
       Object.assign(masterData, data)
-      masterData.CDGBN = data.CDGBN || masterData.CDGBN
+      masterData.cdgbn = data.cdgbn || masterData.cdgbn
       masterData.actkind = 'U0'
     })
   }
@@ -210,7 +210,7 @@ async function fetchGroupOptions() {
   try {
     const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '010' } })
     groupOptions.value = res.data.map((i: any) => ({
-      codecd: String(i.CODE || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim()
+      codecd: String(i.code || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim()
     }))
   } catch (e) { console.error('코드구분 로드 실패') }
 }
@@ -218,7 +218,7 @@ async function fetchGroupOptions() {
 async function fetchGroups() {
   try {
     const res = await api.post('/api/hsba/HSBA_900U_STR', {
-      actkind: 'S1', cmpycd: authStore.cmpycd, CDGBN: '010', SCH_TEXT: searchParam.SCH_TEXT, useyn: searchParam.SCH_useyn
+      actkind: 'S1', cmpycd: authStore.cmpycd, cdgbn: '010', SCH_TEXT: searchParam.SCH_TEXT, useyn: searchParam.SCH_useyn
     })
     groupGrid?.setData(res.data)
   } catch (e) { vAlertError('그룹 목록 조회 실패') }
@@ -226,31 +226,31 @@ async function fetchGroups() {
 
 async function fetchCodes(cdgbn: string) {
   try {
-    const res = await api.post('/api/hsba/HSBA_900U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, CDGBN: cdgbn })
+    const res = await api.post('/api/hsba/HSBA_900U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, cdgbn: cdgbn })
     codeGrid?.setData(res.data)
     activeItemCount.value = res.data.length
   } catch (e) { vAlertError('상세 코드 조회 실패') }
 }
 
 async function save() {
-  if (!masterData.CODE || !masterData.cdnm) return vAlertError('코드와 코드명은 필수입니다.')
+  if (!masterData.code || !masterData.cdnm) return vAlertError('코드와 코드명은 필수입니다.')
   if (!confirm('저장하시겠습니까?')) return
   try {
     await api.post('/api/hsba/HSBA_900U_STR', { ...masterData, userid: authStore.userid })
     vAlert('정상적으로 처리되었습니다.')
-    fetchCodes(masterData.CDGBN)
+    fetchCodes(masterData.cdgbn)
     if (masterData.actkind === 'A0') {
-      const currentGbn = masterData.CDGBN; initializeForm(); masterData.CDGBN = currentGbn
+      const currentGbn = masterData.cdgbn; initializeForm(); masterData.cdgbn = currentGbn
     } else {
-        masterData.actkind = 'A0'; masterData.CODE = ''; masterData.cdnm = ''; masterData.remark = ''; masterData.dspord = ''
+        masterData.actkind = 'A0'; masterData.code = ''; masterData.cdnm = ''; masterData.remark = ''; masterData.dspord = ''
     }
   } catch (e) { vAlertError('저장 중 오류 발생') }
 }
 
 function initializeForm() {
-  const currentGbn = masterData.CDGBN
+  const currentGbn = masterData.cdgbn
   resetForm(masterData)
-  Object.assign(masterData, { actkind: 'A0', cmpycd: authStore.cmpycd, CDGBN: currentGbn, useyn: 'Y' })
+  Object.assign(masterData, { actkind: 'A0', cmpycd: authStore.cmpycd, cdgbn: currentGbn, useyn: 'Y' })
 }
 
 onMounted(async () => {
@@ -258,7 +258,7 @@ onMounted(async () => {
   nextTick(() => { initGrids(); fetchGroups() })
 })
 
-watch(() => masterData.CDGBN, (newVal) => {
+watch(() => masterData.cdgbn, (newVal) => {
     if (masterData.actkind === 'A0') {
         const group = groupOptions.value.find(o => o.codecd === newVal)
         selectedGroupName.value = group ? group.codenm : ''; fetchCodes(newVal)

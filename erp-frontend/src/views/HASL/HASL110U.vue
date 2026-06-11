@@ -139,7 +139,7 @@
             <div class="card border shadow-sm flex-shrink-0 d-flex flex-column bg-white overflow-hidden side-panel-wrapper" style="width: 440px;" v-if="selectedRow">
               <div class="card-header py-2 px-3 bg-secondary text-white small fw-bold d-flex justify-content-between align-items-center">
                  <span><i class="bi bi-gear-fill me-2"></i>상세 관리항목 설정</span>
-                 <span class="badge" :class="selectedRow.dbcr === 'D' ? 'bg-primary' : 'bg-danger'">{{ selectedRow.dbcr === 'D' ? '차변' : '대변' }}</span>
+                 <span class="badge" :class="String(selectedRow.dbcr || '').trim().toUpperCase() === 'D' ? 'bg-primary' : 'bg-danger'">{{ String(selectedRow.dbcr || '').trim().toUpperCase() === 'D' ? '차변' : '대변' }}</span>
               </div>
               <div class="card-body p-0 overflow-auto custom-scrollbar flex-grow-1">
 
@@ -155,9 +155,9 @@
                     </colgroup>
                     <tbody>
                         <!-- [1] 접대비 상세 (typeacct: 100) -->
-                        <template v-if="selectedRow.typeacct === '100'">
+                        <template v-if="String(selectedRow.typeacct || '').trim() === '100'">
                             <tr>
-                                <th class="bg-light border-bottom text-end pe-3 required">유&nbsp;&nbsp;&nbsp;&nbsp;형</th>
+                                <th class="bg-light border-bottom text-end pe-3 required">증빙유형</th>
                                 <td class="border-bottom">
                                     <select v-model="selectedRow.docno3" class="form-select form-select-sm border-0">
                                         <option v-for="opt in entTypeOptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
@@ -177,31 +177,31 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th class="bg-light border-bottom text-end pe-3 text-primary">상&nbsp;&nbsp;&nbsp;&nbsp;호</th>
+                                <th class="bg-light border-bottom text-end pe-3 text-primary">상호/접대지</th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
-                                        <input v-model="selectedRow.docno4" class="form-control border-0" placeholder="상호명 직접입력 또는 검색" />
-                                        <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handleOpenHelp('VAT_CUST')"><i class="bi bi-search"></i></button>
+                                        <input v-model="selectedRow.docno4" class="form-control border-0" placeholder="상호명 입력" />
+                                        <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handleOpenHelp('vat_cust')"><i class="bi bi-search"></i></button>
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="selectedRow.docno3 === '01'">
-                                <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카&nbsp;&nbsp;&nbsp;&nbsp;드</th>
+                            <tr v-if="String(selectedRow.docno3 || '').trim() === '01'">
+                                <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카드번호</th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
-                                        <input v-model="selectedRow.docno5" class="form-control border-0 text-primary" placeholder="카드번호 도움창 선택" />
+                                        <input v-model="selectedRow.docno5" class="form-control border-0 text-primary" placeholder="카드 도움창 선택" />
                                         <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handleOpenHelp('CARD')"><i class="bi bi-credit-card"></i></button>
                                     </div>
                                 </td>
                             </tr>
                             <tr>
-                                <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">순&nbsp;접&nbsp;대&nbsp;비</th>
+                                <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">순접대비</th>
                                 <td class="border-bottom">
                                     <input v-model="selectedRow.docno8" type="number" class="form-control form-control-sm border-0 text-end fw-bold" placeholder="0" />
                                 </td>
                             </tr>
                             <tr>
-                                <th class="bg-light border-bottom text-end pe-3">봉&nbsp;사&nbsp;료</th>
+                                <th class="bg-light border-bottom text-end pe-3">봉사료/기타</th>
                                 <td class="border-bottom">
                                     <input v-model="selectedRow.docno9" type="number" class="form-control form-control-sm border-0 text-end" placeholder="0" />
                                 </td>
@@ -209,8 +209,7 @@
                         </template>
 
                         <!-- [2] 부가세 상세 (typeacct: 090) -->
-                        <template v-else-if="selectedRow.typeacct === '090'">
-                            <!-- 💡 상위 조건 통합: (성격 = 입력차대) 일 때만 상세 내역 일괄 노출 -->
+                        <template v-else-if="String(selectedRow.typeacct || '').trim() === '090'">
                             <template v-if="String(selectedRow.typedc || '').trim().toUpperCase() === String(selectedRow.dbcr || '').trim().toUpperCase()">
                                 <tr>
                                     <th class="bg-light border-bottom text-end pe-3 required">사&nbsp;업&nbsp;장</th>
@@ -222,7 +221,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="bg-light border-bottom text-end pe-3 required">유&nbsp;&nbsp;&nbsp;&nbsp;형</th>
+                                    <th class="bg-light border-bottom text-end pe-3 required">세무유형</th>
                                     <td class="border-bottom">
                                         <select v-model="selectedRow.docno3" class="form-select form-select-sm border-0">
                                             <option value="">유형 선택</option>
@@ -235,7 +234,7 @@
                                     <td class="border-bottom">
                                         <div class="input-group input-group-sm">
                                             <input v-model="selectedRow.docno2nm" class="form-control border-0" readonly placeholder="거래처 도움창 선택" />
-                                            <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handleOpenHelp('VAT_CUST')"><i class="bi bi-search"></i></button>
+                                            <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handleOpenHelp('vat_cust')"><i class="bi bi-search"></i></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -257,7 +256,6 @@
                                         <input v-model="selectedRow.docno9" type="number" class="form-control form-control-sm border-0 text-end fw-bold" />
                                     </td>
                                 </tr>
-                                <!-- 💡 차변(D,D)일 경우에만 카드번호 노출 (ASP 로직 반영: DOCNO4) -->
                                 <tr v-if="String(selectedRow.dbcr || '').trim().toUpperCase() === 'D'">
                                     <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카&nbsp;&nbsp;&nbsp;&nbsp;드</th>
                                     <td class="border-bottom">
@@ -271,7 +269,7 @@
                         </template>
 
                         <!-- [3] 어음 상세 (050, 060, 070) -->
-                        <template v-else-if="['050', '060', '070'].includes(selectedRow.typeacct)">
+                        <template v-else-if="['050', '060', '070'].includes(String(selectedRow.typeacct || '').trim())">
                             <tr>
                                 <th class="bg-light border-bottom text-end pe-3 required">어음번호</th>
                                 <td class="border-bottom">
@@ -281,7 +279,16 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="(selectedRow.typeacct === '050' && selectedRow.dbcr === 'D') || (selectedRow.typeacct === '060' && selectedRow.dbcr === 'C')">
+                            <tr v-if="(String(selectedRow.typeacct || '').trim() === '050' && String(selectedRow.dbcr || '').trim().toUpperCase() === 'D') || (String(selectedRow.typeacct || '').trim() === '060' && String(selectedRow.dbcr || '').trim().toUpperCase() === 'C')">
+                                <th class="bg-light border-bottom text-end pe-3">지급/수취처</th>
+                                <td class="border-bottom">
+                                    <div class="input-group input-group-sm">
+                                        <input v-model="selectedRow.docno9nm" class="form-control border-0" readonly placeholder="도움창 선택" />
+                                        <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handleOpenHelp('vat_cust')"><i class="bi bi-search"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="(String(selectedRow.typeacct || '').trim() === '050' && String(selectedRow.dbcr || '').trim().toUpperCase() === 'D') || (String(selectedRow.typeacct || '').trim() === '060' && String(selectedRow.dbcr || '').trim().toUpperCase() === 'C')">
                                 <th class="bg-light border-bottom text-end pe-3">만기일자</th>
                                 <td class="border-bottom">
                                     <input v-model="selectedRow.docno7" type="date" class="form-control form-control-sm border-0" />
@@ -289,20 +296,27 @@
                             </tr>
                         </template>
 
-                        <!-- [4] 일반 관리항목 / 거래처 -->
+                        <!-- [4] 일반 관리항목 / 거래처 (010~040 포함) -->
                         <template v-else>
-                            <tr v-if="selectedRow.typemgt > '000'">
-                                <th class="bg-light border-bottom text-end pe-3 text-primary">{{ selectedRow.titmgt || '관리항목' }}</th>
+                            <tr v-if="String(selectedRow.typemgt || '').trim() > '000'">
+                                <th class="bg-light border-bottom text-end pe-3 text-primary">
+                                    {{
+                                        String(selectedRow.typemgt || '').trim() === '010' ? '구좌번호' :
+                                        String(selectedRow.typemgt || '').trim() === '020' ? '차입금' :
+                                        String(selectedRow.typemgt || '').trim() === '030' ? '유가증권' :
+                                        String(selectedRow.typemgt || '').trim() === '040' ? '법인카드' : (selectedRow.titmgt || selectedRow.typemgtnm || '관리항목')
+                                    }}
+                                </th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
-                                        <input v-model="selectedRow.mgtno" class="form-control border-0" @keydown.enter="handleOpenHelp('MGT')" placeholder="코드 입력" />
+                                        <input v-model="selectedRow.mgtno" class="form-control border-0" @keydown.enter="handleOpenHelp('MGT')" :placeholder="(String(selectedRow.typemgt || '').trim() >= '010' && String(selectedRow.typemgt || '').trim() <= '040' ? '코드' : '번호') + ' 입력'" />
                                         <button class="btn btn-outline-secondary border-0 border-start px-2" @click="handleOpenHelp('MGT')"><i class="bi bi-search"></i></button>
                                     </div>
                                     <div class="small text-primary mt-1 px-1 fw-bold" v-if="selectedRow.mgtnm">{{ selectedRow.mgtnm }}</div>
                                 </td>
                             </tr>
-                            <tr v-if="selectedRow.typesub > '000' && (selectedRow.typemgt <= '000' || selectedRow.typemgt === '090')">
-                                <th class="bg-light border-bottom text-end pe-3 text-primary">{{ selectedRow.titsub || '거래처' }}</th>
+                            <tr v-if="String(selectedRow.typesub || '').trim() > '000' && (String(selectedRow.typemgt || '').trim() <= '000' || String(selectedRow.typemgt || '').trim() === '090')">
+                                <th class="bg-light border-bottom text-end pe-3 text-primary">{{ selectedRow.titsub || selectedRow.typesubnm || '거래처' }}</th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
                                         <input v-model="selectedRow.subnm" class="form-control border-0" readonly placeholder="도움창 선택" />
@@ -313,7 +327,7 @@
                         </template>
 
                         <!-- [5] 프로젝트/예산 공통 (acctcd > 40000) -->
-                        <template v-if="selectedRow.acctcd > '40000'">
+                        <template v-if="String(selectedRow.acctcd || '').trim() > '40000'">
                             <tr>
                                 <th class="bg-light border-bottom text-end pe-3">프로젝트</th>
                                 <td class="border-bottom">
@@ -323,7 +337,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="selectedRow.typebugt > '000' && selectedRow.dbcr === 'D'">
+                            <tr v-if="String(selectedRow.typebugt || '').trim() > '000' && String(selectedRow.dbcr || '').trim().toUpperCase() === 'D'">
                                 <th class="bg-light border-bottom text-end pe-3">예산과목</th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
@@ -376,15 +390,47 @@ import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
 import { getDate } from '@/composables/useDate'
+import { useRoute } from 'vue-router'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
+const route = useRoute()
 const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp } = useCommonHelp()
+
+// [0] 💡 데이터 키 소문자 정규화 헬퍼 (모든 키를 소문자로 변환, 문자열은 Trim)
+const normalizeKeys = (obj: any) => {
+    if (!obj) return obj;
+    const normalized = Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => [k.toLowerCase(), v && typeof v === 'string' ? v.trim() : v])
+    );
+
+    // 💡 사용자 지시: 조회 시 SUBCD = trim(Rs("CUSTCD")), SUBNM = trim(Rs("CUSTNM")) 로 변환하여 로드
+    const custCd = normalized.custcd || normalized.subcd || normalized.docno2 || normalized.docno9 || '';
+    const custNm = normalized.custnm || normalized.subnm || normalized.docnm2 || normalized.docnm4 || normalized.docnm9 || '';
+
+    if (custCd) normalized.subcd = custCd;
+    if (custNm) normalized.subnm = custNm;
+
+    // 💡 기타 명칭 필드 동기화
+    if (!normalized.docno2nm) normalized.docno2nm = normalized.docnm2 || custNm;
+    if (!normalized.docno4) normalized.docno4 = normalized.docnm4 || custNm;
+    if (!normalized.docno9nm) normalized.docno9nm = normalized.docnm9 || custNm;
+
+    // 💡 날짜 필드 포맷팅 (YYYYMMDD -> YYYY-MM-DD)
+    ['docno6', 'docno7', 'payymd'].forEach(key => {
+        if (normalized[key] && normalized[key].length === 8 && !normalized[key].includes('-')) {
+            const v = normalized[key];
+            normalized[key] = `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}`;
+        }
+    });
+
+    return normalized;
+};
 
 // [1] 데이터 모델링
 const searchParams = reactive({ fromdt: firstDay, todt: today, business: '' })
@@ -405,11 +451,11 @@ const activeRowComponent = ref<any>(null)
 const purchaseVatOptions = ref<any[]>([]); const salesVatOptions = ref<any[]>([])
 const bizPlaceOptions = ref<any[]>([]);
 const entTypeOptions = [{code:'01', name:'카드'}, {code:'02', name:'현금'}, {code:'03', name:'세금계산서'}]
-const currencyOptions = [{code:'USD', name:'USD'}, {code:'JPY', name:'JPY'}, {code:'EUR', name:'EUR'}]
 
 const dynamicVatOptions = computed(() => {
   if (!selectedRow.value) return []
-  return selectedRow.value.dbcr === 'D' ? purchaseVatOptions.value : salesVatOptions.value
+  const dbcr = String(selectedRow.value.dbcr || '').trim().toUpperCase();
+  return dbcr === 'D' ? purchaseVatOptions.value : salesVatOptions.value
 })
 
 const totalDebit = ref(0); const totalCredit = ref(0)
@@ -424,12 +470,18 @@ watch(selectedRow, (newVal) => {
     }
 }, { deep: true });
 
+// 💡 라우트 변경 감지 (다른 화면에서 링크 클릭 시)
+watch(() => route.query, (newQuery) => {
+    if (newQuery.slipymd && newQuery.slipno) {
+        handleIncomingSlip(String(newQuery.slipymd), String(newQuery.slipno));
+    }
+}, { deep: true });
+
 function updateAutoRemark(force = false) {
     const row = selectedRow.value;
     if (!row) return;
 
     let prefix = "";
-    // 거래처 -> 접대비 상호 -> 관리명 -> 계정명 순으로 접두어 생성
     if (row.subnm) prefix = `[${row.subnm}] `;
     else if (row.docno4) prefix = `[${row.docno4}] `;
     else if (row.mgtnm) prefix = `[${row.mgtnm}] `;
@@ -468,11 +520,23 @@ const initGrids = () => {
 
   grid2 = new Tabulator(mainGridRef.value!, {
     layout: "fitColumns", height: "100%", selectable: 1,
-    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columnDefaults: {
+        headerHozAlign: 'center', headerSort: false, vertAlign: "middle",
+        // 💡 중앙 그리드 어느 셀이든 클릭 시 우측 관리항목 로드 보장
+        cellClick: (e, cell) => {
+            cell.getRow().select();
+            selectedRow.value = normalizeKeys(cell.getRow().getData());
+            activeRowComponent.value = cell.getRow();
+        }
+    },
     columns: [
       { title: "No", field: "srowno", width: 40, hozAlign: "center" },
       { title: "차/대", field: "dbcr", width: 70, hozAlign: "center", editor: "list", editorParams: { values: { "D": "차변", "C": "대변" } },
-        formatter: (c) => c.getValue()==='D' ? '<b class="text-primary">차변</b>':'<b class="text-danger">대변</b>' },
+        formatter: (c) => {
+            const v = String(c.getValue() || '').trim().toUpperCase();
+            return v === 'D' ? '<b class="text-primary">차변</b>' : (v === 'C' ? '<b class="text-danger">대변</b>' : v);
+        }
+      },
       { title: "계정과목", field: "acctnm", width: 160, cellClick: (e, cell) => handleOpenHelp('ACCT', cell.getRow()), cssClass: "cursor-pointer text-primary fw-bold" },
       { title: "적요(자동조합)", field: "remark", minWidth: 200, editor: "input", cssClass: "bg-light-yellow" },
       { title: "금액", field: "amount", width: 110, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } },
@@ -487,39 +551,63 @@ const initGrids = () => {
   });
 
   grid2.on("cellEdited", (cell) => {
-    if (cell.getField() === "dbcr") selectedRow.value = cell.getRow().getData();
+    selectedRow.value = normalizeKeys(cell.getRow().getData());
+    activeRowComponent.value = cell.getRow();
     updateTotals();
   });
 
   grid2.on("rowSelected", (row) => {
-    selectedRow.value = row.getData();
+    selectedRow.value = normalizeKeys(row.getData());
     activeRowComponent.value = row;
   });
 }
 
 const updateTotals = () => {
   const data = grid2?.getData() || []
-  totalDebit.value = data.reduce((s, r: any) => s + (r.dbcr === 'D' ? Number(r.amount || 0) : 0), 0)
-  totalCredit.value = data.reduce((s, r: any) => s + (r.dbcr === 'C' ? Number(r.amount || 0) : 0), 0)
+  totalDebit.value = data.reduce((s, r: any) => s + (String(r.dbcr || '').trim().toUpperCase() === 'D' ? Number(r.amount || 0) : 0), 0)
+  totalCredit.value = data.reduce((s, r: any) => s + (String(r.dbcr || '').trim().toUpperCase() === 'C' ? Number(r.amount || 0) : 0), 0)
 }
 
 // [3] 비즈니스 로직
 async function searchSlips() {
   try {
     const res = await api.post('/api/hasl/HASL_110U_STR', {
-      actkind: 'S', cmpycd: authStore.cmpycd,
-      slipymd: masterForm.slipymd.replace(/-/g, ''),
+      actkind: 'F', cmpycd: authStore.cmpycd,
       fromdt: searchParams.fromdt.replace(/-/g, ''),
-      toymd: searchParams.todt.replace(/-/g, ''),
+      todt: searchParams.todt.replace(/-/g, ''),
       keyword: searchParams.business
     });
-    grid1?.setData(res.data || []);
-    vAlert('조회되었습니다.');
+    const list = (res.data || []).map((item: any) => normalizeKeys(item));
+    grid1?.setData(list);
+    return list;
   } catch (e) { vAlertError('조회 실패'); }
 }
 
+async function handleIncomingSlip(slipymd: string, slipno: string) {
+    const formattedYmd = slipymd.length === 8 ? `${slipymd.substring(0,4)}-${slipymd.substring(4,6)}-${slipymd.substring(6,8)}` : slipymd;
+    searchParams.fromdt = formattedYmd;
+    searchParams.todt = formattedYmd;
+    searchParams.business = '';
+
+    const data = await searchSlips();
+
+    if (data && data.length > 0) {
+        const target = data.find((d: any) => String(d.slipno) === String(slipno));
+        if (target) {
+            fetchDetail(target);
+            nextTick(() => {
+                const rows = grid1?.getRows();
+                const row = rows?.find(r => String(r.getData().slipno) === String(slipno));
+                row?.select();
+            });
+        }
+    }
+}
+
 async function fetchDetail(row: any) {
-  Object.assign(masterForm, row);
+  const master = normalizeKeys(row);
+  Object.assign(masterForm, master);
+
   if (masterForm.slipymd && masterForm.slipymd.length === 8) {
     const d = masterForm.slipymd; masterForm.slipymd = `${d.substring(0,4)}-${d.substring(4,6)}-${d.substring(6,8)}`;
   }
@@ -528,16 +616,27 @@ async function fetchDetail(row: any) {
   }
   try {
     const resD = await api.post('/api/hasl/HASL_111U_STR', {
-      actkind: 'S', cmpycd: authStore.cmpycd, slipymd: row.slipymd.replace(/-/g,''), slipno: row.slipno
+      actkind: 'S', cmpycd: authStore.cmpycd, slipymd: String(masterForm.slipymd).replace(/-/g,''), slipno: masterForm.slipno
     });
-    const details = (resD.data || []).map((d: any) => ({
-        ...d,
-        dbcr: Number(d.dbamt || 0) > 0 ? 'D' : 'C',
-        amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt,
-        typedc: (d.typedc || d.drcr || '').trim()
-    }));
+
+    const details = (resD.data || []).map((rowItem: any) => {
+        const d = normalizeKeys(rowItem);
+        return {
+            ...d,
+            dbcr: (d.dbcr || (Number(d.dbamt || 0) > 0 ? 'D' : 'C')).toUpperCase(),
+            amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt,
+            typedc: (d.typedc || d.drcr || '').toUpperCase()
+        };
+    });
+
     grid2?.setData(details); updateTotals();
-    if (details.length > 0) setTimeout(() => grid2?.getRows()[0].select(), 100);
+
+    if (details.length > 0) {
+        setTimeout(() => {
+            const firstRow = grid2?.getRows()[0];
+            if (firstRow) firstRow.select();
+        }, 150);
+    }
   } catch (e) { vAlertError('상세 조회 실패'); }
 }
 
@@ -545,33 +644,52 @@ function handleOpenHelp(type: string, target?: any) {
   if (type === 'DEPT') openHelp('DEPT', (d) => { masterForm.deptcd = d.deptcd; masterForm.deptnm = d.deptnm });
   else if (type === 'ACCT') {
     openHelp('ACCT', (d: any) => {
+        const res = normalizeKeys(d);
+        const typeacct = String(res.typeacct || '').trim();
         target.update({
-            acctcd: d.acctcd , acctnm: d.acctnm , typeacct: d.typeacct ,
-            typemgt: d.typemgt , typesub: d.typesub , typedc: d.typedc ,
-            frgnyn: d.frgnyn , titmgt: d.typemgtnm , titsub: d.typesubnm , typebugt: d.bugtcd ,
-            docno3: d.typeacct === '100' ? '01' : '',
-            docno6: (d.typeacct === '100' || d.typeacct === '090') ? today : ''
+            acctcd: res.acctcd,
+            acctnm: res.acctnm,
+            typeacct: typeacct,
+            typemgt: res.typemgt,
+            typesub: res.typesub,
+            typedc: res.typedc,
+            frgnyn: res.frgnyn,
+            titmgt: res.typemgtnm,
+            titsub: res.typesubnm,
+            typebugt: res.bugtcd,
+            docno3: typeacct === '100' ? '01' : '',
+            docno6: (typeacct === '100' || typeacct === '090') ? today : ''
         });
-        selectedRow.value = target.getData();
+        selectedRow.value = normalizeKeys(target.getData());
+        activeRowComponent.value = target;
     });
   } else if (type === 'MGT' || type === 'CARD') {
       const mgtgbn = type === 'CARD' ? '040' : selectedRow.value.typemgt;
       openHelp('MGT', (d) => {
-          if (type === 'CARD' && selectedRow.value.typeacct === '090') {
-              selectedRow.value.docno4 = d.mgtno;
+          const res = normalizeKeys(d);
+          if (type === 'CARD' && String(selectedRow.value.typeacct || '').trim() === '090') {
+              selectedRow.value.docno4 = res.mgtno;
           } else {
-              selectedRow.value.mgtno = d.mgtno;
-              selectedRow.value.mgtnm = d.mgtnm;
+              selectedRow.value.mgtno = res.mgtno;
+              selectedRow.value.mgtnm = res.mgtnm;
           }
           updateAutoRemark();
       }, { acctcd: selectedRow.value.acctcd, mgtgbn: mgtgbn });
-  } else if (type === 'SUB' || type === 'VAT_CUST') {
+  } else if (type === 'SUB' || type === 'vat_cust') {
       openHelp('CUST', (d) => {
-        if (type === 'SUB') { selectedRow.value.subcd = d.custcd; selectedRow.value.subnm = d.custnm }
-        else {
-            selectedRow.value.docno2 = d.busino || d.busino_T || d.custcd;
-            selectedRow.value.docno2nm = d.custnm;
-        }
+        const res = normalizeKeys(d);
+        // 💡 사용자 지시: CUSTCD/CUSTNM -> SUBCD/SUBNM 로 변환하여 로드
+        selectedRow.value.subcd = res.custcd;
+        selectedRow.value.subnm = res.custnm;
+
+        // 💡 코드값 동기화 (저장 시 custcd로 매핑됨)
+        selectedRow.value.custcd = res.custcd;
+        selectedRow.value.custnm = res.custnm;
+
+        // 부가세 거래처 필드도 동기화
+        selectedRow.value.docno2 = res.busino || res.custcd;
+        selectedRow.value.docno2nm = res.custnm;
+        selectedRow.value.docno9nm = res.custnm;
       });
   } else if (type === 'PRJ') {
       openHelp('PRJ', (d) => { selectedRow.value.prjcd = d.prjcd; selectedRow.value.prjnm = d.prjnm });
@@ -580,7 +698,7 @@ function handleOpenHelp(type: string, target?: any) {
   }
 }
 
-const calcVat = () => { if (selectedRow.value?.typeacct === '090') selectedRow.value.docno9 = Math.floor(Number(selectedRow.value.docno8 || 0) * 0.1); }
+const calcVat = () => { if (String(selectedRow.value?.typeacct || '').trim() === '090') selectedRow.value.docno9 = Math.floor(Number(selectedRow.value.docno8 || 0) * 0.1); }
 
 async function save() {
   if (balance.value !== 0) return vAlertError('차/대변 금액이 일치하지 않습니다.');
@@ -589,10 +707,23 @@ async function save() {
     const payload = {
       actkind: masterForm.slipno ? 'U' : 'A',
       MASTER: { ...masterForm, slipymd: masterForm.slipymd.replace(/-/g, ''), acctymd: masterForm.acctymd.replace(/-/g, '') },
-      DETAILS: grid2?.getData().map(d => ({
-        ...d, dbamt: d.dbcr === 'D' ? d.amount : 0, cramt: d.dbcr === 'C' ? d.amount : 0,
-        upkind: d.upkind || (masterForm.slipno ? 'U' : 'A')
-      }))
+      DETAILS: grid2?.getData().map(d => {
+        const item = { ...d };
+        // 💡 사용자 지시: 저장 시 UI의 subcd를 백엔드의 custcd로 역매핑
+        item.custcd = item.subcd;
+
+        // 💡 날짜 필드 원복 (YYYY-MM-DD -> YYYYMMDD)
+        ['docno6', 'docno7', 'payymd'].forEach(key => {
+            if (item[key]) item[key] = item[key].replace(/-/g, '');
+        });
+
+        return {
+            ...item,
+            dbamt: String(item.dbcr || '').trim().toUpperCase() === 'D' ? (item.amount || 0) : 0,
+            cramt: String(item.dbcr || '').trim().toUpperCase() === 'C' ? (item.amount || 0) : 0,
+            upkind: item.upkind || (masterForm.slipno ? 'U' : 'A')
+        };
+      })
     };
     await api.post('/api/hasl/HASL_110U_SAVE', payload); vAlert('저장되었습니다.'); searchSlips();
   } catch (e) { vAlertError('저장 실패'); }
@@ -607,11 +738,11 @@ const initialize = () => {
 const addRow = () => {
     const data = grid2?.getData() || [];
     const lastRow = data.length > 0 ? data[data.length - 1] : null;
-    const newDbcr = lastRow ? (lastRow.dbcr === 'D' ? 'C' : 'D') : 'D';
+    const newDbcr = lastRow ? (String(lastRow.dbcr || '').trim().toUpperCase() === 'D' ? 'C' : 'D') : 'D';
 
-    grid2?.addRow({
+    grid2?.addRow(normalizeKeys({
         dbcr: newDbcr, remark: masterForm.business, amount: 0, upkind: 'A', srowno: data.length + 1
-    }, false).then(row => {
+    }), false).then(row => {
         nextTick(() => { row.select(); grid2?.scrollToRow(row, "bottom", false); });
     });
 }
@@ -639,7 +770,14 @@ onMounted(async () => {
       name: i.unitnm || i.codenm || i.whnm || ''
     }));
   });
-  nextTick(() => { initGrids(); searchSlips(); });
+  nextTick(() => {
+    initGrids();
+    if (route.query.slipymd && route.query.slipno) {
+        handleIncomingSlip(String(route.query.slipymd), String(route.query.slipno));
+    } else {
+        searchSlips();
+    }
+  });
 })
 </script>
 

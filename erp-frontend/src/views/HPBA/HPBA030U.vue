@@ -50,7 +50,7 @@
                 </td>
                 <th class="text-center bg-light required">중분류코드</th>
                 <td>
-                  <input v-model="formData.bgrpcd" class="form-control text-center fw-bold" maxlength="3" :readonly="formData.actkind === 'u0'" placeholder="3자리" />
+                  <input v-model="formData.bgrpcd" class="form-control text-center fw-bold" maxlength="3" :readonly="formData.actkind === 'U0'" placeholder="3자리" />
                 </td>
                 <th class="text-center bg-light required">중분류명</th>
                 <td>
@@ -119,7 +119,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
 const formData = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   astkind: '', agrpcd: '', bgrpcd: '', bgrpnm: '', useyn: 'Y'
 })
 
@@ -193,7 +193,7 @@ async function fetchMiddleGroups() {
 }
 
 function fetchDetail(row: any) {
-  Object.assign(formData, { ...row, actkind: 'u0' });
+  Object.assign(formData, { ...row, actkind: 'U0' });
 }
 
 async function save() {
@@ -203,7 +203,7 @@ async function save() {
   try {
     await api.post('/api/hpba/HPBA_030U_STR', {
       ...formData,
-      actkind: formData.actkind === 'u0' ? 'u0' : 'a0',
+      actkind: formData.actkind === 'U0' ? 'U0' : 'A0',
       userid: authStore.userid
     });
     vAlert('처리되었습니다.');
@@ -213,7 +213,7 @@ async function save() {
 }
 
 const resetInputForm = () => {
-  formData.actkind = 's0';
+  formData.actkind = 'S0';
   formData.bgrpcd = ''; formData.bgrpnm = ''; formData.useyn = 'Y';
 }
 

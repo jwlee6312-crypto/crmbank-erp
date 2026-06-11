@@ -239,7 +239,7 @@ const onLineChange = async () => {
 const fetchMaster = async () => {
   if (!searchForm.custcd) return vAlertError('거래처를 선택하세요.');
   try {
-    const res = await api.post('/api/hpio/HPIO_350U_STR', { actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd });
+    const res = await api.post('/api/hpio/HPIO_350U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd });
     grid1?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
     grid2?.clearData(); selectedProduct.itemcd = ''; selectedProduct.itemnm = '';
     vAlert('조회되었습니다.');
@@ -250,7 +250,7 @@ const fetchDetails = async (row: any) => {
   selectedProduct.itemcd = row.itemcd; selectedProduct.itemnm = row.itemnm;
   if (!row.itemcd || row._status === '입력') { grid2?.clearData(); return; }
   try {
-    const res = await api.post('/api/hpio/HPIO_351U_STR', { actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, itemcd: row.itemcd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd });
+    const res = await api.post('/api/hpio/HPIO_351U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, itemcd: row.itemcd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd });
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
   } catch (e) {}
 }
@@ -264,11 +264,11 @@ const saveData = async () => {
 
   try {
     for (const p of prods) {
-      const actkind = p._status === '입력' ? 'a0' : (p._status === '삭제' ? 'd0' : 'u0')
+      const actkind = p._status === '입력' ? 'A0' : (p._status === '삭제' ? 'D0' : 'U0')
       await api.post('/api/hpio/HPIO_350U_STR', { ...p, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd, progcd: masterInfo.progcd, whcd: masterInfo.whcd, prodcd: '200', userid: authStore.userid });
     }
     for (const m of mats) {
-      const actkind = m._status === '입력' ? 'a0' : (m._status === '삭제' ? 'd0' : 'u0')
+      const actkind = m._status === '입력' ? 'A0' : (m._status === '삭제' ? 'D0' : 'U0')
       await api.post('/api/hpio/HPIO_351U_STR', { ...m, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, itemcd: selectedProduct.itemcd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd, progcd: masterInfo.progcd, whcd: masterInfo.whcd, prodcd: '200', userid: authStore.userid });
     }
     vAlert('저장되었습니다.'); fetchMaster();

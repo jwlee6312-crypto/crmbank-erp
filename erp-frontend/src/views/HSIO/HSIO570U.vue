@@ -154,10 +154,10 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const searchParam = reactive({ fromdt: firstDay, todt: today, deptcd: authStore.deptcd, deptnm: authStore.deptnm })
 const masterData = reactive<any>({
-  actkind: 's0',
+  actkind: 'S0',
   ioym: today.replace(/-/g, '').substring(0, 6), iono: '0000',
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  ioymd: today, whcd: '', remark: '', sts: 'n'
+  ioymd: today, whcd: '', remark: '', sts: 'N'
 })
 
 const displayIoNo = computed(() => (!masterData.iono || masterData.iono === '0000') ? '' : `${masterData.ioym}-${masterData.iono}`)
@@ -205,7 +205,7 @@ const initGrids = () => {
       { title: "수량", field: "ioqty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
       { title: "단가", field: "price", width: 110, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
       { title: "금액", field: "ioamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "유형", field: "iotypenm", width: 120, cellClick: (e, cell) => handleOpenHelp('IOTYPE', cell.getRow()) },
+      { title: "유형", field: "iotypenm", width: 120, cellClick: (e, cell) => handleOpenHelp('iotype', cell.getRow()) },
       { title: "사용부서", field: "usedeptnm", width: 120, cellClick: (e, cell) => handleOpenHelp('IDEPT', cell.getRow()) },
       { title: "삭제", width: 40, hozAlign: "center", formatter: (c) => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
     ]
@@ -221,7 +221,7 @@ const calcRow = (row: any) => {
 async function search() {
   try {
     const res = await api.post('/api/hsio/HSIO_570U_STR', {
-        actkind: 's1', gubun: '200',
+        actkind: 'S1', gubun: '200',
         deptcd: searchParam.deptcd,
         frymd: searchParam.fromdt.replace(/-/g, ''), toymd: searchParam.todt.replace(/-/g, '')
     });
@@ -234,7 +234,7 @@ async function fetchDetail(row: any) {
   const fYmd = (d: string) => d && d.length === 8 ? `${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6, 8)}` : today;
   Object.assign(masterData, { ...row, ioymd: fYmd(row.ioymd) });
   try {
-    const res = await api.post('/api/hsio/HSIO_571U_STR', { actkind: 's', gubun: '200', ioym: row.ioym, iono: row.iono });
+    const res = await api.post('/api/hsio/HSIO_571U_STR', { actkind: 'S', gubun: '200', ioym: row.ioym, iono: row.iono });
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
   } catch (e) { vAlertError('상세 로드 실패'); }
 }
@@ -247,14 +247,14 @@ async function save() {
   if (!details.length && masterData.iono === '0000') return vAlertError('항목을 추가하세요.');
 
   try {
-    const mst = { ...masterData, actkind: masterData.iono === '0000' ? 'a' : 'u', ioymd: masterData.ioymd.replace(/-/g, ''), gubun: '200', userid: authStore.userid };
+    const mst = { ...masterData, actkind: masterData.iono === '0000' ? 'A' : 'U', ioymd: masterData.ioymd.replace(/-/g, ''), gubun: '200', userid: authStore.userid };
     const mRes = await api.post('/api/hsio/HSIO_570U_STR', mst);
 
     if (mRes.data?.length) {
       const ioym = mRes.data[0].ioym; const iono = mRes.data[0].iono;
       for (const item of details) {
         await api.post('/api/hsio/HSIO_571U_STR', {
-          ...item, actkind: item._status === '입력' ? 'a' : (item._status === '삭제' ? 'd' : 'u'),
+          ...item, actkind: item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U'),
           gubun: '200', ioym, iono, deptcd: masterData.deptcd, whcd: masterData.whcd, ioymd: mst.ioymd, userid: authStore.userid
         });
       }
@@ -267,7 +267,7 @@ const handleOpenHelp = (type: string, target?: any) => {
   if (type === 'DEPT_SCH') openHelp('DEPT', (d) => { searchParam.deptcd = d.deptcd; searchParam.deptnm = d.deptnm });
   else if (type === 'DEPT') openHelp('DEPT', (d) => { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm });
   else if (type === 'ITEM') openHelp('ITEM', (d) => target.update({ itemcd: d.itemcd, itemnm: d.itemnm, unit: d.unit || d.unitnm, price: d.outcost || 0, ioqty: 1, ioamt: d.outcost || 0, _status: '입력', _state: 'NEW' }));
-  else if (type === 'IOTYPE') openHelp('COMMON', (d) => target.update({ iotype: d.code, iotypenm: d.cdnm }), { gbncd: '130' });
+  else if (type === 'iotype') openHelp('COMMON', (d) => target.update({ iotype: d.code, iotypenm: d.cdnm }), { gbncd: '130' });
   else if (type === 'IDEPT') openHelp('DEPT', (d) => target.update({ usedeptcd: d.deptcd, usedeptnm: d.deptnm }));
 }
 
@@ -277,7 +277,7 @@ const addRow = () => grid2?.addRow({ ioqty: 0, price: 0, ioamt: 0, _status: '입
 
 function initialize() {
   resetForm(masterData);
-  Object.assign(masterData, { cmpycd: authStore.cmpycd, iono: '0000', ioymd: today, ioym: today.replace(/-/g, '').substring(0, 6), deptcd: authStore.deptcd, deptnm: authStore.deptnm, sts: 'n' });
+  Object.assign(masterData, { cmpycd: authStore.cmpycd, iono: '0000', ioymd: today, ioym: today.replace(/-/g, '').substring(0, 6), deptcd: authStore.deptcd, deptnm: authStore.deptnm, sts: 'N' });
   if (grid1) grid1.setData([]);
   if (grid2) grid2.setData([]);
 }
@@ -285,7 +285,7 @@ function initialize() {
 async function handleFullDelete() {
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_570U_STR', { ...masterData, actkind: 'd', gubun: '200' });
+    await api.post('/api/hsio/HSIO_570U_STR', { ...masterData, actkind: 'D', gubun: '200' });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }

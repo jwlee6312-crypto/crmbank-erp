@@ -236,7 +236,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 // [1] 데이터 모델링 (HSOD100U 기준 소문자 원칙)
 const searchForm = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, fileno: '' })
 const formData = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd, fileno: '', deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+  actkind: 'S0', cmpycd: authStore.cmpycd, fileno: '', deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   issymd: today, custcd: '', custnm: '', nacd: '',
   currcd: '', frgnrate: 1350, pricond: '', paycond: '', imptgbn: '',
   shipport: '', arvport: '', bigo: '', wonamt: 0, frgnamt: 0, lcamt: 0, xtamt: 0, costsum: 0
@@ -331,7 +331,7 @@ const handleRowAction = (row: any) => {
 
 async function search() {
   try {
-    const res = await api.post('/api/hsip/HSIP_100U_STR', { ...searchForm, actkind: 's1' });
+    const res = await api.post('/api/hsip/HSIP_100U_STR', { ...searchForm, actkind: 'S1' });
     const list = res.data?.data || res.data || [];
     grid1?.setData(list); vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }
@@ -339,11 +339,11 @@ async function search() {
 
 async function fetchDetail(fileNo: string) {
   try {
-    const res = await api.post('/api/hsip/HSIP_100U_STR', { fileno: fileNo, actkind: 's0' });
+    const res = await api.post('/api/hsip/HSIP_100U_STR', { fileno: fileNo, actkind: 'S0' });
     if (res.data?.data?.length) {
       Object.assign(formData, res.data.data[0]);
       // 품목 상세 조회
-      const itemRes = await api.post('/api/hsip/HSIP_101U_STR', { fileno: fileNo, actkind: 's0' });
+      const itemRes = await api.post('/api/hsip/HSIP_101U_STR', { fileno: fileNo, actkind: 'S0' });
       // itemRes.data.data를 사용하여 그리드 세팅
       mainGrid?.setData((itemRes.data.data || []).map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
       updateTotals();
@@ -357,13 +357,13 @@ async function save() {
   if (!details.length && formData.fileno === '0000') return vAlertError('품목을 추가하세요.');
 
   try {
-    const mst = { ...formData, actkind: formData.fileno === '0000' || !formData.fileno ? 'a0' : 'u0', issymd: formData.issymd.replace(/-/g, ''), userid: authStore.userid };
+    const mst = { ...formData, actkind: formData.fileno === '0000' || !formData.fileno ? 'A0' : 'U0', issymd: formData.issymd.replace(/-/g, ''), userid: authStore.userid };
     const resM = await api.post('/api/hsip/HSIP_100U_STR', mst);
     const mstData = resM.data?.data?.[0] || resM.data?.[0];
     if (mstData) {
       const newFileNo = mstData.fileno;
       for (const item of details) {
-        await api.post('/api/hsip/HSIP_101U_STR', { ...item, actkind: item._status === '입력' ? 'a0' : (item._status === '삭제' ? 'd0' : 'u0'), fileno: newFileNo, userid: authStore.userid });
+        await api.post('/api/hsip/HSIP_101U_STR', { ...item, actkind: item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0'), fileno: newFileNo, userid: authStore.userid });
       }
       vAlert('저장되었습니다.'); search(); fetchDetail(newFileNo);
     }
@@ -381,7 +381,7 @@ function initialize() {
 async function handleFullDelete() {
   if (!confirm('정말 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsip/HSIP_100U_STR', { fileno: formData.fileno, actkind: 'd0' });
+    await api.post('/api/hsip/HSIP_100U_STR', { fileno: formData.fileno, actkind: 'D0' });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }
@@ -400,8 +400,8 @@ onMounted(async () => {
             });
             const list = res.data?.data || res.data || [];
             comboData[target] = list.map((i: any) => ({
-                code: i.code || i.CODE || i.codecd || i.CODECD || '',
-                cdnm: i.codenm || i.CODENM || i.cdnm || i.CDNM || ''
+                code: i.code || i.code || i.codecd || i.codecd || '',
+                cdnm: i.codenm || i.codenm || i.cdnm || i.CDNM || ''
             }));
         } catch (e) { console.error(`Combo load error (${target}):`, e); }
     };

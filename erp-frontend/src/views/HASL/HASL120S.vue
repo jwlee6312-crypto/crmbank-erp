@@ -103,7 +103,9 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useRouter } from 'vue-router'
+import { addDynamicRoute as add_dynamic_route } from '@/router/dynamicRoute'
 import Modal from '@/components/Modal.vue'
+import AppAlert from '@/components/AppAlert.vue'
 import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
@@ -179,7 +181,7 @@ function openHelp(type: string) {
 	} else if (type === 'DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm_h },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: searchForm.deptnm_h },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { searchForm.deptcd_h = d.deptcd; searchForm.deptnm_h = d.deptnm }
 		})
@@ -187,25 +189,61 @@ function openHelp(type: string) {
 	modalVisible.value = true
 }
 
+const go_to_slip = (slipkey: string) => {
+	if (!slipkey) return;
+	let ymd = ""; let no = "";
+
+	// 💡 전표번호 (20260601-001) 분리 처리
+	if (slipkey.includes('-')) {
+		const parts = slipkey.split('-');
+		ymd = parts[0]; no = parts[1];
+	} else if (slipkey.length >= 11) {
+		ymd = slipkey.substring(0, 8); no = slipkey.substring(8);
+	} else return;
+
+	// 💡 시스템 라우팅 규칙(dynamicRoute.ts)에 따라 경로는 '/HASL110U'입니다.
+	const pgmid = 'HASL110U'
+	add_dynamic_route(pgmid, '경리전표등록', 'HASL')
+
+	router.push({
+		path: `/${pgmid}`,
+		query: {
+			slipymd: ymd,
+			slipno: no,
+			deptcd: searchForm.deptcd_h
+		}
+	})
+}
+
 onMounted(() => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
+			pagination: "local",
+			paginationSize: 50,
+			paginationSizeSelector: [20, 50, 100, 500],
+			paginationCounter: "rows",
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{
-					title: "전표번호", field: "slipno", width: 140, hozAlign: "center",
+					title: "전표번호", field: "slipno", width: 150, cssClass: "fw-bold", hozAlign: "center",
 					formatter: (cell) => {
-						const val = cell.getValue() || ''
-						return `<span class="text-primary text-decoration-underline cursor-pointer fw-bold">${val}</span>`
+						const value = cell.getValue();
+						if (!value) return "";
+						// 💡 중복 방지: 이전 행과 전표번호가 같으면 표시 안 함
+						const prevrow = cell.getRow().getPrevRow();
+						if (prevrow && prevrow.getData().slipno === value) {
+							return "";
+						}
+						return `<span class="text-primary cursor-pointer text-decoration-underline">${value}</span>`;
 					},
 					cellClick: (e, cell) => {
-						const d = cell.getData()
-						if (d.acctymd && d.slipno) goSlipDetail(d.acctymd, d.slipno)
+						const value = cell.getData().slipno; // 표시 안 된 행이라도 실제 데이터에서 가져옴
+						if(value) go_to_slip(String(value));
 					}
 				},
-				{ title: "행", field: "srowno", width: 40, hozAlign: "center" },
+				{ title: "행번호", field: "srowno", width: 65, hozAlign: "center" },
 				{ title: "계정코드", field: "acctcd", width: 80, hozAlign: "center" },
 				{ title: "계정명", field: "acctnm", width: 150, hozAlign: "left" },
 				{ title: "적요", field: "descnm", minWidth: 200, hozAlign: "left" },

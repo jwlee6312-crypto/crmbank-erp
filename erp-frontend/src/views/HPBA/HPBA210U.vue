@@ -42,7 +42,7 @@
                 <th class="required">생산라인</th>
                 <td>
                   <select v-model="searchData.linecd" class="form-select" style="width: 150px;" @change="onLineChange">
-                    <option v-for="opt in lineOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                    <option v-for="opt in lineOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                   </select>
                 </td>
                 <th class="required">재고자산</th>
@@ -221,7 +221,7 @@ const modalVisible = ref(false); const modalProps = reactive<ModalProps>({ title
 function openHelp(type: string, cell?: any) {
   let config: any = {}
   if (type === 'ITEM') {
-    config = { title: '제품 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'I1', cmpycd: authStore.cmpycd, SELGBN: searchData.astkind, linecd: searchData.linecd }, columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '제품명', field: 'itemnm', width: 250 }],
+    config = { title: '제품 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'I1', cmpycd: authStore.cmpycd, selgbn: searchData.astkind, linecd: searchData.linecd }, columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '제품명', field: 'itemnm', width: 250 }],
         onConfirm: (d: any) => { Object.assign(searchData, { itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit }); search() }
     }
   } else if (type === 'GRID_MAT') {
@@ -229,8 +229,8 @@ function openHelp(type: string, cell?: any) {
         onConfirm: (d: any) => { cell.getRow().update({ mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit }) }
     }
   } else if (type === 'GRID_PROG') {
-    config = { title: '이전공정 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'G0', linecd: searchData.linecd, cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'CODE', width: 80 }, { title: '공정명', field: 'cdnm', width: 150 }],
-        onConfirm: (d: any) => { cell.getRow().update({ BEFPROG: d.CODE, bprognm: d.cdnm }) }
+    config = { title: '이전공정 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'G0', linecd: searchData.linecd, cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'code', width: 80 }, { title: '공정명', field: 'cdnm', width: 150 }],
+        onConfirm: (d: any) => { cell.getRow().update({ BEFPROG: d.code, bprognm: d.cdnm }) }
     }
   }
   Object.assign(modalProps, config); modalVisible.value = true

@@ -35,6 +35,10 @@
         #{lotno}, #{ordym}, #{ordno}, #{updemp}
     </select>
 
+    <select id="HPIO_360S_STR" resultType="map">
+        exec hpio_360s_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{proymd}
+    </select>
+
     <!-- 제품입고 -->
     <select id="HPIO_400U_STR" resultType="map">
         exec hpio_400u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{proymdfr},

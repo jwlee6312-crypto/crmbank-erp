@@ -164,7 +164,7 @@ const handleExecute = async () => {
         else if (targetForm.useyn2 === 'Y') jagbn = '01'
 
 		await api.post('/api/hfmf/FMF3010U_STR', {
-            cmpycd: String(authStore.cmpycd), actkind: 'A0', ym: String(ym), JAGBN: String(jagbn), userid: String(authStore.userid)
+            cmpycd: String(authStore.cmpycd), actkind: 'A0', ym: String(ym), jagbn: String(jagbn), userid: String(authStore.userid)
 		})
 
 		vAlert('원가 생성 작업이 완료되었습니다.')

@@ -37,15 +37,15 @@
               <tr>
                 <th class="required">코드구분</th>
                 <td>
-                  <select v-model="formData.CDGBN" class="form-select form-select-sm" style="width: 180px;">
-                    <option v-for="opt in groupOptions" :key="opt.CODE" :value="opt.CODE">
-                      [{{ opt.CODE }}] {{ opt.cdnm }}
+                  <select v-model="formData.cdgbn" class="form-select form-select-sm" style="width: 180px;">
+                    <option v-for="opt in groupOptions" :key="opt.code" :value="opt.code">
+                      [{{ opt.code }}] {{ opt.cdnm }}
                     </option>
                   </select>
                 </td>
                 <th class="required">코&nbsp;&nbsp;&nbsp;&nbsp;드</th>
                 <td>
-                  <input v-model="formData.CODE" type="text" class="form-control form-control-sm" style="width: 100px;" maxlength="10" :readonly="formData.actkind === 'U0'" />
+                  <input v-model="formData.code" type="text" class="form-control form-control-sm" style="width: 100px;" maxlength="10" :readonly="formData.actkind === 'U0'" />
                 </td>
                 <th class="required">코&nbsp;드&nbsp;명</th>
                 <td>
@@ -123,15 +123,15 @@ const { resetForm } = useFormReset()
 // 1. 상태 관리
 const formData = reactive({
   actkind: 'A0',
-  CDGBN: '010',
-  CODE: '',
+  cdgbn: '010',
+  code: '',
   cdnm: '',
   remark: '',
   dspord: 0,
   useyn: 'Y'
 })
 
-const selectedGroup = reactive({ CODE: '010', cdnm: '' })
+const selectedGroup = reactive({ code: '010', cdnm: '' })
 const groupOptions = ref<any[]>([])
 
 const groupGridElement = ref<HTMLElement | null>(null)
@@ -155,10 +155,10 @@ const initGrids = () => {
 
     groupGrid.on("rowClick", (e, row) => {
         const data = row.getData()
-        Object.assign(selectedGroup, { CODE: data.CODE, cdnm: data.cdnm })
-        formData.CDGBN = data.CODE
-        fetchCodes(data.CODE)
-        resetInputForm(data.CODE)
+        Object.assign(selectedGroup, { code: data.code, cdnm: data.cdnm })
+        formData.cdgbn = data.code
+        fetchCodes(data.code)
+        resetInputForm(data.code)
     })
   }
 
@@ -169,7 +169,7 @@ const initGrids = () => {
       placeholder: "그룹을 선택하세요.",
       selectable: 1,
       columns: [
-        { title: "코드", field: "CODE", width: 100, hozAlign: "center" },
+        { title: "코드", field: "code", width: 100, hozAlign: "center" },
         { title: "코 드 명", field: "cdnm", minWidth: 200, cssClass: "fw-bold" },
         { title: "비 고", field: "remark", minWidth: 200 },
         { title: "순서", field: "dspord", width: 80, hozAlign: "center" },
@@ -199,7 +199,7 @@ const fetchCodes = async (groupCd: string) => {
     const res = await api.post('/api/hpba/HPBA_900U_STR', {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
-      CDGBN: groupCd
+      cdgbn: groupCd
     })
     codeGrid?.setData(res.data)
     itemCount.value = res.data.length
@@ -207,7 +207,7 @@ const fetchCodes = async (groupCd: string) => {
 }
 
 const saveData = async () => {
-  if (!formData.CODE || !formData.cdnm) {
+  if (!formData.code || !formData.cdnm) {
     return vAlertError('코드와 코드명은 필수 입력 사항입니다.')
   }
 
@@ -221,15 +221,15 @@ const saveData = async () => {
       userid: authStore.userid
     })
     vAlert('정상적으로 처리되었습니다.')
-    fetchCodes(formData.CDGBN)
-    resetInputForm(formData.CDGBN)
+    fetchCodes(formData.cdgbn)
+    resetInputForm(formData.cdgbn)
   } catch (e) { vAlertError('저장 중 오류 발생') }
 }
 
 const resetInputForm = (groupCd: string) => {
     formData.actkind = 'A0'
-    formData.CDGBN = groupCd
-    formData.CODE = ''
+    formData.cdgbn = groupCd
+    formData.code = ''
     formData.cdnm = ''
     formData.remark = ''
     formData.dspord = 0
@@ -238,8 +238,8 @@ const resetInputForm = (groupCd: string) => {
 
 const initialize = () => {
   resetForm(formData)
-  Object.assign(formData, { actkind: 'A0', CDGBN: '010', useyn: 'Y', dspord: 0 })
-  Object.assign(selectedGroup, { CODE: '010', cdnm: '' })
+  Object.assign(formData, { actkind: 'A0', cdgbn: '010', useyn: 'Y', dspord: 0 })
+  Object.assign(selectedGroup, { code: '010', cdnm: '' })
   groupGrid?.clearData()
   codeGrid?.clearData()
   itemCount.value = 0

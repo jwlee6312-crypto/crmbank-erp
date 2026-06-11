@@ -50,16 +50,16 @@
 									<span class="erp-label">출고창고</span>
 									<select v-model="searchForm.whcd" class="form-select">
 										<option value="000">전체</option>
-										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</div>
 							</td>
 							<td>
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label">출고유형</span>
-									<select v-model="searchForm.IOTYPE" class="form-select">
+									<select v-model="searchForm.iotype" class="form-select">
 										<option value="000">전체</option>
-										<option v-for="opt in ioTypeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in ioTypeOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</div>
 							</td>
@@ -128,7 +128,7 @@ const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const searchForm = reactive({
-	whcd: '000', IOTYPE: '000',
+	whcd: '000', iotype: '000',
 	frymd: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
 	toymd: new Date().toISOString().substring(0, 10),
 	custcd: '', custnm: '', itemcd: '', itemnm: ''
@@ -151,7 +151,7 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm);
-	searchForm.whcd = '000'; searchForm.IOTYPE = '000';
+	searchForm.whcd = '000'; searchForm.iotype = '000';
 	searchForm.frymd = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10);
 	searchForm.toymd = new Date().toISOString().substring(0, 10);
 	mainGrid?.clearData();
@@ -176,9 +176,9 @@ function handleOpenHelp(type: string) {
 onMounted(async () => {
 	try {
 		const resWh = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'W0', cmpycd: authStore.cmpycd })
-		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.whcd, cdnm: i.cdnm || i.whnm }))
+		whOptions.value = resWh.data.map((i: any) => ({ code: i.code || i.whcd, cdnm: i.cdnm || i.whnm }))
 		const resType = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '130' })
-		ioTypeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE || i.codecd, cdnm: i.cdnm || i.codenm }))
+		ioTypeOptions.value = resType.data.map((i: any) => ({ code: i.code || i.codecd, cdnm: i.cdnm || i.codenm }))
 	} catch (e) {}
 
 	if (mainGridRef.value) {

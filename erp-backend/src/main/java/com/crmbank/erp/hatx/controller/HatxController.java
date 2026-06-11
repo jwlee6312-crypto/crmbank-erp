@@ -81,6 +81,15 @@ public class HatxController {
     }
 
     /**
+     * 신용카드매출전표등발행금액집계표 조회
+     */
+    @PostMapping("/HATX_140S_STR")
+    public List<Map<String, Object>> executeHatx140S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return hatxMapper.HATX_140S_STR(params);
+    }
+
+    /**
      * 수출실적명세서 조회
      */
     @PostMapping("/HATX_600S_STR")

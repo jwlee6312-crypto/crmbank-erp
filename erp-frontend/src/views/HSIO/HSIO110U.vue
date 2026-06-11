@@ -164,7 +164,7 @@ const poGridRef = ref<HTMLDivElement | null>(null); const itemGridRef = ref<HTML
 let poGrid: Tabulator | null = null; let itemGrid: Tabulator | null = null
 
 const totals = computed(() => {
-  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'y' || r.procyn === 'Y') || []
+  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'Y' || r.procyn === 'Y') || []
   const amt = items.reduce((acc, cur: any) => acc + (Number(cur.jsanamt || cur.ioamt) || 0), 0)
   const vat = items.reduce((acc, cur: any) => acc + (Number(cur.jsanvat || cur.iovat) || 0), 0)
   return { amt, vat, sum: amt + vat }
@@ -211,16 +211,16 @@ async function fetchDetail(row: any) {
  * 🚀 저장 로직 (ASP 패턴: 마스터 채번 -> 상세 루프)
  */
 async function save() {
-  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'y' || r.procyn === 'Y') || []
+  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'Y' || r.procyn === 'Y') || []
   if (!items.length) return vAlertError('정산 처리할 품목을 선택하세요.')
   if (!formData.taxunit) return vAlertError('사업장을 선택하세요.')
 
   if (!confirm('정산 작업을 하시겠습니까?')) return
 
   try {
-    // 🚀 Step 1. 정산 MASTER 생성 (actkind: 'a0')
+    // 🚀 Step 1. 정산 MASTER 생성 (actkind: 'A0')
     const masterParams = {
-      actkind: 'a0',
+      actkind: 'A0',
       cmpycd: authStore.cmpycd,
       iogbn: '100',
       ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
@@ -247,10 +247,10 @@ async function save() {
         throw new Error(keyJsanno || '마스터 정산 처리 중 오류가 발생했습니다.')
     }
 
-    // 🚀 Step 2. 상세 내역 루프 저장 (actkind: 'u0')
+    // 🚀 Step 2. 상세 내역 루프 저장 (actkind: 'U0')
     for (const item of items) {
       const detailParams = {
-        actkind: 'u0',
+        actkind: 'U0',
         cmpycd: authStore.cmpycd,
         iogbn: '100',
         ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
@@ -283,8 +283,8 @@ async function save() {
 
 const toggleAllRows = () => {
   const rows = itemGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'y' || r.getData().procyn === 'Y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'n' : 'y' }))
+  const allSelected = rows.every(r => r.getData().procyn === 'Y' || r.getData().procyn === 'Y')
+  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
 }
 
 function initialize() {

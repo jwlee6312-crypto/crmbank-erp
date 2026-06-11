@@ -118,7 +118,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
 const masterData = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   linecd: '010', linenm: '통합라인',
   progcd: '', prognm: '',
   ioym: today.replace(/-/g, '').substring(0, 6), iono: '',
@@ -151,7 +151,7 @@ const initGrids = () => {
       }},
       { title: "코드", field: "itemcd", width: 110, hozAlign: "center" },
       { title: "재공품명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary', cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow()) },
-      { title: "유형", field: "iotypenm", width: 120, cellClick: (e, cell) => handleOpenHelp('IOTYPE', cell.getRow()) },
+      { title: "유형", field: "iotypenm", width: 120, cellClick: (e, cell) => handleOpenHelp('iotype', cell.getRow()) },
       { title: "규격", field: "itsize", width: 150 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
       { title: "수량", field: "ioqty", width: 100, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
@@ -222,8 +222,8 @@ const handleOpenHelp = (type: string, row: any) => {
     openHelp('PROG', (d) => { masterData.progcd = d.code; masterData.prognm = d.cdnm }, { linecd: masterData.linecd });
   } else if (type === 'ITEM') {
     openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' }), { codegbn: '210' });
-  } else if (type === 'IOTYPE') {
-    openHelp('IOTYPE', (d) => row.update({ iotype: d.code, iotypenm: d.cdnm }), { cmpycd: authStore.cmpycd });
+  } else if (type === 'iotype') {
+    openHelp('iotype', (d) => row.update({ iotype: d.code, iotypenm: d.cdnm }), { cmpycd: authStore.cmpycd });
   } else if (type === 'IDEPT') {
     openHelp('DEPT', (d) => row.update({ ideptcd: d.deptcd, ideptnm: d.deptnm }));
   } else if (type === 'SCUST') {

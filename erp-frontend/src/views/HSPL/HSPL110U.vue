@@ -2,64 +2,51 @@
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
   <div class="erp-container">
-    <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-        <i class="bi bi-graph-up-arrow me-2 text-primary" style="font-size: 18px;"></i>
-        매출계획 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        <span class="text-primary fw-bolder">품목그룹별판매계획 (HSPL110U)</span>
+    <!-- 🚀 1. 상단 액션 바: 고정 -->
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-1 px-3 sticky-top shadow-sm flex-shrink-0">
+      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 13px;">
+        <i class="bi bi-graph-up-arrow me-2 text-primary"></i>
+        매출계획 > <span class="text-primary fw-bolder">품목그룹별판매계획 (HSPL110U)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="search">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
-        <button class="btn-erp btn-outline-secondary" @click="print('Print')">인쇄</button>
-        <button class="btn-erp btn-outline-success" @click="print('Excel')">엑셀</button>
+        <button class="btn-erp btn-print" @click="print('Print')">인쇄</button>
+        <button class="btn-erp btn-excel" @click="print('Excel')">엑셀</button>
       </div>
     </div>
 
-    <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
-      <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
-        <div class="card-body p-0">
-          <table class="erp-table-full border-0">
-            <tbody>
-              <tr>
-                <th class="required" style="width: 100px;">연&nbsp;&nbsp;&nbsp;&nbsp;도</th>
-                <td style="width: 150px;">
-                  <div class="d-flex align-items-center gap-1">
-                    <input v-model="searchData.yyyy" type="number" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" />
-                    <span class="small">년</span>
-                  </div>
-                </td>
-                <th class="required">영업부서</th>
-                <td style="width: 250px;">
-                  <div class="input-group input-group-sm">
-                    <input v-model="searchData.deptcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.deptnm" type="text" class="form-control border-start-0" placeholder="부서 선택" @keyup.enter="handleOpenHelp('DEPT')" />
-                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
-                  </div>
-                </td>
-                <th class="required">영업사원</th>
-                <td style="width: 220px;">
-                  <div class="input-group input-group-sm">
-                    <input v-model="searchData.userid" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.usernm" type="text" class="form-control border-start-0" placeholder="사원 선택" @keyup.enter="handleOpenHelp('EMP')" />
-                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('EMP')"><i class="bi bi-search"></i></button>
-                  </div>
-                </td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
+    <!-- 💡 2. 메인 컨텐츠 영역: flex-grow-1 및 overflow-hidden으로 레이아웃 고정 -->
+    <div class="flex-grow-1 d-flex flex-column gap-2 p-2 overflow-hidden">
+      <!-- 🅰️ 조회 조건 영역: 고정 -->
+      <div class="card border shadow-sm flex-shrink-0">
+        <div class="card-body p-1 bg-light-subtle">
+          <div class="d-flex align-items-center gap-3">
+            <div class="input-group input-group-sm flex-nowrap" style="width: 140px;">
+              <span class="input-group-text fw-bold border-0 bg-transparent">연도</span>
+              <input v-model="searchData.yyyy" type="number" class="form-control border-0 bg-white text-center fw-bold" placeholder="yyyy" />
+            </div>
+            <div class="input-group input-group-sm flex-nowrap" style="width: 250px;">
+              <span class="input-group-text fw-bold border-0 bg-transparent">영업부서</span>
+              <input v-model="searchData.deptcd" type="text" class="form-control border-0 bg-light text-center fw-bold" style="max-width: 60px;" readonly />
+              <input v-model="searchData.deptnm" type="text" class="form-control border-0 bg-white" placeholder="부서 선택" @keyup.enter="handleOpenHelp('DEPT')" />
+              <button class="btn btn-dark btn-sm" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
+            </div>
+            <div class="input-group input-group-sm flex-nowrap" style="width: 220px;">
+              <span class="input-group-text fw-bold border-0 bg-transparent">영업사원</span>
+              <input v-model="searchData.userid" type="text" class="form-control border-0 bg-light text-center fw-bold" style="max-width: 60px;" readonly />
+              <input v-model="searchData.usernm" type="text" class="form-control border-0 bg-white" placeholder="사원 선택" @keyup.enter="handleOpenHelp('EMP')" />
+              <button class="btn btn-dark btn-sm" @click="handleOpenHelp('EMP')"><i class="bi bi-search"></i></button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- 🅱️ 데이터 그리드 영역 -->
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
-          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 그룹별 월간 계획</span>
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 그룹별 월간 계획 ({{ activeItemCount }} 건)</span>
           <div class="d-flex gap-2 align-items-center">
             <span class="small text-muted">전체선택</span>
             <input type="checkbox" v-model="allSelected" @change="toggleAllSelection" class="form-check-input" />
@@ -106,6 +93,7 @@ const searchData = reactive({
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
 const allSelected = ref(false)
+const activeItemCount = ref(0)
 
 // 2. 그리드 초기화
 const initGrid = () => {
@@ -114,7 +102,7 @@ const initGrid = () => {
     layout: "fitColumns",
     height: "100%",
     placeholder: "조회된 데이터가 없습니다.",
-    columnDefaults: { headerSort: false },
+    columnDefaults: { headerSort: false, headerHozAlign: "center" },
     columns: [
       {
         title: "선택", field: "procyn", width: 60, hozAlign: "center",
@@ -122,11 +110,11 @@ const initGrid = () => {
         formatterParams: { crossElement: false },
         editor: true
       },
-      { title: "구분", field: "astkindNM", width: 120, hozAlign: "center" },
-      { title: "대분류", field: "Agrpnm", width: 140 },
-      { title: "중분류", field: "Bgrpnm", width: 140 },
+      { title: "구분", field: "astkindnm", width: 120, hozAlign: "center" },
+      { title: "대분류", field: "agrpnm", width: 140, hozAlign: "left" },
+      { title: "중분류", field: "bgrpnm", width: 140, hozAlign: "left" },
       {
-        title: "합계", field: "PLAnsum", width: 120, hozAlign: "right",
+        title: "합계", field: "plansum", width: 120, hozAlign: "right",
         cssClass: "bg-light-blue fw-bold",
         formatter: (cell) => Number(cell.getValue() || 0).toLocaleString()
       },
@@ -134,7 +122,7 @@ const initGrid = () => {
         const month = String(i + 1).padStart(2, '0')
         return {
           title: `${month}월`,
-          field: .mm${month}`,
+          field: `mm${month}`,
           width: 90,
           hozAlign: "right",
           editor: "number",
@@ -152,9 +140,9 @@ const initGrid = () => {
 
     let rowSum = 0
     for(let i=1; i<=12; i++) {
-        rowSum += Number(data[.mm${String(i).padStart(2, '0')}`]) || 0
+        rowSum += Number(data[`mm${String(i).padStart(2, '0')}`]) || 0
     }
-    row.update({ PLAnsum: rowSum })
+    row.update({ plansum: rowSum })
   })
 }
 
@@ -176,12 +164,13 @@ async function search() {
       userid: searchData.userid
     })
     if (grid.value) {
-      const mapped = res.data.map((i: any) => {
+      const mapped = (res.data || []).map((i: any) => {
           let rowSum = 0
-          for(let m=1; m<=12; m++) rowSum += Number(i[.mm${String(m).padStart(2, '0')}`]) || 0
-          return { ...i, procyn: null, PLAnsum: rowSum }
+          for(let m=1; m<=12; m++) rowSum += Number(i[`mm${String(m).padStart(2, '0')}`]) || 0
+          return { ...i, procyn: null, plansum: rowSum }
       })
       grid.value.setData(mapped)
+      activeItemCount.value = mapped.length
     }
   } catch (e) { vAlertError('조회 실패') }
 }
@@ -201,7 +190,7 @@ async function save() {
         yyyy: searchData.yyyy,
         deptcd: searchData.deptcd,
         userid: searchData.userid,
-        UPD_USER: authStore.userid
+        updemp: authStore.userid
       })
     }
     vAlert('정상적으로 저장되었습니다.')
@@ -220,6 +209,7 @@ function initialize() {
   })
   if (grid.value) grid.value.clearData()
   allSelected.value = false
+  activeItemCount.value = 0
 }
 
 function print(type: string) {
@@ -245,3 +235,7 @@ onMounted(() => {
   nextTick(() => initGrid())
 })
 </script>
+
+<style scoped>
+:deep(.tabulator-row:hover) { background-color: #f0f7ff !important; cursor: pointer; }
+</style>

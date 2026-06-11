@@ -114,7 +114,7 @@ const handleOpenHelp = (type: string) => {
 async function fetchList() {
   try {
     const res = await api.post('/api/hsio/HSIO_141U_STR', {
-      actkind: 's0',
+      actkind: 'S0',
       cmpycd: authStore.cmpycd,
       iogbn: '100',
       ioymdfr: searchform.ioymdfr.replace(/-/g, ''),
@@ -138,37 +138,37 @@ async function save() {
 
   try {
     const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
-    const autoslip = resset.data?.[0]?.slipyn || 'n'
+    const autoslip = resset.data?.[0]?.slipyn || 'N'
 
     for (const item of items) {
       const slipymd = (item.slipymd || '').replace(/-/g, '')
       const slipno = item.slipno
-      const udeptcd = item.udeptcd || item.deptcd || searchform.deptcd
+      const deptcd = item.deptcd || item.deptcd || searchform.deptcd
 
       // 1. 자동 전표 승인 취소 (ASP: HASL_020U_STR)
-      if (autoslip === 'y' || autoslip === 'Y') {
+      if (autoslip === 'Y' || autoslip === 'Y') {
         await api.post('/api/hasl/HASL_020U_STR', {
-          actkind: 'a0',
+          actkind: 'A0',
           cmpycd: authStore.cmpycd,
           slipymd: slipymd,
           acctymd: slipymd,
           slipno: slipno,
-          deptcd: udeptcd,
+          deptcd: deptcd,
           slipkind: '030',
-          slipyn: 'y',
-          cofmyn: 'n', // 승인 취소
+          slipyn: 'Y',
+          cofmyn: 'N', // 승인 취소
           updemp: authStore.userid
         })
       }
 
-      // 2. 수입전표 취소 처리 (ASP: HSIO_141U_STR 'd0')
+      // 2. 수입전표 취소 처리 (ASP: HSIO_141U_STR 'D0')
       const params = {
-        actkind: 'd0',
+        actkind: 'D0',
         cmpycd: authStore.cmpycd,
         iogbn: '100',
         ioymdfr: searchform.ioymdfr.replace(/-/g, ''),
         ioymdto: searchform.ioymdto.replace(/-/g, ''),
-        deptcd: udeptcd,
+        deptcd: deptcd,
         slipymd: slipymd,
         slipno: slipno,
         updemp: authStore.userid
@@ -177,7 +177,7 @@ async function save() {
       const res = await api.post('/api/hsio/HSIO_141U_STR', params)
       const resdata = res.data?.[0]
 
-      if (resdata && (resdata.status === 'y' || resdata.erryn === 'y')) {
+      if (resdata && (resdata.status === 'Y' || resdata.erryn === 'Y')) {
         throw new Error(resdata.msg || '취소 처리 중 오류가 발생했습니다.')
       }
     }

@@ -91,7 +91,7 @@
                     <th class="required bg-light text-center">입고창고</th>
                     <td>
                       <select v-model="formData.whcd" class="form-select">
-                        <option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+                        <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
                       </select>
                     </td>
                     <th class="required bg-light text-center">입고일자</th>
@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -150,7 +150,7 @@ const searchForm = reactive({
 })
 
 const formData = reactive<any>({
-  custcd: '', custnm: '', whcd: '100',
+  custcd: '', custnm: '', whcd: '',
   ioymd: new Date().toISOString().substring(0, 10),
   remark: ''
 })
@@ -161,10 +161,29 @@ const itemGridRef = ref<HTMLDivElement | null>(null);
 let poGrid: Tabulator | null = null;
 let itemGrid: Tabulator | null = null
 
+async function fetchWhOptions() {
+  try {
+    const resWh = await api.get('/api/hs00/HS00_000S_STR', {
+      params: { gubun: 'W0', cmpycd: authStore.cmpycd }
+    })
+    whOptions.value = (resWh.data || []).map((i: any) => ({
+      whcd: String(i.whcd || '').trim(),
+      whnm: String(i.whnm || '').trim()
+    }))
+
+    if (whOptions.value.length > 0) {
+      formData.whcd = whOptions.value[0].whcd
+    }
+  } catch (e) {
+    console.error('창고 로드 실패', e)
+    whOptions.value = []
+  }
+}
+
 async function fetchCustList() {
   try {
     const res = await api.post('/api/hsio/HSIO_060U_STR', {
-      ...searchForm, iogbn: '100', actkind: 's1',
+      ...searchForm, iogbn: '100', actkind: 'S1',
       ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
       ioymdto: searchForm.ymdto.replace(/-/g, '')
     })
@@ -179,28 +198,24 @@ async function fetchDetail(cust: any) {
   formData.custnm = cust.custnm;
   try {
     const res = await api.post('/api/hsio/HSIO_060U_STR', {
-      ...searchForm, iogbn: '100', actkind: 's0',
+      ...searchForm, iogbn: '100', actkind: 'S0',
       custcd: cust.custcd,
       ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
       ioymdto: searchForm.ymdto.replace(/-/g, '')
     })
-    const detailData = (res.data || []).map((i: any) => ({ ...i, ioqty: i.janqty, procyn: 'y' }))
+    const detailData = (res.data || []).map((i: any) => ({ ...i, ioqty: i.janqty, procyn: 'Y' }))
     itemGrid?.setData(detailData)
   } catch (e) { vAlertError('상세 조회 실패') }
 }
 
-/**
- * 🚀 저장 로직 (ASP 루프 패턴 이식 - 소문자 통일)
- */
 async function save() {
-  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'y')
+  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'Y')
   if (!items || items.length === 0) return vAlertError('입고 항목을 선택하세요.')
   if (!confirm('입고작업을 하시겠습니까?')) return
 
   try {
-    // 🚀 Step 1. 입고 MASTER 저장 (HSIO_060U_STR)
     const masterParams = {
-        actkind: 'a0',
+        actkind: 'A0',
         cmpycd: authStore.cmpycd,
         iogbn: '100',
         ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
@@ -214,13 +229,12 @@ async function save() {
         whcd: formData.whcd,
         addres: '',
         remark: formData.remark || '',
-        cfmyn: 'y',
+        cfmyn: 'Y',
         updemp: authStore.userid
     }
     const mRes = await api.post('/api/hsio/HSIO_060U_STR', masterParams)
     const mstData = mRes.data?.[0]
 
-    // ASP 에러 체크: ioym이 '000000'이면 에러
     if (mstData && mstData.ioym === '000000') {
       throw new Error(mstData.iono || '마스터 저장 오류')
     }
@@ -228,9 +242,7 @@ async function save() {
     const keyIoym = mstData?.ioym;
     const keyIono = mstData?.iono;
 
-    // 🚀 Step 2. 입고 상세 내역 루프 저장 (HSIO_061U_STR)
     for (const item of items) {
-        // ASP 로직: 단가 비례 금액 계산
         const balQty = Number(item.balqty) || 1
         const inQty = Number(item.ioqty) || 0
         const ioAmt = Math.round((Number(item.balamt) / balQty) * inQty)
@@ -238,7 +250,7 @@ async function save() {
 
         const detailParams = {
             ...item,
-            actkind: 'a0',
+            actkind: 'A0',
             cmpycd: authStore.cmpycd,
             iogbn: '100',
             ioym: keyIoym,
@@ -252,7 +264,7 @@ async function save() {
             ioqty: inQty,
             ioamt: ioAmt,
             iovat: ioVat,
-            cfmyn: 'y',
+            cfmyn: 'Y',
             updemp: authStore.userid
         }
         const resDtl = await api.post('/api/hsio/HSIO_061U_STR', detailParams)
@@ -268,14 +280,16 @@ async function save() {
 
 const toggleAllRows = () => {
   const rows = itemGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'n' : 'y' }))
+  const allSelected = rows.every(r => r.getData().procyn === 'Y')
+  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
 }
 
 function initialize() {
   resetForm(formData);
   formData.ioymd = new Date().toISOString().substring(0, 10);
-  formData.whcd = '100';
+  if (whOptions.value.length > 0) {
+    formData.whcd = whOptions.value[0].whcd;
+  }
   poGrid?.clearData(); itemGrid?.clearData();
 }
 
@@ -286,8 +300,7 @@ function openHelp(type: string) {
 }
 
 onMounted(async () => {
-  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
-     .then(r => whOptions.value = r.data.map((i:any)=>({code: i.code || i.whcd, cdnm: i.cdnm || i.whnm})));
+  await fetchWhOptions();
 
   if (poGridRef.value) {
     poGrid = new Tabulator(poGridRef.value, {

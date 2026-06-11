@@ -131,7 +131,7 @@ const initGrid = () => {
       },
       { title: "품목", field: "itemnm", minWidth: 180, cssClass: "fw-bold" },
       {
-        title: "합계", field: "PLAnsum", width: 90, hozAlign: "right",
+        title: "합계", field: "plansum", width: 90, hozAlign: "right",
         cssClass: "bg-light-blue fw-bold",
         formatter: (cell) => Number(cell.getValue() || 0).toLocaleString()
       },
@@ -139,7 +139,7 @@ const initGrid = () => {
         const month = String(i + 1).padStart(2, '0')
         return {
           title: `${month}월`,
-          field: .mm${month}`,
+          field: `mm${month}`,
           width: 90,
           hozAlign: "right",
           editor: "number",
@@ -157,9 +157,9 @@ const initGrid = () => {
 
     let rowSum = 0
     for(let i=1; i<=12; i++) {
-        rowSum += Number(data[.mm${String(i).padStart(2, '0')}`]) || 0
+        rowSum += Number(data[`mm${String(i).padStart(2, '0')}`]) || 0
     }
-    row.update({ PLAnsum: rowSum })
+    row.update({ plansum: rowSum })
   })
 }
 
@@ -192,8 +192,8 @@ async function search() {
     if (grid.value) {
       const mapped = res.data.map((i: any) => {
           let rowSum = 0
-          for(let m=1; m<=12; m++) rowSum += Number(i[.mm${String(m).padStart(2, '0')}`]) || 0
-          return { ...i, procyn: null, PLAnsum: rowSum }
+          for(let m=1; m<=12; m++) rowSum += Number(i[`mm${String(m).padStart(2, '0')}`]) || 0
+          return { ...i, procyn: null, plansum: rowSum }
       })
       grid.value.setData(mapped)
     }

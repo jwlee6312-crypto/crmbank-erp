@@ -189,7 +189,7 @@ async function fetchCustomerList() {
   if (!searchData.deptcd) return vAlertError('판매부서를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_520U_STR', {
-      actkind: 's1',
+      actkind: 'S1',
       cmpycd: authStore.cmpycd,
       gubun: '200',
       ioymdfr: searchData.ioymdfr,
@@ -208,7 +208,7 @@ async function fetchCustomerList() {
 async function fetchSettlementList() {
   try {
     const res = await api.post('/api/hsio/HSIO_520U_STR', {
-      actkind: 's0',
+      actkind: 'S0',
       cmpycd: authStore.cmpycd,
       gubun: '200',
       ioymdfr: searchData.ioymdfr,
@@ -218,10 +218,10 @@ async function fetchSettlementList() {
     })
     const mapped = res.data.map((i: any) => ({
       ...i,
-      jsanymd: i.jsanymd || i.JSANYMD,
-      spyamt: i.spyamt || i.SPYAMT,
-      vatamt: i.vatamt || i.VATAMT,
-      jsansum: Number(i.spyamt || i.SPYAMT || 0) + Number(i.vatamt || i.VATAMT || 0),
+      jsanymd: i.jsanymd,
+      spyamt: i.spyamt,
+      vatamt: i.vatamt,
+      jsansum: Number(i.spyamt || 0) + Number(i.vatamt || 0),
       procyn: false
     }))
     settleGrid?.setData(mapped)
@@ -241,21 +241,21 @@ async function cancelSettlement() {
   try {
     for (const item of selected) {
       const res = await api.post('/api/hsio/HSIO_520U_STR', {
-        actkind: 'd0',
+        actkind: 'D0',
         cmpycd: authStore.cmpycd,
         gubun: '200',
         ioymdfr: searchData.ioymdfr,
         ioymdto: searchData.ioymdto,
         deptcd: searchData.deptcd,
         custcd: selectedCust.custcd,
-        jsanym: item.jsanym || item.JSANYM,
-        jsanno: item.jsanno || item.JSANNO,
+        jsanym: item.jsanym,
+        jsanno: item.jsanno,
         userid: authStore.userid
       })
 
       const resData = res.data?.[0]
       // ASP: if rs(0) = "Y" then ErrYn = "Y" (에러 발생 시 중단 및 롤백 개념)
-      if (resData && (resData.result === 'y' || resData.RESULT === 'Y' || resData.erryn === 'y' || resData.ERRYN === 'Y')) {
+      if (resData && (resData.result === 'Y' || resData.RESULT === 'Y' || resData.erryn === 'Y' || resData.ERRYN === 'Y')) {
         vAlertError(resData.msg || resData.MSG || '취소 처리 중 업무 오류가 발생했습니다.')
         fetchSettlementList()
         return
@@ -280,13 +280,13 @@ const modalVisible = ref(false)
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 function openHelp(type: string) {
-  let gubun = 'd0', title = '부서 선택', field = 'deptnm'
+  let gubun = 'D0', title = '부서 선택', field = 'deptnm'
   if (type.includes('CUST')) { gubun = 'c4'; title = '거래처 선택'; field = 'custnm' }
 
   Object.assign(modalProps, {
     title, path: '/api/ha00/HA00_00P_STR', defaultField: field,
     data: { gubun, cmpycd: authStore.cmpycd },
-    columns: gubun === 'd0'
+    columns: gubun === 'D0'
       ? [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }]
       : [{ title: '코드', field: 'custcd', width: 70 }, { title: '거래처명', field: 'custnm', width: 180 }],
     onConfirm: (data: any) => {

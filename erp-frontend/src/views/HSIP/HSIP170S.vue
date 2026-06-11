@@ -127,8 +127,8 @@ async function search() {
 			actkind: 'S0'
 		})
 		if (res.data) {
-			mainGrid?.setData(res.data.filter((i:any) => i.GBN !== 'SUM') || [])
-			summaryGrid?.setData(res.data.filter((i:any) => i.GBN === 'SUM') || [])
+			mainGrid?.setData(res.data.filter((i:any) => i.gbn !== 'sum') || [])
+			summaryGrid?.setData(res.data.filter((i:any) => i.gbn === 'sum') || [])
 			vAlert('조회되었습니다.')
 		}
 	} catch (e) { vAlertError('조회 실패') }

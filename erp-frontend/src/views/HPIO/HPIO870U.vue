@@ -22,8 +22,8 @@
       <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchList">조회</button>
-        <button v-if="masterData.iono && searchData.slipyn === 'N'" class="btn-erp btn-save" @click="handleApproval('u0')">승인처리</button>
-        <button v-if="masterData.iono && searchData.slipyn === 'Y'" class="btn-erp btn-danger" @click="handleApproval('d0')">승인취소</button>
+        <button v-if="masterData.iono && searchData.slipyn === 'N'" class="btn-erp btn-save" @click="handleApproval('U0')">승인처리</button>
+        <button v-if="masterData.iono && searchData.slipyn === 'Y'" class="btn-erp btn-danger" @click="handleApproval('D0')">승인취소</button>
       </div>
     </div>
 
@@ -212,14 +212,14 @@ const initGrids = () => {
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.CODE, linenm: i.cdnm }));
+    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
   } catch (e) {}
 }
 
 async function fetchList() {
   try {
     const res = await api.post('/api/hpio/HPIO_870U_STR', {
-      actkind: 'S1', cmpycd: authStore.cmpycd, OUTymdfr: searchData.outymdfr, OUTymdto: searchData.outymdto, linecd: searchData.linecd, slipyn: searchData.slipyn
+      actkind: 'S1', cmpycd: authStore.cmpycd, outymdfr: searchData.outymdfr, outymdto: searchData.outymdto, linecd: searchData.linecd, slipyn: searchData.slipyn
     });
     grid1?.setData(res.data.map((i: any) => ({ ...i, io_disp: `${i.ioym}-${i.iono}` })));
     vAlert('조회되었습니다.');
@@ -244,13 +244,13 @@ const handleApproval = async (actkind: string) => {
   if (ioYmd.substring(0, 6) <= closingInfo.sclsym) return vAlertError('영업 마감된 월입니다.')
   if (ioYmd.substring(0, 6) <= closingInfo.pclsym) return vAlertError('생산 마감된 월입니다.')
 
-  const msg = actkind === 'u0' ? '실적 승인 처리를 하시겠습니까?' : '승인 취소 처리를 하시겠습니까?';
+  const msg = actkind === 'U0' ? '실적 승인 처리를 하시겠습니까?' : '승인 취소 처리를 하시겠습니까?';
   if (!confirm(msg)) return
 
   try {
     await api.post('/api/hpio/HPIO_870U_STR', {
       actkind, cmpycd: authStore.cmpycd, linecd: searchData.linecd, progcd: masterData.progcd,
-      sv_slipyn: actkind === 'u0' ? 'Y' : 'N', iogbn: '200', prodcd: '200',
+      sv_slipyn: actkind === 'U0' ? 'Y' : 'N', iogbn: '200', prodcd: '200',
       ioym: masterData.ioym, iono: masterData.iono, custcd: masterData.custcd, userid: authStore.userid
     });
     vAlert('정상적으로 처리되었습니다.'); fetchList();

@@ -61,13 +61,4 @@ public interface HafaMapper {
      */
     List<Map<String, Object>> HAFA_900U_STR(Map<String, Object> params);
 
-    /**
-     * 자산 선택 도움말 (HELP_ASETCD_LTD_STR)
-     */
-    List<Map<String, Object>> HELP_ASETCD_LTD_STR(Map<String, Object> params);
-
-    /**
-     * 상각율 선택 도움말 (HELP_ASETRATE_LTD_STR)
-     */
-    List<Map<String, Object>> HELP_ASETRATE_LTD_STR(Map<String, Object> params);
 }

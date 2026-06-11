@@ -119,7 +119,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
 const masterData = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   deptcd: authStore.deptcd,
   ioym: today.replace(/-/g, '').substring(0, 6), iono: '',
   ioymd: today.replace(/-/g, ''),
@@ -170,7 +170,7 @@ const initGrids = () => {
 const fetchDeptOptions = async () => {
   try {
     const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'D0', cmpycd: authStore.cmpycd });
-    deptOptions.value = res.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
+    deptOptions.value = res.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
   } catch (e) {}
 }
 
@@ -184,7 +184,7 @@ const fetchWhOptions = async () => {
 async function fetchMaster() {
   if (!masterData.deptcd || !masterData.ioym || !masterData.iono) return vAlertError('조회 조건을 확인하세요.');
   try {
-    const res = await api.post('/api/hpio/HPIO_500U_STR', { actkind: 's', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono, deptcd: masterData.deptcd });
+    const res = await api.post('/api/hpio/HPIO_500U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono, deptcd: masterData.deptcd });
     if (res.data?.length) {
       Object.assign(masterData, res.data[0]);
       fetchDetails();
@@ -194,7 +194,7 @@ async function fetchMaster() {
 
 async function fetchDetails() {
   try {
-    const res = await api.post('/api/hpio/HPIO_501U_STR', { actkind: 's', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono });
+    const res = await api.post('/api/hpio/HPIO_501U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono });
     grid?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
   } catch (e) {}
 }

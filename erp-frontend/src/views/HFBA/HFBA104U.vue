@@ -23,7 +23,7 @@
         <button class="btn-erp btn-init" @click="handleReset">초기화</button>
         <button class="btn-erp btn-search" @click="handleSearch">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
-        <button class="btn-erp btn-delete" @click="deleteData" :disabled="detailForm.mode !== 'u'">삭제</button>
+        <button class="btn-erp btn-delete" @click="deleteData" :disabled="detailForm.mode !== 'U'">삭제</button>
       </div>
     </div>
 
@@ -149,7 +149,7 @@ const divide1Options = ref<any[]>([])
 const divide2Options = ref<any[]>([])
 
 const detailForm = reactive<any>({
-  acct: '', acctnm: '', divide1: '', divide2: '', bigo: '', mode: 'n'
+  acct: '', acctnm: '', divide1: '', divide2: '', bigo: '', mode: 'N'
 })
 
 const mainGridRef = ref<HTMLElement | null>(null)
@@ -208,7 +208,7 @@ const handleSearch = async () => {
 }
 
 const fetchDetail = (row: any) => {
-  Object.assign(detailForm, { ...row, mode: 'u' });
+  Object.assign(detailForm, { ...row, mode: 'U' });
 }
 
 const onAcctChange = () => {
@@ -223,7 +223,7 @@ const save = async () => {
   if (!confirm('저장하시겠습니까?')) return
 
   try {
-    const actkind = detailForm.mode === 'u' ? 'U0' : 'A0'
+    const actkind = detailForm.mode === 'U' ? 'U0' : 'A0'
     await api.post('/api/hfba/FBA1040U_STR', {
       ...detailForm, actkind, cmpycd: authStore.cmpycd, ym: searchForm.ym, userid: authStore.userid
     })
@@ -247,7 +247,7 @@ const deleteData = async () => {
 
 const handleReset = () => {
   resetForm(detailForm)
-  detailForm.mode = 'n'
+  detailForm.mode = 'N'
   if (acctOptions.value.length > 0) {
     detailForm.acct = acctOptions.value[0].acct
     detailForm.acctnm = acctOptions.value[0].acctnm

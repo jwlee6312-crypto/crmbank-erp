@@ -1,236 +1,233 @@
 <!--
 	=============================================================
-	프로그램명	: 카드지불처리
+	프로그램명	: 카드지불처리 (HAFN620U)
 	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 카드사별 미지급 내역을 조회하여 선택 결제 및 전표 발행
+	설명        : 카드사별 미지급 내역을 조회하여 선택 결제 및 전표 발행 (HSOD100U 표준 디자인 및 소문자 원칙 적용)
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <app_alert :show="show_alert" :error="show_error" :message="alert_message" />
+  <modal_component v-model:visible="modal_visible" :modalProps="modal_props" />
 
-	<div class="erp-container">
-		<!-- 🚀 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-credit-card me-2 text-primary" style="font-size: 18px;"></i>
-				자금관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">카드지불처리 (HAFN620U)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기화
-				</button>
-				<button class="btn-erp btn-search" @click="search">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-save" @click="save" :disabled="selectedRows.length === 0">
-					<i class="bi bi-check-lg"></i> 저장 (전표발행)
-				</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-credit-card me-2 text-primary" style="font-size: 18px;"></i>
+        자금관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        <span class="text-primary fw-bolder">카드지불처리 (HAFN620U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-save" @click="save" :disabled="selected_rows.length === 0">저장 (전표발행)</button>
+      </div>
+    </div>
 
-		<!-- 🔍 검색 조건 영역 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm overflow-hidden bg-light">
-				<table class="erp-table-full" style="table-layout: fixed;">
-					<colgroup>
-						<col style="width: 80px;" /><col style="width: 150px;" />
-						<col style="width: 80px;" /><col style="width: 220px;" />
-						<col style="width: 80px;" /><col />
-					</colgroup>
-					<tbody>
-						<tr>
-							<th class="text-center border-end">기준일자</th>
-							<td class="bg-white border-end">
-								<input v-model="searchForm.PAyyMDT" type="date" class="form-control form-control-sm" />
-							</td>
-							<th class="text-center border-end">카드사</th>
-							<td class="bg-white border-end">
-								<div class="input-group input-group-sm">
-									<input v-model="searchForm.custcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="searchForm.custnm" type="text" class="form-control" placeholder="카드사 선택" @keydown.enter="openHelp('SEARCH_CUST')" />
-									<button class="btn btn-outline-secondary px-2" @click="openHelp('SEARCH_CUST')"><i class="bi bi-search"></i></button>
-								</div>
-							</td>
-							<th class="text-center border-end">카드번호</th>
-							<td class="bg-white">
-								<div class="input-group input-group-sm">
-									<input v-model="searchForm.mgtno" type="text" class="form-control text-center bg-light" style="max-width: 150px;" readonly />
-									<input v-model="searchForm.mgtnm" type="text" class="form-control" placeholder="카드 선택" @keydown.enter="openHelp('search_MGT')" />
-									<button class="btn btn-outline-secondary px-2" @click="openHelp('search_MGT')"><i class="bi bi-search"></i></button>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-		<!-- 📝 지불 마스터 정보 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm bg-white overflow-hidden">
-				<table class="erp-table-full" style="table-layout: fixed;">
-					<colgroup>
-						<col style="width: 100px;" /><col />
-						<col style="width: 100px;" /><col />
-						<col style="width: 100px;" /><col />
-					</colgroup>
-					<tbody>
-						<tr>
-							<th class="text-center border-end bg-info-subtle">발행부서</th>
-							<td class="bg-white border-end px-2">
-								<div class="input-group input-group-sm">
-									<input v-model="voucherForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="voucherForm.deptnm" type="text" class="form-control" @keydown.enter="openHelp('DEPT')" />
-									<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-								</div>
-							</td>
-							<th class="text-center border-end bg-info-subtle">지불일자</th>
-							<td class="bg-white border-end px-2">
-								<input v-model="voucherForm.PAyyMD" type="date" class="form-control form-control-sm" />
-							</td>
-							<th class="text-center border-end bg-info-subtle text-primary">지급수수료</th>
-							<td class="bg-white px-2">
-								<input v-model="voucherForm.JIAMT" type="number" class="form-control form-control-sm text-end fw-bold" @input="updateTotalAmount" />
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+      <!-- [상단] 조회 필터 영역 (HSOD100U 디자인 표준화) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 10%;" /><col style="width: 23%;" />
+              <col style="width: 10%;" /><col style="width: 23%;" />
+              <col style="width: 10%;" /><col style="width: 24%;" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light border-end">기준일자</th>
+                <td class="border-end px-2">
+                  <input v-model="search_form.payymdt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+                </td>
+                <th class="text-center bg-light border-end">카드사</th>
+                <td class="border-end px-2">
+                  <div class="input-group input-group-sm">
+                    <input v-model="search_form.custcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="search_form.custnm" type="text" class="form-control" placeholder="카드사 선택" @keydown.enter="open_help('SEARCH_CUST')" />
+                    <button class="btn btn-outline-secondary px-2" @click="open_help('SEARCH_CUST')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="text-center bg-light border-end">카드번호</th>
+                <td class="px-2">
+                  <div class="input-group input-group-sm">
+                    <input v-model="search_form.mgtno" type="text" class="form-control text-center bg-light" style="max-width: 150px;" readonly />
+                    <input v-model="search_form.mgtnm" type="text" class="form-control" placeholder="카드 선택" @keydown.enter="open_help('SEARCH_MGT')" />
+                    <button class="btn btn-outline-secondary px-2" @click="open_help('SEARCH_MGT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-		<!-- 📊 미지급 내역 그리드 -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-header py-1 px-2 bg-light d-flex justify-content-between align-items-center border-bottom text-secondary">
-					<span class="fw-bold small"><i class="bi bi-list-check me-1"></i> 카드 미지급 내역 리스트</span>
-					<div class="d-flex gap-3 align-items-center fw-bold">
-						<span class="text-muted small">결제구좌: {{ voucherForm.gujano || '조회 후 표시' }}</span>
-						<span class="text-primary">총 결제금액: {{ formatMoney(totalPayAmt) }}</span>
-					</div>
-				</div>
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                </div>
-				<div class="card-footer p-0 border-top bg-dark text-white">
-					<table class="table table-sm table-dark table-bordered mb-0 text-end fw-bold" style="font-size: 11px;">
-						<tbody>
-							<tr>
-								<td class="text-center" style="width: 35%;">차/대변 합계</td>
-								<td style="width: 20%;" class="text-info">{{ formatMoney(totalPayAmt) }}</td>
-								<td style="width: 20%;" class="text-warning">{{ formatMoney(totalPayAmt) }}</td>
-								<td style="width: 25%;" class="text-success">일치</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
+      <!-- [중간] 지불 마스터 정보 영역 (HSOD100U 디자인 표준화) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense w-100">
+            <colgroup>
+              <col style="width: 110px;" /><col />
+              <col style="width: 110px;" /><col />
+              <col style="width: 110px;" /><col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="bg-light text-center border-end">발행부서</th>
+                <td class="border-end px-2">
+                  <div class="input-group input-group-sm">
+                    <input v-model="voucher_form.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="voucher_form.deptnm" type="text" class="form-control" @keydown.enter="open_help('DEPT')" />
+                    <button class="btn btn-outline-secondary px-2" @click="open_help('DEPT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="bg-light text-center border-end fw-bold text-info">지불일자</th>
+                <td class="border-end px-2">
+                  <input v-model="voucher_form.payymd" type="date" class="form-control form-control-sm" />
+                </td>
+                <th class="bg-light text-center border-end text-primary fw-bold">지급수수료</th>
+                <td class="px-2">
+                  <input v-model="voucher_form.jiamt" type="number" class="form-control form-control-sm text-end fw-bold" @input="update_total_amount" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+      <!-- [하단] 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 d-flex flex-column overflow-hidden grid-container-right">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0 text-secondary">
+          <span class="fw-bold small"><i class="bi bi-list-check me-1 text-primary"></i> 카드 미지급 내역 리스트</span>
+          <div class="d-flex gap-3 align-items-center fw-bold">
+            <span class="text-muted small">결제구좌: {{ voucher_form.gujano || '조회 후 표시' }}</span>
+            <span class="text-primary">총 결제금액: {{ format_money(total_pay_amt) }}</span>
+          </div>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="main_grid_ref" class="tabulator-instance flex-grow-1"></div>
+        </div>
+        <div class="card-footer p-0 border-top bg-dark text-white flex-shrink-0">
+          <table class="table table-sm table-dark table-bordered mb-0 text-end fw-bold" style="font-size: 11px;">
+            <tbody>
+              <tr>
+                <td class="text-center" style="width: 35%;">차/대변 합계</td>
+                <td style="width: 20%;" class="text-info">{{ format_money(total_pay_amt) }}</td>
+                <td style="width: 20%;" class="text-warning">{{ format_money(total_pay_amt) }}</td>
+                <td style="width: 25%;" class="text-success">일치</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <modal_component v-model:visible="modal_visible" :modalProps="modal_props" />
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
-import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import { ref as _ref, reactive as _reactive, onMounted as _on_mounted, computed as _computed, watch as _watch, nextTick as _next_tick } from 'vue'
+import { TabulatorFull as tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import { useAlerts } from '@/composables/useAlerts'
+import { useAlerts as use_alerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
-import { useAuthStore } from '@/stores/authStore'
-import { useFormReset } from '@/composables/useFormReset'
-import Modal from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
+import { useAuthStore as use_auth_store } from '@/stores/authStore'
+import { useFormReset as use_form_reset } from '@/composables/useFormReset'
+import app_alert from '@/components/AppAlert.vue'
+import modal_component from '@/components/Modal.vue'
+import type { ModalProps as modal_props_type } from '@/types/modal'
 
-const authStore = useAuthStore()
-const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
-const { resetForm } = useFormReset()
+const auth_store = use_auth_store()
+const { showAlert: show_alert, showError: show_error, alertMessage: alert_message, vAlert: v_alert, vAlertError: v_alert_error } = use_alerts()
+const { resetForm: reset_form } = use_form_reset()
 
 const today = new Date().toISOString().substring(0, 10)
-const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10)
+const first_day = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10)
 
-// 🔍 검색 조건
-const searchForm = reactive({
-	PAyyMDT: today,
+// 🔍 검색 조건 (소문자 원칙)
+const search_form = _reactive({
+	payymdt: today,
 	custcd: '',
 	custnm: '',
 	mgtno: '',
 	mgtnm: ''
 })
 
-// 📝 전표 발행 정보
-const voucherForm = reactive({
-	deptcd: authStore.deptcd,
-	deptnm: authStore.deptnm,
-	PAyyMD: today,
-	JIAMT: 0,
+// 📝 전표 발행 정보 (소문자 원칙)
+const voucher_form = _reactive({
+	deptcd: auth_store.deptcd,
+	deptnm: auth_store.deptnm,
+	payymd: today,
+	jiamt: 0,
 	gujano: '', // 결제구좌
 	clsymd: '00000000'
 })
 
-const mainGridRef = ref<HTMLDivElement | null>(null)
-let mainGrid: Tabulator | null = null
-const selectedRows = ref<any[]>([])
+const main_grid_ref = _ref<HTMLDivElement | null>(null)
+let main_grid: tabulator | null = null
+const selected_rows = _ref<any[]>([])
 
-const totalPayAmt = computed(() => {
-	const subtotal = selectedRows.value.reduce((acc, row) => acc + (Number(row.janamt) || 0), 0)
-	return subtotal + Number(voucherForm.JIAMT || 0)
+const total_pay_amt = _computed(() => {
+	const subtotal = selected_rows.value.reduce((acc, row) => acc + (Number(row.janamt) || 0), 0)
+	return subtotal + Number(voucher_form.jiamt || 0)
 })
 
-const formatMoney = (val: any) => Number(val || 0).toLocaleString()
+const format_money = (val: any) => Number(val || 0).toLocaleString()
 
 const search = async () => {
-	if (!searchForm.custcd) return vAlert('카드사를 선택하십시오.')
+	if (!search_form.custcd) return v_alert('카드사를 선택하십시오.')
 	try {
 		const res = await api.post('/api/hafn/HAFN_620U_STR', {
 			actkind: 'S0',
-			cmpycd: authStore.cmpycd,
-			PAyyMDF: firstDay.replace(/-/g, ''),
-			PAyyMDT: searchForm.PAyyMDT.replace(/-/g, ''),
-			custcd: searchForm.custcd,
-			mgtno: searchForm.mgtno
+			cmpycd: auth_store.cmpycd,
+			payymdf: first_day.replace(/-/g, ''),
+			payymdt: search_form.payymdt.replace(/-/g, ''),
+			custcd: search_form.custcd,
+			mgtno: search_form.mgtno
 		})
 
-		const data = (res.data || []).map((row: any) => ({
-			...row,
-			slipymd: row.col0,
-			slipno: row.col1,
-			srowno: row.col2,
-			remark: row.col3,
-			acctcd: row.col4,
-			CARDNO: row.col8,
-			CARDNM: row.COL9,
-			UNPAID_AMT: Number(row.col10 || 0),
-			PAID_AMT: Number(row.col11 || 0),
-			janamt: Number(row.col12 || 0),
-			gujano: row.col13, // 결제구좌
-			SELECT: true
-		}))
+		const data = (res.data || []).map((row: any) => {
+            // 소문자 원칙: 키 정규화
+            const item = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
+            return {
+                ...item,
+                slip_key: `${item.slipymd}-${item.slipno}-${item.srowno}`,
+                cardno: item.mgtno,
+                cardnm: item.cardnm,
+                unpaid_amt: Number(item.upyamt || 0),
+                paid_amt: Number(item.payamt || 0),
+                janamt: Number(item.janamt || 0),
+                gujano: item.gujano,
+                SELECT: true
+            }
+        })
 
 		if (data.length > 0) {
-			voucherForm.gujano = data[0].gujano
+			voucher_form.gujano = data[0].gujano
 		} else {
-			voucherForm.gujano = ''
+			voucher_form.gujano = ''
 		}
 
-		mainGrid?.setData(data)
-		updateTotalAmount()
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 실패') }
+		main_grid?.setData(data)
+		update_total_amount()
+		v_alert('조회되었습니다.')
+	} catch (e) { v_alert_error('조회 실패') }
 }
 
-const updateTotalAmount = () => {
-	const data = mainGrid?.getData() || []
-	selectedRows.value = data.filter((r: any) => r.SELECT)
+const update_total_amount = () => {
+	const data = main_grid?.getData() || []
+	selected_rows.value = data.filter((r: any) => r.SELECT)
 }
 
 const save = async () => {
-	if (voucherForm.PAyyMD.replace(/-/g, '') <= voucherForm.clsymd) {
-		return vAlert('회계 마감된 일자입니다.')
+	if (voucher_form.payymd.replace(/-/g, '') <= voucher_form.clsymd) {
+		return v_alert('회계 마감된 일자입니다.')
 	}
-	if (!voucherForm.gujano) return vAlert('결제구좌 정보가 없습니다. (기초 정보 확인 필요)')
+	if (!voucher_form.gujano) return v_alert('결제구좌 정보가 없습니다. (기초 정보 확인 필요)')
 
 	if (!confirm('선택한 항목들에 대해 결제 전표를 발행하시겠습니까?')) return
 
@@ -238,126 +235,137 @@ const save = async () => {
 		const details = []
 
 		// 1. 차변 (Debits): 카드 미지급금 반제
-		selectedRows.value.forEach(row => {
+		selected_rows.value.forEach(row => {
 			details.push({
-				upkind: 'A', DBCR: 'D',
+				upkind: 'A', dbcr: 'D',
 				acctcd: row.acctcd,
-				remark: `${searchForm.custnm} 카드대금 지불`,
-				AMOUNT: row.janamt,
-				custcd: searchForm.custcd,
-				mgtno: row.CARDNO,
-				Sslipno: `${row.slipymd}${row.slipno}${row.srowno}`
+				remark: `${search_form.custnm} 카드대금 지불`,
+				amount: row.janamt,
+				custcd: search_form.custcd,
+				mgtno: row.cardno,
+				sslipno: `${row.slipymd}${row.slipno}${row.srowno}`
 			})
 		})
 
 		// 지급수수료 차변 추가
-		if (voucherForm.JIAMT > 0) {
+		if (voucher_form.jiamt > 0) {
 			details.push({
-				upkind: 'A', DBCR: 'D',
-				acctcd: '6355', // 지급수수료
+				upkind: 'A', dbcr: 'D',
+				acctcd: '6355',
 				remark: '카드대금 수수료',
-				AMOUNT: voucherForm.JIAMT,
-				custcd: searchForm.custcd
+				amount: voucher_form.jiamt,
+				custcd: search_form.custcd
 			})
 		}
 
 		// 2. 대변 (Credits): 보통예금 출금
 		details.push({
-			upkind: 'A', DBCR: 'C',
-			acctcd: '1120', // 보통예금
-			remark: `${searchForm.custnm} 카드 대금지불`,
-			AMOUNT: totalPayAmt.value,
-			mgtno: voucherForm.gujano // 결제 계좌 번호
+			upkind: 'A', dbcr: 'C',
+			acctcd: '1120',
+			remark: `${search_form.custnm} 카드 대금지불`,
+			amount: total_pay_amt.value,
+			mgtno: voucher_form.gujano
 		})
 
 		const payload = {
 			actkind: 'A',
 			MASTER: {
-				cmpycd: authStore.cmpycd,
-				slipymd: voucherForm.PAyyMD.replace(/-/g, ''),
-				acctymd: voucherForm.PAyyMD.replace(/-/g, ''),
-				deptcd: voucherForm.deptcd,
-				business: `${searchForm.custnm}(${searchForm.mgtno}) 카드 결제 건`,
-				SLIPGU: '010'
+				cmpycd: auth_store.cmpycd,
+				slipymd: voucher_form.payymd.replace(/-/g, ''),
+				acctymd: voucher_form.payymd.replace(/-/g, ''),
+				deptcd: voucher_form.deptcd,
+				business: `${search_form.custnm}(${search_form.mgtno}) 카드 결제 건`,
+				slipgu: '010'
 			},
 			DETAILS: details
 		}
 
 		const res = await api.post('/api/hasl/HASL_010U_SAVE', payload)
-		vAlert('전표가 발행되었습니다.')
+		v_alert('전표가 발행되었습니다.')
 		if (res.data.slipno) {
-			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=010&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
+			window.open(`/api/hasl/HASL_SLIP_PRINT?slipgu=010&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucher_form.deptcd}`)
 		}
 		initialize()
-	} catch (e) { vAlertError('저장 실패') }
+	} catch (e) { v_alert_error('저장 실패') }
 }
 
 const initialize = () => {
-	resetForm(searchForm)
-	resetForm(voucherForm)
-	searchForm.PAyyMDT = today
-	voucherForm.PAyyMD = today
-	voucherForm.deptcd = authStore.deptcd
-	voucherForm.deptnm = authStore.deptnm
-	mainGrid?.clearData()
-	selectedRows.value = []
+	reset_form(search_form)
+	reset_form(voucher_form)
+	search_form.payymdt = today
+	voucher_form.payymd = today
+	voucher_form.deptcd = auth_store.deptcd
+	voucher_form.deptnm = auth_store.deptnm
+	main_grid?.clearData()
+	selected_rows.value = []
 }
 
 // 팝업 설정
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
+const modal_visible = _ref(false)
+const modal_props = _reactive<modal_props_type>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
-function openHelp(type: string) {
+function open_help(type: string) {
 	if (type === 'SEARCH_CUST') {
-		Object.assign(modalProps, {
+		Object.assign(modal_props, {
 			title: '카드사 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'C0', custgbn: '020', cmpycd: authStore.cmpycd, search: searchForm.custnm },
-			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '카드사명', field: 'custnm', width: 180 }],
-			onConfirm: (d: any) => { searchForm.custcd = d.custcd; searchForm.custnm = d.custnm; searchForm.mgtno = ''; searchForm.mgtnm = ''; }
+			data: { gubun: 'C3', custgbn: '020', cmpycd: auth_store.cmpycd, gbncd: '', search: '', remark: '' },
+			columns: [{ title: '코드', field: 'bankcd', width: 80 }, { title: '카드사명', field: 'banknm', width: 180 }],
+			onConfirm: (d: any) => {
+                // 💡 020 은행의 경우 bankcd, banknm 대응 (소문자 원칙)
+                const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v]))
+                search_form.custcd = item.bankcd; search_form.custnm = item.banknm; search_form.mgtno = ''; search_form.mgtnm = '';
+            }
 		})
-	} else if (type === 'search_MGT') {
-		if (!searchForm.custcd) return vAlert('카드사를 먼저 선택하십시오.')
-		Object.assign(modalProps, {
+	} else if (type === 'SEARCH_MGT') {
+		if (!search_form.custcd) return v_alert('카드사를 먼저 선택하십시오.')
+		Object.assign(modal_props, {
 			title: '카드번호 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'M0', acctcd: '111', cmpycd: authStore.cmpycd, search: searchForm.mgtnm },
+			data: { gubun: 'M0', cmpycd: auth_store.cmpycd, gbncd: '040', remark: search_form.custcd },
 			columns: [{ title: '카드번호', field: 'mgtno', width: 150 }, { title: '카드명', field: 'mgtnm', width: 150 }],
-			onConfirm: (d: any) => { searchForm.mgtno = d.mgtno; searchForm.mgtnm = d.mgtnm }
+			onConfirm: (d: any) => {
+                const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v]))
+                search_form.mgtno = item.mgtno; search_form.mgtnm = item.mgtnm
+            }
 		})
 	} else if (type === 'DEPT') {
-		Object.assign(modalProps, {
+		Object.assign(modal_props, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: voucherForm.deptnm },
+			data: { gubun: 'D0', cmpycd: auth_store.cmpycd, search: voucher_form.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
-			onConfirm: (d: any) => { voucherForm.deptcd = d.deptcd; voucherForm.deptnm = d.deptnm }
+			onConfirm: (d: any) => {
+                const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v]))
+                voucher_form.deptcd = item.deptcd; voucher_form.deptnm = item.deptnm
+            }
 		})
 	}
-	modalVisible.value = true
+	modal_visible.value = true
 }
 
-onMounted(() => {
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
+_on_mounted(() => {
+	if (main_grid_ref.value) {
+		main_grid = new tabulator(main_grid_ref.value, {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "선택", field: "SELECT", width: 40, hozAlign: "center", formatter: "tickCross", editor: true, cellClick: (e, cell) => { cell.setValue(!cell.getValue()); updateTotalAmount() } },
+				{ title: "선택", field: "SELECT", width: 40, hozAlign: "center", formatter: "tickCross", editor: true, cellClick: (e, cell) => { cell.setValue(!cell.getValue()); update_total_amount() } },
 				{
 					title: "발생전표번호", field: "slip_key", width: 130, hozAlign: "center",
 					formatter: (cell) => { const d = cell.getData(); return `${d.slipymd}-${d.slipno}-${d.srowno}` }
 				},
 				{ title: "적요", field: "remark", minWidth: 200 },
-				{ title: "카드번호", field: "CARDNO", width: 150, hozAlign: "center" },
-				{ title: "카드명", field: "CARDNM", width: 120 },
-				{ title: "미지불액", field: "UNPAID_AMT", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "카드번호", field: "cardno", width: 150, hozAlign: "center" },
+				{ title: "카드명", field: "cardnm", width: 120 },
+				{ title: "미지불액", field: "unpaid_amt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "잔액", field: "janamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold text-danger" }
 			]
 		})
 	}
 
 	// 마감 정보 로드
-	api.post('/api/ha00/HA00_010S_STR', { gubun: 'P1', cmpycd: authStore.cmpycd }).then(res => {
+	api.post('/api/ha00/HA00_010S_STR', { gubun: 'P1', cmpycd: auth_store.cmpycd }).then(res => {
 		if (res.data && res.data.length > 0) {
-			voucherForm.clsymd = res.data[0].clsymd || '00000000'
+            const item = Object.fromEntries(Object.entries(res.data[0]).map(([k, v]) => [k.toLowerCase(), v]))
+			voucher_form.clsymd = item.clsymd || '00000000'
 		}
 	})
 })
@@ -366,4 +374,5 @@ onMounted(() => {
 <style scoped>
 .erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
 .btn-xs { padding: 1px 5px; font-size: 11px; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
 </style>

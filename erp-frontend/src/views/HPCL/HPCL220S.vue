@@ -195,7 +195,7 @@ const initGrid = () => {
           columns: [
             { title: "수량", field: "Bsqty", width: 70, hozAlign: "right", formatter: "money", bottomCalc: "sum" },
             { title: "단가", field: "BSprice", width: 70, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-            { title: "금액", field: "BSAMT", width: 85, hozAlign: "right", formatter: "money", bottomCalc: "sum" }
+            { title: "금액", field: "bsamt", width: 85, hozAlign: "right", formatter: "money", bottomCalc: "sum" }
           ]
         },
         {
@@ -227,7 +227,7 @@ const initGrid = () => {
           columns: [
             { title: "수량", field: "stkqty", width: 70, hozAlign: "right", formatter: "money", bottomCalc: "sum", cssClass: "fw-bold" },
             { title: "단가", field: "STKprice", width: 70, hozAlign: "right", formatter: "money" },
-            { title: "금액", field: "STKAMT", width: 100, hozAlign: "right", formatter: "money", bottomCalc: "sum", cssClass: "text-primary fw-bold" }
+            { title: "금액", field: "stkamt", width: 100, hozAlign: "right", formatter: "money", bottomCalc: "sum", cssClass: "text-primary fw-bold" }
           ]
         }
       ],
@@ -262,11 +262,11 @@ const fetchList = async () => {
 
     const mapped = res.data.map((i: any) => ({
         ...i,
-        BSprice: Number(i.Bsqty) !== 0 ? Math.round(Number(i.BSAMT) / Number(i.Bsqty)) : 0,
+        BSprice: Number(i.Bsqty) !== 0 ? Math.round(Number(i.bsamt) / Number(i.Bsqty)) : 0,
         INprice: Number(i.inqty) !== 0 ? Math.round(Number(i.Inamt) / Number(i.inqty)) : 0,
         outprice: Number(i.OUtqty) !== 0 ? Math.round(Number(i.outamt) / Number(i.OUtqty)) : 0,
         OUTTprice: Number(i.OUTtqty) !== 0 ? Math.round(Number(i.OUTtamt) / Number(i.OUTtqty)) : 0,
-        STKprice: Number(i.stkqty) !== 0 ? Math.round(Number(i.STKAMT) / Number(i.stkqty)) : 0
+        STKprice: Number(i.stkqty) !== 0 ? Math.round(Number(i.stkamt) / Number(i.stkqty)) : 0
     }))
 
     grid?.setData(mapped)

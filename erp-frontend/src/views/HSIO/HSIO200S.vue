@@ -42,7 +42,7 @@
 								<td>
 									<select v-model="searchForm.whcd" class="form-select form-select-sm">
 										<option value="000">전체</option>
-										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</td>
 								<th>입고일자</th>
@@ -65,9 +65,9 @@
 							<tr>
 								<th>입고유형</th>
 								<td>
-									<select v-model="searchForm.IOTYPE" class="form-select form-select-sm">
+									<select v-model="searchForm.iotype" class="form-select form-select-sm">
 										<option value="000">전체</option>
-										<option v-for="opt in typeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in typeOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</td>
 								<th>주문번호</th>
@@ -80,8 +80,8 @@
 								<th>담&nbsp;&nbsp;당&nbsp;&nbsp;자</th>
 								<td>
 									<div class="input-group input-group-sm">
-										<input v-model="searchForm.SCH_userid" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.SCH_usernm" type="text" class="form-control" />
+										<input v-model="searchForm.sch_userid" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.sch_usernm" type="text" class="form-control" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('USER')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
@@ -128,12 +128,12 @@ const { resetForm } = useFormReset()
 const now = new Date()
 const searchForm = reactive<any>({
 	whcd: '000',
-	IOTYPE: '000',
+	iotype: '000',
 	frymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
 	toymd: now.toISOString().substring(0, 10),
 	custcd: '', custnm: '',
 	ordym: '', ordno: '',
-	SCH_userid: '', SCH_usernm: ''
+	sch_userid: '', sch_usernm: ''
 })
 
 const whOptions = ref<any[]>([])
@@ -146,8 +146,8 @@ async function loadInitData() {
 			api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } }),
 			api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '120' } })
 		])
-		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.whcd, cdnm: i.cdnm || i.whnm }))
-		typeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE, cdnm: i.cdnm }))
+		whOptions.value = resWh.data.map((i: any) => ({ code: i.code || i.whcd, cdnm: i.cdnm || i.whnm }))
+		typeOptions.value = resType.data.map((i: any) => ({ code: i.code, cdnm: i.cdnm }))
 	} catch (e) {}
 }
 
@@ -167,7 +167,7 @@ async function fetchList() {
 
 function initialize() {
 	resetForm(searchForm)
-	searchForm.whcd = '000'; searchForm.IOTYPE = '000'
+	searchForm.whcd = '000'; searchForm.iotype = '000'
 	searchForm.frymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
 	searchForm.toymd = now.toISOString().substring(0, 10)
 	mainGrid?.clearData()
@@ -183,16 +183,16 @@ onMounted(async () => {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 100 },
 			columns: [
-				{ title: '입고번호', field: 'iono_FULL', width: 130, hozAlign: 'center', cssClass: 'fw-bold text-primary',
+				{ title: '입고번호', field: 'iono_full', width: 130, hozAlign: 'center', cssClass: 'fw-bold text-primary',
                   mutatorData: (v, d) => `${d.ioym || ''}-${d.iono || ''}` },
 				{ title: '거래처', field: 'custnm', minWidth: 180, widthGrow: 1 },
-				{ title: '입고유형', field: 'IOtypenm', width: 100, hozAlign: 'center' },
+				{ title: '입고유형', field: 'iotypenm', width: 100, hozAlign: 'center' },
 				{ title: '입고일자', field: 'ioymd', width: 100, hozAlign: 'center',
                   formatter: (c) => { const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v } },
 				{ title: '품명', field: 'itemnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
 				{ title: '규격', field: 'itsize', width: 150 },
 				{ title: '단위', field: 'unit', width: 60, hozAlign: 'center' },
-				{ title: '수량', field: 'QTY', hozAlign: 'right', width: 80, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '수량', field: 'qty', hozAlign: 'right', width: 80, formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '단가', field: 'price', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '공급가', field: 'spyamt', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '부가세', field: 'vatamt', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },

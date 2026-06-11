@@ -46,7 +46,7 @@
 							<th class="text-center border-end">회계일자</th>
 							<td class="bg-white">
 								<div class="d-flex align-items-center gap-2">
-									<input v-model="searchForm.ymD" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="searchForm.ymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 									<span class="small fw-bold text-secondary">현재</span>
 								</div>
 							</td>
@@ -84,7 +84,7 @@ const today = new Date().toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	ymD: today
+	ymd: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -96,19 +96,19 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hafn/HAFN_110S_STR', {
 			cmpycd: authStore.cmpycd,
-			ymD: searchForm.ymD.replace(/-/g, '')
+			ymd: searchForm.ymd.replace(/-/g, '')
 		})
 
 		const data = (res.data || []).map((row: any) => ({
-			acctcd: row.col0,
-			acctnm: row.col1,
-			custcd: row.col2,
-			custnm: row.col3,
-			mgtno: row.col4,
-			stdymd: formatYmd(row.col5),
-			endymd: formatYmd(row.col6),
-			rate: Number(row.col7 || 0),
-			AMT: Number(row.col8 || 0)
+			acctcd: row.acctcd,
+			acctnm: row.acctnm,
+			custcd: row.bankcd,
+			custnm: row.banknm,
+			mgtno: row.mgtno,
+			stdymd: formatYmd(row.stdymd),
+			endymd: formatYmd(row.endymd),
+			rate: Number(row.rate || 0),
+			amt: Number(row.amt || 0)
 		}))
 
 		mainGrid?.setData(data)
@@ -118,14 +118,14 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.ymD = today
+	searchForm.ymd = today
 	mainGrid?.clearData()
 }
 
-const excel = () => mainGrid?.download("xlsx", `예금명세서_${searchForm.ymD}.xlsx`)
+const excel = () => mainGrid?.download("xlsx", `예금명세서_${searchForm.ymd}.xlsx`)
 
 const print = () => {
-	const params = `ymD=${searchForm.ymD}`
+	const params = `ymd=${searchForm.ymd}`
 	window.open(`/api/hafn/HAFN_110P?${params}`, 'DepositStatementPrint', 'width=1000,height=800,scrollbars=yes')
 }
 
@@ -136,26 +136,26 @@ onMounted(() => {
 			height: '100%',
 			groupBy: "acctnm", // 계정과목별 그룹핑
 			groupHeader: function(value, count, data, group) {
-				const sumAMT = data.reduce((acc, curr) => acc + curr.AMT, 0)
+				const sumamt = data.reduce((acc, curr) => acc + curr.amt, 0)
 				return `
 					<div class="d-flex justify-content-between w-100 pe-4">
 						<span class="fw-bold text-dark">${value} 계</span>
 						<div class="small fw-bold">
-							<span class="mx-2 text-muted">예금액 합계: ${sumAMT.toLocaleString()}</span>
+							<span class="mx-2 text-muted">예금액 합계: ${sumamt.toLocaleString()}</span>
 						</div>
 					</div>
 				`
 			},
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "은행(거래처)", field: "custnm", width: 200 },
-				{ title: "구좌번호", field: "mgtno", width: 180 },
-				{ title: "개설일", field: "stdymd", hozAlign: "center", width: 120 },
-				{ title: "만기일", field: "endymd", hozAlign: "center", width: 120 },
-				{ title: "이율", field: "rate", hozAlign: "center", width: 100,
+				{ title: "은행(거래처)", field: "custnm", minWidth: 300 },
+				{ title: "구좌번호", field: "mgtno", width: 250 },
+				{ title: "개설일", field: "stdymd", hozAlign: "center", width: 200 },
+				{ title: "만기일", field: "endymd", hozAlign: "center", width: 200 },
+				{ title: "이율", field: "rate", hozAlign: "center", width: 200,
 					formatter: (cell) => Number(cell.getValue() || 0).toFixed(2) + '%'
 				},
-				{ title: "예금액", field: "AMT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 150,
+				{ title: "예금액", field: "amt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 200,
 					cssClass: "fw-bold"
 				},
 				{ title: "", field: "empty", visible: true } // 여백용

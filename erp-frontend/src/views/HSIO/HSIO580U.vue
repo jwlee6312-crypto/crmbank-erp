@@ -176,10 +176,10 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 // [1] 데이터 모델링
 const form_01 = reactive({ fromdt: firstDay, todt: today, owhcd: '' })
 const form_02 = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   odeptcd: authStore.deptcd, odeptnm: authStore.deptnm,
   inno: '', cfmyn: '', outno: '', outymd: today,
-  owhcd: '100', iwhcd: '', ideptcd: '', ideptnm: '', remark: '', sts: 'n'
+  owhcd: '100', iwhcd: '', ideptcd: '', ideptnm: '', remark: '', sts: 'N'
 })
 
 const closingInfo = reactive({ sclsym: '' })
@@ -251,7 +251,7 @@ const handleOpenHelp = (type: string, target?: any) => {
   else if (type === 'IDEPT') openHelp('DEPT', (d) => { form_02.ideptcd = d.deptcd; form_02.ideptnm = d.deptnm });
   else if (type === 'ITEM') {
     openHelp('ITEM', (d) => {
-      target.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit || d.unitnm, ioqty: 1, cfmyn: 'n', _status: '입력', _state: 'NEW' });
+      target.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit || d.unitnm, ioqty: 1, cfmyn: 'N', _status: '입력', _state: 'NEW' });
     });
   }
 }
@@ -264,7 +264,7 @@ const handleRowAction = (row: any) => {
 
 async function search() {
   try {
-    const res = await api.post('/api/hsio/HSIO_580U_STR', { actkind: 's1', fromdt: form_01.fromdt.replace(/-/g, ''), todt: form_01.todt.replace(/-/g, ''), owhcd: form_01.owhcd });
+    const res = await api.post('/api/hsio/HSIO_580U_STR', { actkind: 'S1', fromdt: form_01.fromdt.replace(/-/g, ''), todt: form_01.todt.replace(/-/g, ''), owhcd: form_01.owhcd });
     grid1?.setData(res.data); vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }
 }
@@ -272,7 +272,7 @@ async function search() {
 async function fetchDetail(row: any) {
   Object.assign(form_02, { ...row, outymd: row.outymd ? `${row.outymd.substring(0,4)}-${row.outymd.substring(4,6)}-${row.outymd.substring(6,8)}` : today });
   try {
-    const res = await api.post('/api/hsio/HSIO_581U_STR', { actkind: 's', cmpycd: authStore.cmpycd, ioym: row.ioym, iono: row.outno });
+    const res = await api.post('/api/hsio/HSIO_581U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, ioym: row.ioym, iono: row.outno });
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
   } catch (e) { vAlertError('상세 로드 실패'); }
 }
@@ -282,13 +282,13 @@ async function save() {
   if (!details.length && !form_02.outno) return vAlertError('저장할 품목이 없습니다.');
 
   try {
-    const mst = { ...form_02, actkind: form_02.outno ? 'u' : 'a', outymd: form_02.outymd.replace(/-/g, ''), userid: authStore.userid };
+    const mst = { ...form_02, actkind: form_02.outno ? 'U' : 'A', outymd: form_02.outymd.replace(/-/g, ''), userid: authStore.userid };
     const mRes = await api.post('/api/hsio/HSIO_580U_STR', mst);
     if (mRes.data?.length) {
       const ioym = mRes.data[0].ioym; const outno = mRes.data[0].outno;
       for (const item of details) {
         await api.post('/api/hsio/HSIO_581U_STR', {
-          ...item, actkind: item._status === '입력' ? 'a' : (item._status === '삭제' ? 'd' : 'u'),
+          ...item, actkind: item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U'),
           cmpycd: authStore.cmpycd, ioym, iono: outno, odeptcd: form_02.odeptcd, owhcd: form_02.owhcd, ideptcd: form_02.ideptcd, iwhcd: form_02.iwhcd, outymd: mst.outymd, userid: authStore.userid
         });
       }
@@ -299,7 +299,7 @@ async function save() {
 
 function addRow() {
   if (isClosed.value) return;
-  grid2?.addRow({ ioqty: 0, cfmyn: 'n', _status: '입력', _state: 'NEW' }, true);
+  grid2?.addRow({ ioqty: 0, cfmyn: 'N', _status: '입력', _state: 'NEW' }, true);
 }
 
 function deleteSelectedRows() {
@@ -308,7 +308,7 @@ function deleteSelectedRows() {
 
 function initialize() {
   resetForm(form_02);
-  Object.assign(form_02, { cmpycd: authStore.cmpycd, odeptcd: authStore.deptcd, odeptnm: authStore.deptnm, outymd: today, outno: '', sts: 'n', owhcd: '100' });
+  Object.assign(form_02, { cmpycd: authStore.cmpycd, odeptcd: authStore.deptcd, odeptnm: authStore.deptnm, outymd: today, outno: '', sts: 'N', owhcd: '100' });
   if (grid1) grid1.setData([]);
   if (grid2) grid2.setData([]);
 }
@@ -316,7 +316,7 @@ function initialize() {
 async function handleFullDelete() {
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_580U_STR', { ...form_02, actkind: 'd' });
+    await api.post('/api/hsio/HSIO_580U_STR', { ...form_02, actkind: 'D' });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }

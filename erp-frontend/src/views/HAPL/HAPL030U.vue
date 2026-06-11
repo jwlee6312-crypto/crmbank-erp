@@ -72,8 +72,8 @@
                 class="list-group-item list-group-item-action border-0 d-flex align-items-center"
                 :class="{ 'active': selectedDeptCD === dept.deptcd }"
                 @click="selectDept(dept)">
-                <span v-for="n in (dept.LEV - 1)" :key="n" class="ms-2"></span>
-                <i v-if="dept.LEV > 1" class="bi bi-arrow-return-right me-1 opacity-50"></i>
+                <span v-for="n in (dept.lev - 1)" :key="n" class="ms-2"></span>
+                <i v-if="dept.lev > 1" class="bi bi-arrow-return-right me-1 opacity-50"></i>
                 {{ dept.deptnm }}
               </button>
             </div>

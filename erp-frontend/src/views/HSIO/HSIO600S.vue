@@ -52,7 +52,7 @@
 									<span class="erp-label me-2" style="width: 80px; flex-shrink: 0;">출고창고</span>
 									<select v-model="searchForm.whcd" class="form-select form-select-sm" style="flex-grow: 1;">
 										<option value="000">전체</option>
-										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</div>
 							</td>
@@ -69,9 +69,9 @@
 							<td>
 								<div class="d-flex align-items-center px-2 text-nowrap">
 									<span class="erp-label me-2" style="width: 80px; flex-shrink: 0;">출고유형</span>
-									<select v-model="searchForm.IOTYPE" class="form-select form-select-sm" style="flex-grow: 1;">
+									<select v-model="searchForm.iotype" class="form-select form-select-sm" style="flex-grow: 1;">
 										<option value="000">전체</option>
-										<option v-for="opt in ioTypeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in ioTypeOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</div>
 							</td>
@@ -133,7 +133,7 @@ const searchForm = reactive({
 	whcd: '000',
 	frymd: firstDay,
 	toymd: today,
-	IOTYPE: '000',
+	iotype: '000',
 	custcd: '',
 	custnm: ''
 })
@@ -161,7 +161,7 @@ const print = () => vAlert('인쇄 기능을 준비 중입니다.')
 
 const initialize = () => {
 	resetForm(searchForm);
-	searchForm.whcd = '000'; searchForm.IOTYPE = '000';
+	searchForm.whcd = '000'; searchForm.iotype = '000';
 	searchForm.frymd = firstDay; searchForm.toymd = today;
 	mainGrid?.clearData();
 }
@@ -178,10 +178,10 @@ function handleOpenHelp(type: string) {
 onMounted(async () => {
 	try {
 		const resWh = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'W0', cmpycd: authStore.cmpycd })
-		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.whcd, cdnm: i.cdnm || i.whnm }))
+		whOptions.value = resWh.data.map((i: any) => ({ code: i.code || i.whcd, cdnm: i.cdnm || i.whnm }))
 
 		const resType = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '130' })
-		ioTypeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE || i.codecd, cdnm: i.cdnm || i.codenm }))
+		ioTypeOptions.value = resType.data.map((i: any) => ({ code: i.code || i.codecd, cdnm: i.cdnm || i.codenm }))
 	} catch (e) {}
 
 	if (mainGridRef.value) {
@@ -190,22 +190,22 @@ onMounted(async () => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
 			columns: [
 				{
-					title: "출고번호", field: "iono_FULL", width: 140, cssClass: "fw-bold text-primary cursor-pointer",
+					title: "출고번호", field: "iono_full", width: 140, cssClass: "fw-bold text-primary cursor-pointer",
 					formatter: (cell) => `${cell.getData().ioym}-${cell.getData().iono}`,
 					cellClick: (e, cell) => {
 						const d = cell.getData();
-						if (d.GIOTYPE === "100" && d.gubun === "1" && d.spyamt >= 0) router.push({ path: '/HSIO/HSIO500U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
-						else if (d.GIOTYPE === "100" && d.gubun === "1" && d.spyamt < 0) router.push({ path: '/HSIO/HSIO490U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
-						else if (d.GIOTYPE === "100" && d.gubun === "2") router.push({ path: '/HSOD/HSOD200S', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
-						else if (d.GIOTYPE === "200") router.push({ path: '/HSIO/HSIO580U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
-						else if (d.GIOTYPE === "390") router.push({ path: d.INGBN === "100" ? '/HSIO/HSIO720U' : '/HSIO/HSIO730U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
-						else if (d.GIOTYPE >= "300") router.push({ path: '/HSIO/HSIO570U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						if (d.giotype === "100" && d.gubun === "1" && d.spyamt >= 0) router.push({ path: '/HSIO/HSIO500U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.giotype === "100" && d.gubun === "1" && d.spyamt < 0) router.push({ path: '/HSIO/HSIO490U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.giotype === "100" && d.gubun === "2") router.push({ path: '/HSOD/HSOD200S', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.giotype === "200") router.push({ path: '/HSIO/HSIO580U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.giotype === "390") router.push({ path: d.ingbn === "100" ? '/HSIO/HSIO720U' : '/HSIO/HSIO730U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.giotype >= "300") router.push({ path: '/HSIO/HSIO570U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
 					}
 				},
-				{ title: "출고유형", field: "IOtypenm", width: 120 },
+				{ title: "출고유형", field: "iotypenm", width: 120 },
 				{ title: "출고일자", field: "ioymd", width: 110, formatter: (c) => { const v = c.getValue(); return v ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : '' } },
 				{ title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold" },
-				{ title: "수량", field: "QTY", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "수량", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "단가", field: "price", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "공급가", field: "spyamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "부가세", field: "vatamt", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },

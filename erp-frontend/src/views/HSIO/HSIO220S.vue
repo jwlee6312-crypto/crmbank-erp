@@ -101,7 +101,7 @@ async function fetchList() {
     mainGrid?.setData(data)
     activeItemCount.value = data.length
     totals.amt = data.reduce((acc: number, cur: any) => acc + (Number(cur.spyamt) || 0), 0)
-    totals.hal = data.reduce((acc: number, cur: any) => acc + (Number(cur.HALAMT) || 0), 0)
+    totals.hal = data.reduce((acc: number, cur: any) => acc + (Number(cur.halamt) || 0), 0)
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
 }
@@ -123,9 +123,9 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 100 },
 			columns: [
 				{ title: '거래처', field: 'custnm', minWidth: 200, widthGrow: 2, cssClass: 'fw-bold text-dark' },
-				{ title: '품목수', field: 'ITMCNT', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '품목수', field: 'itmcnt', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '공급가', field: 'spyamt', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '할인금액', field: 'HALAMT', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-danger fw-bold' }
+				{ title: '할인금액', field: 'halamt', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-danger fw-bold' }
 			]
 		})
 	}

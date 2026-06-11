@@ -1,68 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.crmbank.erp.hafn.mapper.HafnMapper">
+
     <select id="HAFN_010S_STR" resultType="map">
-        exec hafn_010s_str #{cmpycd}, #{ymd}, #{selgbn}
+        exec HAFN_010S_STR #{cmpycd}, #{ymd}, #{selgbn}
     </select>
 
     <select id="HAFN_110S_STR" resultType="map">
-        exec hafn_110s_str #{cmpycd}, #{ymd}
+        exec HAFN_110S_STR #{cmpycd}, #{ymd}
     </select>
 
     <select id="HAFN_120S_STR" resultType="map">
-        exec hafn_120s_str #{cmpycd}, #{ymd}
+        exec HAFN_120S_STR #{cmpycd}, #{ymd}
     </select>
 
     <select id="HAFN_210S_STR" resultType="map">
-        exec hafn_210s_str #{cmpycd}, #{ymd}
+        exec HAFN_210S_STR #{cmpycd}, #{ymd}
     </select>
 
     <select id="HAFN_310S_STR" resultType="map">
-        exec hafn_310s_str #{cmpycd}, #{bondkind}, #{ymd}
+        exec HAFN_310S_STR #{cmpycd}, #{bondkind}, #{ymd}
     </select>
 
     <select id="HAFN_410S_STR" resultType="map">
-        exec hafn_410s_str #{cmpycd}, #{billtype}, #{ymd_fr}, #{ymd_to}
+        exec HAFN_410S_STR #{cmpycd}, #{billtype}, #{ymd_fr}, #{ymd_to}
     </select>
 
     <select id="HAFN_420S_STR" resultType="map">
-        exec hafn_420s_str #{cmpycd}, #{ymd_fr}, #{ymd_to}
+        exec HAFN_420S_STR #{cmpycd}, #{ymd_fr}, #{ymd_to}
     </select>
 
     <select id="HAFN_430S_STR" resultType="map">
-        exec hafn_430s_str #{cmpycd}, #{ymd_fr}, #{ymd_to}
+        exec HAFN_430S_STR #{cmpycd}, #{ymd_fr}, #{ymd_to}
     </select>
 
     <select id="HAFN_510S_STR" resultType="map">
-        exec hafn_510s_str #{cmpycd}, #{ymd_fr}, #{ymd_to}
+        exec HAFN_510S_STR #{cmpycd}, #{ymd_fr}, #{ymd_to}
     </select>
 
     <select id="HAFN_520S_STR" resultType="map">
-        exec hafn_520s_str #{cmpycd}, #{ymd_fr}, #{ymd_to}
+        exec HAFN_520S_STR #{cmpycd}, #{ymd_fr}, #{ymd_to}
     </select>
 
     <select id="HAFN_610U_STR" resultType="map">
-        exec hafn_610u_str #{actkind}, #{cmpycd}, #{ymdf}, #{ymdt}, #{custcd},
+        exec HAFN_610U_STR #{actkind}, #{cmpycd}, #{ymdf}, #{ymdt}, #{custcd},
         #{slipymd}, #{slipno}, #{srowno}, #{payymd}, #{payamt}
     </select>
 
     <select id="HAFN_620U_STR" resultType="map">
-        exec hafn_620u_str #{actkind}, #{cmpycd}, #{ymdf}, #{ymdt}, #{custcd}, #{mgtno}
+        exec HAFN_620U_STR #{actkind}, #{cmpycd}, #{ymdf}, #{ymdt}, #{custcd}, #{mgtno}
     </select>
 
     <select id="HAFN_630U_STR" resultType="map">
-        exec hafn_630u_str #{actkind}, #{cmpycd}, #{ymd}, #{acctcd}
+        exec HAFN_630U_STR #{actkind}, #{cmpycd}, #{ymd}, #{acctcd}
     </select>
 
     <select id="HAFN_670S_STR" resultType="map">
-        exec hafn_670s_str #{cmpycd}, #{ymd}, #{custcdfr}, #{custcdto}
+        exec HAFN_670S_STR #{cmpycd}, #{ymd}, #{custcdfr}, #{custcdto}
     </select>
 
     <select id="HAFN_680S_STR" resultType="map">
-        exec hafn_680s_str #{cmpycd}, #{ymd}, #{custcdfr}, #{custcdto}
+        exec HAFN_680S_STR #{cmpycd}, #{ymd}, #{custcdfr}, #{custcdto}
     </select>
 
     <select id="HAFN_690S_STR" resultType="map">
-        exec hafn_690s_str #{cmpycd}, #{ymd_fr}, #{ymd_to}, #{custcdfr}, #{custcdto}, #{mgtno}
+        exec HAFN_690S_STR #{cmpycd}, #{ymd_fr}, #{ymd_to}, #{custcdfr}, #{custcdto}, #{mgtno}
     </select>
+
 </mapper>

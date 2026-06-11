@@ -10,7 +10,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="erp-container">
+	<div class="erp-container d-flex flex-column h-100 bg-white">
 		<!-- 🚀 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
@@ -31,46 +31,55 @@
 			</div>
 		</div>
 
-		<!-- 🔍 검색 조건 영역 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm bg-white overflow-hidden">
-				<div class="card-body p-2 bg-light">
-					<div class="d-flex align-items-center flex-wrap gap-3 small">
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>예산부서</span>
-							<div class="input-group input-group-sm" style="width: 220px;">
-								<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-								<input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" @input="searchForm.deptcd = ''" />
-								<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT_S')"><i class="bi bi-search"></i></button>
-							</div>
-						</div>
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>신청연월</span>
-							<div class="d-flex gap-1">
-								<select v-model="searchForm.bugtyy" class="form-select form-select-sm" style="width: 100px;">
-									<option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
-								</select>
-								<select v-model="searchForm.bugtmm" class="form-select form-select-sm" style="width: 80px;">
-									<option v-for="m in 12" :key="m" :value="String(m).padStart(2, '0')">{{ String(m).padStart(2, '0') }}월</option>
-								</select>
-							</div>
-						</div>
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>검색대상</span>
-							<select v-model="searchForm.rstyn" class="form-select form-select-sm" style="width: 100px;">
-								<option value="N">미배정</option>
-								<option value="Y">배정</option>
-							</select>
-						</div>
-					</div>
+		<!-- 💡 메인 컨텐츠 영역 -->
+		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+			<!-- 🔍 검색 조건 영역 (HSOD100U 표준 패턴) -->
+			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+				<div class="card-body p-0 bg-white">
+					<table class="erp-table-dense" width="100%">
+						<colgroup>
+							<col style="width: 10%" /><col style="width: 23%" />
+							<col style="width: 10%" /><col style="width: 23%" />
+							<col style="width: 10%" /><col style="width: 24%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th class="text-center bg-light">예산부서</th>
+								<td>
+									<div class="input-group input-group-sm">
+										<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" @input="searchForm.deptcd = ''" />
+										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT_S')"><i class="bi bi-search"></i></button>
+									</div>
+								</td>
+								<th class="text-center bg-light">신청연월</th>
+								<td>
+									<div class="d-flex gap-1">
+										<select v-model="searchForm.bugtyy" class="form-select form-select-sm" style="width: 100px;">
+											<option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
+										</select>
+										<select v-model="searchForm.bugtmm" class="form-select form-select-sm" style="width: 80px;">
+											<option v-for="m in 12" :key="m" :value="String(m).padStart(2, '0')">{{ String(m).padStart(2, '0') }}월</option>
+										</select>
+									</div>
+								</td>
+								<th class="text-center bg-light">검색대상</th>
+								<td>
+									<select v-model="searchForm.rstyn" class="form-select form-select-sm" style="width: 100px;">
+										<option value="N">미배정</option>
+										<option value="Y">배정</option>
+									</select>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
-		</div>
 
-		<!-- 📝 배정 정보 입력 영역 -->
-		<div class="p-2 flex-shrink-0">
-			<div class="card border shadow-sm">
-				<div class="card-body p-0">
+			<!-- 📝 배정 정보 입력 영역 -->
+			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+				<div class="card-body p-0 bg-white">
 					<table class="erp-table-full">
 						<colgroup>
 							<col style="width: 100px;" />
@@ -86,7 +95,7 @@
 								<td>
 									<div class="d-flex gap-1">
 										<input v-model="inputForm.dockind" type="text" class="form-control form-control-sm text-center bg-light" style="width: 50px;" readonly />
-										<input v-model="inputForm.dockindNM" type="text" class="form-control form-control-sm bg-light" readonly />
+										<input v-model="inputForm.dockindnm" type="text" class="form-control form-control-sm bg-light" readonly />
 									</div>
 								</td>
 								<th>예산부서</th>
@@ -154,17 +163,15 @@
 					</table>
 				</div>
 			</div>
-		</div>
 
-		<!-- 📊 그리드 영역 -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
+			<!-- 📊 그리드 영역 -->
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
 				<div class="card-header py-1 px-3 bg-white border-bottom d-flex justify-content-between align-items-center">
 					<span class="small fw-bold text-dark"><i class="bi bi-list-check me-1"></i>신청 및 배정 내역</span>
 				</div>
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                </div>
+				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+					<div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -185,7 +192,8 @@ import type { ModalProps } from '@/types/modal'
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
-const currentYear = new Date().getFullYear()
+//const currentYear = new Date().getFullYear()
+const currentYear = 2011
 const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0')
 const today = new Date().toISOString().substring(0, 10)
 const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
@@ -202,7 +210,7 @@ const inputForm = reactive({
 	actkind: 'U0',
 	bugtno: '',
 	dockind: '',
-	dockindNM: '',
+	dockindnm: '',
 	deptcd: '',
 	deptnm: '',
 	bugtyy: '',
@@ -230,7 +238,7 @@ const search = async () => {
 		const res = await api.post('/api/habg/HABG_120U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			BUGTym: `${searchForm.bugtyy}${searchForm.bugtmm}`,
+			bugtym: `${searchForm.bugtyy}${searchForm.bugtmm}`,
 			deptcd: searchForm.deptcd,
 			rstyn: searchForm.rstyn
 		})
@@ -247,7 +255,7 @@ const save = async () => {
 		await api.post('/api/habg/HABG_120U_STR', {
 			...inputForm,
 			cmpycd: authStore.cmpycd,
-			BUGTym: `${inputForm.bugtyy}${inputForm.bugtmm}`,
+			bugtym: `${inputForm.bugtyy}${inputForm.bugtmm}`,
 			bugtymd: inputForm.bugtymd.replace(/-/g, '')
 		})
 		vAlert('배정 처리가 완료되었습니다.')
@@ -258,7 +266,7 @@ const save = async () => {
 
 const initialize = () => {
 	Object.assign(inputForm, {
-		actkind: 'U0', bugtno: '', dockind: '', dockindNM: '', deptcd: '', deptnm: '',
+		actkind: 'U0', bugtno: '', dockind: '', dockindnm: '', deptcd: '', deptnm: '',
 		bugtyy: '', bugtmm: '', reqamt: 0, janamt: 0, bugtamt: 0, bugtymd: today,
 		bugtcd_fr: '', bugtnm_fr: '', bugtcd_to: '', bugtnm_to: '',
 		bugtym_fr: '', bugtym_to: '', bigo: '', rstyn: 'N'
@@ -277,7 +285,7 @@ function openHelp(type: string) {
 	if (type === 'DEPT_S') {
         Object.assign(modalProps, {
             title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-            data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm },
+            data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: searchForm.deptnm },
             columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
             onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm; search() }
         })
@@ -291,23 +299,24 @@ onMounted(() => {
 			layout: 'fitColumns',
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle", hozAlign: "center" },
+
 			columns: [
-				{ title: "번호", field: "col0", width: 50 },
+				{ title: "번호", field: "bugtno", width: 50 },
 				{
-					title: "신청일", field: "col11", width: 90,
+					title: "신청일", field: "rqstymd", width: 90,
 					formatter: (cell) => {
 						const v = cell.getValue();
 						return v ? `${v.substring(2, 4)}.${v.substring(4, 6)}.${v.substring(6, 8)}` : '';
 					}
 				},
-				{ title: "조정구분", field: "col14", width: 80 },
-				{ title: "신청액", field: "col7", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "조정구분", field: "dockindnm", width: 80 },
+				{ title: "신청액", field: "rqstamt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{
 					title: "FROM",
 					columns: [
-						{ title: "예산명", field: "col5", width: 150, hozAlign: "left" },
+						{ title: "예산명", field: "bugtnmfr", width: 150, hozAlign: "left" },
 						{
-							title: "연월", field: "col6", width: 70,
+							title: "연월", field: "bugtymfr", width: 70,
 							formatter: (cell) => { const v = cell.getValue(); return v ? `${v.substring(2, 4)}.${v.substring(4, 6)}` : '' }
 						}
 					]
@@ -315,41 +324,41 @@ onMounted(() => {
 				{
 					title: "TO",
 					columns: [
-						{ title: "예산명", field: "COL9", width: 150, hozAlign: "left" },
+						{ title: "예산명", field: "bugtnmto", width: 150, hozAlign: "left" },
 						{
-							title: "연월", field: "col10", width: 70,
+							title: "연월", field: "bugtymto", width: 70,
 							formatter: (cell) => { const v = cell.getValue(); return v ? `${v.substring(2, 4)}.${v.substring(4, 6)}` : '' }
 						}
 					]
 				},
-				{ title: "적요", field: "col13", minWidth: 200, hozAlign: "left" },
-				{ title: "배정", field: "col12", width: 50, formatter: "tickCross", formatterParams: { tickElement: "<i class='bi bi-check-lg text-primary fw-bold'></i>", crossElement: "" } }
+				{ title: "적요", field: "bigo", minWidth: 200, hozAlign: "left" },
+				{ title: "배정", field: "rstyn", width: 50, formatter: "tickCross", formatterParams: { tickElement: "<i class='bi bi-check-lg text-primary fw-bold'></i>", crossElement: "" } }
 			]
 		})
 
 		mainGrid.on("rowClick", (e, row) => {
 			const d = row.getData();
 			Object.assign(inputForm, {
-				actkind: 'U0',
-				bugtno: d.col0,
-				deptcd: d.col1,
-				deptnm: d.col2,
-				dockind: d.col3,
-				dockindNM: d.col14,
-				bugtcd_fr: d.col4,
-				bugtnm_fr: d.col5,
-				bugtym_fr: d.col6,
-				reqamt: Number(d.col7),
-				bugtcd_to: d.col8,
-				bugtnm_to: d.COL9,
-				bugtym_to: d.col10,
-				rstyn: d.col12,
-				bigo: d.col13,
-				bugtamt: d.col12 === 'Y' ? Number(d.col15) : Number(d.col7),
-				bugtymd: d.col12 === 'Y' ? (d.col16 ? `${d.col16.substring(0, 4)}-${d.col16.substring(4, 6)}-${d.col16.substring(6, 8)}` : today) : today,
-				janamt: Number(d.col17),
-				bugtyy: d.col18.substring(0, 4),
-				bugtmm: d.col18.substring(4, 6)
+                actkind: 'U0',
+                bugtno: d.bugtno,
+                deptcd: d.deptcd,
+                deptnm: d.deptnm,
+                dockind: d.dockind,
+                dockindnm: d.dockindnm,
+                bugtcd_fr: d.bugtcdfr,
+                bugtnm_fr: d.bugtnmfr,
+                bugtym_fr: d.bugtymfr,
+                reqamt: Number(d.rqstamt),
+                bugtcd_to: d.bugtcdto,
+                bugtnm_to: d.bugtnmto,
+                bugtym_to: d.bugtymto,
+                rstyn: d.rstyn,
+                bigo: d.bigo,
+                bugtamt: d.rstyn === 'Y' ? Number(d.bugtamt) : Number(d.rqstamt),
+                bugtymd: d.rstyn === 'Y' ? (d.bugtymd ? `${d.bugtymd.substring(0, 4)}-${d.bugtymd.substring(4, 6)}-${d.bugtymd.substring(6, 8)}` : today) : today,
+                janamt: Number(d.janamt),
+                bugtyy: d.bugtym.substring(0, 4),
+                bugtmm: d.bugtym.substring(4, 6)
 			})
 		})
 	}
@@ -357,7 +366,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
 .erp-table-full th { background-color: #f8f9fa; text-align: center; padding: 5px; font-size: 12px; border: 1px solid #dee2e6; }
 .erp-table-full td { padding: 4px; border: 1px solid #dee2e6; background-color: #fff; }
 .bg-yellow { background-color: #fff9db !important; }

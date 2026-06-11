@@ -42,7 +42,7 @@
 								<td>
 									<select v-model="searchForm.whcd" class="form-select form-select-sm">
 										<option value="000">전체</option>
-										<option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</td>
 								<th class="required">입고일자</th>
@@ -55,9 +55,9 @@
 								</td>
 								<th>입고유형</th>
 								<td>
-									<select v-model="searchForm.IOTYPE" class="form-select form-select-sm">
+									<select v-model="searchForm.iotype" class="form-select form-select-sm">
 										<option value="000">전체</option>
-										<option v-for="opt in typeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+										<option v-for="opt in typeOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
 									</select>
 								</td>
 							</tr>
@@ -123,7 +123,7 @@ const { resetForm } = useFormReset()
 const now = new Date()
 const searchForm = reactive<any>({
 	whcd: '000',
-	IOTYPE: '000',
+	iotype: '000',
 	frymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
 	toymd: now.toISOString().substring(0, 10),
 	custcd: '', custnm: '',
@@ -140,8 +140,8 @@ async function loadInitData() {
 			api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } }),
 			api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '120' } })
 		])
-		whOptions.value = resWh.data.map((i: any) => ({ CODE: i.CODE || i.whcd, cdnm: i.cdnm || i.whnm }))
-		typeOptions.value = resType.data.map((i: any) => ({ CODE: i.CODE, cdnm: i.cdnm }))
+		whOptions.value = resWh.data.map((i: any) => ({ code: i.code || i.whcd, cdnm: i.cdnm || i.whnm }))
+		typeOptions.value = resType.data.map((i: any) => ({ code: i.code, cdnm: i.cdnm }))
 	} catch (e) {}
 }
 
@@ -151,8 +151,7 @@ async function fetchList() {
 			...searchForm,
 			cmpycd: authStore.cmpycd,
 			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
-            LIMITOFFSET: 0, LIMITROWS: 1000
+			toymd: searchForm.toymd.replace(/-/g, '')
 		})
 		mainGrid?.setData(res.data.data || [])
 		vAlert('조회되었습니다.')
@@ -161,7 +160,7 @@ async function fetchList() {
 
 function initialize() {
 	resetForm(searchForm)
-	searchForm.whcd = '000'; searchForm.IOTYPE = '000'
+	searchForm.whcd = '000'; searchForm.iotype = '000'
 	searchForm.frymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
 	searchForm.toymd = now.toISOString().substring(0, 10)
 	mainGrid?.clearData()
@@ -188,7 +187,7 @@ onMounted(async () => {
                   mutatorData: (v, d) => (Number(d.jsanamt) / (Number(d.ioqty) || 1)) },
 				{ title: '공급가', field: 'jsanamt', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 } },
 				{ title: '부가세', field: 'jsanvat', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '합계', field: 'Iosum', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 },
+				{ title: '합계', field: 'iosum', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 },
                   mutatorData: (v, d) => Number(d.jsanamt || 0) + Number(d.jsanvat || 0), cssClass: 'fw-bold bg-light' },
 				{ title: '비고', field: 'scustnm', width: 150 }
 			]

@@ -46,8 +46,4 @@
         exec habg_230s_str #{cmpycd}, #{bugtyy}, #{deptcd}
     </select>
 
-    <select id="GET_BGTYPE" resultType="map">
-        select bgtype from haba910t_tbl where cmpycd = #{cmpycd}
-    </select>
-
 </mapper>

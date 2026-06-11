@@ -180,14 +180,14 @@ const fetchOptions = async () => {
       api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '120' } })
     ]);
     whOptions.value = wh.data.map((i: any) => ({ whcd: i.whcd, whnm: i.whnm }));
-    iotypeOptions.value = io.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
+    iotypeOptions.value = io.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
   } catch (e) {}
 }
 
 async function fetchList() {
   try {
     const res = await api.post('/api/hpio/HPIO_710S_STR', {
-      cmpycd: authStore.cmpycd, whcd: searchData.whcd, IOTYPE: searchData.iotype, frymd: searchData.frymd, toymd: searchData.toymd, custcd: searchData.custcd, itemcd: searchData.itemcd
+      cmpycd: authStore.cmpycd, whcd: searchData.whcd, iotype: searchData.iotype, frymd: searchData.frymd, toymd: searchData.toymd, custcd: searchData.custcd, itemcd: searchData.itemcd
     })
     grid?.setData(res.data)
     rowCount.value = res.data.length

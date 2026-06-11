@@ -210,8 +210,8 @@ const initGrids = () => {
         }
       },
       { title: "입금유형", field: "imtype", width: 100, editor: "list",
-        editorParams: { values: () => imtypeData.value.reduce((acc, cur) => ({ ...acc, [cur.CODE]: cur.cdnm }), {}) },
-        formatter: (c) => imtypeData.value.find(i => i.CODE === c.getValue())?.cdnm || c.getValue(),
+        editorParams: { values: () => imtypeData.value.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.cdnm }), {}) },
+        formatter: (c) => imtypeData.value.find(i => i.code === c.getValue())?.cdnm || c.getValue(),
         cellEdited: (cell) => {
           const row = cell.getRow();
           row.update({ imamt: 0, mgtno: '', billamt: 0, pubymd: '', endymd: '', pubbank: '' });
@@ -323,7 +323,7 @@ async function handleFullDelete() {
 }
 
 onMounted(async () => {
-  api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '130', CODE: '', codenm: '' }).then(r => {
+  api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '130', code: '', codenm: '' }).then(r => {
     imtypeData.value = r.data.status === 200 ? r.data.data : r.data;
   });
   initGrids(); initialize();

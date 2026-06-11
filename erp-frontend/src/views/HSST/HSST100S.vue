@@ -44,8 +44,8 @@
                 <th style="width: 100px;">거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 300px;">
-                    <input v-model="searchData.custcdFR" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="searchData.custnmFR" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="openHelp('CUST')" />
+                    <input v-model="searchData.custcdfr" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="searchData.custnmfr" type="text" class="form-control" placeholder="거래처 선택" @keyup.enter="openHelp('CUST')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -97,9 +97,9 @@ const searchData = reactive({
   deptnm: authStore.deptnm,
   frymd: initfrymd.replace(/-/g, ''),
   toymd: initymd.replace(/-/g, ''),
-  custcdFR: '',
-  custnmFR: '',
-  SELGBN: '1'
+  custcdfr: '',
+  custnmfr: '',
+  selgbn: '1'
 })
 
 const uifrymd = computed({ get: () => formatDateString(searchData.frymd, '-'), set: (v) => searchData.frymd = v.replace(/-/g, '') })
@@ -130,12 +130,12 @@ const initGrid = () => {
       },
       // 판매현황 그룹
       {
-        title: "판매현황(VAT포함)",
+        title: "판매현황(vat포함)",
         columns: [
           { title: "공급가", field: "spyamt", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
           { title: "부가세", field: "vatamt", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
           {
-            title: "매출계", field: "SALES_TOTAL", width: 150, hozAlign: "right",
+            title: "매출계", field: "SALES_total", width: 150, hozAlign: "right",
             formatter: (cell) => formatNumber(Number(cell.getData().spyamt || 0) + Number(cell.getData().vatamt || 0)),
             cssClass: "bg-light border-end", bottomCalc: "sum", bottomCalcFormatter: "money"
           },
@@ -145,15 +145,15 @@ const initGrid = () => {
       {
         title: "입 금 현 황",
         columns: [
-          { title: "현금", field: "CASHAMT", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
-          { title: "예금", field: "BANKAMT", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
+          { title: "현금", field: "cashamt", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
+          { title: "예금", field: "bankamt", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
           { title: "어음/카드", field: "billamt", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
-          { title: "기타", field: "ETcamt", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
+          { title: "기타", field: "etcamt", width: 120, hozAlign: "right", formatter: "money", bottomCalc: "sum", bottomCalcFormatter: "money" },
           {
-            title: "입금계", field: "DEPOSIT_TOTAL", width: 150, hozAlign: "right",
+            title: "입금계", field: "DEPOSIT_total", width: 150, hozAlign: "right",
             formatter: (cell) => {
               const d = cell.getData();
-              return formatNumber(Number(d.CASHAMT || 0) + Number(d.BANKAMT || 0) + Number(d.billamt || 0) + Number(d.ETcamt || 0));
+              return formatNumber(Number(d.cashamt || 0) + Number(d.bankamt || 0) + Number(d.billamt || 0) + Number(d.etcamt || 0));
             },
             cssClass: "bg-light border-end", bottomCalc: "sum", bottomCalcFormatter: "money"
           },
@@ -164,7 +164,7 @@ const initGrid = () => {
         formatter: (cell) => {
           const d = cell.getData();
           const totalSales = Number(d.spyamt || 0) + Number(d.vatamt || 0);
-          const totalDeposit = Number(d.CASHAMT || 0) + Number(d.BANKAMT || 0) + Number(d.billamt || 0) + Number(d.ETcamt || 0);
+          const totalDeposit = Number(d.cashamt || 0) + Number(d.bankamt || 0) + Number(d.billamt || 0) + Number(d.etcamt || 0);
           return formatNumber(Number(d.baseamt || 0) + totalSales - totalDeposit);
         },
         cssClass: "bg-light fw-bold text-danger",
@@ -180,10 +180,10 @@ async function search() {
   try {
     const res = await api.post('/api/hsst/HSST_100S_STR', {
       cmpycd: authStore.cmpycd,
-      SELGBN: searchData.SELGBN,
+      selgbn: searchData.selgbn,
       deptcd: searchData.deptcd,
-      custcdFR: searchData.custcdFR,
-      custcdTO: searchData.custcdFR, // ASP 로직상 시작/종료를 동일하게 사용하거나 범위 지정
+      custcdfr: searchData.custcdfr,
+      custcdto: searchData.custcdfr, // ASP 로직상 시작/종료를 동일하게 사용하거나 범위 지정
       frymd: searchData.frymd,
       toymd: searchData.toymd
     })
@@ -219,7 +219,7 @@ function initialize() {
 
 function print(type: string) {
   // 인쇄 또는 엑셀 내보내기 로직 (기존 ASP 팝업 호출 방식 유지 가능)
-  const url = `HSST_100P.asp?SELGBN=1&deptcd=${searchData.deptcd}&custcdFR=${searchData.custcdFR}&frymd=${searchData.frymd}&toymd=${searchData.toymd}&PRTGU=${type}`
+  const url = `HSST_100P.asp?selgbn=1&deptcd=${searchData.deptcd}&custcdfr=${searchData.custcdfr}&frymd=${searchData.frymd}&toymd=${searchData.toymd}&PRTGU=${type}`
   window.open(url, 'print', 'width=700,height=650,scrollbars=yes')
 }
 
@@ -231,16 +231,16 @@ function openHelp(type: string) {
   if (type === 'DEPT') {
     Object.assign(modalProps, {
       title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-      data: { gubun: 'D0', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd },
       columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
       onConfirm: (data: any) => { searchData.deptcd = data.deptcd; searchData.deptnm = data.deptnm }
     })
   } else if (type === 'CUST') {
     Object.assign(modalProps, {
       title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'custnm',
-      data: { gubun: 'C4', cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+      data: { gubun: 'C4', cmpycd: authStore.cmpycd },
       columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 200 }],
-      onConfirm: (data: any) => { searchData.custcdFR = data.custcd; searchData.custnmFR = data.custnm }
+      onConfirm: (data: any) => { searchData.custcdfr = data.custcd; searchData.custnmfr = data.custnm }
     })
   }
   modalVisible.value = true

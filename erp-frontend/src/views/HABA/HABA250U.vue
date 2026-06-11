@@ -49,7 +49,7 @@
 							<div class="d-flex align-items-center gap-1">
 								<input v-model="searchForm.symd" type="date" class="form-control form-control-sm" style="width: 140px;" />
 								<span>~</span>
-								<input v-model="searchForm.EymD" type="date" class="form-control form-control-sm" style="width: 140px;" />
+								<input v-model="searchForm.eymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
 							</div>
 						</div>
 					</div>
@@ -173,7 +173,7 @@ const searchForm = reactive({
 	acctcd: '',
 	acctnm: '',
 	symd: firstDay,
-	EymD: today
+	eymd: today
 })
 
 // 📝 마스터 데이터
@@ -200,14 +200,14 @@ let mainGrid: Tabulator | null = null
 
 const search = async () => {
 	if (!searchForm.acctcd) return vAlert('검색할 계정과목을 선택해 주십시요.')
-	if (!searchForm.symd || !searchForm.EymD) return vAlert('발생일을 선택해 주십시요.')
+	if (!searchForm.symd || !searchForm.eymd) return vAlert('발생일을 선택해 주십시요.')
 
 	try {
 		const res = await api.post('/api/haba/HABA_250U_STR', {
 			actkind: 'SR',
 			cmpycd: authStore.cmpycd,
 			symd: searchForm.symd.replace(/-/g, ''),
-			EymD: searchForm.EymD.replace(/-/g, ''),
+			eymd: searchForm.eymd.replace(/-/g, ''),
 			slipymd: '',
 			slipno: '',
 			srowno: '',
@@ -239,7 +239,7 @@ const save = async () => {
 			actkind: masterForm.actkind,
 			cmpycd: authStore.cmpycd,
 			symd: searchForm.symd.replace(/-/g, ''),
-			EymD: searchForm.EymD.replace(/-/g, ''),
+			eymd: searchForm.eymd.replace(/-/g, ''),
 			slipymd: masterForm.slipymd.replace(/-/g, ''),
 			slipno: masterForm.slipno,
 			srowno: masterForm.srowno,
@@ -270,7 +270,7 @@ const initialize = () => {
 	const prevacctcd = searchForm.acctcd
 	const prevacctnm = searchForm.acctnm
 	const prevsymd = searchForm.symd
-	const prevEymD = searchForm.EymD
+	const preveymd = searchForm.eymd
 
 	resetForm(masterForm)
 
@@ -297,7 +297,7 @@ function openHelp(type: string) {
 		Object.assign(modalProps, {
 			title: '계정과목 선택',
 			path: '/api/ha00/HA00_00P_STR',
-			data: { GBN: 'CRS', cmpycd: authStore.cmpycd, acctgbn: '020', search: searchVal },
+			data: { gbn: 'CRS', cmpycd: authStore.cmpycd, acctgbn: '020', search: searchVal },
 			columns: [
 				{ title: '코드', field: 'col0', width: 100, hozAlign: 'center' },
 				{ title: '계정명', field: 'col1', width: 250 }

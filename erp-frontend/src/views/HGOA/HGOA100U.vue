@@ -19,7 +19,7 @@
 					<select v-model="SELECTED_CAMP_NO" class="form-select form-select-sm fw-bold border-0 bg-light shadow-none" style="min-width: 250px;" @change="handle_camp_change">
 						<option value="">캠페인을 선택하세요</option>
 						<option v-for="cp in CAMPAIGNS" :key="cp.CAMP_NO" :value="cp.CAMP_NO">
-							[{{ cp.SURVGBNM || '유형' }}] {{ cp.CAMP_NM }}
+							[{{ cp.survgbnM || '유형' }}] {{ cp.CAMP_NM }}
 						</option>
 					</select>
 				</div>
@@ -116,7 +116,7 @@
 							<div class="col-md-3">
 								<select v-model="CALL_RESULT.rslt_cd" class="form-select form-select-sm fw-bold border-success shadow-none">
 									<option value="">결과 선택</option>
-									<option v-for="code in RESULT_CODES" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
+									<option v-for="code in result_codeS" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
 								</select>
 							</div>
 							<div class="col-md-6"><input type="text" v-model="CALL_RESULT.MEMO" class="form-control form-control-sm border-success shadow-none" placeholder="상담 중요 요약 메모"></div>
@@ -168,7 +168,7 @@ const STATS = reactive<any>({ TOT_CNT: 0, READY_CNT: 0 }); const DETAIL_STATS = 
 const CAMPAIGNS = ref<any[]>([]); const SELECTED_CAMP_NO = ref('')
 const search_KEYWORD = ref(''); const SELECTED_CUSTOMER = ref<any>(null)
 const CUSTOMER_INFO = reactive({ email: '', TEL_NO: '' })
-const FILTERED_EXT_DATA = ref<any>({}); const RESULT_CODES = ref<any[]>([])
+const FILTERED_EXT_DATA = ref<any>({}); const result_codeS = ref<any[]>([])
 const SURVEY_QUESTIONS = ref<any[]>([]); const ACTIVE_QUESTION_NO = ref('')
 const CALL_RESULT = reactive({ rslt_cd: '', MEMO: '' })
 const AGENT_CHAT_HISTORY = ref<any[]>([]); const AGENT_REPLY_INPUT = ref('')
@@ -326,7 +326,7 @@ const handle_invite = async () => { if (CUSTOMER_INFO.email) { await api.post('/
 onMounted(() => {
     init_customer_table();
     api.get('/crm/outbound/camp-list').then(res => CAMPAIGNS.value = res.data);
-    fetchCrmSelectData('920').then(res => RESULT_CODES.value = res);
+    fetchCrmSelectData('920').then(res => result_codeS.value = res);
     const itv = setInterval(fetch_messages, 3000);
     onUnmounted(() => clearInterval(itv));
 });

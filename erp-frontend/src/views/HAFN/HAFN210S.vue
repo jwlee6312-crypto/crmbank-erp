@@ -46,7 +46,7 @@
 							<th class="text-center border-end">회계일자</th>
 							<td class="bg-white">
 								<div class="d-flex align-items-center gap-2">
-									<input v-model="searchForm.ymD" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="searchForm.ymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 									<span class="small fw-bold text-secondary">현재</span>
 								</div>
 							</td>
@@ -84,7 +84,7 @@ const today = new Date().toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	ymD: today
+	ymd: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -96,22 +96,21 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hafn/HAFN_210S_STR', {
 			cmpycd: authStore.cmpycd,
-			ymD: searchForm.ymD.replace(/-/g, '')
+			ymd: searchForm.ymd.replace(/-/g, '')
 		})
-
 		const data = (res.data || []).map((row: any) => ({
-			acctcd: row.col0,
-			acctnm: row.col1,
-			custcd: row.col2,
-			custnm: row.col3,
-			mgtno: row.col4,
-			stdymd: formatYmdShort(row.col5),
-			endymd: formatYmdShort(row.col6),
-			rate: Number(row.col7 || 0),
-			LOAnamt: Number(row.col8 || 0),
-			REpayamt: Number(row.COL9 || 0),
-			janamt: Number(row.col8 || 0) - Number(row.COL9 || 0),
-			bigo: row.col10
+			acctcd: row.acctcd,
+			acctnm: row.acctnm,
+			custcd: row.bankcd,
+			custnm: row.banknm,
+			mgtno: row.mgtno,
+			stdymd: formatYmdShort(row.stdymd),
+			endymd: formatYmdShort(row.endymd),
+			rate: Number(row.rate || 0),
+			loanamt: Number(row.loanamt || 0),
+			repayamt: Number(row.amt || 0),
+			janamt: Number(row.loanamt || 0) - Number(row.amt || 0),
+			bigo: row.remark
 		}))
 
 		mainGrid?.setData(data)
@@ -121,14 +120,14 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.ymD = today
+	searchForm.ymd = today
 	mainGrid?.clearData()
 }
 
-const excel = () => mainGrid?.download("xlsx", `차입금명세서_${searchForm.ymD}.xlsx`)
+const excel = () => mainGrid?.download("xlsx", `차입금명세서_${searchForm.ymd}.xlsx`)
 
 const print = () => {
-	const params = `ymD=${searchForm.ymD}`
+	const params = `ymd=${searchForm.ymd}`
 	window.open(`/api/hafn/HAFN_210P?${params}`, 'LoanStatementPrint', 'width=1000,height=800,scrollbars=yes')
 }
 
@@ -139,8 +138,8 @@ onMounted(() => {
 			height: '100%',
 			groupBy: "acctnm",
 			groupHeader: function(value, count, data, group) {
-				const sumLoan = data.reduce((acc, curr) => acc + curr.LOAnamt, 0)
-				const sumRepay = data.reduce((acc, curr) => acc + curr.REpayamt, 0)
+				const sumLoan = data.reduce((acc, curr) => acc + curr.loanamt, 0)
+				const sumRepay = data.reduce((acc, curr) => acc + curr.repayamt, 0)
 				const sumJan = data.reduce((acc, curr) => acc + curr.janamt, 0)
 				return `
 					<div class="d-flex justify-content-between w-100 pe-4">
@@ -160,8 +159,8 @@ onMounted(() => {
 				{ title: "이율", field: "rate", hozAlign: "right", width: 70,
 					formatter: (cell) => Number(cell.getValue() || 0).toFixed(2)
 				},
-				{ title: "차입액", field: "LOAnamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: "상환액", field: "REpayamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: "차입액", field: "loanamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: "상환액", field: "repayamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
 				{ title: "잔액", field: "janamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110,
 					cssClass: "fw-bold text-danger"
 				},

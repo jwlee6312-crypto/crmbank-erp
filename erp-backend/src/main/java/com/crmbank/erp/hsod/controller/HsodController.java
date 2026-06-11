@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -23,7 +24,7 @@ public class HsodController {
     private final HsodService hsodService;
 
     /**
-     * 🚀 주문등록 통합 저장 (ApiResponse 표준 체계)
+     * 🚀 주문등록 통합 저장 (Service 레이어 사용 -> ApiResponse 유지)
      */
     @PostMapping("/HSOD_100U_SAVE")
     public ResponseEntity<ApiResponse<?>> saveOrder(@RequestBody Hsod100uRequest request, HttpSession session) {
@@ -32,13 +33,10 @@ public class HsodController {
         String cmpycd = (user != null) ? user.getCmpycd() : "";
         
         try {
-            // 세션의 회사코드와 사용자ID 강제 주입
             if (request.getMst() != null) {
                 request.getMst().setCmpycd(cmpycd);
                 request.getMst().setUpdemp(userId);
             }
-            
-            log.info("💾 주문 통합 저장 시작: {}-{}", cmpycd, request.getMst() != null ? request.getMst().getOrdym() : "NULL");
             Map<String, Object> result = hsodService.saveOrder(request, userId);
             return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
         } catch (Exception e) {
@@ -48,31 +46,24 @@ public class HsodController {
     }
 
     /**
-     * 🚀 개별 프로시저 호출 (Map 직접 전달 방식)
+     * 🚀 단순 프로시저 호출 (Mapper 직접 사용 -> List 반환)
      */
     @PostMapping("/{procedure}")
-    public ResponseEntity<ApiResponse<?>> executeProcedure(
+    public List<Map<String, Object>> executeProcedure(
             @PathVariable String procedure,
             @RequestBody Map<String, Object> params,
             HttpSession session) {
         
         injectSession(params, session);
         
-        try {
-            Object result;
-            switch (procedure.toUpperCase()) {
-                case "HSOD_100U_STR": result = hsodMapper.HSOD_100U_STR(params); break;
-                case "HSOD_101U_STR": result = hsodMapper.HSOD_101U_STR(params); break;
-                case "HSOD_110S_STR": result = hsodMapper.HSOD_110S_STR(params); break;
-                case "HSOD_120U_STR": result = hsodMapper.HSOD_120U_STR(params); break;
-                case "HSOD_210U_STR": result = hsodMapper.HSOD_210U_STR(params); break;
-                default:
-                    return ResponseEntity.status(404).body(ApiResponse.notFound("해당 서비스를 찾을 수 없습니다."));
-            }
-            return ResponseEntity.ok(ApiResponse.success(result, "조회 성공"));
-        } catch (Exception e) {
-            log.error("❌ 프로시저 실행 오류 ({}): {}", procedure, e.getMessage());
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        switch (procedure.toUpperCase()) {
+            case "HSOD_100U_STR": return hsodMapper.HSOD_100U_STR(params);
+            case "HSOD_101U_STR": return hsodMapper.HSOD_101U_STR(params);
+            case "HSOD_110S_STR": return hsodMapper.HSOD_110S_STR(params);
+            case "HSOD_120U_STR": return hsodMapper.HSOD_120U_STR(params);
+            case "HSOD_210U_STR": return hsodMapper.HSOD_210U_STR(params);
+            default:
+                return null;
         }
     }
 

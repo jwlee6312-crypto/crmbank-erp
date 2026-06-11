@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 무주문 출고등록 (HSIO500U)
 	작성일자	: 2025.02.24
-	설명        : 주문 없이 직접 출고 데이터를 등록/관리 (소문자 표준화 적용)
+	설명        : 주문 없이 직접 출고 데이터를 등록/관리 (창고 로직 표준화 적용)
 	=============================================================
 -->
 
@@ -16,7 +16,7 @@
             <i class="bi bi-cart-check-fill me-2 text-primary" style="font-size: 18px;"></i> 영업관리
             <i class="bi bi-chevron-right mx-1 small opacity-50"></i> 출고관리
             <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-            <span class="text-primary fw-bolder text-nowrap">무주문 출고등록</span>
+            <span class="text-primary fw-bolder text-nowrap">무주문 출고등록 (HSIO500U)</span>
         </div>
         <div class="btn-group-erp d-flex gap-1 pe-3">
             <button class="btn-erp btn-init" @click="initialize">초기화</button>
@@ -95,7 +95,7 @@
                     <th class="required bg-light text-center">출고창고</th>
                     <td>
                       <select v-model="form_02.whcd" class="form-select">
-                        <option v-for="item in whcd_codes" :key="item.code" :value="item.code">{{ item.cdnm }}</option>
+                        <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
                       </select>
                     </td>
                   </tr>
@@ -175,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, onUnmounted } from 'vue'
+import { reactive, ref, onMounted, computed, onUnmounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -199,18 +199,18 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
-// [1] 데이터 모델링 (원칙: 완전 소문자 표준)
+// [1] 데이터 모델링
 const form_01 = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, out_no: '' })
 const form_02 = reactive<any>({
   cmpycd: authStore.cmpycd, deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  out_no: '', outymd: today, whcd: '100', custcd: '', custnm: '',
+  out_no: '', outymd: today, whcd: '', custcd: '', custnm: '',
   sale_userid: authStore.userid, dlv_userid: '', dlv_usernm: '',
   paycndt: '1', postno: '', address: '', d_address: '', addrcd: '',
   endymd: today, remark: '', totsum: 0
 })
 
 const closingInfo = reactive({ sclsym: '' })
-const whcd_codes = ref<any[]>([])
+const whOptions = ref<any[]>([])
 const userData = ref<any[]>([])
 
 // [2] 그리드 관리
@@ -275,6 +275,24 @@ const initGrids = () => {
 }
 
 // [3] 로직 처리
+const fetchWhOptions = async () => {
+  try {
+    const resWh = await api.get('/api/hs00/HS00_000S_STR', {
+      params: { gubun: 'W0', cmpycd: authStore.cmpycd }
+    })
+    whOptions.value = (resWh.data || []).map((i: any) => ({
+      whcd: String(i.whcd || '').trim(),
+      whnm: String(i.whnm || '').trim()
+    }))
+
+    if (whOptions.value.length > 0 && !form_02.whcd) {
+      form_02.whcd = whOptions.value[0].whcd
+    }
+  } catch (e) {
+    whOptions.value = []
+  }
+}
+
 const setGridDataWithPadding = (data: any[]) => {
   const displayData = data.map(i => ({ ...i, _state: 'EXIST', _status: '' }));
   while (displayData.length < MIN_ROWS) {
@@ -284,7 +302,7 @@ const setGridDataWithPadding = (data: any[]) => {
 }
 
 const calcRow = (row: any) => {
-  const data = row.StandardizedData();
+  const data = row.getData();
   if (data._state === 'EMPTY') return;
 
   const amt = Math.round(Number(data.qty || 0) * Number(data.price || 0));
@@ -334,9 +352,8 @@ const handleRowAction = (row: any) => {
 
 async function search() {
   try {
-    const res = await api.post('/api/hsio/HSIO_500U_STR', form_01);
-    const list = res.data.data || (Array.isArray(res.data) ? res.data : []);
-    grid1?.setData(list);
+    const res = await api.post('/api/hsio/HSIO_500U_STR', { ...form_01, actkind: 'S1', cmpycd: authStore.cmpycd });
+    grid1?.setData(res.data || []);
     vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }
 }
@@ -344,9 +361,8 @@ async function search() {
 async function fetchDetail(row: any) {
   Object.assign(form_02, row);
   try {
-    const res = await api.post(`/api/hsio/HSIO_501U_STR`, { out_no: row.out_no });
-    const list = res.data.data || (Array.isArray(res.data) ? res.data : []);
-    setGridDataWithPadding(list);
+    const res = await api.post(`/api/hsio/HSIO_501U_STR`, { actkind: 'S0', cmpycd: authStore.cmpycd, outym: row.ioym, outno: row.iono });
+    setGridDataWithPadding(res.data || []);
     updateTotalSum();
   } catch (e) { vAlertError('상세 로드 실패'); }
 }
@@ -359,7 +375,9 @@ async function save() {
   if (!details.length && !form_02.out_no) return vAlertError('저장할 품목이 없습니다.');
 
   try {
-    await api.post('/api/hsio/HSIO_500U_SAVE', { mst: form_02, dtl: details });
+    const mst = { ...form_02, actkind: form_02.iono ? 'U0' : 'A0', ioymd: form_02.outymd.replace(/-/g, ''), endymd: form_02.endymd.replace(/-/g, ''), updemp: authStore.userid };
+    const dtl = details.map(d => ({ ...d, actkind: d._status === '신규' ? 'A0' : (d._status === '삭제' ? 'D0' : 'U0'), updemp: authStore.userid }));
+    await api.post('/api/hsio/HSIO_500U_SAVE', { mst, dtl });
     vAlert('저장되었습니다.'); search();
   } catch (e) { vAlertError('저장 실패'); }
 }
@@ -377,7 +395,8 @@ function deleteSelectedRows() {
 function initialize() {
   resetForm(form_02);
   form_02.cmpycd = authStore.cmpycd;
-  form_02.outymd = today; form_02.endymd = today; form_02.whcd = '100';
+  form_02.outymd = today; form_02.endymd = today;
+  if (whOptions.value.length > 0) form_02.whcd = whOptions.value[0].whcd;
   form_02.deptcd = authStore.deptcd; form_02.deptnm = authStore.deptnm;
   form_02.sale_userid = authStore.userid;
   form_02.totsum = 0;
@@ -385,28 +404,29 @@ function initialize() {
 }
 
 async function handleFullDelete() {
-  if (!form_02.out_no) return;
+  if (!form_02.iono) return;
   if (isClosed.value) return vAlertError('마감된 월입니다.');
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_500U_SAVE', { mst: { ...form_02, actkind: 'D0' }, dtl: [] });
+    await api.post('/api/hsio/HSIO_500U_SAVE', { mst: { ...form_02, actkind: 'D0', ioymd: form_02.outymd.replace(/-/g, '') }, dtl: [] });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }
 
 onMounted(async () => {
-  api.post('/api/hs00/hs00_000s_str', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '030', code: '', codenm: '' }).then(r => { whcd_codes.value = r.data; });
-  api.post('/api/ha00/ha00_00p_str', { gubun: 'SD', cmpycd: authStore.cmpycd }).then(r => { userData.value = r.data; });
-  api.get('/api/hp00/hp00_000s_str', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
+  await fetchWhOptions();
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SD', cmpycd: authStore.cmpycd }).then(r => { userData.value = r.data; });
+  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym;
   });
-  initGrids(); initialize();
+  nextTick(initGrids);
+  initialize();
 })
 
 onUnmounted(() => { searchStore.removeTab(route.name as string) });
 </script>
 <style scoped>
-.main-content-wrapper { padding-bottom: 1vh !important; }
+.main-content-wrapper { padding-bottom: 0px !important; }
 .grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
 .erp-table-dense th, .erp-table-dense td {
   height: 32px !important;

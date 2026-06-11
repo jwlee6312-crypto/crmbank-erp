@@ -9,7 +9,7 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="erp-container">
+	<div class="erp-container d-flex flex-column h-100 bg-white">
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-list-check me-2 text-primary" style="font-size: 18px;"></i>
@@ -26,40 +26,51 @@
 			</div>
 		</div>
 
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm bg-white overflow-hidden">
-				<div class="card-body p-2 bg-light">
-					<div class="d-flex align-items-center flex-wrap gap-3 small">
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>예산년월</span>
-							<input v-model="searchForm.BUGTym" type="month" class="form-control form-control-sm" style="width: 130px;" @change="search" />
-						</div>
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>예산부서</span>
-							<div class="input-group input-group-sm" style="width: 220px;">
-								<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-								<input v-model="searchForm.deptnm" type="text" class="form-control" @keydown.enter="openHelp('DEPT')" />
-								<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-							</div>
-						</div>
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>예산과목</span>
-							<div class="input-group input-group-sm" style="width: 220px;">
-								<input v-model="searchForm.bugtcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-								<input v-model="searchForm.bugtnm" type="text" class="form-control" @keydown.enter="openHelp('BUGT')" />
-								<button class="btn btn-outline-secondary px-2" @click="openHelp('BUGT')"><i class="bi bi-search"></i></button>
-							</div>
-						</div>
-					</div>
+		<!-- 💡 메인 컨텐츠 영역 -->
+		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+			<!-- 🔍 검색 조건 영역 (HSOD100U 표준 패턴) -->
+			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+				<div class="card-body p-0 bg-white">
+					<table class="erp-table-dense" width="100%">
+						<colgroup>
+							<col style="width: 10%" /><col style="width: 23%" />
+							<col style="width: 10%" /><col style="width: 23%" />
+							<col style="width: 10%" /><col style="width: 24%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th class="text-center bg-light">예산년월</th>
+								<td>
+									<input v-model="searchForm.bugtym" type="month" class="form-control form-control-sm" style="width: 150px;" @change="search" />
+								</td>
+								<th class="text-center bg-light">예산부서</th>
+								<td>
+									<div class="input-group input-group-sm" style="width: 220px;">
+										<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.deptnm" type="text" class="form-control" @keydown.enter="openHelp('DEPT')" placeholder="부서 선택" />
+										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+									</div>
+								</td>
+								<th class="text-center bg-light">예산과목</th>
+								<td>
+									<div class="input-group input-group-sm" style="width: 220px;">
+										<input v-model="searchForm.bugtcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+										<input v-model="searchForm.bugtnm" type="text" class="form-control" @keydown.enter="openHelp('BUGT')" placeholder="과목 선택" />
+										<button class="btn btn-outline-secondary px-2" @click="openHelp('BUGT')"><i class="bi bi-search"></i></button>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
-		</div>
 
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
+			<!-- 📊 그리드 영역 -->
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                </div>
+				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+					<div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -81,7 +92,7 @@ const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
 const searchForm = reactive({
-	BUGTym: new Date().toISOString().slice(0, 7),
+	bugtym: new Date().toISOString().slice(0, 7),
 	deptcd: authStore.deptcd || '',
 	deptnm: authStore.deptnm || '',
 	bugtcd: '',
@@ -95,16 +106,16 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/habg/HABG_220S_STR', {
 			cmpycd: authStore.cmpycd,
-			BUGTym: searchForm.BUGTym.replace('-', ''),
+			bugtym: searchForm.bugtym.replace('-', ''),
 			deptcd: searchForm.deptcd,
 			bugtcd: searchForm.bugtcd
 		})
 
 		const data = (res.data || []).map((row: any) => ({
-			ACTDATE: row.col0,
+			actdate: row.col0,
 			slipno: row.col1,
 			bigo: row.col2,
-			AMT: Number(row.col3 || 0)
+			amt: Number(row.col3 || 0)
 		}))
 
 		mainGrid?.setData(data)
@@ -113,7 +124,7 @@ const search = async () => {
 }
 
 const excel = () => {
-	mainGrid?.download("xlsx", `예산상세현황_${searchForm.BUGTym}.xlsx`)
+	mainGrid?.download("xlsx", `예산상세현황_${searchForm.bugtym}.xlsx`)
 }
 
 const modalVisible = ref(false)
@@ -122,7 +133,7 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
-			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm },
+			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: searchForm.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
 		})
@@ -142,13 +153,17 @@ onMounted(() => {
 			layout: 'fitColumns',
 			height: '100%',
 			columns: [
-				{ title: "일자", field: "ACTDATE", width: 100, hozAlign: "center" },
-				{ title: "전표번호", field: "slipno", width: 150, hozAlign: "center" },
-				{ title: "적요", field: "bigo", width: 300 },
-				{ title: "금액", field: "AMT", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" }
+				{ title: "일자", field: "actdate", widthGrow: 1, hozAlign: "center" },
+				{ title: "전표번호", field: "slipno", widthGrow: 1, hozAlign: "center" },
+				{ title: "적요", field: "bigo", widthGrow: 1 },
+				{ title: "금액", field: "amt", widthGrow: 1, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" }
 			]
 		})
 	}
 	if (searchForm.deptcd) search()
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+</style>

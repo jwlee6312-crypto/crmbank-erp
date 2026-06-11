@@ -30,9 +30,9 @@
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold small text-dark" style="min-width: 60px;">출고일자</span>
               <div class="d-flex align-items-center gap-1">
-                <input v-model="searchForm.OUTymdfr" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                <input v-model="searchForm.outymdfr" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 <span class="text-muted">~</span>
-                <input v-model="searchForm.OUTymdto" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                <input v-model="searchForm.outymdto" type="date" class="form-control form-control-sm" style="width: 140px;" />
               </div>
             </div>
             <button class="btn btn-sm btn-dark px-4 fw-bold ms-auto" @click="fetchCustList">
@@ -148,8 +148,8 @@ const initymd = `${initym}${String(now.getDate()).padStart(2, '0')}`;
 
 const searchForm = reactive({
   whcd: '100',
-  OUTymdfr: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
-  OUTymdto: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  outymdfr: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
+  outymdto: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 })
 
 const masterData = reactive<any>({
@@ -180,7 +180,7 @@ const initGrid = () => {
       { title: "수량", field: "ioqty", width: 100, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
       { title: "금액", field: "jsanamt", width: 110, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
       { title: "부가세", field: "jsanvat", width: 100, hozAlign: "right", formatter: (c) => formatNumber(c.getValue()) },
-      { title: "합계", field: "Iosum", width: 120, hozAlign: "right", cssClass: "fw-bold", formatter: (c) => formatNumber(c.getValue()) }
+      { title: "합계", field: "iosum", width: 120, hozAlign: "right", cssClass: "fw-bold", formatter: (c) => formatNumber(c.getValue()) }
     ],
     rowSelectionChanged: (data) => {
        activeItemCount.value = data.length;
@@ -193,8 +193,8 @@ async function fetchCustList() {
   try {
     const res = await api.post('/api/hsio/HSIO_560U_STR', {
       actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '200',
-      OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
-      OUTymdto: searchForm.OUTymdto.replace(/-/g, ''),
+      outymdfr: searchForm.outymdfr.replace(/-/g, ''),
+      outymdto: searchForm.outymdto.replace(/-/g, ''),
       whcd: searchForm.whcd
     });
     custList.value = res.data || [];
@@ -213,14 +213,14 @@ async function fetchDetail(cust: any) {
   try {
     const res = await api.post('/api/hsio/HSIO_560U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '200',
-      OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
-      OUTymdto: searchForm.OUTymdto.replace(/-/g, ''),
+      outymdfr: searchForm.outymdfr.replace(/-/g, ''),
+      outymdto: searchForm.outymdto.replace(/-/g, ''),
       custcd: cust.custcd, whcd: cust.whcd, ioym: cust.ioym, iono: cust.iono
     });
     if (grid.value) {
       grid.value.setData(res.data.map((i: any) => ({
         ...i,
-        Iosum: (Number(i.jsanamt) || 0) + (Number(i.jsanvat) || 0)
+        iosum: (Number(i.jsanamt) || 0) + (Number(i.jsanvat) || 0)
       })));
     }
   } catch (e) { vAlertError('상세 내역 로드 실패'); }
@@ -244,8 +244,8 @@ async function saveCancel() {
     for (const item of items) {
       await api.post('/api/hsio/HSIO_560U_STR', {
         actkind: 'D0', cmpycd: authStore.cmpycd, iogbn: '200',
-        OUTymdfr: searchForm.OUTymdfr.replace(/-/g, ''),
-        OUTymdto: searchForm.OUTymdto.replace(/-/g, ''),
+        outymdfr: searchForm.outymdfr.replace(/-/g, ''),
+        outymdto: searchForm.outymdto.replace(/-/g, ''),
         whcd: masterData.whcd, custcd: masterData.custcd,
         ioym: masterData.ioym, iono: masterData.iono, iorowno: item.iorowno,
         updemp: authStore.userid
@@ -265,7 +265,7 @@ function initialize() {
 async function loadComboCodes(gbn: string, gbnCd: string) {
   try {
     const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: gbn, cmpycd: authStore.cmpycd, gbncd: gbnCd, LIMITOFFSET: 0, LIMITROWS: 9999 } });
-    return res.data.map((item: any) => ({ codecd: String(item.CODE || item.codecd || item.whcd || Object.values(item)[0]).trim(), codenm: String(item.cdnm || item.codenm || item.whnm || Object.values(item)[1]).trim() }))
+    return res.data.map((item: any) => ({ codecd: String(item.code || item.codecd || item.whcd || Object.values(item)[0]).trim(), codenm: String(item.cdnm || item.codenm || item.whnm || Object.values(item)[1]).trim() }))
   } catch (e) { return [] }
 }
 

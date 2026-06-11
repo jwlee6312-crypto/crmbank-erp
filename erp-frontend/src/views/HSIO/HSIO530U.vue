@@ -158,7 +158,7 @@ const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | 
 const fetchUnissuedList = async () => {
 	try {
 		const res = await api.post('/api/hsio/HSIO_530U_STR', {
-			actkind: 's0',
+			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
 			ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
 			ioymdto: searchForm.ioymdto.replace(/-/g, ''),
@@ -184,13 +184,13 @@ const handleGenerateSlip = async () => {
 	try {
         // 1. 자동전표 여부 확인 (gbn: 'p1')
         const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
-        const autoslip = (resset.data?.[0]?.slipyn || 'n').toLowerCase()
-        const acctymd = autoslip === 'y' ? slipymd : ''
+        const autoslip = (resset.data?.[0]?.slipyn || 'N').toLowerCase()
+        const acctymd = autoslip === 'Y' ? slipymd : ''
         const business = `${slipymd.substring(0, 4)}년 ${slipymd.substring(4, 6)}월 상품 매출 건`
 
         // 2. 전표 마스터 생성 (ASP: HASL_010U_STR 'A')
 		const resmst = await api.post('/api/hasl/HASL_010U_STR', {
-			actkind: 'a',
+			actkind: 'A',
 			cmpycd: authStore.cmpycd,
 			slipymd: slipymd,
             slipno: '',
@@ -208,15 +208,15 @@ const handleGenerateSlip = async () => {
         // 3. 정산 내역 순차 업데이트 (ASP: HSIO_530U_STR 'U0')
         for (const item of selected) {
             const params = {
-                actkind: 'u0',
+                actkind: 'U0',
                 cmpycd: authStore.cmpycd,
                 gubun: '200',
                 ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
                 ioymdto: searchForm.ioymdto.replace(/-/g, ''),
-                udeptcd: item.udeptcd || item.deptcd || formData.deptcd,
+                deptcd: item.deptcd || item.deptcd || formData.deptcd,
                 jsanym: item.jsanym,
                 jsanno: item.jsanno,
-                jsanymd: (item.jsanymd || item.jsanymD || '').replace(/-/g, ''),
+                jsanymd: (item.jsanymd || item.jsanymd || '').replace(/-/g, ''),
                 spyamt: String(item.spyamt || '0').replace(/,/g, ''),
                 vatamt: String(item.vatamt || '0').replace(/,/g, ''),
                 custcd: item.custcd,
@@ -228,23 +228,23 @@ const handleGenerateSlip = async () => {
             }
             const resdet = await api.post('/api/hsio/HSIO_530U_STR', params)
             const resdata = resdet.data?.[0]
-            if (resdata && (resdata.status === 'y' || resdata.erryn === 'y' || resdata.STATUS === 'Y' || resdata.ERRYN === 'Y')) {
+            if (resdata && (resdata.status === 'Y' || resdata.erryn === 'Y' || resdata.STATUS === 'Y' || resdata.ERRYN === 'Y')) {
                 throw new Error(resdata.msg || resdata.MSG || '정산 내역 처리 중 업무 오류 발생')
             }
         }
 
-        // 4. 자동전표 확정 (autoslip === 'y')
-        if (autoslip === 'y') {
+        // 4. 자동전표 확정 (autoslip === 'Y')
+        if (autoslip === 'Y') {
             await api.post('/api/hasl/HASL_020U_STR', {
-                actkind: 'a0',
+                actkind: 'A0',
                 cmpycd: authStore.cmpycd,
                 slipymd: slipymd,
                 acctymd: acctymd,
                 slipno: slipno,
                 deptcd: formData.deptcd,
                 slipkind: '040',
-                slipyn: 'n',
-                cofmyn: 'y',
+                slipyn: 'N',
+                cofmyn: 'Y',
                 empnm: authStore.usernm,
                 updemp: authStore.userid
             })
@@ -253,7 +253,7 @@ const handleGenerateSlip = async () => {
 		vAlert('전표가 발행되었습니다.')
 
         // 전표 인쇄 팝업 (ASP 로직 반영)
-        const printUrl = `../HASL/HASL_SLIP_PRINT.asp?SLIPGU=010&SLIPYMD=${slipymd}&slipno=${slipno}&DEPTCD=${formData.deptcd}`
+        const printUrl = `../HASL/HASL_SLIP_PRINT.asp?slipgu=010&SLIPYMD=${slipymd}&slipno=${slipno}&DEPTCD=${formData.deptcd}`
         window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
 
 		fetchUnissuedList()
@@ -287,7 +287,7 @@ function openHelp(type: string) {
 	if (type === 'DEPT' || type === 'ISSUE_DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-			data: { gubun: 'd0', cmpycd: authStore.cmpycd },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => {
 				if (type === 'DEPT') { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
@@ -317,7 +317,7 @@ onMounted(async () => {
 					headerClick: () => toggleAllRows()
 				},
 				{ title: "정산일", field: "jsanymd", width: 150, formatter: (c) => {
-                    const v = c.getValue() || c.getData().jsanymD;
+                    const v = c.getValue() || c.getData().jsanymd;
                     return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
                 }},
 				{ title: "정산부서", field: "deptnm", width: 250 },

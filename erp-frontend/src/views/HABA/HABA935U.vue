@@ -1,77 +1,99 @@
-<!--시스템관리/사용자그룹 프로그램 권한관리 [ERP 프리미엄 고밀도 표준 - 간격 확보] -->
+<!--
+	=============================================================
+	프로그램명	: 사용자 그룹 프로그램 권한관리 (HABA935U)
+	작성일자	: 2025.03.14
+	설명        : 사용자 그룹별 프로그램 사용 및 즐겨찾기 권한 관리 (HSOD100U 디자인 표준 준수)
+	=============================================================
+-->
+
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="erp-container">
-		<!-- 🚀 1. 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 shadow-sm sticky-top">
-			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-shield-lock-fill me-2 text-primary" style="font-size: 18px;"></i>
-				시스템 관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-				<span class="text-primary fw-bolder">사용자 그룹 프로그램 권한관리 (HABA935U)</span>
-			</div>
-			<div class="btn-group-erp pe-3">
-				<button class="btn-erp btn-search" @click="fetchCategories">조회</button>
-				<button class="btn-erp btn-save" @click="saveAll">일괄 저장</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-shield-lock-fill me-2 text-primary" style="font-size: 18px;"></i>
+        시스템 관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">사용자 그룹 권한관리 (HABA935U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-search" @click="fetchCategories">조회</button>
+        <button class="btn-erp btn-save" @click="saveAll">일괄 저장</button>
+      </div>
+    </div>
 
-		<!-- 💡 메인 컨텐츠 영역 (섹션 간 확실한 간격 확보: gap-3) -->
-		<div class="flex-grow-1 overflow-hidden d-flex flex-column gap-3 p-3">
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-			<!-- 🔍 2. 검색 조건 섹션 -->
-			<div class="card border-0 shadow-sm flex-shrink-0">
-				<div class="card-body p-2 bg-white rounded">
-					<div class="d-flex align-items-center gap-3">
-						<div class="input-group input-group-sm flex-nowrap" style="width: 350px;">
-							<span class="input-group-text bg-light fw-bold px-3 border-0">사용자그룹</span>
-							<select v-model="searchForm.usergrp" class="form-select border-light-subtle">
-								<option v-for="opt in groupOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-							</select>
-						</div>
-						<div class="input-group input-group-sm flex-nowrap" style="width: 300px;">
-							<span class="input-group-text bg-light fw-bold px-3 border-0">업무분류</span>
-							<select v-model="searchForm.upmucd" class="form-select border-light-subtle" @change="fetchCategories">
-								<option v-for="opt in upmuOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-							</select>
-						</div>
-						<div class="small text-muted border-start ps-3"><i class="bi bi-info-circle me-1"></i> 좌측 분류를 선택하면 우측에 해당 프로그램 리스트가 나타납니다.</div>
-					</div>
-				</div>
-			</div>
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 30%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">사용자그룹</th>
+                <td>
+                  <select v-model="form_01.usergrp" class="form-select form-select-sm">
+                    <option v-for="opt in userGrpData" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  </select>
+                </td>
+                <th class="text-center bg-light">업무분류</th>
+                <td>
+                  <select v-model="form_01.upmucd" class="form-select form-select-sm" @change="fetchCategories">
+                    <option v-for="opt in upmuData" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  </select>
+                </td>
+                <td class="small text-muted ps-3">
+                  <i class="bi bi-info-circle me-1"></i> 분류 선택 시 우측에 리스트가 표시됩니다.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-			<!-- 📊 3. 하단 분할 영역 (카드로 명확히 분리 및 간격 확보) -->
-			<div class="d-flex flex-row gap-3 flex-grow-1 overflow-hidden">
+      <!-- [하단] 투-그리드 레이아웃 영역 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
 
-				<!-- 🅰️ 좌측: 프로그램 분류 리스트 -->
-				<div class="card border-0 shadow-sm d-flex flex-column" style="width: 350px;">
-					<div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center">
-						<i class="bi bi-list-task me-2 text-secondary"></i>
-						<span class="fw-bold small text-dark">메뉴 그룹 분류</span>
-					</div>
-                    <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                        <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                    </div>
-				</div>
+        <!-- ⬅️ 좌측: 메뉴 그룹 분류 -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden" style="width: 350px; min-width: 350px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+            <i class="bi bi-list-task me-2 text-secondary"></i>
+            <span class="fw-bold small text-dark">메뉴 그룹 분류</span>
+          </div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
+          </div>
+        </div>
 
-				<!-- 🅱️ 우측: 상세 권한 설정 -->
-				<div class="card border-0 shadow-sm d-flex flex-column flex-grow-1">
-					<div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
-						<div class="fw-bold small text-dark"><i class="bi bi-check2-circle me-2 text-secondary"></i>상세 프로그램 권한 설정</div>
-						<button class="btn btn-xs btn-outline-primary fw-bold" @click="toggleSelectAll">전체선택 / 해제</button>
-					</div>
-                    <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                        <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                    </div>
-				</div>
-			</div>
-		</div>
-	</div>
+        <!-- ➡️ 우측: 상세 프로그램 권한 설정 -->
+        <div class="card border shadow-sm flex-grow-1 d-flex flex-column overflow-hidden">
+          <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+            <div class="fw-bold small text-dark">
+              <i class="bi bi-check2-circle me-2 text-primary"></i> 상세 프로그램 권한 설정
+              <span v-if="selectedGroupName" class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ selectedGroupName }}</span>
+            </div>
+            <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="toggleSelectAll" style="font-size: 11px;">전체선택 / 해제</button>
+          </div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef2" class="tabulator-instance flex-grow-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
@@ -80,113 +102,179 @@ import { useAuthStore } from '@/stores/authStore'
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
-const searchForm = reactive({ usergrp: '', upmucd: '', grpcd: '' })
-const groupOptions = ref<any[]>([])
-const upmuOptions = ref<any[]>([])
+// 1. 상태 관리
+const form_01 = reactive({ usergrp: '', upmucd: '', grpcd: '' })
+const userGrpData = ref<any[]>([])
+const upmuData = ref<any[]>([])
+const selectedGroupName = ref('')
 
-const catGridRef = ref<HTMLElement | null>(null)
-const pgmGridRef = ref<HTMLElement | null>(null)
-let catGrid: Tabulator | null = null
-let pgmGrid: Tabulator | null = null
-//HS00_000S_STR 'GB','" & strCustId & "','600',''
-//HA00_00P_STR 'E0','','320',''
+const tableRef1 = ref<HTMLElement | null>(null)
+const tableRef2 = ref<HTMLElement | null>(null)
+let grid1: Tabulator | null = null
+let grid2: Tabulator | null = null
+
+// 2. 기초 데이터 로드
 async function fetchGrp() {
-	try {
-		// 💡 SELGBN 대신 gbncd 사용
-		const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'GB',  cmpycd: authStore.cmpycd, gbncd: '600' })
-		console.log(res.data)
-		if (res.data) {
-			groupOptions.value = res.data.map((i: any) => ({ codecd: String(i.code || i.code).trim(), codenm: String(i.cdnm || i.cdnm).trim() }))
-			if (groupOptions.value.length > 0) {
-				searchForm.usergrp = groupOptions.value[0].codecd;
-
-				await fetchUpmu();
-			}
-		}
-	} catch (e) { console.error('사용자그룹 로드 실패') }
+  try {
+    const res = await api.post('/api/hs00/hs00_000s_str', { gubun: 'GB', cmpycd: authStore.cmpycd, gbncd: '600' })
+    if (res.data) {
+      userGrpData.value = res.data.map((i: any) => ({
+        codecd: (i.code || i.codecd || '').toString().trim(),
+        codenm: (i.cdnm || i.codenm || '').toString().trim()
+      }))
+      if (userGrpData.value.length > 0) {
+        form_01.usergrp = userGrpData.value[0].codecd;
+        await fetchUpmu();
+      }
+    }
+  } catch (e) { console.error('사용자그룹 로드 실패') }
 }
 
 async function fetchUpmu() {
-	try {
-		// 💡 SELGBN 대신 gbncd 사용
-		const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '320', cmpycd: authStore.cmpycd })
-		if (res.data) {
-			upmuOptions.value = res.data.map((i: any) => ({ codecd: String(i.codecd || i.code).trim(), codenm: String(i.codenm || i.cdnm).trim() }))
-			if (upmuOptions.value.length > 0) {
-				searchForm.upmucd = upmuOptions.value[0].codecd;
-
-				await fetchCategories()
-			}
-		}
-	} catch (e) { console.error('업무코드 로드 실패') }
+  try {
+    const res = await api.post('/api/ha00/ha00_00p_str', { gubun: 'E0', gbncd: '320', cmpycd: authStore.cmpycd })
+    if (res.data) {
+      upmuData.value = res.data.map((i: any) => ({
+        codecd: (i.codecd || i.code || '').toString().trim(),
+        codenm: (i.codenm || i.cdnm || '').toString().trim()
+      }))
+      if (upmuData.value.length > 0) {
+        form_01.upmucd = upmuData.value[0].codecd;
+        await fetchCategories();
+      }
+    }
+  } catch (e) { console.error('업무코드 로드 실패') }
 }
 
+// 3. 그리드 데이터 조회
 async function fetchCategories() {
-	if (!searchForm.usergrp || !searchForm.upmucd) return
-	try {
-		const res = await api.post('/api/haba/HABA_935U_STR', { actkind: 'S1', usergrp: searchForm.usergrp, upmucd: searchForm.upmucd, cmpycd: authStore.cmpycd })
-		catGrid?.setData(res.data || [])
-		pgmGrid?.clearData()
-	} catch (e) { vAlertError('분류 조회 실패') }
+  if (!form_01.usergrp || !form_01.upmucd) return
+  try {
+    const res = await api.post('/api/haba/haba_935u_str', { actkind: 'S1', usergrp: form_01.usergrp, upmucd: form_01.upmucd, cmpycd: authStore.cmpycd })
+    grid1?.setData(res.data || [])
+    grid2?.clearData()
+    selectedGroupName.value = ''
+  } catch (e) { vAlertError('분류 조회 실패') }
 }
 
-async function fetchPermissions(grpCd: string) {
-	searchForm.grpcd = grpCd
-	try {
-		const res = await api.post('/api/haba/HABA_935U_STR', { actkind: 'S0', usergrp: searchForm.usergrp, upmucd: searchForm.upmucd, grpcd: grpCd, cmpycd: authStore.cmpycd })
-		pgmGrid?.setData(res.data || [])
-	} catch (e) { vAlertError('권한 로드 실패') }
+async function fetchPermissions(grpcd: string, grpnm: string) {
+  form_01.grpcd = grpcd
+  selectedGroupName.value = grpnm
+  try {
+    const res = await api.post('/api/haba/haba_935u_str', { actkind: 'S0', usergrp: form_01.usergrp, upmucd: form_01.upmucd, grpcd: grpcd, cmpycd: authStore.cmpycd })
+    grid2?.setData(res.data || [])
+  } catch (e) { vAlertError('권한 로드 실패') }
 }
 
+// 4. 저장 및 기능
 async function saveAll() {
-	const rows = pgmGrid?.getData()
-	if (!rows || rows.length === 0) return vAlertError('저장할 데이터가 없습니다.')
-	try {
-		await api.post('/api/haba/HABA_935U_STR', { actkind: 'U0', usergrp: searchForm.usergrp, upmucd: searchForm.upmucd, grpcd: searchForm.grpcd, items: rows, cmpycd: authStore.cmpycd, userid: authStore.userid })
-		vAlert('성공적으로 저장되었습니다.')
-		fetchPermissions(searchForm.grpcd)
-	} catch (e) { vAlertError('저장 실패') }
+  const rows = grid2?.getData()
+  if (!rows || rows.length === 0) return vAlertError('저장할 데이터가 없습니다.')
+  if (!confirm('설정된 권한을 일괄 저장하시겠습니까?')) return
+  try {
+    for (const row of rows) {
+      // 변수명 소문자, 값 대문자 'Y'/'N' 표준 준수
+
+      await api.post('/api/haba/haba_935u_str', {
+        actkind: 'U0',
+        cmpycd: authStore.cmpycd,
+        usergrp: form_01.usergrp,
+        upmucd: form_01.upmucd,
+        grpcd: form_01.grpcd,
+        pgmid: row.pgmid,
+        pgmnm: row.pgmnm,
+        useyn: String(row.useyn || 'N').trim().toUpperCase(),
+        mypgm: String(row.mypgm || 'N').trim().toUpperCase(),
+        dspord: 0,
+        userid: authStore.userid
+      })
+    }
+    vAlert('성공적으로 저장되었습니다.')
+    fetchPermissions(form_01.grpcd, selectedGroupName.value)
+  } catch (e) {
+    console.error(e)
+    vAlertError('저장 중 오류가 발생했습니다.')
+  }
 }
 
 const toggleSelectAll = () => {
-	const rows = pgmGrid?.getRows(); if (!rows) return
-	const allChecked = rows.every(r => r.getData().useyn === 'Y')
-	rows.forEach(r => r.update({ useyn: allChecked ? 'N' : 'Y' }))
+  const rows = grid2?.getRows(); if (!rows) return
+  const allChecked = rows.every(r => {
+    const d = r.getData()
+    return String(d.useyn || 'N').trim().toUpperCase() === 'Y'
+  })
+  rows.forEach(r => r.update({ useyn: allChecked ? 'N' : 'Y' }))
+}
+
+function initialize() {
+  form_01.grpcd = ''
+  selectedGroupName.value = ''
+  grid1?.clearData()
+  grid2?.clearData()
+  fetchGrp()
+}
+
+// 5. 그리드 초기화
+const initGrids = () => {
+  if (tableRef1.value) {
+    grid1 = new Tabulator(tableRef1.value, {
+      layout: 'fitColumns', height: '100%', selectable: 1,
+      placeholder: '데이터 없음',
+      columnDefaults: { headerSort: false, headerHozAlign: 'center', vertAlign: 'middle' },
+      columns: [
+        { title: '코드', field: 'grpcd', width: 70, hozAlign: 'center' },
+        { title: '분류 명칭', field: 'grpnm', widthGrow: 1, cssClass: 'fw-bold text-primary', hozAlign: 'left' }
+      ]
+    })
+    grid1.on('rowClick', (e, row) => {
+      const d = row.getData();
+      fetchPermissions(d.grpcd, d.grpnm)
+    })
+  }
+
+  if (tableRef2.value) {
+    grid2 = new Tabulator(tableRef2.value, {
+      layout: 'fitColumns', height: '100%',
+      placeholder: '분류를 선택하세요',
+      columnDefaults: { headerSort: false, headerHozAlign: 'center', vertAlign: 'middle' },
+      columns: [
+        { title: '프로그램id', field: 'pgmid', width: 130, hozAlign: 'center', cssClass: 'fw-bold border-end' },
+        { title: '프로그램 명칭', field: 'pgmnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
+        {
+          title: '사용', field: 'useyn', hozAlign: 'center', width: 80,
+          formatter: (c) => {
+            const val = String(c.getValue() || 'N').toUpperCase();
+            return val === 'Y' ? '<span class="text-primary fw-bold">O</span>' : '<span class="text-danger fw-bold">X</span>';
+          },
+          cellClick: (e, cell) => {
+            const current = String(cell.getValue() || 'N').toUpperCase();
+            cell.setValue(current === 'Y' ? 'N' : 'Y');
+          }
+        },
+        {
+          title: '즐겨찾기', field: 'mypgm', hozAlign: 'center', width: 90,
+          formatter: (c) => {
+            const val = String(c.getValue() || 'N').toUpperCase();
+            return val === 'Y' ? '<span class="text-warning">★</span>' : '<span class="text-secondary">☆</span>';
+          },
+          cellClick: (e, cell) => {
+            const current = String(cell.getValue() || 'N').toUpperCase();
+            cell.setValue(current === 'Y' ? 'N' : 'Y');
+          }
+        }
+      ]
+    })
+  }
 }
 
 onMounted(async () => {
-	if (catGridRef.value) {
-		catGrid = new Tabulator(catGridRef.value, {
-			layout: 'fitColumns', height: '100%', selectable: 1,
-			columns: [
-				{ title: '코드', field: 'grpcd', width: 70, hozAlign: 'center' },
-				{ title: '분류 명칭', field: 'grpnm', headerSort: false, cssClass: 'fw-bold text-primary' }
-			]
-		})
-		catGrid.on('rowClick', (e, row) => fetchPermissions(row.getData().grpcd))
-	}
-	if (pgmGridRef.value) {
-		pgmGrid = new Tabulator(pgmGridRef.value, {
-			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: 'center' },
-			columns: [
-				{ title: '프로그램ID', field: 'pgmid', width: 130, hozAlign: 'center', cssClass: 'fw-bold border-end' },
-				{ title: '프로그램 명칭', field: 'pgmnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
-				{
-					title: '사용', field: 'useyn', hozAlign: 'center', width: 80,
-					formatter: (c) => c.getValue() === 'Y' ? '<span class="text-primary fw-bold">O</span>' : '<span class="text-danger fw-bold">X</span>',
-					cellClick: (e, cell) => cell.setValue(cell.getValue() === 'Y' ? 'N' : 'Y')
-				},
-				{
-					title: '즐겨찾기', field: 'MYPGM', hozAlign: 'center', width: 90,
-					formatter: (c) => c.getValue() === 'Y' ? '<span class="text-warning">★</span>' : '<span class="text-secondary">☆</span>',
-					cellClick: (e, cell) => cell.setValue(cell.getValue() === 'Y' ? 'N' : 'Y')
-				}
-			]
-		})
-	}
-
-	await fetchGrp()
-
+  await nextTick();
+  initGrids();
+  await fetchGrp();
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+:deep(.tabulator-row-selected) { background-color: #e7f1ff !important; }
+</style>

@@ -72,13 +72,13 @@
                 <th class="required">재고수량</th>
                 <td>
                   <div class="px-1">
-                    <input v-model="formData.QTY" type="number" class="form-control text-end fw-bold" style="width: 150px;" />
+                    <input v-model="formData.qty" type="number" class="form-control text-end fw-bold" style="width: 150px;" />
                   </div>
                 </td>
                 <th class="required">재고금액</th>
                 <td>
                   <div class="px-1">
-                    <input v-model="formData.AMT" type="number" class="form-control text-end fw-bold text-primary" style="width: 180px;" />
+                    <input v-model="formData.amt" type="number" class="form-control text-end fw-bold text-primary" style="width: 180px;" />
                   </div>
                 </td>
                 <td colspan="2" class="text-muted small px-3">
@@ -123,7 +123,7 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 
-const formData = reactive({ actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, deptcd: authStore.deptcd, deptnm: authStore.deptnm, itemcd: '', itemnm: '', itsize: '', unit: '', QTY: 0, AMT: 0 })
+const formData = reactive({ actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, deptcd: authStore.deptcd, deptnm: authStore.deptnm, itemcd: '', itemnm: '', itsize: '', unit: '', qty: 0, amt: 0 })
 const monthStr = computed({ get: () => String(formData.mm).padStart(2, '0'), set: (v) => { formData.mm = Number(v) } })
 const yearOptions = ref<string[]>([]); const monthOptions = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
@@ -142,8 +142,8 @@ const initGrid = () => {
         { title: "코드", field: "itemcd", width: 100, hozAlign: "center", cssClass: "text-primary fw-bold" },
         { title: "품 목 명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold" },
         { title: "규격", field: "itsize", width: 150 },
-        { title: "수량", field: "QTY", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "금액", field: "AMT", width: 120, hozAlign: "right", formatter: "money", cssClass: "text-primary fw-bold" }
+        { title: "수량", field: "qty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "금액", field: "amt", width: 120, hozAlign: "right", formatter: "money", cssClass: "text-primary fw-bold" }
       ],
     })
     grid.on("rowClick", (e, row) => { const d = row.getData(); Object.assign(formData, { ...d, actkind: 'U0', yy: d.ym.substring(0, 4), mm: Number(d.ym.substring(4, 6)) }) })
@@ -159,7 +159,7 @@ async function search() {
 
 async function save() {
   if (!formData.deptcd || !formData.itemcd) return vAlertError('부서와 품목을 모두 선택하세요.')
-  if (formData.QTY === 0 && formData.AMT === 0) return vAlertError('수량 또는 금액을 입력하세요.')
+  if (formData.qty === 0 && formData.amt === 0) return vAlertError('수량 또는 금액을 입력하세요.')
   if (!confirm('기초 재고 정보를 저장하시겠습니까?')) return
   try {
     await api.post('/api/hpba/HPBA_810U_STR', { ...formData, mm: monthStr.value, cmpycd: authStore.cmpycd, userid: authStore.userid })
@@ -169,10 +169,10 @@ async function save() {
 
 function excel() { grid?.download("xlsx", `부서별기초재고_${formData.yy}${monthStr.value}.xlsx`) }
 
-const initializeFormOnly = () => { Object.assign(formData, { actkind: 'A0', itemcd: '', itemnm: '', itsize: '', unit: '', QTY: 0, AMT: 0 }) }
+const initializeFormOnly = () => { Object.assign(formData, { actkind: 'A0', itemcd: '', itemnm: '', itsize: '', unit: '', qty: 0, amt: 0 }) }
 
 function initialize() {
-  resetForm(formData); Object.assign(formData, { actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, deptcd: authStore.deptcd, deptnm: authStore.deptnm, QTY: 0, AMT: 0 })
+  resetForm(formData); Object.assign(formData, { actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, deptcd: authStore.deptcd, deptnm: authStore.deptnm, qty: 0, amt: 0 })
   grid?.clearData(); itemCount.value = 0; search()
 }
 
@@ -183,8 +183,8 @@ function openHelp(type: string) {
       onConfirm: (d: any) => { Object.assign(formData, { itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit }) }
     })
   } else if (type === 'DEPT') {
-    Object.assign(modalProps, { title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'CODE', width: 80 }, { title: '부서명', field: 'cdnm', width: 180 }],
-      onConfirm: (d: any) => { formData.deptcd = d.CODE; formData.deptnm = d.cdnm }
+    Object.assign(modalProps, { title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'code', width: 80 }, { title: '부서명', field: 'cdnm', width: 180 }],
+      onConfirm: (d: any) => { formData.deptcd = d.code; formData.deptnm = d.cdnm }
     })
   }
   modalVisible.value = true

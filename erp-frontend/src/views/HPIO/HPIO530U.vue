@@ -61,7 +61,7 @@
                 <th class="required">출고창고</th>
                 <td>
                   <select v-model="masterData.whcd" class="form-select form-select-sm" style="width: 140px;">
-                    <option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                    <option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                   </select>
                 </td>
               </tr>
@@ -84,12 +84,12 @@
                 <th class="required">입고창고</th>
                 <td>
                   <select v-model="masterData.iwhcd" class="form-select form-select-sm" style="width: 140px;">
-                    <option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                    <option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                   </select>
                 </td>
                 <td colspan="2" class="bg-light">
                   <div class="d-flex gap-2 justify-content-center">
-                    <button class="btn btn-xs btn-primary px-2" style="height: 26px;" @click="generateBom">
+                    <button class="btn btn-xs btn-primary px-2" style="height: 26px;" @click="generatebom">
                       <i class="bi bi-diagram-3-fill me-1"></i> BOM전개
                     </button>
                     <button class="btn btn-xs btn-info text-white px-2" style="height: 26px;" @click="importData">
@@ -247,7 +247,7 @@ const fetchDetails = async () => {
   } catch (e) {}
 }
 
-const generateBom = async () => {
+const generatebom = async () => {
     if (!masterData.ordym || !masterData.ordno) return vAlertError('주문번호를 입력하세요.')
     if (!confirm('BOM 전개를 실행하시겠습니까?')) return
     try {
@@ -339,11 +339,11 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string, cell?: any) {
   let config: any = {}
   if (type === 'DEPT') {
-    config = { title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'cdnm', data: { gubun: 'D0', cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'CODE', width: 80 }, { title: '부서명', field: 'cdnm', width: 150 }], onConfirm: (data: any) => { masterData.deptcd = data.CODE; masterData.deptnm = data.cdnm } }
+    config = { title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'cdnm', data: { gubun: 'D0', cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'code', width: 80 }, { title: '부서명', field: 'cdnm', width: 150 }], onConfirm: (data: any) => { masterData.deptcd = data.code; masterData.deptnm = data.cdnm } }
   } else if (type === 'ORDER') {
     config = { title: '주문 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'ordno', data: { gubun: 'ORDER', cmpycd: authStore.cmpycd }, columns: [{ title: '연월', field: 'ordym', width: 80 }, { title: '번호', field: 'ordno', width: 60 }, { title: '거래처', field: 'custnm', width: 150 }], onConfirm: (data: any) => { masterData.ordym = data.ordym; masterData.ordno = data.ordno } }
   } else if (type === 'GRID_ITEM') {
-    config = { title: '자재 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'itemnm', data: { gubun: 'I1', cmpycd: authStore.cmpycd, iogbn: 'I' }, columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '자재명', field: 'itemnm', width: 250 }], onConfirm: (data: any) => { cell.getRow().update({ itemcd: data.itemcd, itemnm: data.itemnm, itsize: data.itsize, unit: data.unit, QTYPNT: data.QTYPNT }) } }
+    config = { title: '자재 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'itemnm', data: { gubun: 'I1', cmpycd: authStore.cmpycd, iogbn: 'I' }, columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '자재명', field: 'itemnm', width: 250 }], onConfirm: (data: any) => { cell.getRow().update({ itemcd: data.itemcd, itemnm: data.itemnm, itsize: data.itsize, unit: data.unit, qtypnt: data.qtypnt }) } }
   }
   Object.assign(modalProps, config); modalVisible.value = true
 }

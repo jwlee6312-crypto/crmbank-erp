@@ -155,7 +155,7 @@
         WHERE A.CMPYCD = #{CMPYCD, jdbcType=VARCHAR} AND A.CUSTCD = #{CUSTCD, jdbcType=VARCHAR}
         ORDER BY A.START_TIME DESC
     </select>
-
+    <!--    selectServiceHistory selectSettleHistory 추가할 것 인바운 상당 내역에 필요-->
     <!-- [8. 이관 데이터 관리] -->
     <select id="selectTransferData" parameterType="string" resultType="map">
         SELECT * FROM CTI_TRANSFER_TBL WHERE LINKEDID = #{linkedid, jdbcType=VARCHAR}

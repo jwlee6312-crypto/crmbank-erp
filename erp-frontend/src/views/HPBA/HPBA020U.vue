@@ -49,7 +49,7 @@
                 </td>
                 <th class="text-center bg-light required">대분류코드</th>
                 <td>
-                  <input v-model="formData.agrpcd" class="form-control text-center fw-bold" maxlength="3" :readonly="formData.actkind === 'u0'" placeholder="3자리" />
+                  <input v-model="formData.agrpcd" class="form-control text-center fw-bold" maxlength="3" :readonly="formData.actkind === 'U0'" placeholder="3자리" />
                 </td>
                 <th class="text-center bg-light required">대분류명</th>
                 <td>
@@ -98,7 +98,7 @@ const { resetForm } = useFormReset()
 
 // [1] 데이터 모델링
 const formData = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   astkind: '', agrpcd: '', agrpnm: '', useyn: 'Y'
 })
 
@@ -124,7 +124,7 @@ const initGrids = () => {
 const fetchAstOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '100' } });
-    astOptions.value = res.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
+    astOptions.value = res.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
     if (astOptions.value.length > 0) formData.astkind = astOptions.value[0].code;
   } catch (e) {}
 }
@@ -139,7 +139,7 @@ async function search() {
 }
 
 function fetchDetail(row: any) {
-  Object.assign(formData, { ...row, actkind: 'u0' });
+  Object.assign(formData, { ...row, actkind: 'U0' });
 }
 
 async function save() {
@@ -149,7 +149,7 @@ async function save() {
   try {
     await api.post('/api/hpba/HPBA_020U_STR', {
       ...formData,
-      actkind: formData.actkind === 'u0' ? 'u0' : 'a0',
+      actkind: formData.actkind === 'U0' ? 'U0' : 'A0',
       userid: authStore.userid
     });
     vAlert('처리되었습니다.');
@@ -159,7 +159,7 @@ async function save() {
 }
 
 const resetInputForm = () => {
-  formData.actkind = 's0';
+  formData.actkind = 'S0';
   formData.agrpcd = ''; formData.agrpnm = ''; formData.useyn = 'Y';
 }
 

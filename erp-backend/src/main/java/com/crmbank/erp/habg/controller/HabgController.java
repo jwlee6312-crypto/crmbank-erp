@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -21,116 +22,50 @@ public class HabgController {
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
-            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
+            params.putIfAbsent("cmpycd", user.getCmpycd());
+            params.put("userid", user.getUserid());
+            params.put("updemp", user.getUserid());
         }
     }
 
-    /**
-     * 예산신청 조회 및 처리
-     */
-    @PostMapping("/HABG_010U_STR")
-    public List<Map<String, Object>> getHabg010U(@RequestBody Map<String, Object> params, HttpSession session) {
+    @PostMapping("/{procedure}")
+    public List<Map<String, Object>> executeProcedure(
+            @PathVariable String procedure,
+            @RequestBody Map<String, Object> params,
+            HttpSession session) {
+
         injectSession(params, session);
-        return habgMapper.HABG_010U_STR(params);
+
+        String proc = procedure.toUpperCase();
+        log.info("📋 SSMS 실행용: {}", buildSsmsLog(proc, params));
+
+        switch (proc) {
+            case "HABG_010U_STR": return habgMapper.HABG_010U_STR(params);
+            case "HABG_020S_STR": return habgMapper.HABG_020S_STR(params);
+            case "HABG_030U_STR": return habgMapper.HABG_030U_STR(params);
+            case "HABG_050U_STR": return habgMapper.HABG_050U_STR(params);
+            case "HABG_060U_STR": return habgMapper.HABG_060U_STR(params);
+            case "HABG_070S_STR": return habgMapper.HABG_070S_STR(params);
+            case "HABG_110U_STR": return habgMapper.HABG_110U_STR(params);
+            case "HABG_120U_STR": return habgMapper.HABG_120U_STR(params);
+            case "HABG_210S_STR": return habgMapper.HABG_210S_STR(params);
+            case "HABG_220S_STR": return habgMapper.HABG_220S_STR(params);
+            case "HABG_230S_STR": return habgMapper.HABG_230S_STR(params);
+            default:
+                log.warn("❌ [habg] Unregistered procedure: {}", proc);
+                return null;
+        }
     }
 
-    /**
-     * 예산신청서 조회
-     */
-    @PostMapping("/HABG_020S_STR")
-    public List<Map<String, Object>> getHabg020S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_020S_STR(params);
-    }
+    private String buildSsmsLog(String proc, Map<String, Object> params) {
+        String[] keys = params.keySet().toArray(new String[0]);
+        String values = java.util.Arrays.stream(keys)
+                .map(key -> {
+                    Object val = params.get(key);
+                    return val == null ? "''" : "'" + val.toString().trim() + "'";
+                })
+                .collect(Collectors.joining(", "));
 
-    /**
-     * 예산조정 조회 및 처리
-     */
-    @PostMapping("/HABG_030U_STR")
-    public List<Map<String, Object>> executeHabg030U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_030U_STR(params);
-    }
-
-    /**
-     * 예산배정 조회 및 처리
-     */
-    @PostMapping("/HABG_050U_STR")
-    public List<Map<String, Object>> executeHabg050U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_050U_STR(params);
-    }
-
-    /**
-     * 예산일괄배정 처리
-     */
-    @PostMapping("/HABG_060U_STR")
-    public List<Map<String, Object>> executeHabg060U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_060U_STR(params);
-    }
-
-    /**
-     * 예산배정서 조회
-     */
-    @PostMapping("/HABG_070S_STR")
-    public List<Map<String, Object>> getHabg070S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_070S_STR(params);
-    }
-
-    /**
-     * 추가/조정신청 조회 및 처리
-     */
-    @PostMapping("/HABG_110U_STR")
-    public List<Map<String, Object>> executeHabg110U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_110U_STR(params);
-    }
-
-    /**
-     * 추가/조정신청 처리
-     */
-    @PostMapping("/HABG_120U_STR")
-    public List<Map<String, Object>> executeHabg120U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_120U_STR(params);
-    }
-
-    /**
-     * 예산현황 조회
-     */
-    @PostMapping("/HABG_210S_STR")
-    public List<Map<String, Object>> getHabg210S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_210S_STR(params);
-    }
-
-    /**
-     * 예산상세현황 조회
-     */
-    @PostMapping("/HABG_220S_STR")
-    public List<Map<String, Object>> getHabg220S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_220S_STR(params);
-    }
-
-    /**
-     * 예산실적서 조회
-     */
-    @PostMapping("/HABG_230S_STR")
-    public List<Map<String, Object>> getHabg230S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.HABG_230S_STR(params);
-    }
-
-    /**
-     * 예산구분 조회
-     */
-    @PostMapping("/GET_BGTYPE")
-    public Map<String, Object> getBgType(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return habgMapper.GET_BGTYPE(params);
+        return String.format("EXEC %s %s", proc, values);
     }
 }

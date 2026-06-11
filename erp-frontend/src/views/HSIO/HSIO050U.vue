@@ -166,11 +166,11 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 // [1] 데이터 모델링 (HSOD100U 기준 소문자 원칙)
 const form_01 = reactive({ fromdt: firstDay, todt: today, custnm: '' })
 const form_02 = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   balno: '0000', balymd: today, reqymd: today,
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   custcd: '', custnm: '', userid: authStore.userid,
-  remark: '', flag: 'n', email: '', totsum: 0, balgb: '1', reqno: ''
+  remark: '', flag: 'N', email: '', totsum: 0, balgb: '1', reqno: ''
 })
 
 const displayBalNo = computed(() => (!form_02.balno || form_02.balno === '0000') ? '' : form_02.balno)
@@ -229,7 +229,7 @@ const calcRow = (row: any) => {
 
 async function search() {
   try {
-    const res = await api.post('/api/hsio/HSIO_050U_STR', { actkind: 's1', fromdt: form_01.fromdt.replace(/-/g, ''), todt: form_01.todt.replace(/-/g, ''), custnm: form_01.custnm, balgb: form_02.balgb });
+    const res = await api.post('/api/hsio/HSIO_050U_STR', { actkind: 'S1', fromdt: form_01.fromdt.replace(/-/g, ''), todt: form_01.todt.replace(/-/g, ''), custnm: form_01.custnm, balgb: form_02.balgb });
     grid1?.setData(res.data); vAlert('조회되었습니다.');
   } catch (e: any) { vAlertError('조회 실패'); }
 }
@@ -238,7 +238,7 @@ async function fetchDetail(row: any) {
   const fYmd = (d: string) => d && d.length === 8 ? `${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6, 8)}` : today;
   Object.assign(form_02, { ...row, balymd: fYmd(row.balymd), reqymd: fYmd(row.reqymd) });
   try {
-    const res = await api.post('/api/hsio/HSIO_051U_STR', { actkind: 's0', balno: row.balno });
+    const res = await api.post('/api/hsio/HSIO_051U_STR', { actkind: 'S0', balno: row.balno });
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
   } catch (e: any) { vAlertError('상세 로드 실패'); }
 }
@@ -249,8 +249,8 @@ async function save() {
   if (!details.length && form_02.balno === '0000') return vAlertError('항목을 추가하세요.');
 
   try {
-    const mst = { ...form_02, actkind: form_02.balno === '0000' ? 'a0' : 'u0', balymd: form_02.balymd.replace(/-/g, ''), reqymd: form_02.reqymd.replace(/-/g, ''), updemp: authStore.userid };
-    const dtl = details.map((d: any) => ({ ...d, actkind: d._status === '입력' ? 'a0' : (d._status === '삭제' ? 'd0' : 'u0'), updemp: authStore.userid }));
+    const mst = { ...form_02, actkind: form_02.balno === '0000' ? 'A0' : 'U0', balymd: form_02.balymd.replace(/-/g, ''), reqymd: form_02.reqymd.replace(/-/g, ''), updemp: authStore.userid };
+    const dtl = details.map((d: any) => ({ ...d, actkind: d._status === '입력' ? 'A0' : (d._status === '삭제' ? 'D0' : 'U0'), updemp: authStore.userid }));
     await api.post('/api/hsio/HSIO_050U_SAVE', { mst, dtl });
     vAlert('저장되었습니다.'); search();
   } catch (e: any) { vAlertError('저장 오류'); }

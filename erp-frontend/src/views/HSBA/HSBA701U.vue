@@ -73,7 +73,7 @@ const initGrid = () => {
         formatter: "tickCross", editor: true
       },
       {
-        title: "분개유형", field: "SLIPKIND", width: 200, editor: "list",
+        title: "분개유형", field: "slipkind", width: 200, editor: "list",
         editorParams: { values: slipKindOptions.value.reduce((acc, opt) => ({ ...acc, [opt.codecd]: opt.codenm }), {}) },
         formatter: (cell) => {
           const val = cell.getValue();
@@ -103,11 +103,11 @@ const initGrid = () => {
       },
       { title: "대변계정명", field: "acctnm2", width: 150, editor: "input" },
       {
-        title: "부가세코드", field: "Vacctcd", width: 100, editor: "input",
+        title: "부가세코드", field: "vacctcd", width: 100, editor: "input",
         cellClick: (e, cell) => { if ((e.target as HTMLElement).classList.contains('bi-search')) openHelp('VACCT', cell.getRow()) },
         formatter: (cell) => (cell.getValue() || '') + " <i class='bi bi-search text-primary ms-1 cursor-pointer'></i>"
       },
-      { title: "부가세명", field: "Vacctnm", width: 150, editor: "input" },
+      { title: "부가세명", field: "vacctnm", width: 150, editor: "input" },
       {
         title: "", width: 40, hozAlign: "center",
         formatter: () => "<i class='bi bi-trash text-danger cursor-pointer'></i>",
@@ -135,7 +135,7 @@ async function fetchOptions() {
     // 재고자산 (100)
 
     const resAsset = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '100' } })
-    assetKindOptions.value = resAsset.data.map((i: any) => ({ codecd: i.CODE, codenm: i.cdnm }))
+    assetKindOptions.value = resAsset.data.map((i: any) => ({ codecd: i.code, codenm: i.cdnm }))
   } catch (e) { console.error('옵션 로드 실패') }
 }
 
@@ -183,7 +183,7 @@ function initialize() {
 
 function addRow() {
   if (grid.value) {
-    grid.value.addRow({ procyn: true, SLIPKIND: '', astkind: '', acctcd1: '', acctnm1: '', acctcd2: '', acctnm2: '', Vacctcd: '', Vacctnm: '' })
+    grid.value.addRow({ procyn: true, slipkind: '', astkind: '', acctcd1: '', acctnm1: '', acctcd2: '', acctnm2: '', vacctcd: '', vacctnm: '' })
     updateTotals()
   }
 }
@@ -205,7 +205,7 @@ function openHelp(type: string, row: any) {
     onConfirm: (data: any) => {
       if (type === 'ACCT1') row.update({ acctcd1: data.acctcd, acctnm1: data.acctnm })
       else if (type === 'ACCT2') row.update({ acctcd2: data.acctcd, acctnm2: data.acctnm })
-      else if (type === 'VACCT') row.update({ Vacctcd: data.acctcd, Vacctnm: data.acctnm })
+      else if (type === 'VACCT') row.update({ vacctcd: data.acctcd, vacctnm: data.acctnm })
     }
   })
   modalVisible.value = true

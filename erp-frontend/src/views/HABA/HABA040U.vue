@@ -1,115 +1,69 @@
-<!--
-	=============================================================
-	프로그램명	: 보조과목관리
-	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 계정과목의 보조부유형이 기타인 코드 관리
-	=============================================================
--->
-
+<!--관리정보/기초관리/창고정보관리 [ERP 프리미엄 고밀도 표준] -->
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+	<appalert :show="showalert" :error="showerror" :message="alertmessage" />
 
 	<div class="erp-container">
-		<!-- 🚀 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-collection me-2 text-primary" style="font-size: 18px;"></i>
-				기본정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">보조과목관리 (HABA040U)</span>
+		<!-- 🚀 1. 상단 액션 바 -->
+		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 shadow-sm sticky-top">
+			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 14px;">
+				<i class="bi bi-house-door-fill me-2 text-primary" style="font-size: 18px;"></i>
+				기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				기초관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				<span class="text-primary fw-bolder">창고정보관리 (haba040u)</span>
 			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-plus-lg"></i> 신규
-				</button>
-				<button class="btn-erp btn-search" @click="search">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-save" @click="save">
-					<i class="bi bi-check-lg"></i> 저장
-				</button>
-				<button class="btn-erp btn-excel" @click="excel">
-					<i class="bi bi-file-earmark-excel"></i> 엑셀
-				</button>
+			<div class="btn-group-erp pe-3">
+				<button class="btn-erp btn-init" @click="initialize">초기화</button>
+				<button class="btn-erp btn-search" @click="search">조회</button>
+				<button class="btn-erp btn-save" @click="save">저장</button>
 			</div>
 		</div>
 
-		<!-- 🔍 검색 조건 영역 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm overflow-hidden bg-light">
-				<table class="erp-table-full" style="table-layout: fixed;">
-					<colgroup>
-						<col style="width: 100px;" /><col style="width: 250px;" />
-						<col />
-					</colgroup>
-					<tbody>
-						<tr>
-							<th class="text-center border-end">보조과목 명</th>
-							<td class="bg-white border-end px-2">
-								<input v-model="searchForm.subnm_h" type="text" class="form-control form-control-sm" placeholder="검색어 입력" @keydown.enter="search" />
-							</td>
-							<td class="bg-white px-3 text-muted small">
-								<i class="bi bi-info-circle me-1"></i> 보조과목명을 입력하여 검색하실 수 있습니다.
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+		<!-- 💡 메인 컨텐츠 영역 -->
+		<div class="flex-grow-1 overflow-hidden d-flex flex-column gap-3 p-3 bg-light">
 
-		<!-- 📝 상세 정보 입력 영역 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm bg-white overflow-hidden">
-				<div class="card-header py-1 px-2 bg-light border-bottom">
-					<span class="small fw-bold text-secondary"><i class="bi bi-pencil-square me-1"></i> 보조과목 상세 정보 [{{ masterForm.actkind === 'A0' ? '신규' : '수정' }}]</span>
+			<!-- 💡 2. 상세 입수정 영역 -->
+			<div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
+				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
+					<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-secondary"></i>창고 상세 정보</div>
+					<div v-if="formdata.actkind === 'U0'" class="badge bg-warning text-dark px-2">수정 중</div>
+					<div v-else class="badge bg-primary text-white px-2">신규 등록</div>
 				</div>
-				<table class="erp-table-full small">
-					<colgroup>
-						<col style="width: 100px;" /><col style="width: 20%;" />
-						<col style="width: 100px;" /><col style="width: 30%;" />
-						<col style="width: 100px;" /><col />
-					</colgroup>
-					<tbody>
-						<tr>
-							<th class="text-center bg-light-subtle border-end">보조과목</th>
-							<td class="bg-white border-end px-2">
-								<input v-model="masterForm.subcd" type="text" class="form-control form-control-sm text-center fw-bold" maxlength="5" :readonly="masterForm.actkind === 'U0'" placeholder="코드 입력" />
-							</td>
-							<th class="text-center bg-light-subtle border-end">보조과목명</th>
-							<td colspan="3" class="bg-white px-2">
-								<input v-model="masterForm.subnm" type="text" class="form-control form-control-sm" maxlength="30" />
-							</td>
-						</tr>
-						<tr>
-							<th class="text-center bg-light-subtle border-end border-top">비&nbsp;&nbsp;&nbsp;&nbsp;고</th>
-							<td class="bg-white border-end border-top px-2">
-								<input v-model="masterForm.remark" type="text" class="form-control form-control-sm" maxlength="50" />
-							</td>
-							<th class="text-center bg-light-subtle border-end border-top">출현순서</th>
-							<td class="bg-white border-end border-top px-2">
-								<input v-model="masterForm.dspord" type="text" class="form-control form-control-sm text-center" maxlength="3" />
-							</td>
-							<th class="text-center bg-light-subtle border-end border-top">사용여부</th>
-							<td class="bg-white border-top px-3">
-								<div class="form-check pt-1">
-									<input v-model="masterForm.useyn" class="form-check-input" type="checkbox" id="useCheck" true-value="Y" false-value="N">
-									<label class="form-check-label small fw-bold" for="useCheck">사용</label>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="card-body p-0 bg-white">
+					<table class="erp-table-full border-0">
+						<colgroup>
+                            <col style="width: 80px;" /><col style="width: 150px;" />
+                            <col style="width: 80px;" /><col />
+                            <col style="width: 60px;" /><col style="width: 100px;" />
+                            <col style="width: 50px;" /><col style="width: 80px;" />
+                        </colgroup>
+						<tbody>
+							<tr>
+								<th class="required">코드</th>
+								<td><input v-model="formdata.whcd" type="text" class="form-control fw-bold text-primary text-center" maxlength="3" placeholder="000" :disabled="formdata.actkind === 'U0'"/></td>
+								<th class="required">창고명</th>
+								<td><input v-model="formdata.whnm" type="text" class="form-control" maxlength="30" /></td>
+								<th>순서</th>
+								<td><input v-model="formdata.dspord" type="number" class="form-control text-end" /></td>
+								<th>사용</th>
+								<td>
+									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
+										<input v-model="formdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="y" false-value="n" id="useyn040">
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</div>
-			<div class="mt-2 ps-1 text-primary small fw-bold">
-				&nbsp;☞계정과목의 보조부유형이 기타인 코드를 등록하여 관리한다.
-			</div>
-		</div>
 
-		<!-- 📊 그리드 영역 -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
+			<!-- 📊 3. 하단 그리드 영역 -->
+			<div class="card border-0 shadow-sm flex-grow-1 overflow-hidden">
+				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+					<i class="bi bi-table me-2 text-secondary"></i>
+					<span class="fw-bold small text-dark">창고 리스트 ({{ activeitemcount }} 건)</span>
+				</div>
                 <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                    <div ref="maingridelement" class="tabulator-instance flex-grow-1"></div>
                 </div>
 			</div>
 		</div>
@@ -117,115 +71,79 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { onMounted, reactive, ref, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
+import { useAlerts } from '@/composables/useAlerts'
 import { useFormReset } from '@/composables/useFormReset'
+import appalert from '@/components/AppAlert.vue'
 
-const authStore = useAuthStore()
-const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
-const { resetForm } = useFormReset()
+const authstore = useAuthStore()
+const { showAlert: showalert, showError: showerror, alertMessage: alertmessage, vAlert: valert, vAlertError: valerterror } = useAlerts()
+const { resetForm: resetform } = useFormReset()
 
-// 🔍 검색 데이터
-const searchForm = reactive({
-	subnm_h: ''
+const formdata = reactive({
+	actkind: 'S0', whcd: '', whnm: '', dspord: '1', useyn: 'Y',
+	cmpycd: authstore.cmpycd, userid: authstore.userid
 })
 
-// 📝 마스터 데이터
-const masterForm = reactive({
-	actkind: 'A0',
-	subcd: '',
-	subnm: '',
-	remark: '',
-	dspord: '',
-	useyn: 'Y'
-})
+const maingridelement = ref<HTMLDivElement | null>(null)
+let maingrid: Tabulator | null = null
+const activeitemcount = ref(0)
 
-const mainGridRef = ref<HTMLDivElement | null>(null)
-let mainGrid: Tabulator | null = null
+const normalizekeys = (obj: any) => {
+  const n: any = {}; if (!obj) return n;
+  Object.keys(obj).forEach(k => n[k.toLowerCase()] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k]);
+  return n;
+}
 
-const search = async () => {
+async function search() {
 	try {
-		const res = await api.post('/api/haba/HABA_040U_STR', {
-			actkind: 'S0',
-			cmpycd: authStore.cmpycd,
-			subnm: searchForm.subnm_h
-		})
-
-		const processedData = (res.data || []).map((r: any) => ({
-			subcd: r.subcd || r.col0,
-			subnm: r.subnm || r.col1,
-			remark: r.bigo || r.col2,
-			dspord: r.dspord || r.col3,
-			useyn: r.useyn || r.col4
-		}))
-
-		mainGrid?.setData(processedData)
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 중 오류 발생') }
+		const res = await api.post('/api/haba/haba_040u_str', { actkind: 'S0', cmpycd: authstore.cmpycd })
+		const processed = (res.data || []).map((i: any) => normalizekeys(i));
+		maingrid?.setData(processed)
+		activeitemcount.value = processed.length
+		valert('조회되었습니다.')
+	} catch (e) { valerterror('데이터 로드 실패') }
 }
 
-const save = async () => {
-	if (!masterForm.subcd) return vAlert('보조과목 코드를 입력하십시오.')
-	if (!masterForm.subnm) return vAlert('보조과목명을 입력하십시오.')
-	if (!masterForm.dspord) return vAlert('출현순서를 입력하십시오.')
-
+async function save() {
+	if (!formdata.whcd || !formdata.whnm) return valerterror('코드와 명칭은 필수입니다.')
+	if (!confirm('저장하시겠습니까?')) return
 	try {
-		const payload = {
-			...masterForm,
-			cmpycd: authStore.cmpycd,
-			userid: authStore.userid
-		}
-
-		const res = await api.post('/api/haba/HABA_040U_STR', payload)
-
-		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].ret_msg)
-		} else {
-			vAlert('저장되었습니다.')
-			search()
-			initialize()
-		}
-	} catch (e) { vAlertError('저장 실패') }
+		const act = formdata.actkind === 'S0' ? 'A0' : 'U0';
+		const res = await api.post('/api/haba/haba_040u_str', { ...formdata, actkind: act })
+		const resdata = normalizekeys(res.data?.[0]);
+		if (resdata.result === 'N') valerterror(resdata.msg || '저장 실패')
+		else { valert('저장되었습니다.'); search(); initialize() }
+	} catch (e) { valerterror('저장 실패') }
 }
 
-const initialize = () => {
-	resetForm(masterForm)
-	masterForm.actkind = 'A0'
-	masterForm.useyn = 'Y'
+function initialize() {
+	resetform(formdata); Object.assign(formdata, { actkind: 'S0', useyn: 'Y', dspord: '1', cmpycd: authstore.cmpycd, userid: authstore.userid });
 }
-
-const excel = () => mainGrid?.download("xlsx", `보조과목관리_${new Date().toISOString().substring(0, 10)}.xlsx`)
 
 onMounted(() => {
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns',
-			height: '100%',
-			columnDefaults: { headerSort: false, vertAlign: "middle" },
+	if (maingridelement.value) {
+		maingrid = new Tabulator(maingridelement.value, {
+			layout: 'fitColumns', height: '100%', selectable: 1,
+			placeholder: '데이터가 없습니다.',
+			columnDefaults: { headerSort: false, headerHozAlign: 'center', vertAlign: "middle" },
 			columns: [
-				{ title: "보조과목", field: "subcd", width: 100, hozAlign: "center" },
-				{ title: "보조과목 명", field: "subnm", minWidth: 200 },
-				{ title: "비고", field: "remark", minWidth: 300 },
-				{ title: "출현순서", field: "dspord", width: 100, hozAlign: "center" },
-				{ title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
-			],
-			rowClick: (e, row) => {
-				const d = row.getData()
-				Object.assign(masterForm, d)
-				masterForm.actkind = 'U0'
-			}
+				{ title: '코드', field: 'whcd', hozAlign: 'center', width: 80, cssClass: 'fw-bold text-primary' },
+				{ title: '창고 명칭', field: 'whnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
+				{ title: '순서', field: 'dspord', hozAlign: 'center', width: 70 },
+				{ title: '사용', field: 'useyn', hozAlign: 'center', width: 70, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+			]
+		})
+		maingrid.on('rowClick', (e, row) => {
+			const d = normalizekeys(row.getData());
+			Object.assign(formdata, d);
+			formdata.actkind = 'U0'
 		})
 	}
+	nextTick(search);
 })
 </script>
-
-<style scoped>
-.erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
-.bg-light-subtle { background-color: #f8f9fa !important; }
-:deep(.tabulator-row) { cursor: pointer; }
-:deep(.tabulator-row:hover) { background-color: #f0f7ff !important; }
-</style>

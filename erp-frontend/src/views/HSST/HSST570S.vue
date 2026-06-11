@@ -126,7 +126,7 @@ const searchForm = reactive({
 	custcd: '', custnm: '', itemcd: '', itemnm: ''
 })
 
-const rowCount = ref(0); const totals = reactive({ SUM: 0 })
+const rowCount = ref(0); const totals = reactive({ sum: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const search = async () => {
@@ -139,7 +139,7 @@ const search = async () => {
 		const data = res.data || []
 		mainGrid?.setData(data)
 		rowCount.value = data.length
-		totals.SUM = data.reduce((acc: number, cur: any) => acc + (Number(cur.spyamt||0) + Number(cur.vatamt||0)), 0)
+		totals.sum = data.reduce((acc: number, cur: any) => acc + (Number(cur.spyamt||0) + Number(cur.vatamt||0)), 0)
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
@@ -149,7 +149,7 @@ const initialize = () => {
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
 	searchForm.frymd = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10);
 	searchForm.toymd = new Date().toISOString().substring(0, 10);
-	mainGrid?.clearData(); rowCount.value = 0; totals.SUM = 0;
+	mainGrid?.clearData(); rowCount.value = 0; totals.sum = 0;
 }
 
 const excel = () => mainGrid?.download("xlsx", "부서별출고현황.xlsx")
@@ -192,20 +192,20 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
 			columns: [
 				{
-					title: "출고번호", field: "iono_FULL", width: 140, cssClass: "fw-bold text-primary cursor-pointer",
+					title: "출고번호", field: "iono_full", width: 140, cssClass: "fw-bold text-primary cursor-pointer",
 					formatter: (cell) => `${cell.getData().ioym}-${cell.getData().iono}`,
 					cellClick: (e, cell) => {
 						const d = cell.getData();
-						if (d.GIOTYPE === "100") router.push({ path: '/HSIO/HSIO500U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
-						else if (d.GIOTYPE === "200") router.push({ path: '/HSIO/HSIO580U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						if (d.giotype === "100") router.push({ path: '/HSIO/HSIO500U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
+						else if (d.giotype === "200") router.push({ path: '/HSIO/HSIO580U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
                         else router.push({ path: '/HSIO/HSIO570U', query: { ioym: d.ioym, iono: d.iono, deptcd: d.deptcd } });
 					}
 				},
 				{ title: "거래처명", field: "custnm", minWidth: 150, hozAlign: "left" },
-				{ title: "출고유형", field: "IOtypenm", width: 100 },
+				{ title: "출고유형", field: "iotypenm", width: 100 },
 				{ title: "출고일자", field: "ioymd", width: 110, formatter: (c) => { const v = c.getValue(); return v ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : '' } },
 				{ title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold" },
-				{ title: "수량", field: "QTY", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "수량", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "공급가", field: "spyamt", hozAlign: "right", width: 120, formatter: "money" },
 				{ title: "합계액", field: "amtsum", hozAlign: "right", width: 130, formatter: "money", cssClass: "text-primary fw-bold", mutatorData: (v,d) => Number(d.spyamt||0) + Number(d.vatamt||0) },
 				{ title: "특기사항", field: "remark", minWidth: 150, hozAlign: "left" }

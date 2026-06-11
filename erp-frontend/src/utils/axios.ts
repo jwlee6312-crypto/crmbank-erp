@@ -74,10 +74,17 @@ api.interceptors.response.use(
 		return { ...response, data: finalData }
 	},
 	async (error) => {
-		if (error.response?.status === 401) {
+		// 🚀 세션 유실(401) 또는 권한 없음(403) 발생 시 자동 로그아웃 처리
+		if (error.response?.status === 401 || error.response?.status === 403) {
 			const authStore = useAuthStore()
-			authStore.resetState(); sessionStorage.clear()
-			if (!router.currentRoute.value.path.includes('/login')) await router.push('/auth/login')
+
+			// 무한 루프 방지: 현재 페이지가 로그인 페이지가 아닐 때만 처리
+			if (!router.currentRoute.value.path.includes('/login')) {
+				alert('세션이 만료되었거나 연결 정보가 유실되었습니다.\n로그인 페이지로 이동합니다.')
+				authStore.resetState()
+				sessionStorage.clear()
+				await router.push('/auth/login')
+			}
 		}
 		return Promise.reject(error)
 	}

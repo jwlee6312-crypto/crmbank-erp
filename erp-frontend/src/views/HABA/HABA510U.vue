@@ -50,11 +50,11 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end">지불유형</th>
 							<td class="bg-white border-end px-2 py-1">
-								<input v-model="masterForm.PAYGBN" type="text" class="form-control form-control-sm text-center" maxlength="3" :readonly="masterForm.actkind === 'U0'" placeholder="3자리" />
+								<input v-model="masterForm.paygbn" type="text" class="form-control form-control-sm text-center" maxlength="3" :readonly="masterForm.actkind === 'U0'" placeholder="3자리" />
 							</td>
 							<th class="text-center bg-light-subtle border-end">지불유형명</th>
 							<td class="bg-white border-end px-2 py-1">
-								<input v-model="masterForm.PAYGBNM" type="text" class="form-control form-control-sm" maxlength="20" />
+								<input v-model="masterForm.paygbnm" type="text" class="form-control form-control-sm" maxlength="20" />
 							</td>
 							<th class="text-center bg-light-subtle border-end">계정과목</th>
 							<td class="bg-white px-2 py-1">
@@ -101,8 +101,8 @@ const { resetForm } = useFormReset()
 // 📝 마스터 데이터
 const masterForm = reactive({
 	actkind: 'A0',
-	PAYGBN: '',
-	PAYGBNM: '',
+	paygbn: '',
+	paygbnm: '',
 	acctcd: '',
 	acctnm: ''
 })
@@ -123,17 +123,17 @@ const search = async () => {
 }
 
 const save = async () => {
-	if (!masterForm.PAYGBN) return vAlert('지불유형을 기재해 주십시요.')
-	if (masterForm.PAYGBN.length < 3) return vAlert('지불유형은 3자리로 입력하셔야 합니다.')
-	if (!masterForm.PAYGBNM) return vAlert('지불유형 명을 기재해 주십시요.')
+	if (!masterForm.paygbn) return vAlert('지불유형을 기재해 주십시요.')
+	if (masterForm.paygbn.length < 3) return vAlert('지불유형은 3자리로 입력하셔야 합니다.')
+	if (!masterForm.paygbnm) return vAlert('지불유형 명을 기재해 주십시요.')
 	if (!masterForm.acctcd) return vAlert('계정과목을 선택해 주십시요.')
 
 	try {
 		const payload = {
 			actkind: masterForm.actkind,
 			cmpycd: authStore.cmpycd,
-			PAYGBN: masterForm.PAYGBN,
-			PAYGBNM: masterForm.PAYGBNM,
+			paygbn: masterForm.paygbn,
+			paygbnm: masterForm.paygbnm,
 			acctcd: masterForm.acctcd,
 			userid: authStore.userid
 		}
@@ -151,14 +151,14 @@ const save = async () => {
 }
 
 const deleteData = async () => {
-	if (!masterForm.PAYGBN) return vAlert('삭제할 지불유형을 선택해 주십시요.')
+	if (!masterForm.paygbn) return vAlert('삭제할 지불유형을 선택해 주십시요.')
 	if (!confirm('정말로 삭제하시겠습니까?')) return
 
 	try {
 		const res = await api.post('/api/haba/HABA_510U_STR', {
 			actkind: 'D0',
 			cmpycd: authStore.cmpycd,
-			PAYGBN: masterForm.PAYGBN,
+			paygbn: masterForm.paygbn,
 			userid: authStore.userid
 		})
 
@@ -185,14 +185,14 @@ function openHelp() {
 	Object.assign(modalProps, {
 		title: '계정과목 선택',
 		path: '/api/ha00/HA00_00P_STR',
-		data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: masterForm.acctnm },
+		data: { gubun: 'A0', cmpycd: authStore.cmpycd, code: masterForm.acctnm },
 		columns: [
-			{ title: '코드', field: 'col0', width: 100, hozAlign: 'center' },
-			{ title: '계정명', field: 'col1', width: 250 }
+			{ title: '코드', field: 'acctcd', width: 100, hozAlign: 'center' },
+			{ title: '계정명', field: 'acctnm', width: 250 }
 		],
 		onConfirm: (d: any) => {
-			masterForm.acctcd = d.col0
-			masterForm.acctnm = d.col1
+			masterForm.acctcd = d.acctcd
+			masterForm.acctnm = d.acctnm
 		}
 	})
 	modalVisible.value = true
@@ -205,16 +205,16 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "유형", field: "PAYGBN", width: 100, hozAlign: "center" },
-				{ title: "유형명", field: "PAYGBNM", width: 250 },
+				{ title: "유형", field: "paygbn", width: 100, hozAlign: "center" },
+				{ title: "유형명", field: "paygbnm", width: 250 },
 				{ title: "계정과목", field: "acctcd", width: 120, hozAlign: "center" },
 				{ title: "계정과목 명", field: "acctnm", minWidth: 250 }
 			],
 			rowClick: (e, row) => {
 				const d = row.getData()
 				masterForm.actkind = 'U0'
-				masterForm.PAYGBN = d.PAYGBN
-				masterForm.PAYGBNM = d.PAYGBNM
+				masterForm.paygbn = d.paygbn
+				masterForm.paygbnm = d.paygbnm
 				masterForm.acctcd = d.acctcd
 				masterForm.acctnm = d.acctnm
 			}

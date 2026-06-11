@@ -116,7 +116,7 @@ const searchForm = reactive({
 })
 
 const rowCount = ref(0)
-const totals = reactive({ TMSUM: 0, TYSUM: 0 })
+const totals = reactive({ tmsum: 0, tysum: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const search = async () => {
@@ -131,8 +131,8 @@ const search = async () => {
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
-		totals.TMSUM = data.reduce((acc: number, cur: any) => acc + (Number(cur.TMAMT) || 0), 0)
-		totals.TYSUM = data.reduce((acc: number, cur: any) => acc + (Number(cur.TYAMT) || 0), 0)
+		totals.tmsum = data.reduce((acc: number, cur: any) => acc + (Number(cur.TMamt) || 0), 0)
+		totals.tysum = data.reduce((acc: number, cur: any) => acc + (Number(cur.TYamt) || 0), 0)
 
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -143,7 +143,7 @@ const initialize = () => {
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
 	searchForm.fymd = firstDay; searchForm.tymd = today;
 	mainGrid?.clearData(); rowCount.value = 0;
-	totals.TMSUM = 0; totals.TYSUM = 0;
+	totals.tmsum = 0; totals.tysum = 0;
 }
 
 const excel = () => mainGrid?.download("xlsx", "품목별판매현황.xlsx")
@@ -190,19 +190,19 @@ onMounted(() => {
 				{
 					title: "당월 실적 (Current Month)",
 					columns: [
-						{ title: "수량", field: "MQTY", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매출액", field: "SMAMT", hozAlign: "right", width: 150, formatter: "money" },
-						{ title: "부가세", field: "VMAMT", hozAlign: "right", width: 150, formatter: "money" },
-						{ title: "합계", field: "TMAMT", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-primary fw-bold" }
+						{ title: "수량", field: "mqty", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "매출액", field: "SMamt", hozAlign: "right", width: 150, formatter: "money" },
+						{ title: "부가세", field: "VMamt", hozAlign: "right", width: 150, formatter: "money" },
+						{ title: "합계", field: "TMamt", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-primary fw-bold" }
 					]
 				},
 				{
 					title: "누계 실적 (Cumulative)",
 					columns: [
-						{ title: "수량", field: "YQTY", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매출액", field: "SYAMT", hozAlign: "right", width: 150, formatter: "money" },
-						{ title: "부가세", field: "VYAMT", hozAlign: "right", width: 150, formatter: "money" },
-						{ title: "합계", field: "TYAMT", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-warning fw-bold" }
+						{ title: "수량", field: "yqty", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "매출액", field: "SYamt", hozAlign: "right", width: 150, formatter: "money" },
+						{ title: "부가세", field: "VYamt", hozAlign: "right", width: 150, formatter: "money" },
+						{ title: "합계", field: "TYamt", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-warning fw-bold" }
 					]
 				}
 			]

@@ -49,7 +49,7 @@
                 <th class="required">재고자산</th>
                 <td>
                   <select v-model="searchData.astkind" class="form-select form-select-sm" style="width: 180px;">
-                    <option v-for="opt in astOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                    <option v-for="opt in astOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                   </select>
                 </td>
                 <td class="text-muted small">
@@ -154,7 +154,7 @@ const initGrid = () => {
           columns: [
             { title: "수량", field: "Bsqty", width: 80, hozAlign: "right", formatter: "money", bottomCalc: "sum" },
             { title: "단가", field: "BSprice", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-            { title: "금액", field: "BSAMT", width: 90, hozAlign: "right", formatter: "money", bottomCalc: "sum" }
+            { title: "금액", field: "bsamt", width: 90, hozAlign: "right", formatter: "money", bottomCalc: "sum" }
           ]
         },
         {
@@ -186,7 +186,7 @@ const initGrid = () => {
           columns: [
             { title: "수량", field: "stkqty", width: 80, hozAlign: "right", formatter: "money", bottomCalc: "sum", cssClass: "fw-bold" },
             { title: "단가", field: "STKprice", width: 80, hozAlign: "right", formatter: "money" },
-            { title: "금액", field: "STKAMT", width: 100, hozAlign: "right", formatter: "money", bottomCalc: "sum", cssClass: "text-primary fw-bold" }
+            { title: "금액", field: "stkamt", width: 100, hozAlign: "right", formatter: "money", bottomCalc: "sum", cssClass: "text-primary fw-bold" }
           ]
         }
       ],
@@ -199,11 +199,11 @@ async function fetchOptions() {
   try {
     // 💎 요청하신 대로 HS00_000S_STR 'E0', '140' 으로 호출
     const res = await api.get('/api/hs00/HS00_000S_STR', {
-      params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '140', CODE: '' }
+      params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '140', code: '' }
     })
-    // 💎 컬럼명 CODE, cdnm 으로 매핑
+    // 💎 컬럼명 code, cdnm 으로 매핑
     astOptions.value = res.data.map((i: any) => ({
-        CODE: i.CODE,
+        code: i.code,
         cdnm: i.cdnm
     }))
 
@@ -214,7 +214,7 @@ async function fetchOptions() {
         searchData.mm = pclsym.substring(4, 6)
     }
 
-    if (astOptions.value.length > 0) searchData.astkind = astOptions.value[0].CODE
+    if (astOptions.value.length > 0) searchData.astkind = astOptions.value[0].code
   } catch (e) { console.error('기초 정보 로드 실패') }
 }
 
@@ -230,11 +230,11 @@ async function fetchList() {
 
     const mapped = res.data.map((i: any) => ({
         ...i,
-        BSprice: Number(i.Bsqty) !== 0 ? Math.round(Number(i.BSAMT) / Number(i.Bsqty)) : 0,
+        BSprice: Number(i.Bsqty) !== 0 ? Math.round(Number(i.bsamt) / Number(i.Bsqty)) : 0,
         INprice: Number(i.inqty) !== 0 ? Math.round(Number(i.Inamt) / Number(i.inqty)) : 0,
         outprice: Number(i.OUtqty) !== 0 ? Math.round(Number(i.outamt) / Number(i.OUtqty)) : 0,
         OUTTprice: Number(i.OUTtqty) !== 0 ? Math.round(Number(i.OUTtamt) / Number(i.OUTtqty)) : 0,
-        STKprice: Number(i.stkqty) !== 0 ? Math.round(Number(i.STKAMT) / Number(i.stkqty)) : 0
+        STKprice: Number(i.stkqty) !== 0 ? Math.round(Number(i.stkamt) / Number(i.stkqty)) : 0
     }))
 
     grid?.setData(mapped)

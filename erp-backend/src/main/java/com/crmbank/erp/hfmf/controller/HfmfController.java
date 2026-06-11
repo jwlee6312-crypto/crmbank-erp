@@ -56,7 +56,7 @@ public class HfmfController {
             case "FMF1050U_STR": return ResponseEntity.ok(hfmfMapper.FMF1050U_STR(params));
             case "FMF2010U_STR": return ResponseEntity.ok(hfmfMapper.FMF2010U_STR(params));
             case "FMF2020U_STR": return ResponseEntity.ok(hfmfMapper.FMF2020U_STR(params));
-            case "FMF2060R_STR": return ResponseEntity.ok(hfmfMapper.FMF2060R_STR(params)); // 💡 추가됨
+            case "FMF2060R_STR": return ResponseEntity.ok(hfmfMapper.FMF2060R_STR(params)); 
             case "FMF2070U_STR": return ResponseEntity.ok(hfmfMapper.FMF2070U_STR(params));
             case "FMF2110U_STR": return ResponseEntity.ok(hfmfMapper.FMF2110U_STR(params));
             case "FMF2120R_STR": return ResponseEntity.ok(hfmfMapper.FMF2120R_STR(params));
@@ -70,40 +70,5 @@ public class HfmfController {
             default:
                 return ResponseEntity.notFound().build();
         }
-    }
-
-    private String buildSsmsLog(String procedure, Map<String, Object> params) {
-        String proc = procedure.toUpperCase();
-        String[] keys;
-        
-        if (proc.equals("FMF1040U_STR")) {
-            keys = new String[]{"cmpycd", "actkind", "ym", "costcd", "acct", "costamt", "userid"};
-        } else if (proc.equals("FMF1050U_STR")) {
-            keys = new String[]{"cmpycd", "actkind", "ym", "costcd", "linecd", "divstd", "rate", "remark", "userid"};
-        } else if (proc.equals("FMF2010U_STR")) {
-            keys = new String[]{"cmpycd", "actkind", "ym", "colgbn", "userid"};
-        } else if (proc.equals("FMF2020U_STR")) {
-            keys = new String[]{"cmpycd", "actkind", "ym", "chasu", "userid"};
-        } else if (proc.equals("FMF2060R_STR")) {
-            keys = new String[]{"cmpycd", "actkind", "ym", "costcd"};
-        } else if (proc.equals("FMF2070U_STR")) {
-            keys = new String[]{"cmpycd", "actkind", "ym", "costcd", "acct", "linecd", "adstamt", "userid"};
-        } else if (proc.equals("FMF2110U_STR")) {
-            keys = new String[]{"cmpycd", "actkind", "ym", "jobord", "userid", "msgyn", "msgtext"};
-        } else if (proc.equals("FMF3010U_STR")) {
-            keys = new String[]{"cmpycd", "actkind", "ym", "jagbn", "userid"};
-        } else {
-            keys = params.keySet().toArray(new String[0]);
-        }
-
-        String values = java.util.Arrays.stream(keys)
-                .map(key -> {
-                    Object val = params.get(key);
-                    if (val == null) val = params.get(key.toUpperCase());
-                    return val == null ? "NULL" : "'" + val.toString().trim() + "'";
-                })
-                .collect(Collectors.joining(", "));
-
-        return String.format("EXEC %s %s", proc, values);
     }
 }

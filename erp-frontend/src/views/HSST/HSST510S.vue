@@ -144,8 +144,8 @@ const search = async () => {
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
-		totals.SMTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.MAMT || 0) + Number(cur.MVAT || 0)), 0)
-		totals.SYTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.tamt || 0) + Number(cur.TVAT || 0)), 0)
+		totals.SMTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.Mamt || 0) + Number(cur.mvat || 0)), 0)
+		totals.SYTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.tamt || 0) + Number(cur.tvat || 0)), 0)
 
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -210,21 +210,21 @@ onMounted(() => {
 				{
 					title: "당월 실적 (Current Month)",
 					columns: [
-						{ title: "수량", field: "MQTY", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: (c:any) => c.getData().QTYPNT || 0 } },
-						{ title: "매출액", field: "MAMT", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "MVAT", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "MSUM", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-primary fw-bold",
-						  mutatorData: (v,d) => Number(d.MAMT||0) + Number(d.MVAT||0) }
+						{ title: "수량", field: "mqty", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: (c:any) => c.getData().qtypnt || 0 } },
+						{ title: "매출액", field: "Mamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "mvat", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "msum", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-primary fw-bold",
+						  mutatorData: (v,d) => Number(d.Mamt||0) + Number(d.mvat||0) }
 					]
 				},
 				{
 					title: "누계 실적 (Cumulative)",
 					columns: [
-						{ title: "수량", field: "tqty", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: (c:any) => c.getData().QTYPNT || 0 } },
+						{ title: "수량", field: "tqty", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: (c:any) => c.getData().qtypnt || 0 } },
 						{ title: "매출액", field: "tamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "TVAT", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "TSUM", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-warning fw-bold",
-						  mutatorData: (v,d) => Number(d.tamt||0) + Number(d.TVAT||0) }
+						{ title: "부가세", field: "tvat", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "tsum", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-warning fw-bold",
+						  mutatorData: (v,d) => Number(d.tamt||0) + Number(d.tvat||0) }
 					]
 				}
 			]

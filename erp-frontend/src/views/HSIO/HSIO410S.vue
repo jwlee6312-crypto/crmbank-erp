@@ -173,7 +173,7 @@ function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: searchForm.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
 		})
@@ -195,7 +195,7 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
 				{
-					title: "입금일", field: "IMymD", width: 100, formatter: (cell) => {
+					title: "입금일", field: "imymd", width: 100, formatter: (cell) => {
 						const val = cell.getValue();
 						return val && val.length === 8 ? `${val.substring(0, 4)}-${val.substring(4, 6)}-${val.substring(6, 8)}` : val;
 					}
@@ -210,29 +210,29 @@ onMounted(() => {
 				{
 					title: "전표", field: "slipyn", width: 80, formatter: (cell) => cell.getValue() === 'Y' ? '발행' : '미발행'
 				},
-				{ title: "현금", field: "CASHAMT", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "예금", field: "BANKAMT", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "카드", field: "CARDAMT", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "현금", field: "cashamt", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "예금", field: "bankamt", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "카드", field: "cardamt", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "어음", field: "billamt", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "대체", field: "SANGAMT", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "기타", field: "ETcamt", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "대체", field: "sangamt", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "기타", field: "etcamt", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0 } },
 				{
-					title: "입금계", field: "AMTTOT", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 },
+					title: "입금계", field: "amttot", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 },
 					cssClass: "bg-light fw-bold text-primary",
-					mutatorData: (v, d) => Number(d.CASHAMT || 0) + Number(d.BANKAMT || 0) + Number(d.CARDAMT || 0) + Number(d.billamt || 0) + Number(d.SANGAMT || 0) + Number(d.ETcamt || 0)
+					mutatorData: (v, d) => Number(d.cashamt || 0) + Number(d.bankamt || 0) + Number(d.cardamt || 0) + Number(d.billamt || 0) + Number(d.sangamt || 0) + Number(d.etcamt || 0)
 				},
 				{
 					title: "세부내역", field: "remark", hozAlign: "left", minWidth: 200,
 					formatter: (cell) => {
 						const d = cell.getData();
-						const type = String(d.IMTYPE || '');
+						const type = String(d.imtype || '');
 						if (type.startsWith('2') || type.startsWith('3') || type.startsWith('6') || type.startsWith('7')) {
 							return [d.mgtno, d.mgtnm].filter(Boolean).join(' ');
 						} else if (type.startsWith('4')) {
 							const pubYmd = d.pubymd ? `${d.pubymd.substring(0, 4)}-${d.pubymd.substring(4, 6)}-${d.pubymd.substring(6, 8)}` : '';
 							const endYmd = d.endymd ? `${d.endymd.substring(0, 4)}-${d.endymd.substring(4, 6)}-${d.endymd.substring(6, 8)}` : '';
 							const amt = Number(d.billamt || 0).toLocaleString();
-							return [d.mgtno, d.cdnm, pubYmd, endYmd, amt, d.PUBBANK, d.PUBMAN].filter(Boolean).join(' | ');
+							return [d.mgtno, d.cdnm, pubYmd, endYmd, amt, d.pubbank, d.pubman].filter(Boolean).join(' | ');
 						} else if (type.startsWith('5')) {
 							return d.mgtno || d.remark || '';
 						}
@@ -245,10 +245,10 @@ onMounted(() => {
 
 		mainGrid.on("dataLoaded", () => {
 			mainGrid?.setColumns(mainGrid.getColumnDefinitions().map(col => {
-				if (['CASHAMT', 'BANKAMT', 'CARDAMT', 'billamt', 'SANGAMT', 'ETcamt', 'AMTTOT'].includes(col.field as string)) {
+				if (['cashamt', 'bankamt', 'cardamt', 'billamt', 'sangamt', 'etcamt', 'amttot'].includes(col.field as string)) {
 					return { ...col, bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 } };
 				}
-				if (col.field === 'IMymD') {
+				if (col.field === 'imymd') {
 					return { ...col, bottomCalc: () => "합 계" };
 				}
 				return col;

@@ -3,8 +3,9 @@ import { useMenuStore } from '@/stores/menuStore'
 
 // Program     : 동적 라우팅 유틸리티
 // Create-Date : 25.04.16
-// Modify-Date : 26.04.21
+// Modify-Date : 26.05.21
 // History     : PGMID 8자리 규칙에 맞춰 폴더 추출 로직 수정 (앞 3자리 -> 앞 4자리)
+//               Vite 동적 임포트 오류 해결을 위해 상대 경로 방식으로 변경
 
 export function addDynamicRoute(pgmid: string, pgmnm: string, grpcd: string) {
 	if (router.hasRoute(pgmnm)) return
@@ -15,8 +16,8 @@ export function addDynamicRoute(pgmid: string, pgmnm: string, grpcd: string) {
 	const folder = pgmid.slice(0, 4)
 
 	const component = () =>
-		import(`@/views/${folder}/${pgmid}.vue`).catch((err) => {
-			alert(`[${pgmid}] 페이지가 존재하지 않습니다.\n경로: @/views/${folder}/${pgmid}.vue`)
+		import(`../views/${folder}/${pgmid}.vue`).catch((err) => {
+			alert(`[${pgmid}] 페이지가 존재하지 않습니다.\n경로: src/views/${folder}/${pgmid}.vue`)
 			console.error(err)
 			return import('@/views/NotFound.vue') // 에러 시 404 페이지로 대체
 		})

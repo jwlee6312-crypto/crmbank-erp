@@ -217,7 +217,7 @@ async function save() {
 
     // 🚀 Step 1. 전표 MASTER 생성 (ASP: HSIO_131U_STR 'A0')
     const masterParams = {
-        actkind: 'a0',
+        actkind: 'A0',
         cmpycd: authStore.cmpycd,
         iogbn: '100',
         ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
@@ -250,7 +250,7 @@ async function save() {
     for (const item of items) {
         const detailParams = {
             ...masterParams,
-            actkind: 'u0',
+            actkind: 'U0',
             jsanym: item.jsanym,
             jsanno: item.jsanno,
             jsanymd: (item.jsanymd || '').replace(/-/g, ''),

@@ -28,7 +28,7 @@
               <tr>
                 <th>구&nbsp;&nbsp;&nbsp;&nbsp;분</th>
                 <td>
-                  <select v-model="searchData.GBN" class="form-select form-select-sm" style="width: 150px;">
+                  <select v-model="searchData.gbn" class="form-select form-select-sm" style="width: 150px;">
                     <option value="001">판매장려금</option>
                     <option value="002">재고보상금</option>
                   </select>
@@ -55,7 +55,7 @@
               <tr>
                 <th class="required">구&nbsp;&nbsp;&nbsp;&nbsp;분</th>
                 <td>
-                  <select v-model="formData.GBN" class="form-select form-select-sm" style="width: 150px;">
+                  <select v-model="formData.gbn" class="form-select form-select-sm" style="width: 150px;">
                     <option value="001">판매장려금</option>
                     <option value="002">재고보상금</option>
                   </select>
@@ -141,14 +141,14 @@ const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, 
 
 // 1. 상태 관리
 const searchData = reactive({
-  GBN: '001',
+  gbn: '001',
   frymd: initfrymd,
   toymd: initymd
 })
 
 const formData = reactive<any>({
   actkind: 'A',
-  GBN: '001',
+  gbn: '001',
   custcd: '', custnm: '',
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   ioymd: initymd,
@@ -175,7 +175,7 @@ const initGrid = () => {
       placeholder: "조회된 데이터가 없습니다.",
       columnDefaults: { headerSort: false, headerHozAlign: 'center' },
       columns: [
-        { title: "구분", field: "GBN", width: 100, hozAlign: "center", formatter: (c) => c.getValue() === '001' ? '판매장려금' : '재고보상금' },
+        { title: "구분", field: "gbn", width: 100, hozAlign: "center", formatter: (c) => c.getValue() === '001' ? '판매장려금' : '재고보상금' },
         { title: "거래처 상호", field: "custnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
         { title: "등록일", field: "ioymd", width: 120, hozAlign: "center", formatter: (c) => formatDateString(c.getValue(), '-') },
         { title: "금액", field: "ioamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
@@ -202,7 +202,7 @@ const search = async () => {
     const res = await api.post('/api/hsod/HSOD_210U_STR', {
       actkind: 'S',
       cmpycd: authStore.cmpycd,
-      GBN: searchData.GBN,
+      gbn: searchData.gbn,
       frymd: searchData.frymd,
       toymd: searchData.toymd
     })
@@ -262,7 +262,7 @@ const initialize = () => {
   resetForm(formData)
   Object.assign(formData, {
     actkind: 'A',
-    GBN: searchData.GBN,
+    gbn: searchData.gbn,
     deptcd: authStore.deptcd,
     deptnm: authStore.deptnm,
     ioymd: initymd,

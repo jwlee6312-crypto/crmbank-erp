@@ -88,7 +88,7 @@
                 <th class="required">재고수량</th>
                 <td colspan="3">
                   <div class="d-flex align-items-center gap-3">
-                    <input v-model="formData.QTY" type="number" class="form-control form-control-sm text-end border-primary" style="width: 150px;" />
+                    <input v-model="formData.qty" type="number" class="form-control form-control-sm text-end border-primary" style="width: 150px;" />
                     <span class="text-muted small"><i class="bi bi-info-circle me-1"></i> 외주처에 남아 있는 재고수량을 입력하십시오.</span>
                   </div>
                 </td>
@@ -146,7 +146,7 @@ const formData = reactive({
   itemnm: '',
   itsize: '',
   unit: '',
-  QTY: 0
+  qty: 0
 })
 
 const lineOptions = ref<any[]>([])
@@ -200,9 +200,9 @@ const initGrid = () => {
         { title: "품 목", field: "itemnm", minWidth: 200, cssClass: "fw-bold" },
         { title: "규격", field: "itsize", width: 150 },
         { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-        { title: "기초재고수량", field: "stkqty", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().QTYPNT||0 }, cssClass: "text-primary fw-bold" },
+        { title: "기초재고수량", field: "stkqty", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().qtypnt||0 }, cssClass: "text-primary fw-bold" },
         { title: "단가", field: "price", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
-        { title: "기초재고금액", field: "STKAMT", width: 120, hozAlign: "right", formatter: "money" }
+        { title: "기초재고금액", field: "stkamt", width: 120, hozAlign: "right", formatter: "money" }
       ],
     })
 
@@ -213,7 +213,7 @@ const initGrid = () => {
             actkind: 'U0',
             yy: data.ym.substring(0, 4),
             mm: Number(data.ym.substring(4, 6)),
-            QTY: data.stkqty
+            qty: data.stkqty
         })
         fetchProgOptions(formData.linecd)
     })
@@ -231,7 +231,7 @@ const fetchList = async () => {
     const mapped = res.data.map((i: any) => ({
         ...i,
         ym: i.ym || (formData.yy + monthStr.value),
-        price: Number(i.stkqty) !== 0 ? Number((Number(i.STKAMT) / Number(i.stkqty)).toFixed(2)) : 0
+        price: Number(i.stkqty) !== 0 ? Number((Number(i.stkamt) / Number(i.stkqty)).toFixed(2)) : 0
     }))
 
     grid?.setData(mapped); itemCount.value = mapped.length; vAlert('조회되었습니다.')
@@ -241,7 +241,7 @@ const fetchList = async () => {
 const saveData = async () => {
   if (!formData.linecd || !formData.progcd || !formData.custcd) return vAlertError('라인, 공정, 외주처를 선택하세요.')
   if (!formData.itemcd) return vAlertError('품목을 선택하세요.')
-  if (formData.QTY === 0) return vAlertError('수량을 입력하세요.')
+  if (formData.qty === 0) return vAlertError('수량을 입력하세요.')
 
   if (!confirm('외주 재공 기초 재고 정보를 저장하시겠습니까?')) return
 
@@ -252,12 +252,12 @@ const saveData = async () => {
 }
 
 const initializeFormOnly = () => {
-    formData.actkind = 'A0'; formData.itemcd = ''; formData.itemnm = ''; formData.itsize = ''; formData.unit = ''; formData.QTY = 0
+    formData.actkind = 'A0'; formData.itemcd = ''; formData.itemnm = ''; formData.itsize = ''; formData.unit = ''; formData.qty = 0
 }
 
 const initialize = () => {
   resetForm(formData)
-  Object.assign(formData, { actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, linecd: '010', linenm: '통합라인', QTY: 0 })
+  Object.assign(formData, { actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, linecd: '010', linenm: '통합라인', qty: 0 })
   grid?.clearData(); itemCount.value = 0
   fetchProgOptions(formData.linecd)
 }
@@ -271,8 +271,8 @@ function openHelp(type: string) {
     config = {
         title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'cdnm',
         data: { gubun: '010', cmpycd: authStore.cmpycd },
-        columns: [{ title: '코드', field: 'CODE', width: 100 }, { title: '거래처명', field: 'cdnm', width: 200 }],
-        onConfirm: (data: any) => { formData.custcd = data.CODE; formData.custnm = data.cdnm; }
+        columns: [{ title: '코드', field: 'code', width: 100 }, { title: '거래처명', field: 'cdnm', width: 200 }],
+        onConfirm: (data: any) => { formData.custcd = data.code; formData.custnm = data.cdnm; }
     }
   } else if (type === 'ITEM') {
     config = {

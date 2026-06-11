@@ -3,7 +3,7 @@
 	프로그램명	: 부서별 비용명세서
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 부서별 월별 비용 발생 내역을 12개월분 조회
+	설명        : 부서별 월별 비용 발생 내역을 12개월분 조회 (부서 팝업 파라미터 수정)
 	=============================================================
 -->
 
@@ -118,7 +118,6 @@ const fetchMonthHeaders = async () => {
 		})
 		if (res.data && res.data.length > 0) {
 			const row = res.data[0]
-			// API 결과에 따라 col0 ~ col11 또는 필드명으로 매핑
 			monthHeaders.value = Array.from({ length: 12 }, (_, i) => {
 				const val = row['COL' + i] || Object.values(row)[i]
 				return val ? String(val).substring(4, 6) + '월' : `${i + 1}월`
@@ -178,7 +177,7 @@ const search = async () => {
 					processedData.push({
 						acctcd: row.col0,
 						acctnm: row.col1,
-						TOTAL: rowMonthlySum,
+						total: rowMonthlySum,
 						...Object.fromEntries(monthlyValues.map((v, idx) => [`M${idx + 1}`, v])),
 						is_data: true
 					})
@@ -189,9 +188,9 @@ const search = async () => {
 				processedData.push({
 					acctcd: '',
 					acctnm: '소   계',
-					TOTAL: groupSum[0],
+					total: groupSum[0],
 					...Object.fromEntries(groupSum.slice(1).map((v, idx) => [`M${idx + 1}`, v])),
-					IS_SUBTOTAL: true
+					IS_SUBtotal: true
 				})
 			}
 
@@ -199,7 +198,7 @@ const search = async () => {
 			processedData.push({
 				acctcd: '',
 				acctnm: '합   계',
-				TOTAL: totalSum[0],
+				total: totalSum[0],
 				...Object.fromEntries(totalSum.slice(1).map((v, idx) => [`M${idx + 1}`, v])),
 				is_total: true
 			})
@@ -218,7 +217,7 @@ const updateGridColumns = () => {
 		{ title: "계정", field: "acctcd", width: 80, hozAlign: "center", headerSort: false },
 		{ title: "계정과목 명", field: "acctnm", width: 200, headerSort: false },
 		{
-			title: "합 계", field: "TOTAL", width: 120, hozAlign: "right",
+			title: "합 계", field: "total", width: 120, hozAlign: "right",
 			formatter: "money", formatterParams: { precision: 0 }, headerSort: false,
 			cssClass: "fw-bold text-primary"
 		}
@@ -248,12 +247,23 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 
 function openHelp(type: string) {
 	Object.assign(modalProps, {
-		title: '부서 선택', path: '/api/ha00/HA00_03P_STR', defaultField: 'col1',
-		data: { custgbn: '030', cmpycd: authStore.cmpycd, search: searchForm.deptnm },
-		columns: [{ title: '코드', field: 'col0', width: 80 }, { title: '부서명', field: 'col1', width: 180 }],
+		title: '부서 선택',
+		path: '/api/ha00/HA00_00P_STR',
+		defaultField: 'deptnm',
+		data: {
+			gubun: 'D0',
+			cmpycd: authStore.cmpycd,
+			gbncd: '',
+			code: searchForm.deptnm
+		},
+		columns: [
+			{ title: '코드', field: 'deptcd', width: 80 },
+			{ title: '부서명', field: 'deptnm', width: 180 }
+		],
 		onConfirm: (d: any) => {
-			searchForm.deptcd = d.col0
-			searchForm.deptnm = d.col1
+			const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v]))
+			searchForm.deptcd = item.deptcd
+			searchForm.deptnm = item.deptnm
 			search()
 		}
 	})
@@ -269,7 +279,7 @@ onMounted(() => {
 			columns: [], // 초기 컬럼은 비워둠 (조회 시 동적 설정)
 			rowFormatter: (row) => {
 				const d = row.getData()
-				if (d.IS_SUBTOTAL) row.getElement().style.backgroundColor = "#fcfcfc"
+				if (d.IS_SUBtotal) row.getElement().style.backgroundColor = "#fcfcfc"
 				if (d.is_total) {
 					row.getElement().style.backgroundColor = "#f0f7ff"
 					row.getElement().style.fontWeight = "bold"

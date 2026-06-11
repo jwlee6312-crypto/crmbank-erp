@@ -47,14 +47,14 @@
 							<th class="text-center border-end">만기일</th>
 							<td class="bg-white border-end">
 								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.ymD_FR" type="date" class="form-control form-control-sm" />
+									<input v-model="searchForm.ymd_fr" type="date" class="form-control form-control-sm" />
 									<span class="text-muted">~</span>
-									<input v-model="searchForm.ymD_TO" type="date" class="form-control form-control-sm" />
+									<input v-model="searchForm.ymd_to" type="date" class="form-control form-control-sm" />
 								</div>
 							</td>
 							<th class="text-center border-end">유&nbsp;&nbsp;형</th>
 							<td class="bg-white">
-								<select v-model="searchForm.BILLTYPE" class="form-select form-select-sm" style="max-width: 150px;">
+								<select v-model="searchForm.billtype" class="form-select form-select-sm" style="max-width: 150px;">
 									<option value="000">전체</option>
 									<option v-for="item in billTypeOptions" :key="item.codecd" :value="item.codecd">{{ item.codenm }}</option>
 								</select>
@@ -95,9 +95,9 @@ const today = now.toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	ymD_FR: firstDay,
-	ymD_TO: today,
-	BILLTYPE: '000'
+	ymd_fr: firstDay,
+	ymd_to: today,
+	billtype: '000'
 })
 
 const billTypeOptions = ref<any[]>([])
@@ -111,11 +111,12 @@ const loadInitData = async () => {
 	try {
 		const res = await api.post('/api/ha00/HA00_00P_STR', {
 			gubun: 'E0',
-			search: '160'
+			cmpycd: authStore.cmpycd,
+			gbncd: '160'
 		})
 		billTypeOptions.value = res.data.map((item: any) => ({
-			codecd: item.codecd || item.col0,
-			codenm: item.codenm || item.col1
+			codecd: item.codecd,
+			codenm: item.codenm
 		}))
 	} catch (e) {
 		console.error('어음 유형 코드 로드 실패', e)
@@ -126,14 +127,14 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hafn/HAFN_410S_STR', {
 			cmpycd: authStore.cmpycd,
-			BILLTYPE: searchForm.BILLTYPE,
-			ymD_FR: searchForm.ymD_FR.replace(/-/g, ''),
-			ymD_TO: searchForm.ymD_TO.replace(/-/g, '')
+			billtype: searchForm.billtype,
+			ymd_fr: searchForm.ymd_fr.replace(/-/g, ''),
+			ymd_to: searchForm.ymd_to.replace(/-/g, '')
 		})
 
 		const data = (res.data || []).map((row: any) => {
-			let bigo = row.COL9 || ''
-			const pcustNm = String(row.col11 || '').trim()
+			let bigo = row.bigo || ''
+			const pcustNm = String(row.pcustnm || '').trim()
 
 			// ASP 비고 병합 로직 반영
 			if (pcustNm) {
@@ -142,16 +143,16 @@ const search = async () => {
 
 			return {
 				...row,
-				DUEymD: formatYmdShort(row.col0),
-				BILLNO: row.col1,
-				ISSUBANK: row.col2,
-				ISSUMAN: row.col3,
-				stdymd: formatYmdShort(row.col4),
-				custnm: row.col5,
-				BILLKIND_NM: String(row.col6 || '').substring(0, 2),
-				BILLTYPE_NM: row.col7,
-				billamt: Number(row.col8 || 0),
-				bigo_STR: bigo
+				dueymd: formatYmdShort(row.endymd),
+				billno: row.billno,
+				issubank: row.issubank,
+				issuman: row.issuman,
+				stdymd: formatYmdShort(row.stdymd),
+				custnm: row.custnm,
+				billkind_nm: row.billkind_nm,
+				billtype_nm: row.billtype_nm,
+				billamt: Number(row.billamt || 0),
+				bigo_str: bigo
 			}
 		})
 
@@ -162,16 +163,16 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.ymD_FR = firstDay
-	searchForm.ymD_TO = today
-	searchForm.BILLTYPE = '000'
+	searchForm.ymd_fr = firstDay
+	searchForm.ymd_to = today
+	searchForm.billtype = '000'
 	mainGrid?.clearData()
 }
 
 const excel = () => mainGrid?.download("xlsx", `받을어음명세서_${today}.xlsx`)
 
 const print = () => {
-	const params = `ymD_FR=${searchForm.ymD_FR}&ymD_TO=${searchForm.ymD_TO}&BILLTYPE=${searchForm.BILLTYPE}`
+	const params = `ymd_fr=${searchForm.ymd_fr}&ymd_to=${searchForm.ymd_to}&billtype=${searchForm.billtype}`
 	window.open(`/api/hafn/HAFN_410P?${params}`, 'BillStatementPrint', 'width=1000,height=800,scrollbars=yes')
 }
 
@@ -181,31 +182,31 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
-			groupBy: "DUEymD", // 만기일별 그룹핑
+			groupBy: "dueymd", // 만기일별 그룹핑
 			groupHeader: function(value, count, data, group) {
-				const sumAMT = data.reduce((acc, curr) => acc + curr.billamt, 0)
+				const sumamt = data.reduce((acc, curr) => acc + curr.billamt, 0)
 				return `
 					<div class="d-flex justify-content-between w-100 pe-4">
 						<span class="fw-bold text-dark">만기일: ${value}</span>
 						<div class="small fw-bold">
-							<span class="mx-2 text-muted">소계: ${sumAMT.toLocaleString()}원 (${count}건)</span>
+							<span class="mx-2 text-muted">소계: ${sumamt.toLocaleString()}원 (${count}건)</span>
 						</div>
 					</div>
 				`
 			},
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "어음번호", field: "BILLNO", width: 130, hozAlign: "center" },
-				{ title: "발행은행", field: "ISSUBANK", width: 120 },
-				{ title: "발행인", field: "ISSUMAN", width: 110 },
-				{ title: "발행일", field: "stdymd", hozAlign: "center", width: 90 },
-				{ title: "받은거래처", field: "custnm", width: 150 },
-				{ title: "종류", field: "BILLKIND_NM", hozAlign: "center", width: 60 },
-				{ title: "형태", field: "BILLTYPE_NM", hozAlign: "center", width: 60 },
-				{ title: "금액", field: "billamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110,
+				{ title: "어음번호", field: "billno", width: 200, hozAlign: "center" },
+				{ title: "발행은행", field: "issubank", width: 200 },
+				{ title: "발행인", field: "issuman", width: 150 },
+				{ title: "발행일", field: "stdymd", hozAlign: "center", width: 150 },
+				{ title: "받은거래처", field: "custnm", width: 250 },
+				{ title: "종류", field: "billkind_nm", hozAlign: "center", width: 150 },
+				{ title: "형태", field: "billtype_nm", hozAlign: "center", width: 150 },
+				{ title: "금액", field: "billamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 150,
 					cssClass: "fw-bold text-primary"
 				},
-				{ title: "비고", field: "bigo_STR", minWidth: 150 },
+				{ title: "비고", field: "bigo_str", minWidth: 150 },
 				{ title: "", field: "empty", visible: true }
 			]
 		})

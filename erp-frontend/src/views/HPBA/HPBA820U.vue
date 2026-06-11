@@ -79,11 +79,11 @@
                 </td>
                 <th class="required">재고수량</th>
                 <td>
-                  <input v-model="formData.QTY" type="number" class="form-control form-control-sm text-end border-primary" style="width: 130px;" />
+                  <input v-model="formData.qty" type="number" class="form-control form-control-sm text-end border-primary" style="width: 130px;" />
                 </td>
                 <th class="required">재고금액</th>
                 <td>
-                  <input v-model="formData.AMT" type="number" class="form-control form-control-sm text-end border-primary" style="width: 130px;" />
+                  <input v-model="formData.amt" type="number" class="form-control form-control-sm text-end border-primary" style="width: 130px;" />
                 </td>
               </tr>
             </tbody>
@@ -137,8 +137,8 @@ const formData = reactive({
   itemnm: '',
   itsize: '',
   unit: '',
-  QTY: 0,
-  AMT: 0
+  qty: 0,
+  amt: 0
 })
 
 const lineOptions = ref<any[]>([])
@@ -192,9 +192,9 @@ const initGrid = () => {
         { title: "품 목", field: "itemnm", minWidth: 200, cssClass: "fw-bold" },
         { title: "규격", field: "itsize", width: 150 },
         { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-        { title: "기초재고수량", field: "stkqty", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().QTYPNT||0 }, cssClass: "text-primary fw-bold" },
+        { title: "기초재고수량", field: "stkqty", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any)=>c.getData().qtypnt||0 }, cssClass: "text-primary fw-bold" },
         { title: "단가", field: "price", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
-        { title: "기초재고금액", field: "STKAMT", width: 120, hozAlign: "right", formatter: "money" }
+        { title: "기초재고금액", field: "stkamt", width: 120, hozAlign: "right", formatter: "money" }
       ],
     })
 
@@ -205,8 +205,8 @@ const initGrid = () => {
             actkind: 'U0',
             yy: data.ym.substring(0, 4),
             mm: Number(data.ym.substring(4, 6)),
-            QTY: data.stkqty,
-            AMT: data.STKAMT
+            qty: data.stkqty,
+            amt: data.stkamt
         })
         fetchProgOptions(formData.linecd)
     })
@@ -229,7 +229,7 @@ const fetchList = async () => {
     const mapped = res.data.map((i: any) => ({
         ...i,
         ym: i.ym || (formData.yy + monthStr.value),
-        price: Number(i.stkqty) !== 0 ? Number((Number(i.STKAMT) / Number(i.stkqty)).toFixed(2)) : 0
+        price: Number(i.stkqty) !== 0 ? Number((Number(i.stkamt) / Number(i.stkqty)).toFixed(2)) : 0
     }))
 
     grid?.setData(mapped)
@@ -241,7 +241,7 @@ const fetchList = async () => {
 const saveData = async () => {
   if (!formData.linecd || !formData.progcd) return vAlertError('라인과 공정을 선택하세요.')
   if (!formData.itemcd) return vAlertError('품목을 선택하세요.')
-  if (formData.QTY === 0 && formData.AMT === 0) return vAlertError('수량 또는 금액을 입력하세요.')
+  if (formData.qty === 0 && formData.amt === 0) return vAlertError('수량 또는 금액을 입력하세요.')
 
   if (!confirm('재공 기초 재고 정보를 저장하시겠습니까?')) return
 
@@ -264,13 +264,13 @@ const initializeFormOnly = () => {
     formData.itemnm = ''
     formData.itsize = ''
     formData.unit = ''
-    formData.QTY = 0
-    formData.AMT = 0
+    formData.qty = 0
+    formData.amt = 0
 }
 
 const initialize = () => {
   resetForm(formData)
-  Object.assign(formData, { actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, linecd: '010', linenm: '통합라인', QTY: 0, AMT: 0 })
+  Object.assign(formData, { actkind: 'A0', yy: String(now.getFullYear()), mm: now.getMonth() + 1, linecd: '010', linenm: '통합라인', qty: 0, amt: 0 })
   grid?.clearData()
   itemCount.value = 0
   fetchLineOptions()

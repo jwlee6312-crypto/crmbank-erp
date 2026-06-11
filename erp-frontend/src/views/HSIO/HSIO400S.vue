@@ -61,14 +61,14 @@
 								<td colspan="3" class="border-bottom-0">
 									<div class="d-flex align-items-center gap-1">
 										<div class="input-group input-group-sm flex-nowrap" style="width: 250px;">
-											<input v-model="searchForm.custcdFR" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-											<input v-model="searchForm.custnmFR" type="text" class="form-control" placeholder="거래처(시작)" @keyup.enter="openHelp('CUSTFR')" />
+											<input v-model="searchForm.custcdfr" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+											<input v-model="searchForm.custnmfr" type="text" class="form-control" placeholder="거래처(시작)" @keyup.enter="openHelp('CUSTFR')" />
 											<button class="btn btn-outline-secondary px-2" @click="openHelp('CUSTFR')"><i class="bi bi-search"></i></button>
 										</div>
 										<span class="text-muted mx-1">~</span>
 										<div class="input-group input-group-sm flex-nowrap" style="width: 250px;">
-											<input v-model="searchForm.custcdTO" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-											<input v-model="searchForm.custnmTO" type="text" class="form-control" placeholder="거래처(종료)" @keyup.enter="openHelp('CUSTTO')" />
+											<input v-model="searchForm.custcdto" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+											<input v-model="searchForm.custnmto" type="text" class="form-control" placeholder="거래처(종료)" @keyup.enter="openHelp('CUSTTO')" />
 											<button class="btn btn-outline-secondary px-2" @click="openHelp('CUSTTO')"><i class="bi bi-search"></i></button>
 										</div>
 									</div>
@@ -124,7 +124,7 @@ const lastDay = now.toISOString().substring(0, 10)
 const searchForm = reactive({
 	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
 	frymd: firstDay, toymd: lastDay, salsemp: '000',
-	custcdFR: '', custnmFR: '', custcdTO: '', custnmTO: ''
+	custcdfr: '', custnmfr: '', custcdto: '', custnmto: ''
 })
 
 const empOptions = ref<any[]>([])
@@ -141,13 +141,13 @@ async function fetchList() {
 			deptcd: searchForm.deptcd,
 			frymd: searchForm.frymd.replace(/-/g, ''),
 			toymd: searchForm.toymd.replace(/-/g, ''),
-			custcdFR: searchForm.custcdFR,
-			custcdTO: searchForm.custcdTO,
+			custcdfr: searchForm.custcdfr,
+			custcdto: searchForm.custcdto,
 			salsemp: searchForm.salsemp
 		})
 		mainGrid?.setData(res.data || [])
 		listCount.value = res.data?.length || 0
-		totalSum.value = (res.data || []).reduce((acc: number, cur: any) => acc + (Number(cur.AMTTOT) || 0), 0)
+		totalSum.value = (res.data || []).reduce((acc: number, cur: any) => acc + (Number(cur.amttot) || 0), 0)
 		vAlert('입금현황 조회가 완료되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
@@ -173,8 +173,8 @@ function openHelp(type: string) {
 			data: { gubun: 'C4', cmpycd: authStore.cmpycd },
 			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 200 }],
 			onConfirm: (data: any) => {
-				if (type === 'CUSTFR') { searchForm.custcdFR = data.custcd; searchForm.custnmFR = data.custnm }
-				else { searchForm.custcdTO = data.custcd; searchForm.custnmTO = data.custnm }
+				if (type === 'CUSTFR') { searchForm.custcdfr = data.custcd; searchForm.custnmfr = data.custnm }
+				else { searchForm.custcdto = data.custcd; searchForm.custnmto = data.custnm }
 			}
 		})
 	}
@@ -192,13 +192,13 @@ onMounted(async () => {
 			columnDefaults: { headerHozAlign: 'center', headerSort: false },
 			columns: [
 				{ title: '거래처 명칭', field: 'custnm', minWidth: 200, widthGrow: 2, cssClass: 'fw-bold' },
-				{ title: '현금', field: 'CASHAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: '예금', field: 'BANKAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: '카드', field: 'CARDAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: '현금', field: 'cashamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: '예금', field: 'bankamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: '카드', field: 'cardamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
 				{ title: '어음', field: 'billamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: '대체', field: 'SANGAMT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: '기타', field: 'ETcamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: '합계', field: 'AMTTOT', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 130, cssClass: 'fw-bold text-primary bg-light-subtle' }
+				{ title: '대체', field: 'sangamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: '기타', field: 'etcamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: '합계', field: 'amttot', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 130, cssClass: 'fw-bold text-primary bg-light-subtle' }
 			]
 		})
 	}

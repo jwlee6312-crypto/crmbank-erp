@@ -51,14 +51,14 @@
                 <td>
                   <div class="d-flex align-items-center gap-1">
                     <div class="input-group input-group-sm flex-nowrap" style="width: 200px;">
-                      <input v-model="searchForm.acctcdFR" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
-                      <input v-model="searchForm.acctcdFRNM" type="text" class="form-control border-start-0" placeholder="시작 계정" @keyup.enter="openHelp('ACCT_FR')" />
+                      <input v-model="searchForm.acctcdfr" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
+                      <input v-model="searchForm.acctcdfrnm" type="text" class="form-control border-start-0" placeholder="시작 계정" @keyup.enter="openHelp('ACCT_FR')" />
                       <button class="btn btn-outline-secondary px-2" @click="openHelp('ACCT_FR')"><i class="bi bi-search"></i></button>
                     </div>
                     <span>~</span>
                     <div class="input-group input-group-sm flex-nowrap" style="width: 200px;">
-                      <input v-model="searchForm.acctcdTO" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
-                      <input v-model="searchForm.acctcdTONM" type="text" class="form-control border-start-0" placeholder="종료 계정" @keyup.enter="openHelp('ACCT_TO')" />
+                      <input v-model="searchForm.acctcdto" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
+                      <input v-model="searchForm.acctcdtonm" type="text" class="form-control border-start-0" placeholder="종료 계정" @keyup.enter="openHelp('ACCT_TO')" />
                       <button class="btn btn-outline-secondary px-2" @click="openHelp('ACCT_TO')"><i class="bi bi-search"></i></button>
                     </div>
                   </div>
@@ -103,10 +103,10 @@ const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart
 const searchForm = reactive({
   yy: String(currentYear),
   mm: currentMonth,
-  acctcdFR: '',
-  acctcdFRNM: '',
-  acctcdTO: '',
-  acctcdTONM: ''
+  acctcdfr: '',
+  acctcdfrnm: '',
+  acctcdto: '',
+  acctcdtonm: ''
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -117,8 +117,8 @@ const search = async () => {
     const res = await api.post('/api/hapl/HAPL_120S_STR', {
       cmpycd: authStore.cmpycd,
       STDym: searchForm.yy + searchForm.mm,
-      acctcdFR: searchForm.acctcdFR,
-      acctcdTO: searchForm.acctcdTO
+      acctcdfr: searchForm.acctcdfr,
+      acctcdto: searchForm.acctcdto
     })
 
     const data = (res.data || []).map((row: any) => ({
@@ -126,9 +126,9 @@ const search = async () => {
       acctcd: row.col2,
       acctnm: row.col3,
       AFdeptnm: row.col5,
-      DIRAMT: Number(row.col6 || 0),
-      IDIRAMT: Number(row.col7 || 0),
-      TOTAL: Number(row.col6 || 0) + Number(row.col7 || 0),
+      diramt: Number(row.col6 || 0),
+      idiramt: Number(row.col7 || 0),
+      total: Number(row.col6 || 0) + Number(row.col7 || 0),
       BFdeptcd: row.col0 // 그룹화용
     }))
 
@@ -138,7 +138,7 @@ const search = async () => {
 }
 
 const print = () => {
-  const params = `acctcdFR=${searchForm.acctcdFR}&acctcdTO=${searchForm.acctcdTO}&ym=${searchForm.yy}${searchForm.mm}&PRTGU=1`
+  const params = `acctcdfr=${searchForm.acctcdfr}&acctcdto=${searchForm.acctcdto}&ym=${searchForm.yy}${searchForm.mm}&PRTGU=1`
   window.open(`/api/hapl/HAPL_120P?${params}`, 'AllocationPrint', 'width=1000,height=800,scrollbars=yes')
 }
 
@@ -149,8 +149,8 @@ const excel = () => {
 const openHelp = (type: string) => {
   if (type.startsWith('ACCT')) {
     commonOpenHelp('ACCT', (d) => {
-      if (type === 'ACCT_FR') { searchForm.acctcdFR = d.acctcd; searchForm.acctcdFRNM = d.acctnm }
-      else { searchForm.acctcdTO = d.acctcd; searchForm.acctcdTONM = d.acctnm }
+      if (type === 'ACCT_FR') { searchForm.acctcdfr = d.acctcd; searchForm.acctcdfrnm = d.acctnm }
+      else { searchForm.acctcdto = d.acctcd; searchForm.acctcdtonm = d.acctnm }
     })
   } else if (type === 'DEPT') {
     commonOpenHelp('DEPT', (d) => { /* 부서 선택 처리 필요시 */ })
@@ -170,9 +170,9 @@ onMounted(() => {
         { title: "계정과목", field: "acctcd", width: 100, hozAlign: "center" },
         { title: "계정과목 명", field: "acctnm", width: 200, cssClass: 'fw-bold' },
         { title: "배부후 부서", field: "AFdeptnm", widthGrow: 1 },
-        { title: "직접비", field: "DIRAMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
-        { title: "간접비", field: "IDIRAMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
-        { title: "합 계", field: "TOTAL", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "bg-light fw-bold text-primary" }
+        { title: "직접비", field: "diramt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+        { title: "간접비", field: "idiramt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+        { title: "합 계", field: "total", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "bg-light fw-bold text-primary" }
       ]
     })
   }

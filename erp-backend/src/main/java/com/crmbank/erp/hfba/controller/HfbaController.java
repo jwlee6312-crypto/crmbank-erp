@@ -1,6 +1,5 @@
 package com.crmbank.erp.hfba.controller;
 
-import com.crmbank.erp.comm.dto.ApiResponse;
 import com.crmbank.erp.comm.dto.UserSession;
 import com.crmbank.erp.hfba.mapper.HfbaMapper;
 import jakarta.servlet.http.HttpSession;
@@ -38,7 +37,7 @@ public class HfbaController {
     }
 
     @PostMapping("/{procedure}")
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> executeProcedure(
+    public ResponseEntity<List<Map<String, Object>>> executeProcedure(
             @PathVariable String procedure,
             @RequestBody Map<String, Object> params,
             HttpSession session) {
@@ -46,19 +45,17 @@ public class HfbaController {
         injectSession(params, session);
         log.info("🚀 [HFBA] {} 호출: {}", procedure.toUpperCase(), params);
         
-        List<Map<String, Object>> result;
         switch (procedure.toUpperCase()) {
-            case "FBA1010U_STR": result = hfbaMapper.FBA1010U_STR(params); break;
-            case "FBA1040U_STR": result = hfbaMapper.FBA1040U_STR(params); break;
-            case "FBA1060U_STR": result = hfbaMapper.FBA1060U_STR(params); break;
-            case "FBA2010U_STR": result = hfbaMapper.FBA2010U_STR(params); break;
-            case "FBA3010U_STR": result = hfbaMapper.FBA3010U_STR(params); break;
-            case "SELECT_ACCT_LIST": result = hfbaMapper.selectAcctList(params); break;
-            case "SELECT_DIVIDE_LIST": result = hfbaMapper.selectDivideList(params); break;
-            case "SELECT_DIVIDE_JUKSU_LIST": result = hfbaMapper.selectDivideJuksuList(params); break;
+            case "FBA1010U_STR": return ResponseEntity.ok(hfbaMapper.FBA1010U_STR(params));
+            case "FBA1040U_STR": return ResponseEntity.ok(hfbaMapper.FBA1040U_STR(params));
+            case "FBA1060U_STR": return ResponseEntity.ok(hfbaMapper.FBA1060U_STR(params));
+            case "FBA2010U_STR": return ResponseEntity.ok(hfbaMapper.FBA2010U_STR(params));
+            case "FBA3010U_STR": return ResponseEntity.ok(hfbaMapper.FBA3010U_STR(params));
+            case "SELECT_ACCT_LIST": return ResponseEntity.ok(hfbaMapper.selectAcctList(params));
+            case "SELECT_DIVIDE_LIST": return ResponseEntity.ok(hfbaMapper.selectDivideList(params));
+            case "SELECT_DIVIDE_JUKSU_LIST": return ResponseEntity.ok(hfbaMapper.selectDivideJuksuList(params));
             default:
                 return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(ApiResponse.success(result, "조회 성공"));
     }
 }

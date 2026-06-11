@@ -125,8 +125,8 @@ onMounted(async () => {
 				{ title: '규격', field: 'itsize', width: 250 },
 				{ title: '단위', field: 'unit', hozAlign: 'center', width: 80 },
 				{ title: '발주량', field: 'balqty', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '선적량', field: 'SHIPQTY', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-success' },
-				{ title: '미선적량', field: 'UNSHIPQTY', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().balqty) - Number(c.getData().SHIPQTY)).toLocaleString() },
+				{ title: '선적량', field: 'shipqty', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-success' },
+				{ title: '미선적량', field: 'unshipqty', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().balqty) - Number(c.getData().shipqty)).toLocaleString() },
 				{ title: '통관량', field: 'PASsqty', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-primary' },
 				{ title: '미입고량', field: 'UNPASsqty', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().balqty) - Number(c.getData().PASsqty)).toLocaleString(), cssClass: 'text-danger fw-bold' }
 			]

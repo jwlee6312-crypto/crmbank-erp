@@ -49,14 +49,14 @@
           <span class="fw-bold small text-secondary">▶ 거 래 처:</span>
           <div class="d-flex align-items-center gap-1">
             <div class="input-group input-group-sm" style="width: 200px;">
-              <input v-model="searchForm.custcdFR" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-              <input v-model="searchForm.custnmFR" type="text" class="form-control" placeholder="From" @keyup.enter="handleOpenHelp('CUST_FR')" />
+              <input v-model="searchForm.custcdfr" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+              <input v-model="searchForm.custnmfr" type="text" class="form-control" placeholder="From" @keyup.enter="handleOpenHelp('CUST_FR')" />
               <button class="btn btn-outline-secondary" @click="handleOpenHelp('CUST_FR')"><i class="bi bi-search"></i></button>
             </div>
             <span class="text-muted">~</span>
             <div class="input-group input-group-sm" style="width: 200px;">
-              <input v-model="searchForm.custcdTO" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-              <input v-model="searchForm.custnmTO" type="text" class="form-control" placeholder="To" @keyup.enter="handleOpenHelp('CUST_TO')" />
+              <input v-model="searchForm.custcdto" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
+              <input v-model="searchForm.custnmto" type="text" class="form-control" placeholder="To" @keyup.enter="handleOpenHelp('CUST_TO')" />
               <button class="btn btn-outline-secondary" @click="handleOpenHelp('CUST_TO')"><i class="bi bi-search"></i></button>
             </div>
           </div>
@@ -105,8 +105,8 @@ const searchForm = reactive<any>({
   deptnm: authStore.deptnm,
   frymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
   toymd: now.toISOString().substring(0, 10),
-  custcdFR: '', custnmFR: '',
-  custcdTO: '', custnmTO: ''
+  custcdfr: '', custnmfr: '',
+  custcdto: '', custnmto: ''
 })
 
 const gridElement = ref<HTMLDivElement | null>(null);
@@ -116,9 +116,9 @@ const handleOpenHelp = (type: string) => {
   if (type === 'DEPT') {
     openHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
   } else if (type === 'CUST_FR') {
-    openHelp('CUST', (d) => { searchForm.custcdFR = d.custcd; searchForm.custnmFR = d.custnm });
+    openHelp('CUST', (d) => { searchForm.custcdfr = d.custcd; searchForm.custnmfr = d.custnm });
   } else if (type === 'CUST_TO') {
-    openHelp('CUST', (d) => { searchForm.custcdTO = d.custcd; searchForm.custnmTO = d.custnm });
+    openHelp('CUST', (d) => { searchForm.custcdto = d.custcd; searchForm.custnmto = d.custnm });
   }
 }
 
@@ -129,15 +129,15 @@ async function search() {
     const res = await api.post('/api/hsod/HSOD_110S_STR', {
       cmpycd: authStore.cmpycd,
       deptcd: searchForm.deptcd,
-      custcdFR: searchForm.custcdFR,
-      custcdTO: searchForm.custcdTO,
+      custcdfr: searchForm.custcdfr,
+      custcdto: searchForm.custcdto,
       frymd: searchForm.frymd.replace(/-/g, ''),
       toymd: searchForm.toymd.replace(/-/g, '')
     });
 
     const mapped = res.data.map((i: any) => ({
       ...i,
-      ordno_FULL: `${i.ordym}-${i.ordno}`
+      ordno_full: `${i.ordym}-${i.ordno}`
     }));
 
     grid?.setData(mapped);
@@ -170,7 +170,7 @@ onMounted(() => {
       columns: [
         { title: "No", formatter: "rownum", width: 50, hozAlign: "center" },
         { title: "주문일", field: "ordymd", width: 120, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
-        { title: "주문번호", field: "ordno_FULL", width: 120, hozAlign: "center", cssClass: "fw-bold text-primary cursor-pointer",
+        { title: "주문번호", field: "ordno_full", width: 120, hozAlign: "center", cssClass: "fw-bold text-primary cursor-pointer",
           cellClick: (e, cell) => {
             const d = cell.getRow().getData();
             // 주문등록 화면으로 이동 (쿼리 파라미터 전달)

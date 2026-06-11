@@ -54,7 +54,7 @@
 							<th class="text-center border-end">회계일자</th>
 							<td class="bg-white">
 								<div class="d-flex align-items-center gap-2">
-									<input v-model="searchForm.ymD" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="searchForm.ymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 									<span class="small fw-bold text-secondary">현재</span>
 								</div>
 							</td>
@@ -93,7 +93,7 @@ const today = new Date().toISOString().substring(0, 10)
 // 🔍 검색 조건
 const searchForm = reactive({
 	bondkind: '000',
-	ymD: today
+	ymd: today
 })
 
 const bondKindOptions = ref<any[]>([])
@@ -107,11 +107,12 @@ const loadInitData = async () => {
 	try {
 		const res = await api.post('/api/ha00/HA00_00P_STR', {
 			gubun: 'E0',
-			search: '140'
+			cmpycd: authStore.cmpycd,
+			gbncd: '140'
 		})
 		bondKindOptions.value = res.data.map((item: any) => ({
-			codecd: item.codecd || item.col0,
-			codenm: item.codenm || item.col1
+			codecd: item.codecd,
+			codenm: item.codenm
 		}))
 	} catch (e) {
 		console.error('종목 코드 로드 실패', e)
@@ -123,22 +124,22 @@ const search = async () => {
 		const res = await api.post('/api/hafn/HAFN_310S_STR', {
 			cmpycd: authStore.cmpycd,
 			bondkind: searchForm.bondkind,
-			ymD: searchForm.ymD.replace(/-/g, '')
+			ymd: searchForm.ymd.replace(/-/g, '')
 		})
 
 		const data = (res.data || []).map((row: any) => ({
-			acctcd: row.col0,
-			acctnm: row.col1,
-			custcd: row.col2,
-			custnm: row.col3,
-			mgtno: row.col4,
-			stdymd: formatYmdShort(row.col5),
-			endymd: formatYmdShort(row.col6),
-			rate: Number(row.col7 || 0),
-			puchqty: Number(row.col8 || 0),
-			issuamt: Number(row.COL9 || 0),
-			puchamt: Number(row.col10 || 0),
-			AMT: Number(row.col11 || 0)
+			acctcd: row.acctcd,
+			acctnm: row.acctnm,
+			custcd: row.bankcd,
+			custnm: row.banknm,
+			mgtno: row.mgtno,
+			stdymd: formatYmdShort(row.stdymd),
+			endymd: formatYmdShort(row.endymd),
+			rate: Number(row.rate || 0),
+			puchqty: Number(row.puchqty || 0),
+			issuamt: Number(row.issuamt || 0),
+			puchamt: Number(row.puchamt || 0),
+			amt: Number(row.col11 || 0)
 		}))
 
 		mainGrid?.setData(data)
@@ -148,15 +149,15 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.ymD = today
+	searchForm.ymd = today
 	searchForm.bondkind = '000'
 	mainGrid?.clearData()
 }
 
-const excel = () => mainGrid?.download("xlsx", `유가증권명세서_${searchForm.ymD}.xlsx`)
+const excel = () => mainGrid?.download("xlsx", `유가증권명세서_${searchForm.ymd}.xlsx`)
 
 const print = () => {
-	const params = `ymD=${searchForm.ymD}&bondkind=${searchForm.bondkind}`
+	const params = `ymd=${searchForm.ymd}&bondkind=${searchForm.bondkind}`
 	window.open(`/api/hafn/HAFN_310P?${params}`, 'SecuritiesPrint', 'width=1000,height=800,scrollbars=yes')
 }
 
@@ -170,27 +171,27 @@ onMounted(() => {
 			groupHeader: function(value, count, data, group) {
 				const sumISSU = data.reduce((acc, curr) => acc + curr.issuamt, 0)
 				const sumPUCH = data.reduce((acc, curr) => acc + curr.puchamt, 0)
-				const sumAMT = data.reduce((acc, curr) => acc + curr.AMT, 0)
+				const sumamt = data.reduce((acc, curr) => acc + curr.amt, 0)
 
 				return `
 					<div class="d-flex justify-content-between w-100 pe-4">
 						<span class="fw-bold text-dark">${value} 계</span>
 						<div class="small fw-bold">
-							<span class="mx-2 text-muted">액면가: ${sumISSU.toLocaleString()} / 취득가: ${sumPUCH.toLocaleString()} / 장부가: ${sumAMT.toLocaleString()}</span>
+							<span class="mx-2 text-muted">액면가: ${sumISSU.toLocaleString()} / 취득가: ${sumPUCH.toLocaleString()} / 장부가: ${sumamt.toLocaleString()}</span>
 						</div>
 					</div>
 				`
 			},
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "증권번호", field: "mgtno", width: 140 },
-				{ title: "발행일", field: "stdymd", hozAlign: "center", width: 90 },
-				{ title: "만기일", field: "endymd", hozAlign: "center", width: 90 },
-				{ title: "이율", field: "rate", hozAlign: "right", width: 70, formatter: (c) => Number(c.getValue()).toFixed(2) },
-				{ title: "매수", field: "puchqty", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 70 },
-				{ title: "액면가", field: "issuamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: "취득가", field: "puchamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: "장부가", field: "AMT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110,
+				{ title: "증권번호", field: "mgtno", minWidth: 200 },
+				{ title: "발행일", field: "stdymd", hozAlign: "center", width: 200 },
+				{ title: "만기일", field: "endymd", hozAlign: "center", width: 200 },
+				{ title: "이율", field: "rate", hozAlign: "right", width: 150, formatter: (c) => Number(c.getValue()).toFixed(2) },
+				{ title: "매수", field: "puchqty", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 150 },
+				{ title: "액면가", field: "issuamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 200 },
+				{ title: "취득가", field: "puchamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 200 },
+				{ title: "장부가", field: "amt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 200,
 					cssClass: "fw-bold text-primary"
 				},
 				{ title: "", field: "empty", visible: true }

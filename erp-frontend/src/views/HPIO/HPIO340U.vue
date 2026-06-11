@@ -185,7 +185,7 @@ const onProcessSelect = (prog: any) => {
 const fetchGridData = async () => {
   try {
     const res = await api.post('/api/hpio/HPIO_340U_STR', {
-      actkind: 's0', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd
+      actkind: 'S0', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd
     })
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })))
     vAlert('조회되었습니다.')
@@ -200,7 +200,7 @@ const saveData = async () => {
   try {
     for (const item of details) {
       await api.post('/api/hpio/HPIO_340U_STR', {
-        actkind: 'u0', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd,
+        actkind: 'U0', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd,
         itemcd: item.itemcd, inqty: item.inqty, bigo: item.bigo, userid: authStore.userid
       })
     }

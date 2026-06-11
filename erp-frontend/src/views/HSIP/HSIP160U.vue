@@ -187,7 +187,7 @@ const save = async () => {
   try {
     for (const item of selected) {
       const params = {
-        actkind: 'u0', // ASP 로직에 따라 입고 확정은 u0
+        actkind: 'U0', // ASP 로직에 따라 입고 확정은 u0
         cmpycd: authStore.cmpycd,
         deptcd: searchForm.deptcd,
         frymd: searchForm.ymdfr.replace(/-/g, ''),
@@ -203,7 +203,7 @@ const save = async () => {
       const resData = res.data?.[0]
 
       // ASP 에러 체크 패턴 적용
-      if (resData && (resData.status === 'y' || resData.erryn === 'y' || resData.status === 'Y' || resData.erryn === 'Y')) {
+      if (resData && (resData.status === 'Y' || resData.erryn === 'Y' || resData.status === 'Y' || resData.erryn === 'Y')) {
         throw new Error(resData.msg || '입고 처리 중 업무 오류가 발생했습니다.')
       }
     }

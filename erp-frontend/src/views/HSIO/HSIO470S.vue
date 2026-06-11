@@ -96,9 +96,9 @@
 			<div class="row align-items-center w-100">
 				<div class="col-md-3 small">조회 건수: <span class="fw-bold text-info">{{ rowCount }}</span> 건</div>
 				<div class="col-md-9 text-end">
-					<span class="me-4 small opacity-75">총 수량: <span class="fw-bold text-white ms-1">{{ formatNumber(totals.QTY) }}</span></span>
-					<span class="me-4 small opacity-75">공급가액: <span class="fw-bold text-info ms-1">{{ formatNumber(totals.AMT) }}</span></span>
-					<span class="fs-5 ms-2 fw-light">총 합계액: <span class="fw-bold text-warning ms-2">{{ formatNumber(totals.SUM) }}</span> 원</span>
+					<span class="me-4 small opacity-75">총 수량: <span class="fw-bold text-white ms-1">{{ formatNumber(totals.qty) }}</span></span>
+					<span class="me-4 small opacity-75">공급가액: <span class="fw-bold text-info ms-1">{{ formatNumber(totals.amt) }}</span></span>
+					<span class="fs-5 ms-2 fw-light">총 합계액: <span class="fw-bold text-warning ms-2">{{ formatNumber(totals.sum) }}</span> 원</span>
 				</div>
 			</div>
 		</div>
@@ -137,7 +137,7 @@ const searchForm = reactive({
 })
 
 const rowCount = ref(0);
-const totals = reactive({ QTY: 0, AMT: 0, SUM: 0 })
+const totals = reactive({ qty: 0, amt: 0, sum: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null);
 let mainGrid: Tabulator | null = null
 
@@ -152,9 +152,9 @@ const search = async () => {
 		const data = res.data || []
 		mainGrid?.setData(data)
 		rowCount.value = data.length
-		totals.QTY = data.reduce((acc: number, cur: any) => acc + (Number(cur.QTY) || 0), 0)
-		totals.AMT = data.reduce((acc: number, cur: any) => acc + (Number(cur.AMT) || 0), 0)
-		totals.SUM = data.reduce((acc: number, cur: any) => acc + (Number(cur.AMT || 0) + Number(cur.VAT || 0)), 0)
+		totals.qty = data.reduce((acc: number, cur: any) => acc + (Number(cur.qty) || 0), 0)
+		totals.amt = data.reduce((acc: number, cur: any) => acc + (Number(cur.amt) || 0), 0)
+		totals.sum = data.reduce((acc: number, cur: any) => acc + (Number(cur.amt || 0) + Number(cur.vat || 0)), 0)
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
@@ -166,7 +166,7 @@ const initialize = () => {
 	searchForm.toymd = today;
 	mainGrid?.clearData();
 	rowCount.value = 0;
-	totals.QTY = 0; totals.AMT = 0; totals.SUM = 0;
+	totals.qty = 0; totals.amt = 0; totals.sum = 0;
 }
 
 const excel = () => mainGrid?.download("xlsx", "반품현황.xlsx")
@@ -209,7 +209,7 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
 			columns: [
 				{
-					title: "출고번호", field: "iono_FULL", width: 140, cssClass: "fw-bold text-primary cursor-pointer",
+					title: "출고번호", field: "iono_full", width: 140, cssClass: "fw-bold text-primary cursor-pointer",
 					formatter: (cell) => `${cell.getData().ioym}-${cell.getData().iono}`,
 					cellClick: (e, cell) => {
 						const d = cell.getData();
@@ -220,10 +220,10 @@ onMounted(() => {
 				{ title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 2, hozAlign: "left" },
 				{ title: "규격", field: "itsize", width: 150, hozAlign: "left" },
 				{ title: "단위", field: "unit", width: 70 },
-				{ title: "수량", field: "QTY", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "공급가", field: "AMT", hozAlign: "right", width: 120, formatter: "money" },
-				{ title: "부가세", field: "VAT", hozAlign: "right", width: 110, formatter: "money" },
-				{ title: "합계액", field: "amtsum", hozAlign: "right", width: 130, formatter: "money", cssClass: "text-primary fw-bold", mutatorData: (v,d) => Number(d.AMT||0) + Number(d.VAT||0) },
+				{ title: "수량", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "공급가", field: "amt", hozAlign: "right", width: 120, formatter: "money" },
+				{ title: "부가세", field: "vat", hozAlign: "right", width: 110, formatter: "money" },
+				{ title: "합계액", field: "amtsum", hozAlign: "right", width: 130, formatter: "money", cssClass: "text-primary fw-bold", mutatorData: (v,d) => Number(d.amt||0) + Number(d.vat||0) },
 				{ title: "매출일자", field: "salsymd", width: 110, formatter: (c) => { const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v } }
 			]
 		})

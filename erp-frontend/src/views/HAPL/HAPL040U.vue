@@ -65,8 +65,8 @@
                 class="list-group-item list-group-item-action border-0 d-flex align-items-center"
                 :class="{ 'active': selectedDeptCD === dept.deptcd }"
                 @click="selectDept(dept)">
-                <span v-for="n in (dept.LEV - 1)" :key="n" class="ms-2"></span>
-                <i v-if="dept.LEV > 1" class="bi bi-arrow-return-right me-1 opacity-50"></i>
+                <span v-for="n in (dept.lev - 1)" :key="n" class="ms-2"></span>
+                <i v-if="dept.lev > 1" class="bi bi-arrow-return-right me-1 opacity-50"></i>
                 {{ dept.deptnm }}
               </button>
             </div>
@@ -119,7 +119,7 @@ const handleSearchChange = () => fetchLeftList()
 const fetchLeftList = async () => {
   try {
     const res = await api.post('/api/hapl/HAPL_040U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, STDym: searchForm.yy + searchForm.mm })
-    leftDeptList.value = (res.data || []).map((r: any) => ({ deptcd: r.deptcd, deptnm: r.deptnm, LEV: Number(r.LEV || 1) }))
+    leftDeptList.value = (res.data || []).map((r: any) => ({ deptcd: r.deptcd, deptnm: r.deptnm, lev: Number(r.lev || 1) }))
     selectedDeptCD.value = ''; mainGrid?.setData([])
   } catch (e) { vAlertError('조회 실패') }
 }
@@ -153,8 +153,8 @@ onMounted(() => {
       columns: [
         { title: "선택", field: "_selected", width: 60, hozAlign: "center", formatter: "tickCross", cellClick: (e, cell) => cell.setValue(!cell.getValue()) },
         { title: "부서", field: "deptnm", widthGrow: 1.5, cssClass: 'fw-bold', formatter: (cell) => {
-          const row = cell.getData(); const indent = '&nbsp;'.repeat((row.LEV - 1) * 3);
-          const icon = row.LEV > 1 ? '<i class="bi bi-arrow-return-right me-1 opacity-50"></i>' : '';
+          const row = cell.getData(); const indent = '&nbsp;'.repeat((row.lev - 1) * 3);
+          const icon = row.lev > 1 ? '<i class="bi bi-arrow-return-right me-1 opacity-50"></i>' : '';
           return `<span>${indent}${icon}${cell.getValue()}</span>`
         }},
         { title: "비고", field: "remark", widthGrow: 2, editor: "input" }

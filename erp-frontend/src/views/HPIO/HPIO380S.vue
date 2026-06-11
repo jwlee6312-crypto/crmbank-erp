@@ -172,7 +172,7 @@ const fetchInitOptions = async () => {
       api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
     ]);
     gbnOptions.value = gbn.data.filter((i: any) => i.code <= '119');
-    lineOptions.value = line.data.map((i: any) => ({ linecd: i.code || i.CODE, linenm: i.cdnm }));
+    lineOptions.value = line.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
     if (lineOptions.value.length > 0) onLineChange();
   } catch (e) {}
 }
@@ -180,7 +180,7 @@ const fetchInitOptions = async () => {
 const onLineChange = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: searchData.linecd, code: '' } })
-    progOptions.value = res.data.map((i: any) => ({ progcd: i.code || i.CODE, prognm: i.cdnm }));
+    progOptions.value = res.data.map((i: any) => ({ progcd: i.code || i.code, prognm: i.cdnm }));
   } catch (e) {}
 }
 

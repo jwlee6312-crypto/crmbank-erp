@@ -41,7 +41,7 @@
                 <td>
                   <select v-model="searchForm.TAXUNIT" class="form-select form-select-sm ms-1" style="width: 200px;">
                     <option value="000">전체</option>
-                    <option v-for="opt in taxUnitOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.CODENM }}</option>
+                    <option v-for="opt in taxUnitOptions" :key="opt.code" :value="opt.code">{{ opt.codenm }}</option>
                   </select>
                 </td>
                 <th class="text-center bg-light required">기 간</th>
@@ -293,7 +293,7 @@ async function search() {
     const bizRes = await api.post('/api/haba/HABA_030U_STR', { actkind: 'TX', cmpycd: authStore.cmpycd, unitcd: searchForm.TAXUNIT });
     if (bizRes.data?.length) Object.assign(bizInfo, bizRes.data[0]);
 
-    // 2. 부가세 합계 데이터 조회 (IOGBN '51' - 신고서 메인)
+    // 2. 부가세 합계 데이터 조회 (iogbn '51' - 신고서 메인)
     const res51 = await api.post('/api/hatx/HATX_110S_STR', {
       cmpycd: authStore.cmpycd, iogbn: '51', taxunit: searchForm.TAXUNIT, ymfr: ymfr, ymto: ymto
     });

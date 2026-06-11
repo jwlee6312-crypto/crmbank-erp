@@ -112,7 +112,7 @@
                     <td>
                       <select v-model="formData.whcd" class="form-select">
                         <option value="">-- 선택 --</option>
-                        <option v-for="opt in whOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                        <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
                       </select>
                     </td>
                     <th class="required bg-light text-center">입고부서</th>
@@ -253,13 +253,36 @@ function openHelp(type: string) {
 const loadCombos = async () => {
   const fetchCombo = async (gbn: string, gbncd: string = '') => {
     try {
-      const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: gbn, cmpycd: authStore.cmpycd, gbncd: gbncd } })
-      return res.data.map((i: any) => ({ codecd: String(i.codecd || i.CODE || '').trim(), codenm: String(i.codenm || i.cdnm || '').trim() }))
+      const res = await api.get('/api/hs00/HS00_000S_STR', {
+        params: { gubun: gbn, cmpycd: authStore.cmpycd, gbncd: gbncd }
+      })
+      return res.data.map((i: any) => ({
+        codecd: String(i.codecd|| '').trim(),
+        codenm: String(i.codenm|| '').trim()
+      }))
     } catch (e) { return [] }
   }
+
+  // 세관 콤보
   taxOrgOptions.value = await fetchCombo('E2', '306')
-  whOptions.value = await fetchCombo('W0', '')
-  if (whOptions.value.length > 0) formData.whcd = whOptions.value[0].codecd
+
+  // 창고 콤보 로드 및 whcd, whnm으로 매핑
+  try {
+    const resWh = await api.get('/api/hs00/HS00_000S_STR', {
+      params: { gubun: 'W0', cmpycd: authStore.cmpycd }
+    })
+    whOptions.value = (resWh.data || []).map((i: any) => ({
+      whcd: String(i.whcd || '').trim(),
+      whnm: String(i.whnm || '').trim()
+    }))
+
+    // 첫 번째 창고 자동 선택
+    if (whOptions.value.length > 0) {
+      formData.whcd = whOptions.value[0].whcd
+    }
+  } catch (e) {
+    whOptions.value = []
+  }
 }
 
 onMounted(() => {

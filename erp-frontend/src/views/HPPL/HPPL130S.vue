@@ -28,7 +28,7 @@
                 <th class="required">기준일자</th>
                 <td>
                   <div class="d-flex align-items-center gap-2">
-                    <input v-model="uiymD" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                    <input v-model="uiymd" type="date" class="form-control form-control-sm" style="width: 150px;" />
                     <span class="small text-muted">현재</span>
                   </div>
                 </td>
@@ -79,12 +79,12 @@ const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0
 
 // 1. 상태 관리
 const searchData = reactive({
-  ymD: initymd
+  ymd: initymd
 })
 
-const uiymD = computed({
-  get: () => formatDateString(searchData.ymD, '-'),
-  set: (v) => searchData.ymD = v.replace(/-/g, '')
+const uiymd = computed({
+  get: () => formatDateString(searchData.ymd, '-'),
+  set: (v) => searchData.ymd = v.replace(/-/g, '')
 })
 
 const activeItemCount = ref(0)
@@ -121,7 +121,7 @@ const initGrid = () => {
       ajaxParams: () => ({
         actkind: 'S',
         cmpycd: authStore.cmpycd,
-        ymD: searchData.ymD,
+        ymd: searchData.ymd,
         userid: authStore.userid
       }),
       ajaxResponse: (url, params, response) => {
@@ -151,7 +151,7 @@ async function generateRequirement() {
     const res = await api.post('/api/hsio/HSIO_020S_STR', {
       actkind: 'B',
       cmpycd: authStore.cmpycd,
-      ymD: searchData.ymD,
+      ymd: searchData.ymd,
       userid: authStore.userid
     })
 
@@ -165,13 +165,13 @@ async function generateRequirement() {
 }
 
 function initialize() {
-  searchData.ymD = initymd
+  searchData.ymd = initymd
   grid?.clearData()
   activeItemCount.value = 0
 }
 
 const exportExcel = () => {
-  grid?.download("xlsx", `자재소요량_${searchData.ymD}.xlsx`, { title: "자재소요량 현황" })
+  grid?.download("xlsx", `자재소요량_${searchData.ymd}.xlsx`, { title: "자재소요량 현황" })
 }
 
 const formatDateString = (v: any, sep: string) => v && v.length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : v

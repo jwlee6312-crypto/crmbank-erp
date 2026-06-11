@@ -286,7 +286,7 @@ function openHelp(type: string) {
 	if (type === 'SEARCH_DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: searchForm.deptnm },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: searchForm.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
 		})

@@ -41,12 +41,12 @@
                 <th class="required">대분류코드</th>
                 <td><input v-model="formData.agrpcd" type="text" class="form-control form-control-sm text-center fw-bold" maxlength="3" :disabled="formData.actkind === 'U0'" placeholder="3자리" /></td>
                 <th class="required">대분류명</th>
-                <td><input v-model="formData.Agrpnm" type="text" class="form-control form-control-sm" maxlength="50" @keyup.enter="search" /></td>
+                <td><input v-model="formData.agrpnm" type="text" class="form-control form-control-sm" maxlength="50" @keyup.enter="search" /></td>
                 <th>사용여부</th>
                 <td>
                   <div class="form-check form-switch m-0 d-flex justify-content-center">
-                    <input v-model="formData.useyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="useYn020">
-                    <label class="ms-2 small fw-bold" for="useYn020">{{ formData.useyn === 'Y' ? '사용' : '중지' }}</label>
+                    <input v-model="formData.useyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="useyn020">
+                    <label class="ms-2 small fw-bold" for="useyn020">{{ formData.useyn === 'Y' ? '사용' : '중지' }}</label>
                   </div>
                 </td>
               </tr>
@@ -86,7 +86,7 @@ const { resetForm } = useFormReset()
 // 1. 상태 관리
 const formData = reactive({
   actkind: 'A0', cmpycd: authStore.cmpycd, userid: authStore.user_id,
-  astkind: '120', agrpcd: '', Agrpnm: '', useyn: 'Y'
+  astkind: '120', agrpcd: '', agrpnm: '', useyn: 'Y'
 })
 
 const assetOptions = ref<any[]>([])
@@ -101,7 +101,7 @@ const initGrid = () => {
     placeholder: "데이터가 없습니다.", columnDefaults: { headerSort: false, headerHozAlign: "center" },
     columns: [
       { title: "대분류코드", field: "agrpcd", width: 120, hozAlign: "center", cssClass: "fw-bold text-primary border-end" },
-      { title: "대분류 명칭", field: "Agrpnm", minWidth: 300 },
+      { title: "대분류 명칭", field: "agrpnm", minWidth: 300 },
       { title: "사용", field: "useyn", width: 100, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
     ]
   })
@@ -112,7 +112,7 @@ const initGrid = () => {
 async function fetchAssetCodes() {
   try {
     const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '100' } })
-    assetOptions.value = res.data.map((i: any) => ({ codecd: String(i.CODE || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
+    assetOptions.value = res.data.map((i: any) => ({ codecd: String(i.code || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
     if (assetOptions.value.length > 0) {
       formData.astkind = assetOptions.value[0].codecd
       search()
@@ -123,7 +123,7 @@ async function fetchAssetCodes() {
 async function search() {
   try {
     const res = await api.post('/api/hsba/HSBA_020U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, astkind: formData.astkind, Agrpnm: formData.Agrpnm
+      actkind: 'S0', cmpycd: authStore.cmpycd, astkind: formData.astkind, agrpnm: formData.agrpnm
     })
     if (grid.value) {
       grid.value.setData(res.data || []);
@@ -133,7 +133,7 @@ async function search() {
 }
 
 async function save() {
-  if (!formData.agrpcd || !formData.Agrpnm) return vAlertError('대분류 코드와 명칭은 필수입니다.')
+  if (!formData.agrpcd || !formData.agrpnm) return vAlertError('대분류 코드와 명칭은 필수입니다.')
   if (!confirm('저장하시겠습니까?')) return
 
   try {

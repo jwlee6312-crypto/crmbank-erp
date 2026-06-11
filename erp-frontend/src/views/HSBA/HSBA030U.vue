@@ -50,7 +50,7 @@
                 <th class="required">중분류코드</th>
                 <td><input v-model="formData.bgrpcd" type="text" class="form-control form-control-sm text-center fw-bold" maxlength="3" :disabled="formData.actkind === 'U0'" placeholder="3자리" /></td>
                 <th class="required">중분류명</th>
-                <td><input v-model="formData.Bgrpnm" type="text" class="form-control form-control-sm" maxlength="50" placeholder="분류 명칭" /></td>
+                <td><input v-model="formData.bgrpnm" type="text" class="form-control form-control-sm" maxlength="50" placeholder="분류 명칭" /></td>
                 <th>사용</th>
                 <td>
                   <div class="form-check form-switch m-0 d-flex justify-content-center">
@@ -108,7 +108,7 @@ const { resetForm } = useFormReset()
 const searchForm = reactive({ astkind: '120' })
 const formData = reactive({
   actkind: 'A0', cmpycd: authStore.cmpycd, userid: authStore.user_id,
-  astkind: '120', agrpcd: '', bgrpcd: '', Agrpnm: '', Bgrpnm: '', useyn: 'Y'
+  astkind: '120', agrpcd: '', bgrpcd: '', agrpnm: '', bgrpnm: '', useyn: 'Y'
 })
 
 const assetOptions = ref<any[]>([])
@@ -128,13 +128,13 @@ const initGrids = () => {
       columnDefaults: { headerSort: false, headerHozAlign: "center" },
       columns: [
         { title: "코드", field: "agrpcd", width: 70, hozAlign: "center", cssClass: "fw-bold text-secondary" },
-        { title: "대분류 명칭", field: "Agrpnm", minWidth: 150 }
+        { title: "대분류 명칭", field: "agrpnm", minWidth: 150 }
       ]
     })
     largeGrid.on("rowClick", (e, row) => {
       const data = row.getData()
       formData.agrpcd = data.agrpcd
-      selectedLargeNm.value = data.Agrpnm
+      selectedLargeNm.value = data.agrpnm
       formData.actkind = 'A0' // 대분류 선택 시 중분류는 신규등록 모드로
       fetchMiddleList()
     })
@@ -147,7 +147,7 @@ const initGrids = () => {
       columnDefaults: { headerSort: false, headerHozAlign: "center" },
       columns: [
         { title: "중분류코드", field: "bgrpcd", width: 100, hozAlign: "center", cssClass: "fw-bold text-primary border-end" },
-        { title: "중분류 명칭", field: "Bgrpnm", minWidth: 250 },
+        { title: "중분류 명칭", field: "bgrpnm", minWidth: 250 },
         { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
       ]
     })
@@ -163,7 +163,7 @@ const initGrids = () => {
 async function fetchAssetCodes() {
   try {
     const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '100' } })
-    assetOptions.value = res.data.map((i: any) => ({ codecd: String(i.CODE || '').trim(), codenm: String(i.cdnm || '').trim() }))
+    assetOptions.value = res.data.map((i: any) => ({ codecd: String(i.code || '').trim(), codenm: String(i.cdnm || '').trim() }))
     if (assetOptions.value.length > 0) {
       searchForm.astkind = assetOptions.value[0].codecd
       fetchLargeList()
@@ -176,11 +176,11 @@ async function fetchLargeList() {
     formData.astkind = searchForm.astkind
     const res = await api.post('/api/hsba/HSBA_030U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, astkind: searchForm.astkind })
     largeGrid?.setData(res.data || [])
-    largeOptions.value = res.data.map((i: any) => ({ codecd: i.agrpcd, codenm: i.Agrpnm }))
+    largeOptions.value = res.data.map((i: any) => ({ codecd: i.agrpcd, codenm: i.agrpnm }))
 
     // 초기화
     middleGrid?.setData([])
-    formData.agrpcd = ''; formData.bgrpcd = ''; formData.Bgrpnm = ''; selectedLargeNm.value = ''
+    formData.agrpcd = ''; formData.bgrpcd = ''; formData.bgrpnm = ''; selectedLargeNm.value = ''
   } catch (e) { vAlertError('조회 실패') }
 }
 
@@ -197,7 +197,7 @@ async function fetchMiddleList() {
 
 // 4. 저장
 async function save() {
-  if (!formData.agrpcd || !formData.bgrpcd || !formData.Bgrpnm) return vAlertError('대분류, 중분류 코드 및 명칭은 필수입니다.')
+  if (!formData.agrpcd || !formData.bgrpcd || !formData.bgrpnm) return vAlertError('대분류, 중분류 코드 및 명칭은 필수입니다.')
   if (!confirm('설정된 정보를 저장하시겠습니까?')) return
 
   try {

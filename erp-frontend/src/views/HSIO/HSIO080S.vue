@@ -142,11 +142,11 @@ const initGrid = () => {
       { title: "발주량", field: "balqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       { title: "공급가", field: "balamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       { title: "부가세", field: "balvat", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "합계", field: "TOTAL", width: 120, hozAlign: "right", cssClass: "fw-bold", formatter: (cell) => {
+      { title: "합계", field: "total", width: 120, hozAlign: "right", cssClass: "fw-bold", formatter: (cell) => {
         const d = cell.getData();
         return formatNumber((Number(d.balamt) || 0) + (Number(d.balvat) || 0));
       }},
-      { title: "입고량", field: "inqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: (cell:any) => cell.getData().QTYPNT || 0 } },
+      { title: "입고량", field: "inqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: (cell:any) => cell.getData().qtypnt || 0 } },
       { title: "미입고량", field: "janqty", width: 90, hozAlign: "right", cssClass: "text-danger fw-bold", formatter: (cell) => {
         const d = cell.getData();
         return formatNumber((Number(d.balqty) || 0) - (Number(d.inqty) || 0));

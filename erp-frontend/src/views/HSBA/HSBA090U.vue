@@ -109,7 +109,7 @@
                 <th class="bg-light">전화번호</th>
                 <td><input v-model="formData.telno" type="text" class="form-control" maxlength="30" /></td>
                 <th class="bg-light">팩스번호</th>
-                <td><input v-model="formData.FAXNO" type="text" class="form-control" maxlength="30" /></td>
+                <td><input v-model="formData.faxno" type="text" class="form-control" maxlength="30" /></td>
                 <th class="bg-light">단가(입)</th>
                 <td>
                   <select v-model="formData.inprcgbn" class="form-select">
@@ -267,7 +267,7 @@ let grid: Tabulator | null = null
 
 const formData = reactive<any>({
   actkind: 'A0', custcd: '', custnm: '', custno: '', JUMINNO: '', legalno: '', custgbn: '010',
-  bossnm: '', custtype: '', custkind: '', postno: '', address: '', telno: '', FAXNO: '',
+  bossnm: '', custtype: '', custkind: '', postno: '', address: '', telno: '', faxno: '',
   inprcgbn: '200', outprcgbn: '200', hdamt: 0, rcvdd: 0, gigbcd: '305',
   agrpcd: '000', bgrpcd: '000', cgrpcd: '000', area: '000', cdamdang: '', ctelno: '', cemail: '',
   remark: '', status: '010', banknm: '', gujoa: '', stdymd: '', clsymd: '99991231',
@@ -285,13 +285,13 @@ async function fetchOptions() {
   const getOptHS = async (gbn: string, cd = '') => {
     try {
       const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: gbn, cmpycd: authStore.cmpycd, gbncd: cd })
-      return (res.data || []).map((i: any) => ({ codecd: String(i.CODE || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
+      return (res.data || []).map((i: any) => ({ codecd: String(i.code || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
     } catch (e) { return [] }
   }
   const getOptHA = async (gbn: string, cd = '') => {
     try {
       const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: gbn, cmpycd: authStore.cmpycd, gbncd: cd })
-      return (res.data || []).map((i: any) => ({ codecd: String(i.CODE || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
+      return (res.data || []).map((i: any) => ({ codecd: String(i.code || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
     } catch (e) { return [] }
   }
 
@@ -316,7 +316,7 @@ const initGrid = () => {
       { title: "사업자번호", field: "custno", width: 130, hozAlign: "center" },
       { title: "대표자", field: "bossnm", width: 100, hozAlign: "center" },
       { title: "연락처", field: "telno", width: 130, hozAlign: "left" },
-      { title: "상태", field: "statusNM", width: 80, hozAlign: "center" },
+      { title: "상태", field: "statusnm", width: 80, hozAlign: "center" },
       { title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
     ]
   })

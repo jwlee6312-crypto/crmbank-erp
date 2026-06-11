@@ -134,8 +134,8 @@ const search = async () => {
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
-		totals.SMTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.SMAMT || 0) + Number(cur.VMAMT || 0)), 0)
-		totals.SYTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.SYAMT || 0) + Number(cur.VYAMT || 0)), 0)
+		totals.SMTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.SMamt || 0) + Number(cur.VMamt || 0)), 0)
+		totals.SYTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.SYamt || 0) + Number(cur.VYamt || 0)), 0)
 
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -175,8 +175,8 @@ onMounted(() => {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 80 },
 			columns: [
-				{ title: "대분류", field: "Agrpnm", minWidth: 100, hozAlign: "left", frozen: true },
-				{ title: "중분류", field: "Bgrpnm", minWidth: 100, hozAlign: "left", frozen: true },
+				{ title: "대분류", field: "agrpnm", minWidth: 100, hozAlign: "left", frozen: true },
+				{ title: "중분류", field: "bgrpnm", minWidth: 100, hozAlign: "left", frozen: true },
 				{ title: "소분류", field: "Cgrpnm", minWidth: 120, hozAlign: "left", cssClass: "fw-bold text-primary cursor-pointer", frozen: true,
 					cellClick: (e, cell) => {
 						const d = cell.getData();
@@ -186,24 +186,24 @@ onMounted(() => {
 				{
 					title: "당월 실적 (Current Month)",
 					columns: [
-						{ title: "매출액", field: "CSMAMT", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "CVMAMT", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "CTMAMT", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-primary fw-bold" },
+						{ title: "매출액", field: "CSMamt", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "CVMamt", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "CTMamt", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-primary fw-bold" },
 						{ title: "%", field: "PROF_rate_M", hozAlign: "right", width: 70, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
-							const total = Number(d.SMSUM) || 0;
-							return total !== 0 ? (Number(d.CSMAMT) / total * 100) : 0;
+							const total = Number(d.smsum) || 0;
+							return total !== 0 ? (Number(d.CSMamt) / total * 100) : 0;
 						}}
 					]
 				},
 				{
 					title: "누계 실적 (Cumulative)",
 					columns: [
-						{ title: "매출액", field: "CSYAMT", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "CVYAMT", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "CTYAMT", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-warning fw-bold" },
+						{ title: "매출액", field: "CSYamt", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "CVYamt", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "CTYamt", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-warning fw-bold" },
 						{ title: "%", field: "PROF_rate_Y", hozAlign: "right", width: 70, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
-							const total = Number(d.SYSUM) || 0;
-							return total !== 0 ? (Number(d.CSYAMT) / total * 100) : 0;
+							const total = Number(d.sysum) || 0;
+							return total !== 0 ? (Number(d.CSYamt) / total * 100) : 0;
 						}}
 					]
 				}

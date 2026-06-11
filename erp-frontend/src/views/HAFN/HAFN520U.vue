@@ -44,9 +44,9 @@
 							<th class="text-center border-end">만기일 범위</th>
 							<td class="bg-white border-end">
 								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.ymD_FR" type="date" class="form-control form-control-sm" />
+									<input v-model="searchForm.ymd_fr" type="date" class="form-control form-control-sm" />
 									<span class="text-muted">~</span>
-									<input v-model="searchForm.ymD_TO" type="date" class="form-control form-control-sm" />
+									<input v-model="searchForm.ymd_to" type="date" class="form-control form-control-sm" />
 								</div>
 							</td>
 							<th class="text-center border-end">발행부서</th>
@@ -127,8 +127,8 @@ const today = now.toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	ymD_FR: firstDay,
-	ymD_TO: today
+	ymd_fr: firstDay,
+	ymd_to: today
 })
 
 // 📝 전표 발행 정보
@@ -158,14 +158,14 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hafn/HAFN_520S_STR', {
 			cmpycd: authStore.cmpycd,
-			ymD_FR: searchForm.ymD_FR.replace(/-/g, ''),
-			ymD_TO: searchForm.ymD_TO.replace(/-/g, '')
+			ymd_fr: searchForm.ymd_fr.replace(/-/g, ''),
+			ymd_to: searchForm.ymd_to.replace(/-/g, '')
 		})
 
 		const data = (res.data || []).map((row: any) => ({
 			...row,
-			endymd_F: formatYmd(row.endymd),
-			stdymd_F: formatYmd(row.stdymd),
+			endymd_f: formatYmd(row.endymd),
+			stdymd_f: formatYmd(row.stdymd),
 			billamt: Number(row.billamt || 0)
 		}))
 
@@ -191,16 +191,16 @@ const save = async () => {
 		selectedRows.value.forEach(row => {
 			details.push({
 				upkind: 'A',
-				DBCR: 'D',
+				dbcr: 'D',
 				acctcd: row.acctcd,
 				acctnm: '지급어음',
-				remark: `만기 지급어음(${row.BILLNO}:${row.endymd_F})`,
-				AMOUNT: row.billamt,
-				USEdeptcd: voucherForm.deptcd,
+				remark: `만기 지급어음(${row.billno}:${row.endymd_f})`,
+				amount: row.billamt,
+				usedeptcd: voucherForm.deptcd,
 				usedeptnm: voucherForm.deptnm,
 				custcd: row.custcd,
 				subnm: row.custnm,
-				mgtno: row.BILLNO,
+				mgtno: row.billno,
 				typeacct: '060' // 지급어음 유형
 			})
 		})
@@ -208,12 +208,12 @@ const save = async () => {
 		// 2. 대변: 출금계정 (보통예금 등)
 		details.push({
 			upkind: 'A',
-			DBCR: 'C',
+			dbcr: 'C',
 			acctcd: voucherForm.acctcd,
 			acctnm: voucherForm.acctnm,
 			remark: '만기 지급어음 지급',
-			AMOUNT: totalSelectedAmount.value,
-			USEdeptcd: voucherForm.deptcd,
+			amount: totalSelectedAmount.value,
+			usedeptcd: voucherForm.deptcd,
 			usedeptnm: voucherForm.deptnm,
 			mgtno: voucherForm.mgtno
 		})
@@ -226,7 +226,7 @@ const save = async () => {
 				acctymd: voucherForm.slipymd.replace(/-/g, ''),
 				deptcd: voucherForm.deptcd,
 				business: '만기 지급어음 지불 건',
-				SLIPGU: '010'
+				slipgu: '010'
 			},
 			DETAILS: details
 		}
@@ -236,7 +236,7 @@ const save = async () => {
 		vAlert('전표가 발행되었습니다.')
 
 		if (res.data && res.data.slipno) {
-			window.open(`/api/hasl/HASL_SLIP_PRINT?SLIPGU=010&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
+			window.open(`/api/hasl/HASL_SLIP_PRINT?slipgu=010&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
 		}
 
 		search()
@@ -245,8 +245,8 @@ const save = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.ymD_FR = firstDay
-	searchForm.ymD_TO = today
+	searchForm.ymd_fr = firstDay
+	searchForm.ymd_to = today
 	voucherForm.acctcd = ''
 	voucherForm.acctnm = ''
 	voucherForm.mgtno = ''
@@ -262,7 +262,7 @@ function openHelp(type: string) {
 	if (type === 'ACCT') {
 		Object.assign(modalProps, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: voucherForm.acctnm },
+			data: { gubun: 'A6', cmpycd: authStore.cmpycd, gbncd: '023' },
 			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }],
 			onConfirm: (d: any) => {
 				voucherForm.acctcd = d.acctcd;
@@ -273,17 +273,17 @@ function openHelp(type: string) {
 	} else if (type === 'DEPT') {
 		Object.assign(modalProps, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, search: voucherForm.deptnm },
+			data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: voucherForm.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { voucherForm.deptcd = d.deptcd; voucherForm.deptnm = d.deptnm }
 		})
 	} else if (type === 'MGT') {
 		if (!voucherForm.acctcd) return vAlert('출금계정을 먼저 선택하십시오.')
 		Object.assign(modalProps, {
-			title: '구좌번호 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'M0', acctcd: voucherForm.acctcd, cmpycd: authStore.cmpycd, search: voucherForm.mgtno },
-			columns: [{ title: '관리번호', field: 'mgtno', width: 150 }, { title: '구좌명', field: 'mgtnm', width: 150 }],
-			onConfirm: (d: any) => { voucherForm.mgtno = d.mgtno; voucherForm.mgtnm = d.mgtnm }
+		    title: '구좌번호 선택', path: '/api/ha00/HA00_00P_STR',
+            data: { gubun: 'M0', gbncd: '010', cmpycd: authStore.cmpycd, code: '', remark: voucherForm.acctcd },
+            columns: [{ title: '관리번호', field: 'mgtno', width: 150 }, { title: '구좌명', field: 'mgtnm', width: 150 }],
+            onConfirm: (d: any) => { voucherForm.mgtno = d.mgtno; voucherForm.mgtnm = d.mgtnm }
 		})
 	}
 	modalVisible.value = true
@@ -298,13 +298,13 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{ formatter: "rowSelection", titleFormatter: "rowSelection", hozAlign: "center", headerHozAlign: "center", width: 40 },
-				{ title: "만기일", field: "endymd_F", hozAlign: "center", width: 100 },
-				{ title: "어음번호", field: "BILLNO", hozAlign: "center", width: 120 },
-				{ title: "발행은행", field: "banknm", width: 150 },
-				{ title: "발행인", field: "ISSUMAN", width: 120 },
-				{ title: "발행일", field: "stdymd_F", hozAlign: "center", width: 100 },
-				{ title: "지급거래처", field: "custnm", minWidth: 150 },
-				{ title: "금액", field: "billamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 120, cssClass: "fw-bold" }
+				{ title: "만기일", field: "endymd_f", hozAlign: "center", width: 150 },
+				{ title: "어음번호", field: "billno", hozAlign: "center", width: 200 },
+				{ title: "발행은행", field: "banknm", width: 250 },
+				{ title: "발행인", field: "issuman", width: 200 },
+				{ title: "발행일", field: "stdymd_f", hozAlign: "center", width: 150 },
+				{ title: "지급거래처", field: "custnm", minWidth: 250 },
+				{ title: "금액", field: "billamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 150, cssClass: "fw-bold" }
 			],
 		})
 

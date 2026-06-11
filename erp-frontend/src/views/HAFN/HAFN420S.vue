@@ -46,9 +46,9 @@
 							<th class="text-center border-end">부도일 범위</th>
 							<td class="bg-white">
 								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.ymD_FR" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="searchForm.ymd_fr" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 									<span class="text-muted">~</span>
-									<input v-model="searchForm.ymD_TO" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="searchForm.ymd_to" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 								</div>
 							</td>
 						</tr>
@@ -87,8 +87,8 @@ const today = now.toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	ymD_FR: firstDay,
-	ymD_TO: today
+	ymd_fr: firstDay,
+	ymd_to: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -100,20 +100,19 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hafn/HAFN_420S_STR', {
 			cmpycd: authStore.cmpycd,
-			ymD_FR: searchForm.ymD_FR.replace(/-/g, ''),
-			ymD_TO: searchForm.ymD_TO.replace(/-/g, '')
+			ymd_fr: searchForm.ymd_fr.replace(/-/g, ''),
+			ymd_to: searchForm.ymd_to.replace(/-/g, '')
 		})
-
 		const data = (res.data || []).map((row: any) => ({
-			BUDOymD: formatYmdShort(row.col0),
-			BILLNO: row.col1,
-			ISSUBANK: row.col2,
-			ISSUMAN: row.col3,
-			stdymd: formatYmdShort(row.col4),
-			DUEymD: formatYmdShort(row.col5),
-			custnm: row.col6,
-			billamt: Number(row.COL9 || 0),
-			status: Number(row.col10 || 0) === 0 ? '정리' : '미정리'
+			budoymd: formatYmdShort(row.budoymd),
+			billno: row.billno,
+			issubank: row.issubank,
+			issuman: row.issuman,
+			stdymd: formatYmdShort(row.stdymd),
+			dueymd: formatYmdShort(row.endymd),
+			custnm: row.custnm,
+			billamt: Number(row.billamt || 0),
+			status: Number(row.amt || 0) === 0 ? '정리' : '미정리'
 		}))
 
 		mainGrid?.setData(data)
@@ -123,15 +122,15 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.ymD_FR = firstDay
-	searchForm.ymD_TO = today
+	searchForm.ymd_fr = firstDay
+	searchForm.ymd_to = today
 	mainGrid?.clearData()
 }
 
 const excel = () => mainGrid?.download("xlsx", `부도어음명세서_${today}.xlsx`)
 
 const print = () => {
-	const params = `ymD_FR=${searchForm.ymD_FR}&ymD_TO=${searchForm.ymD_TO}`
+	const params = `ymd_fr=${searchForm.ymd_fr}&ymd_to=${searchForm.ymd_to}`
 	window.open(`/api/hafn/HAFN_420P?${params}`, 'BudoBillPrint', 'width=1000,height=800,scrollbars=yes')
 }
 
@@ -142,12 +141,12 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "부도일", field: "BUDOymD", hozAlign: "center", width: 90 },
-				{ title: "어음번호", field: "BILLNO", hozAlign: "center", width: 130 },
-				{ title: "발행은행", field: "ISSUBANK", width: 180 },
-				{ title: "발행인", field: "ISSUMAN", width: 120 },
+				{ title: "부도일", field: "budoymd", hozAlign: "center", width: 90 },
+				{ title: "어음번호", field: "billno", hozAlign: "center", width: 130 },
+				{ title: "발행은행", field: "issubank", width: 180 },
+				{ title: "발행인", field: "issuman", width: 120 },
 				{ title: "발행일", field: "stdymd", hozAlign: "center", width: 90 },
-				{ title: "만기일", field: "DUEymD", hozAlign: "center", width: 90 },
+				{ title: "만기일", field: "dueymd", hozAlign: "center", width: 90 },
 				{ title: "받은거래처", field: "custnm", minWidth: 150 },
 				{ title: "금액", field: "billamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110, cssClass: "fw-bold" },
 				{ title: "정리여부", field: "status", hozAlign: "center", width: 90,

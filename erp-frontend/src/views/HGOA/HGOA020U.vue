@@ -70,7 +70,7 @@
                                             </select>
                                         </td>
                                         <th class="bg-light text-end pe-2">실행일자</th>
-                                        <td><input v-model="form.ACTDATE" type="text" class="form-control form-control-sm" placeholder="yyyymmDD" /></td>
+                                        <td><input v-model="form.actdate" type="text" class="form-control form-control-sm" placeholder="yyyymmDD" /></td>
                                     </tr>
                                     <tr>
                                         <th class="bg-light text-end pe-2">비고</th>
@@ -124,7 +124,7 @@ import AppAlert from '@/components/AppAlert.vue'
 const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
 
 // 💡 모든 속성명을 대문자로 정의
-const form = reactive({ cmpycd: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', remark: '', ACTDATE: '', status: '010', START_MENT: '', END_MENT: '' })
+const form = reactive({ cmpycd: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', remark: '', actdate: '', status: '010', START_MENT: '', END_MENT: '' })
 const campaigns = ref<any[]>([]); const survey_list = ref<any[]>([]); const code_910 = ref<any[]>([]); const code_930 = ref<any[]>([])
 const list_ref = ref<HTMLDivElement | null>(null); let list_instance: Tabulator | null = null
 
@@ -182,7 +182,7 @@ async function search() {
 }
 
 function initialize() {
-	Object.assign(form, { cmpycd: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', remark: '', ACTDATE: new Date().toISOString().slice(0,10).replace(/-/g,''), status: '010', START_MENT: '', END_MENT: '' })
+	Object.assign(form, { cmpycd: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', remark: '', actdate: new Date().toISOString().slice(0,10).replace(/-/g,''), status: '010', START_MENT: '', END_MENT: '' })
 	survey_list.value = [];
     list_instance?.deselectRow();
 }

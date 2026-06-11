@@ -138,7 +138,7 @@ const save = async () => {
     for (const item of selected) {
       const slipYmd = item.SLIPYMD || item.slipymd
       const slipNo = item.slipno || item.slipno
-      const uDeptCd = item.UDEPTCD || item.udeptcd || searchForm.DEPTCD
+      const uDeptCd = item.UDEPTCD || item.deptcd || searchForm.DEPTCD
 
       // 🚀 Step 1. 자동 전표 승인 취소 (ASP: HASL_020U_STR)
       if (autoSlip.value === 'Y') {
@@ -149,7 +149,7 @@ const save = async () => {
           ACCTYMD: slipYmd,
           slipno: slipNo,
           DEPTCD: uDeptCd,
-          SLIPKIND: '031',
+          slipkind: '031',
           slipyn: 'Y',
           COFMYN: 'N', // 승인 취소
           UPDEMP: authStore.USERID
@@ -199,7 +199,7 @@ function openHelp(type: string) {
 onMounted(async () => {
   // 전표 환경 설정 체크 (ASP: HA00_010S_STR 'P1')
   try {
-    const resSet = await api.post('/api/ha00/HA00_010S_STR', { CMPYCD: authStore.CMPYCD, GBN: 'P1' })
+    const resSet = await api.post('/api/ha00/HA00_010S_STR', { CMPYCD: authStore.CMPYCD, gbn: 'P1' })
     if (resSet.data?.length > 0) autoSlip.value = resSet.data[0].slipyn || 'N'
   } catch (e) {}
 
@@ -219,7 +219,7 @@ onMounted(async () => {
         { title: "정산일", field: "JSANYMD", width: 110, formatter: (c) => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
-        { title: "비용금액", field: "SPYAMT", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
+        { title: "비용금액", field: "spyamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
         { title: "상세 적요", field: "BIGO", minWidth: 200, widthGrow: 1, hozAlign: "left" }
       ]
     })

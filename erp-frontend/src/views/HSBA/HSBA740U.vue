@@ -32,11 +32,11 @@
               <tr>
                 <th class="required">지불유형</th>
                 <td>
-                  <input v-model="formData.PAYGBN" type="text" class="form-control form-control-sm text-center fw-bold" style="width: 100px;" maxlength="3" :readonly="formData.actkind === 'U0'" />
+                  <input v-model="formData.paygbn" type="text" class="form-control form-control-sm text-center fw-bold" style="width: 100px;" maxlength="3" :readonly="formData.actkind === 'U0'" />
                 </td>
                 <th class="required">지불유형명</th>
                 <td>
-                  <input v-model="formData.PAYGBNNM" type="text" class="form-control form-control-sm" style="width: 250px;" maxlength="20" />
+                  <input v-model="formData.paygbnNM" type="text" class="form-control form-control-sm" style="width: 250px;" maxlength="20" />
                 </td>
                 <th>삭제여부</th>
                 <td>
@@ -50,16 +50,16 @@
                 <th class="required">차변 발생계정</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 300px;">
-                    <input v-model="formData.Dacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.Dacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('DACCT')" />
+                    <input v-model="formData.dacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.dacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('DACCT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('DACCT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">대변 발생계정</th>
                 <td colspan="3">
                   <div class="input-group input-group-sm" style="width: 300px;">
-                    <input v-model="formData.Cacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.Cacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('CACCT')" />
+                    <input v-model="formData.cacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.cacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('CACCT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('CACCT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -103,10 +103,10 @@ const { resetForm } = useFormReset()
 const formData = reactive<any>({
   actkind: 'A0',
   cmpycd: authStore.cmpycd,
-  PAYGBN: '',
-  PAYGBNNM: '',
-  Dacctcd: '', Dacctnm: '',
-  Cacctcd: '', Cacctnm: '',
+  paygbn: '',
+  paygbnNM: '',
+  dacctcd: '', dacctnm: '',
+  cacctcd: '', cacctnm: '',
   useyn: 'Y'
 })
 
@@ -122,10 +122,10 @@ const initGrid = () => {
       height: "100%",
       placeholder: "조회된 데이터가 없습니다.",
       columns: [
-        { title: "유형코드", field: "PAYGBN", width: 100, hozAlign: "center", cssClass: "fw-bold" },
-        { title: "지불 유형명", field: "PAYGBNNM", width: 200 },
-        { title: "차변 발생계정", field: "Dacctnm", minWidth: 200 },
-        { title: "대변 발생계정", field: "Cacctnm", minWidth: 200 },
+        { title: "유형코드", field: "paygbn", width: 100, hozAlign: "center", cssClass: "fw-bold" },
+        { title: "지불 유형명", field: "paygbnNM", width: 200 },
+        { title: "차변 발생계정", field: "dacctnm", minWidth: 200 },
+        { title: "대변 발생계정", field: "cacctnm", minWidth: 200 },
       ],
     })
 
@@ -152,9 +152,9 @@ async function fetchList() {
 }
 
 async function saveData() {
-  if (!formData.PAYGBN) return vAlertError('지불유형을 입력하세요.')
-  if (!formData.PAYGBNNM) return vAlertError('지불유형명을 입력하세요.')
-  if (!formData.Dacctcd || !formData.Cacctcd) return vAlertError('차변/대변 계정과목을 선택하세요.')
+  if (!formData.paygbn) return vAlertError('지불유형을 입력하세요.')
+  if (!formData.paygbnNM) return vAlertError('지불유형명을 입력하세요.')
+  if (!formData.dacctcd || !formData.cacctcd) return vAlertError('차변/대변 계정과목을 선택하세요.')
 
   if (!confirm('자료를 저장하시겠습니까?')) return
 
@@ -198,14 +198,14 @@ function openHelp(type: string) {
 
   Object.assign(modalProps, {
     title, path: '/api/comm/HELP_acctcd_LTD', defaultField: 'acctnm',
-    data: { ACCT: acctType, cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+    data: { ACCT: acctType, cmpycd: authStore.cmpycd },
     columns: [
       { title: '코드', field: 'acctcd', width: 80 },
       { title: '계정과목명', field: 'acctnm', width: 200 }
     ],
     onConfirm: (data: any) => {
-      if (type === 'DACCT') { formData.Dacctcd = data.acctcd; formData.Dacctnm = data.acctnm }
-      else if (type === 'CACCT') { formData.Cacctcd = data.acctcd; formData.Cacctnm = data.acctnm }
+      if (type === 'DACCT') { formData.dacctcd = data.acctcd; formData.dacctnm = data.acctnm }
+      else if (type === 'CACCT') { formData.cacctcd = data.acctcd; formData.cacctnm = data.acctnm }
     }
   })
   modalVisible.value = true

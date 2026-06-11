@@ -126,24 +126,25 @@ const search = async () => {
 			cmpycd: authStore.cmpycd,
 			acctcd: searchForm.acctcd,
 			mgtno: searchForm.mgtno,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, '')
+			ymdfr: searchForm.frymd.replace(/-/g, ''),
+			ymdto: searchForm.toymd.replace(/-/g, '')
 		})
 
-		const rawData = res.data || []
+		// SQL Alias 대응을 위해 키를 소문자로 변환하여 처리
+		const rawData = (res.data || []).map((row: any) => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v])))
 		const processedData: any[] = []
 
 		if (rawData.length > 0) {
-			// 첫 번째 행: 전기이월/시작잔액
+			// 첫 번째 행: 전기이월/시작잔액 (SQL 알리아스 사용: dbamt, cramt, dbcr, descnm 등)
 			let carryRow = rawData[0]
-			let dbMmTot = Number(carryRow.col8 || 0)
-			let crMmTot = Number(carryRow.COL9 || 0)
-			let dbcr = carryRow.col10 // 'D' or 'C'
+			let dbMmTot = Number(carryRow.dbamt || 0)
+			let crMmTot = Number(carryRow.cramt || 0)
+			let dbcr = carryRow.dbcr // 'D' or 'C'
 			let janAmt = dbcr === 'D' ? (dbMmTot - crMmTot) : (crMmTot - dbMmTot)
 
 			processedData.push({
 				acctymd: '',
-				descnm: carryRow.col1,
+				descnm: carryRow.descnm,
 				slipno: '',
 				dbamt: dbMmTot,
 				cramt: crMmTot,
@@ -153,45 +154,47 @@ const search = async () => {
 
 			let i = 1
 			while (i < rawData.length) {
-				let currentYm = String(rawData[i].col0).substring(0, 6)
+				let currentYm = String(rawData[i].acctymd).substring(0, 6)
 				let dbMmAmt = 0
 				let crMmAmt = 0
 
-				while (i < rawData.length && String(rawData[i].col0).substring(0, 6) === currentYm) {
+				while (i < rawData.length && String(rawData[i].acctymd).substring(0, 6) === currentYm) {
 					const row = rawData[i]
-					const db = Number(row.col8 || 0)
-					const cr = Number(row.COL9 || 0)
+					const db = Number(row.dbamt || 0)
+					const cr = Number(row.cramt || 0)
 
 					if (dbcr === 'D') janAmt += (db - cr)
 					else janAmt += (cr - db)
 
-					// 세부내역(TEMP) 조립
+					// 세부내역 조립
 					let details: string[] = []
-					if (row.col4) details.push(String(row.col4).trim()) // deptnm
-					if (row.col3) details.push(String(row.col3).trim()) // custnm
-					if (row.col7) details.push(String(row.col7).trim()) // mgtno
-					if (row.col5) details.push(String(row.col5).trim()) // bugtnm
-					if (row.col6) details.push(String(row.col6).trim()) // prjnm
+					if (row.deptnm) details.push(String(row.deptnm).trim())
+					if (row.subnm) details.push(String(row.subnm).trim())
+					if (row.mgtno) details.push(String(row.mgtno).trim())
+					if (row.bugtnm) details.push(String(row.bugtnm).trim())
+					if (row.prjnm) details.push(String(row.prjnm).trim())
 
-					// 관리항목 12-17
-					for (let idx = 12; idx <= 17; idx++) {
-						const val = row[`COL${idx}`]
+					// 관리항목 (issubank, issuman, stdymd, endymd, sname 등)
+					const mgtFields = ['issubank', 'issuman', 'stdymd', 'endymd', 'sname']
+					mgtFields.forEach(f => {
+						const val = row[f]
 						if (val && String(val).trim().length > 0 && val !== '00000000') details.push(String(val).trim())
-					}
-					if (Number(row.col18) !== 0) details.push(new Intl.NumberFormat().format(row.col18))
-					if (Number(row.col19) !== 0) details.push(new Intl.NumberFormat().format(row.col19))
+					})
+
+					if (Number(row.srvamt) !== 0) details.push(new Intl.NumberFormat().format(row.srvamt))
+					if (Number(row.bongamt) !== 0) details.push(new Intl.NumberFormat().format(row.bongamt))
 
 					// 외화
-					if (row.col20 === 'Y') {
-						if (row.col21) details.push(String(row.col21).trim())
-						if (Number(row.col22) !== 0) details.push(new Intl.NumberFormat().format(row.col22))
-						if (Number(row.col23) !== 0) details.push(new Intl.NumberFormat().format(row.col23))
+					if (row.frgnyn === 'Y' || row.frgnyn === 'Y') {
+						if (row.frgnnm) details.push(String(row.frgnnm).trim())
+						if (Number(row.frgnrate) !== 0) details.push(new Intl.NumberFormat().format(row.frgnrate))
+						if (Number(row.frgnamt) !== 0) details.push(new Intl.NumberFormat().format(row.frgnamt))
 					}
 
 					processedData.push({
-						acctymd: row.col0,
-						descnm: row.col1 + (row.col11 && String(row.col11).trim() !== '' ? ` (${row.col11})` : ''),
-						slipno: row.col2,
+						acctymd: row.acctymd,
+						descnm: row.descnm + (row.sslipno && String(row.sslipno).trim() !== '' ? ` (${row.sslipno})` : ''),
+						slipno: row.slipno,
 						dbamt: db,
 						cramt: cr,
 						janamt: janAmt,
@@ -245,23 +248,23 @@ function openHelp(type: 'ACCT' | 'MGT') {
 	if (type === 'ACCT') {
 		Object.assign(modalProps, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'acctnm',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: searchForm.acctnm },
+			data: { gubun: 'A2', cmpycd: authStore.cmpycd, code: searchForm.acctnm },
 			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }, { title: '구분', field: 'TYPEMGT', width: 50, visible: false }],
 			onConfirm: (d: any) => {
 				searchForm.acctcd = d.acctcd
 				searchForm.acctnm = d.acctnm
-				searchForm.mgtgbn = d.TYPEMGT || ''
+				searchForm.mgtgbn = d.typemgt || ''
 				searchForm.mgtno = ''
 			}
 		})
 	} else {
 		if (!searchForm.acctcd) return vAlertError('계정과목을 먼저 선택하세요.')
 		Object.assign(modalProps, {
-			title: '관리번호 선택', path: '/api/ha00/HA00_05P_STR', defaultField: 'col0',
-			data: { mgtgbn: searchForm.mgtgbn, acctcd: searchForm.acctcd, cmpycd: authStore.cmpycd, search: searchForm.mgtno },
-			columns: [{ title: '관리번호', field: 'col0', width: 150 }, { title: '명칭/적요', field: 'col1', width: 250 }],
+			title: '관리번호 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'mgtno',
+			data: { gubun: 'M0', cmpycd: authStore.cmpycd, gbncd: searchForm.mgtgbn, code: searchForm.mgtnm, remark: searchForm.acctcd },
+			columns: [{ title: '관리번호', field: 'mgtno', width: 150 }, { title: '명칭/적요', field: 'mgtnm', width: 250 }],
 			onConfirm: (d: any) => {
-				searchForm.mgtno = d.col0
+				searchForm.mgtno = d.mgtno
 				search()
 			}
 		})

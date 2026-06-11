@@ -34,8 +34,8 @@
                 <th class="required" style="width: 150px;">차변 발생계정</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 350px;">
-                    <input v-model="formData.Dacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.Dacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('DACCT')" />
+                    <input v-model="formData.dacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.dacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('DACCT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('DACCT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -44,8 +44,8 @@
                 <th class="required">대변 발생계정</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 350px;">
-                    <input v-model="formData.Cacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.Cacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('CACCT')" />
+                    <input v-model="formData.cacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.cacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('CACCT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('CACCT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -61,8 +61,8 @@
                 <th style="width: 150px;">차변 발생계정</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 350px;">
-                    <input v-model="formData.DDacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.DDacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('DDACCT')" />
+                    <input v-model="formData.Ddacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.Ddacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('DDACCT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('DDACCT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -71,8 +71,8 @@
                 <th>대변 발생계정</th>
                 <td>
                   <div class="input-group input-group-sm" style="width: 350px;">
-                    <input v-model="formData.DCacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
-                    <input v-model="formData.DCacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('DCACCT')" />
+                    <input v-model="formData.Dcacctcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="formData.Dcacctnm" type="text" class="form-control" placeholder="계정 선택" @keyup.enter="openHelp('DCACCT')" />
                     <button class="btn btn-outline-secondary" @click="openHelp('DCACCT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -119,10 +119,10 @@ const { resetForm } = useFormReset()
 const formData = reactive<any>({
   actkind: 'A0',
   cmpycd: authStore.cmpycd,
-  Dacctcd: '', Dacctnm: '',
-  Cacctcd: '', Cacctnm: '',
-  DDacctcd: '', DDacctnm: '',
-  DCacctcd: '', DCacctnm: '',
+  dacctcd: '', dacctnm: '',
+  cacctcd: '', cacctnm: '',
+  Ddacctcd: '', Ddacctnm: '',
+  Dcacctcd: '', Dcacctnm: '',
   useyn: 'Y'
 })
 
@@ -145,7 +145,7 @@ async function fetchSetting() {
 }
 
 async function saveData() {
-  if (!formData.Dacctcd || !formData.Cacctcd) {
+  if (!formData.dacctcd || !formData.cacctcd) {
     return vAlertError('금액 관련 차변/대변 계정은 필수입니다.')
   }
 
@@ -181,16 +181,16 @@ function openHelp(type: string) {
 
   Object.assign(modalProps, {
     title, path: '/api/comm/HELP_acctcd_LTD', defaultField: 'acctnm',
-    data: { ACCT: acctType, cmpycd: authStore.cmpycd, LIMITOFFSET: 0, LIMITROWS: 20 },
+    data: { ACCT: acctType, cmpycd: authStore.cmpycd },
     columns: [
       { title: '코드', field: 'acctcd', width: 80 },
       { title: '계정과목명', field: 'acctnm', width: 200 }
     ],
     onConfirm: (data: any) => {
-      if (type === 'DACCT') { formData.Dacctcd = data.acctcd; formData.Dacctnm = data.acctnm }
-      else if (type === 'CACCT') { formData.Cacctcd = data.acctcd; formData.Cacctnm = data.acctnm }
-      else if (type === 'DDACCT') { formData.DDacctcd = data.acctcd; formData.DDacctnm = data.acctnm }
-      else if (type === 'DCACCT') { formData.DCacctcd = data.acctcd; formData.DCacctnm = data.acctnm }
+      if (type === 'DACCT') { formData.dacctcd = data.acctcd; formData.dacctnm = data.acctnm }
+      else if (type === 'CACCT') { formData.cacctcd = data.acctcd; formData.cacctnm = data.acctnm }
+      else if (type === 'DDACCT') { formData.Ddacctcd = data.acctcd; formData.Ddacctnm = data.acctnm }
+      else if (type === 'DCACCT') { formData.Dcacctcd = data.acctcd; formData.Dcacctnm = data.acctnm }
     }
   })
   modalVisible.value = true

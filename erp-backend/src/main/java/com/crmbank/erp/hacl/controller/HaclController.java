@@ -26,18 +26,60 @@ public class HaclController {
         }
     }
 
-    /**
-     * 월 마감작업 처리 및 오류 전표 조회
-     */
+    @PostMapping("/HACL_010S_STR")
+    public List<Map<String, Object>> searchHacl010S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return haclMapper.HACL_010S_STR(params);
+    }
+
+    @PostMapping("/HACL_020S_STR")
+    public List<Map<String, Object>> searchHacl020S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return haclMapper.HACL_020S_STR(params);
+    }
+
+    @PostMapping("/HACL_030S_STR")
+    public List<Map<String, Object>> searchHacl030S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return haclMapper.HACL_030S_STR(params);
+    }
+
+    @PostMapping("/HACL_040S_STR")
+    public List<Map<String, Object>> searchHacl040S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return haclMapper.HACL_040S_STR(params);
+    }
+
+    @PostMapping("/HACL_050S_STR")
+    public List<Map<String, Object>> searchHacl050S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return haclMapper.HACL_050S_STR(params);
+    }
+
+    @PostMapping("/HACL_060S_STR")
+    public List<Map<String, Object>> searchHacl060S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return haclMapper.HACL_060S_STR(params);
+    }
+
+    @PostMapping("/HACL_070S_STR")
+    public List<Map<String, Object>> searchHacl070S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return haclMapper.HACL_070S_STR(params);
+    }
+
+    @PostMapping("/HACL_080S_STR")
+    public List<Map<String, Object>> searchHacl080S(@RequestBody Map<String, Object> params, HttpSession session) {
+        injectSession(params, session);
+        return haclMapper.HACL_080S_STR(params);
+    }
+
     @PostMapping("/HACL_800U_STR")
     public List<Map<String, Object>> executeHacl800U(@RequestBody Map<String, Object> params, HttpSession session) {
         injectSession(params, session);
         return haclMapper.HACL_800U_STR(params);
     }
 
-    /**
-     * 차기이월 작업 처리
-     */
     @PostMapping("/HACL_900U_STR")
     public List<Map<String, Object>> executeHacl900U(@RequestBody Map<String, Object> params, HttpSession session) {
         injectSession(params, session);

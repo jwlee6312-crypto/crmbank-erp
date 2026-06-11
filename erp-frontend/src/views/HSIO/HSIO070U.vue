@@ -157,7 +157,7 @@ async function fetchDetail(cust: any) {
  * 🚀 저장(취소) 로직 (ASP 패턴: 선택된 각 행을 d0로 순차 호출)
  */
 async function save() {
-  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'y')
+  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'Y')
   if (!items || items.length === 0) return vAlertError('취소할 항목을 선택하세요.')
   if (!confirm('입고처리를 취소하시겠습니까?')) return
 
@@ -187,14 +187,14 @@ async function save() {
 
 const toggleAllRows = () => {
   const rows = itemGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'n' : 'y' }))
+  const allSelected = rows.every(r => r.getData().procyn === 'Y')
+  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
   updateCount()
 }
 
 const updateCount = () => {
     const data = itemGrid?.getData() || []
-    activeItemCount.value = data.filter((r: any) => r.procyn === 'y').length
+    activeItemCount.value = data.filter((r: any) => r.procyn === 'Y').length
 }
 
 function initialize() {
@@ -237,10 +237,10 @@ onMounted(async () => {
     itemGrid.on("cellEdited", (cell) => {
         if (cell.getField() === 'procyn') {
             const d = cell.getData();
-            if (d.procyn === 'y') {
-                if (d.jyn === 'y' || d.jyn === 'Y') { vAlertError('정산 완료된 자료입니다.'); cell.setValue('n'); return; }
+            if (d.procyn === 'Y') {
+                if (d.jyn === 'Y' || d.jyn === 'Y') { vAlertError('정산 완료된 자료입니다.'); cell.setValue('N'); return; }
                 const ioym = d.ioymd?.substring(0, 6) || '';
-                if (clsInfo.sclsym && ioym <= clsInfo.sclsym) { vAlertError('영업 마감된 월입니다.'); cell.setValue('n'); return; }
+                if (clsInfo.sclsym && ioym <= clsInfo.sclsym) { vAlertError('영업 마감된 월입니다.'); cell.setValue('N'); return; }
             }
             updateCount()
         }

@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.crmbank.erp.haba.mapper.HabaMapper">
 
+    <select id="HABA_YYYY_S" resultType="map">
+        SELECT DISTINCT YYYY FROM HABA810T_TBL WHERE CMPYCD = #{cmpycd} ORDER BY YYYY DESC
+    </select>
+
     <select id="HABA_010U_STR" resultType="map">
         exec haba_010u_str #{actkind}, #{cmpycd}, #{gubun}, #{acctcd}, #{acctnm},
         #{upacct}, #{typedc}, #{slipyn}, #{typeacct}, #{typesub}, #{typemgt},
@@ -9,17 +13,29 @@
     </select>
 
     <select id="HABA_020U_STR" resultType="map">
-        exec haba_020u_str #{actkind}, #{cmpycd}, #{yyyy}, #{gubun}, #{upacct},
-        #{acctnm}, #{dbcr}, #{actgbn}, #{dspord}, #{dsprl}, #{rstyn},#{useyn}, #{updemp}
+        DECLARE @v_yyyy VARCHAR(4) = #{yyyy};
+        IF ISNULL(@v_yyyy, '') = ''
+           SELECT @v_yyyy = ISNULL(MAX(YYYY), '0000') FROM HABA810T_TBL WHERE CMPYCD = #{cmpycd};
+
+        exec haba_020u_str #{actkind}, #{cmpycd}, @v_yyyy, #{gubun}, #{upacct},
+        #{acctnm}, #{dbcr}, #{actgbn}, #{dspord}, #{dsprl}, #{rstyn}, #{useyn}, #{updemp}
     </select>
 
     <select id="HABA_021U_STR" resultType="map">
-        exec haba_021u_str #{actkind}, #{cmpycd}, #{yyyy}, #{gubun}, #{upacct},
+        DECLARE @v_yyyy VARCHAR(4) = #{yyyy};
+        IF ISNULL(@v_yyyy, '') = ''
+           SELECT @v_yyyy = ISNULL(MAX(YYYY), '0000') FROM HABA810T_TBL WHERE CMPYCD = #{cmpycd};
+
+        exec haba_021u_str #{actkind}, #{cmpycd}, @v_yyyy, #{gubun}, #{upacct},
         #{arowno}, #{acctcd}, #{caltype}, #{calgagam}, #{useyn}, #{updemp}
     </select>
 
     <select id="HABA_022U_STR" resultType="map">
-        exec haba_022u_str #{actkind}, #{cmpycd}, #{yyyy}, #{gubun}, #{upacct},
+        DECLARE @v_yyyy VARCHAR(4) = #{yyyy};
+        IF ISNULL(@v_yyyy, '') = ''
+           SELECT @v_yyyy = ISNULL(MAX(YYYY), '0000') FROM HABA810T_TBL WHERE CMPYCD = #{cmpycd};
+
+        exec haba_022u_str #{actkind}, #{cmpycd}, @v_yyyy, #{gubun}, #{upacct},
         #{acctcd}, #{caltype}, #{calgagam}, #{useyn}, #{updemp}
     </select>
 
@@ -149,14 +165,22 @@
 
     <select id="HABA_920U_STR" resultType="map">
         EXEC HABA_920U_STR
-            #{actkind}, #{word}, #{cmpycd}, #{userid}, #{usernm},
-            #{deptcd}, #{deptnm}, #{empno}, #{salsyn}, #{pw},
-            #{telno}, #{hpno}, #{email}, #{sdept}, #{useyn},
-            #{usergrp}, #{updemp}, #{pricegbn}, #{positionoff}
+            #{actkind}, #{word},   #{cmpycd},   #{userid},      #{usernm},
+            #{deptcd},  #{deptnm}, #{empno},    #{salsyn},      #{pw},
+            #{telno},   #{hpno},   #{email},    #{sdept},       #{useyn},
+            #{usergrp}, #{updemp}, #{pricegbn}, #{positionoff}, #{inner_no}
     </select>
 
     <select id="HABA_935U_STR" resultType="map">
-        EXEC HABA_935U_STR #{actkind}, #{cmpycd}, #{usergrp}, #{upmucd}, #{grpcd}, #{pgmid}, #{useyn}, #{mypgm}, #{userid}
+        EXEC HABA_935U_STR #{actkind},
+        #{cmpycd},
+        #{usergrp},
+        #{upmucd},
+        #{grpcd},
+        #{pgmid},
+        #{pgmnm},
+        #{useyn},
+        #{mypgm}, #{dspord}, #{userid}
     </select>
 
 </mapper>

@@ -47,7 +47,7 @@
                 <th class="text-center bg-light required">공정배부기준</th>
                 <td>
                   <select v-model="searchForm.divstd" class="form-select form-select-sm" @change="handleSearch">
-                    <option v-for="opt in divideOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                    <option v-for="opt in divideOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                   </select>
                 </td>
                 <td class="text-end pe-3 border-start-0">
@@ -108,8 +108,8 @@ const loadInitData = async () => {
         if (cls.data?.length > 0) {
             clsInfo.wclsym = cls.data[0].wclsym || cls.data[0].codecd || ''
         }
-		divideOptions.value = (divOpts.data || []).filter((opt: any) => opt.CODE !== '3010')
-        if (divideOptions.value.length > 0) searchForm.divstd = divideOptions.value[0].CODE
+		divideOptions.value = (divOpts.data || []).filter((opt: any) => opt.code !== '3010')
+        if (divideOptions.value.length > 0) searchForm.divstd = divideOptions.value[0].code
 	} catch (e) { vAlertError('기초 데이터 로드 실패') }
 }
 

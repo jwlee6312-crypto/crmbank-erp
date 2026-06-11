@@ -159,13 +159,13 @@ const initGrids = () => {
             });
         }
       },
-      { title: "매출액", field: "SALSAMT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+      { title: "매출액", field: "salsamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "매출원가", field: "SALSCOST", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "매총이익", field: "MPROFIT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "bg-light-blue" },
       { title: "이익율(%)", field: "M_RATE", hozAlign: "right", width: 80,
         formatter: (c) => Number(c.getValue() || 0).toFixed(2) + '%',
         bottomCalc: (values, data) => {
-            const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.SALSAMT) || 0), 0);
+            const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.salsamt) || 0), 0);
             const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.MPROFIT) || 0), 0);
             return sumAmt === 0 ? '0.00%' : ((sumProfit / sumAmt) * 100).toFixed(2) + '%';
         }
@@ -178,7 +178,7 @@ const initGrids = () => {
       { title: "이익율(%)", field: "Y_RATE", hozAlign: "right", width: 80,
         formatter: (c) => Number(c.getValue() || 0).toFixed(2) + '%',
         bottomCalc: (values, data) => {
-            const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.SALSAMT) || 0), 0);
+            const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.salsamt) || 0), 0);
             const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.YYPROFIT) || 0), 0);
             return sumAmt === 0 ? '0.00%' : ((sumProfit / sumAmt) * 100).toFixed(2) + '%';
         }
@@ -195,7 +195,7 @@ const initGrids = () => {
       { title: "이익율(%)", field: "G_RATE", hozAlign: "right", width: 80,
         formatter: (c) => Number(c.getValue() || 0).toFixed(2) + '%',
         bottomCalc: (values, data) => {
-            const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.SALSAMT) || 0), 0);
+            const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.salsamt) || 0), 0);
             const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.GPROFIT) || 0), 0);
             return sumAmt === 0 ? '0.00%' : ((sumProfit / sumAmt) * 100).toFixed(2) + '%';
         }
@@ -218,9 +218,9 @@ async function search() {
 
     const list = (res.data || []).map((i: any) => ({
         ...i,
-        M_RATE: i.SALSAMT ? (i.MPROFIT / i.SALSAMT * 100) : 0,
-        Y_RATE: i.SALSAMT ? (i.YYPROFIT / i.SALSAMT * 100) : 0,
-        G_RATE: i.SALSAMT ? (i.GPROFIT / i.SALSAMT * 100) : 0
+        M_RATE: i.salsamt ? (i.MPROFIT / i.salsamt * 100) : 0,
+        Y_RATE: i.salsamt ? (i.YYPROFIT / i.salsamt * 100) : 0,
+        G_RATE: i.salsamt ? (i.GPROFIT / i.salsamt * 100) : 0
     }));
 
     mainGrid?.setData(list);
@@ -239,7 +239,7 @@ const handlePrint = (prtgu: string) => {
         DEPTNM: searchForm.deptnm,
         YMFR: searchForm.yyyy + searchForm.fmm,
         YMTO: searchForm.yyyy + searchForm.tmm,
-        ORDGBN: searchForm.ordgbn,
+        ordgbn: searchForm.ordgbn,
         PRTGU: prtgu
     }).toString();
     window.open(`/api/hapl/HAPL_210P?${params}`, 'CustomerProfitPrint', 'width=1000,height=800,scrollbars=yes');

@@ -37,7 +37,7 @@
                 </td>
                 <th style="width: 100px;">단가구분</th>
                 <td style="width: 220px;">
-                  <select v-model="searchData.PRCGBN" class="form-select form-select-sm">
+                  <select v-model="searchData.prcgbn" class="form-select form-select-sm">
                     <option v-for="opt in prcgbnOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
@@ -80,7 +80,7 @@ const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
-const searchData = reactive({ iogbn: '', PRCGBN: '' })
+const searchData = reactive({ iogbn: '', prcgbn: '' })
 const iogbnOptions = ref<any[]>([]); const prcgbnOptions = ref<any[]>([])
 const gridElement = ref<HTMLElement | null>(null); const grid = ref<Tabulator | null>(null)
 const activeItemCount = ref(0); const allSelected = ref(true); const allStd = ref(false)
@@ -110,7 +110,7 @@ async function fetchOptions() {
   try {
     const resIo = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', gbncd: '210' })
     iogbnOptions.value = resIo.data.map((i: any) => ({
-      codecd: String(i.CODE || i.codecd || i.code || '').trim(),
+      codecd: String(i.code || i.codecd || i.code || '').trim(),
       codenm: String(i.cdnm || i.codenm || i.cdnm || '').trim()
     }))
     if (iogbnOptions.value.length) searchData.iogbn = iogbnOptions.value[0].codecd
@@ -122,21 +122,21 @@ async function updatePrcGbnOptions() {
   try {
     const resPrc = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', gbncd: '200' })
     prcgbnOptions.value = resPrc.data.map((i: any) => ({
-      codecd: String(i.CODE || i.codecd || i.code || '').trim(),
+      codecd: String(i.code || i.codecd || i.code || '').trim(),
       codenm: String(i.cdnm || i.codenm || i.cdnm || '').trim()
     }))
-    if (prcgbnOptions.value.length) searchData.PRCGBN = prcgbnOptions.value[0].codecd
+    if (prcgbnOptions.value.length) searchData.prcgbn = prcgbnOptions.value[0].codecd
   } catch (e) { console.error('단가구분 로드 실패') }
 }
 
 async function onIogbnChange() { await updatePrcGbnOptions() }
 
 async function search() {
-  if (!searchData.iogbn || !searchData.PRCGBN) return;
+  if (!searchData.iogbn || !searchData.prcgbn) return;
   try {
     const res = await api.post('/api/hsba/HSBA_060U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: searchData.iogbn,
-      itemcd: '', PRCGBN: searchData.PRCGBN, price: 0, STDYN: '',
+      itemcd: '', prcgbn: searchData.prcgbn, price: 0, STDYN: '',
       remark: '', useyn: '', userid: authStore.userid
     })
     if (grid.value) {
@@ -156,7 +156,7 @@ async function save() {
     for (const row of selectedRows) {
       await api.post('/api/hsba/HSBA_060U_STR', {
         actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: searchData.iogbn,
-        itemcd: row.itemcd, PRCGBN: searchData.PRCGBN, price: row.price,
+        itemcd: row.itemcd, prcgbn: searchData.prcgbn, price: row.price,
         STDYN: row.STDYN ? 'Y' : 'N', remark: row.remark, useyn: 'Y', userid: authStore.userid
       })
     }

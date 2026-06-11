@@ -156,7 +156,7 @@ async function fetchDetail(cust: any) {
  * 🚀 정산 취소 저장 로직 (ASP 패턴: 선택 항목별 d0 순차 호출 및 소문자 통일)
  */
 async function save() {
-  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'y' || r.procyn === 'Y') || []
+  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'Y' || r.procyn === 'Y') || []
   if (items.length === 0) return vAlertError('취소할 항목을 선택하세요.')
 
   if (!confirm('정산자료를 취소하시겠습니까?')) return
@@ -167,7 +167,7 @@ async function save() {
 
     for (const item of items) {
         const params = {
-            actkind: 'd0',
+            actkind: 'D0',
             cmpycd: authStore.cmpycd,
             iogbn: '100',
             ioymdfr: ioymdfr,
@@ -193,8 +193,8 @@ async function save() {
 
 const toggleAllRows = () => {
   const rows = itemGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'y' || r.getData().procyn === 'Y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'n' : 'y' }))
+  const allSelected = rows.every(r => r.getData().procyn === 'Y' || r.getData().procyn === 'Y')
+  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
 }
 
 function initialize() {
@@ -239,10 +239,10 @@ onMounted(async () => {
     itemGrid.on("cellEdited", (cell) => {
         if (cell.getField() === 'procyn') {
             const d = cell.getData();
-            if (d.procyn === 'y' || d.procyn === 'Y') {
-                if (d.slipymd && d.slipymd > '00000000') { vAlertError('전표 발행된 자료입니다.'); cell.setValue('n'); return; }
+            if (d.procyn === 'Y' || d.procyn === 'Y') {
+                if (d.slipymd && d.slipymd > '00000000') { vAlertError('전표 발행된 자료입니다.'); cell.setValue('N'); return; }
                 const ioym = d.jsanymd?.replace(/-/g, '').substring(0, 6) || '';
-                if (clsInfo.sclsym && ioym <= clsInfo.sclsym) { vAlertError('영업 마감된 월입니다.'); cell.setValue('n'); return; }
+                if (clsInfo.sclsym && ioym <= clsInfo.sclsym) { vAlertError('영업 마감된 월입니다.'); cell.setValue('N'); return; }
             }
         }
     })

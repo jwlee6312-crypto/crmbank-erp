@@ -47,7 +47,7 @@
 							<div class="d-flex align-items-center gap-1">
 								<input v-model="searchForm.symd" type="date" class="form-control form-control-sm" style="width: 140px;" />
 								<span>~</span>
-								<input v-model="searchForm.EymD" type="date" class="form-control form-control-sm" style="width: 140px;" />
+								<input v-model="searchForm.eymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
 							</div>
 						</div>
 					</div>
@@ -145,7 +145,7 @@ const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 2).to
 const searchForm = reactive({
 	acctcd: '',
 	symd: firstDay,
-	EymD: today
+	eymd: today
 })
 
 // 📝 마스터 데이터
@@ -193,7 +193,7 @@ const search = async () => {
 			actkind: 'SR',
 			cmpycd: authStore.cmpycd,
 			symd: searchForm.symd.replace(/-/g, ''),
-			EymD: searchForm.EymD.replace(/-/g, ''),
+			eymd: searchForm.eymd.replace(/-/g, ''),
 			slipymd: '',
 			slipno: '',
 			srowno: '',
@@ -216,7 +216,7 @@ const save = async () => {
 			actkind: masterForm.actkind,
 			cmpycd: authStore.cmpycd,
 			symd: searchForm.symd.replace(/-/g, ''),
-			EymD: searchForm.EymD.replace(/-/g, ''),
+			eymd: searchForm.eymd.replace(/-/g, ''),
 			slipymd: masterForm.slipymd.replace(/-/g, ''),
 			slipno: masterForm.slipno,
 			srowno: masterForm.srowno,
@@ -245,7 +245,7 @@ const save = async () => {
 const initialize = () => {
 	const prevacctcd = searchForm.acctcd
 	const prevsymd = searchForm.symd
-	const prevEymD = searchForm.EymD
+	const preveymd = searchForm.eymd
 
 	resetForm(masterForm)
 
@@ -272,7 +272,7 @@ onMounted(async () => {
 			columns: [
 				{ title: "발생일", field: "acctymd", width: 110, hozAlign: "center", formatter: (cell) => formatDate(cell.getValue()) },
 				{ title: "적요", field: "remark", minWidth: 250 },
-				{ title: "미지급비용", field: "AMT", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "미지급비용", field: "amt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "기간", field: "stdymd", width: 220, hozAlign: "center", formatter: (cell) => {
 					const data = cell.getRow().getData()
 					return `${formatDate(data.stdymd)} ~ ${formatDate(data.endymd)}`
@@ -287,7 +287,7 @@ onMounted(async () => {
 				masterForm.srowno = d.srowno
 				masterForm.acctcd = d.TYPESUB + d.acctcd
 				masterForm.pubymd = formatDate(d.acctymd)
-				masterForm.UNpayamt = Number(d.AMT)
+				masterForm.UNpayamt = Number(d.amt)
 				masterForm.frymd = formatDate(d.stdymd)
 				masterForm.toymd = formatDate(d.endymd)
 				masterForm.remark = d.remark

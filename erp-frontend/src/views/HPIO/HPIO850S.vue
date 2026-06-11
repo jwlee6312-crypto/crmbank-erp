@@ -197,14 +197,14 @@ const initGrids = () => {
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.CODE, linenm: i.cdnm }));
+    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
   } catch (e) {}
 }
 
 async function fetchList() {
   try {
     const res = await api.post('/api/hpio/HPIO_850S_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, OUTymdfr: searchData.outymdfr, OUTymdto: searchData.outymdto, linecd: searchData.linecd, slipyn: searchData.slipyn
+      actkind: 'S0', cmpycd: authStore.cmpycd, outymdfr: searchData.outymdfr, outymdto: searchData.outymdto, linecd: searchData.linecd, slipyn: searchData.slipyn
     });
     grid1?.setData(res.data.map((i: any) => ({ ...i, io_disp: `${i.ioym}-${i.iono}` })));
     rowCount.value = res.data.length;

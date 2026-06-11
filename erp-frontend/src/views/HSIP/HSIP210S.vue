@@ -117,18 +117,18 @@ onMounted(async () => {
 			columns: [
 				{ title: '품목 명칭', field: 'itemnm', minWidth: 250, widthGrow: 1, cssClass: 'fw-bold text-dark border-end' },
 				{ title: '합 계', field: 'amtsum', hozAlign: 'right', width: 110, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-info-subtle fw-bold' },
-				{ title: '1월', field: 'AMT01', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '2월', field: 'AMT02', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '3월', field: 'AMT03', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '4월', field: 'AMT04', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '5월', field: 'AMT05', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '6월', field: 'AMT06', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '7월', field: 'AMT07', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '8월', field: 'AMT08', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '9월', field: 'AMT09', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '10월', field: 'AMT10', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '11월', field: 'AMT11', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '12월', field: 'AMT12', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } }
+				{ title: '1월', field: 'amt01', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '2월', field: 'amt02', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '3월', field: 'amt03', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '4월', field: 'amt04', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '5월', field: 'amt05', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '6월', field: 'amt06', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '7월', field: 'amt07', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '8월', field: 'amt08', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '9월', field: 'amt09', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '10월', field: 'amt10', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '11월', field: 'amt11', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '12월', field: 'amt12', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } }
 			]
 		})
 	}

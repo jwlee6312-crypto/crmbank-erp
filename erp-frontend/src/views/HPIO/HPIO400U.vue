@@ -185,7 +185,7 @@ const initGrids = () => {
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = res.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
+    lineOptions.value = res.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
   } catch (e) {}
 }
 
@@ -213,7 +213,7 @@ const onProcessSelect = (prog: any) => {
 const fetchGridData = async () => {
   try {
     const res = await api.post('/api/hpio/HPIO_400U_STR', {
-      actkind: 's0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, proymdFR: searchForm.proymdfr, proymdTO: searchForm.proymdto
+      actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, proymdFR: searchForm.proymdfr, proymdTO: searchForm.proymdto
     })
     const mapped = res.data.map((item: any) => ({
       ...item,

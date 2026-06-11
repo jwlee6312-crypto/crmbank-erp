@@ -188,14 +188,14 @@ function open_help(type: string) {
 	if (type === 'dept') {
 		Object.assign(modalprops, {
 			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-			data: { gubun: 'd0', cmpycd: authstore.cmpycd, search: searchform.deptnm },
+			data: { gubun: 'D0', cmpycd: authstore.cmpycd, code: searchform.deptnm },
 			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { searchform.deptcd = d.deptcd; searchform.deptnm = d.deptnm }
 		})
 	} else if (type.startsWith('acct')) {
 		Object.assign(modalprops, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'acctnm',
-			data: { gubun: 'a0', cmpycd: authstore.cmpycd, search: type === 'acct1' ? searchform.acctnm1 : searchform.acctnm2 },
+			data: { gubun: 'A0', cmpycd: authstore.cmpycd, search: type === 'acct1' ? searchform.acctnm1 : searchform.acctnm2 },
 			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }],
 			onConfirm: (d: any) => {
 				if (type === 'acct1') { searchform.acctcd1 = d.acctcd; searchform.acctnm1 = d.acctnm }
@@ -240,10 +240,14 @@ _on_mounted(() => {
 		maingrid = new tabulator(maingridref.value, {
 			layout: 'fitColumns',
 			height: '100%',
+			pagination: "local",
+			paginationSize: 50,
+			paginationSizeSelector: [20, 50, 100, 500],
+			paginationCounter: "rows",
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
 				{
-					title: "전표번호", field: "slipno", width: 150, cssClass: "fw-bold",
+					title: "전표번호", field: "slipno", width: 150, cssClass: "fw-bold",hozAlign: "center",
 					formatter: (cell) => {
 						const value = cell.getValue();
 						if (!value) return "";
@@ -259,7 +263,7 @@ _on_mounted(() => {
 						if(value) go_to_slip(String(value));
 					}
 				},
-				{ title: "행번호", field: "srowno", width: 65 },
+				{ title: "행번호", field: "srowno",hozAlign: "center", width: 65 },
 				{
 					title: "계정과목", field: "acctnm", width: 160, hozAlign: "left",
 					formatter: (cell) => `<div>${cell.getData().acctcd}</div><div class="small text-muted">${cell.getValue()}</div>`
@@ -310,5 +314,5 @@ _on_mounted(() => {
 }
 
 :deep(.tabulator-row) { min-height: 42px; border-bottom: 1px solid #eee !important; }
-.cursor-pointer { cursor: pointer; }
+.cursor-pointer { pointer: pointer; }
 </style>

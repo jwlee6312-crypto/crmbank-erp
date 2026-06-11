@@ -135,7 +135,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
 const formData = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   yy: today.substring(0, 4), mm: Number(today.substring(5, 7)),
   itemcd: '', itemnm: '', itsize: '', unit: '', qty: 0, amt: 0
 })
@@ -173,7 +173,7 @@ const initGrids = () => {
 async function search() {
   try {
     const res = await api.post('/api/hpba/HPBA_800U_STR', {
-      actkind: 's1', cmpycd: authStore.cmpycd,
+      actkind: 'S1', cmpycd: authStore.cmpycd,
       yy: formData.yy, mm: monthStr.value, itemcd: formData.itemcd
     });
     grid?.setData(res.data);
@@ -182,7 +182,7 @@ async function search() {
 }
 
 function fetchDetail(row: any) {
-  Object.assign(formData, { ...row, actkind: 'u0' });
+  Object.assign(formData, { ...row, actkind: 'U0' });
   if (row.ym) {
     formData.yy = row.ym.substring(0, 4);
     formData.mm = Number(row.ym.substring(4, 6));
@@ -198,7 +198,7 @@ async function save() {
   try {
     const payload = {
       ...formData,
-      actkind: formData.actkind === 'u0' ? 'u0' : 'a0',
+      actkind: formData.actkind === 'U0' ? 'U0' : 'A0',
       mm: monthStr.value,
       userid: authStore.userid
     };
@@ -218,7 +218,7 @@ const handleOpenHelp = (type: string) => {
 }
 
 const initializeFormOnly = () => {
-  formData.actkind = 's0';
+  formData.actkind = 'S0';
   formData.itemcd = ''; formData.itemnm = ''; formData.itsize = ''; formData.unit = '';
   formData.qty = 0; formData.amt = 0;
 }
@@ -226,7 +226,7 @@ const initializeFormOnly = () => {
 const initialize = () => {
   resetForm(formData);
   Object.assign(formData, {
-    cmpycd: authStore.cmpycd, actkind: 's0',
+    cmpycd: authStore.cmpycd, actkind: 'S0',
     yy: today.substring(0, 4), mm: Number(today.substring(5, 7))
   });
   grid?.clearData();

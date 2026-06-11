@@ -159,7 +159,7 @@ const initGrids = () => {
 const fetchOptions = async () => {
   try {
     const resLine = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = resLine.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
+    lineOptions.value = resLine.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
     if (lineOptions.value.length > 0) onLineChange();
   } catch (e) {}
 }
@@ -167,7 +167,7 @@ const fetchOptions = async () => {
 const onLineChange = async () => {
   try {
     const resProg = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'I8', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, code: '' } })
-    progOptions.value = resProg.data.map((i: any) => ({ code: i.code || i.CODE, cdnm: i.cdnm }));
+    progOptions.value = resProg.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
   } catch (e) {}
 }
 

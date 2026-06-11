@@ -96,7 +96,7 @@
                     <th class="required bg-light text-center">보관장소</th>
                     <td>
                       <select v-model="formData.storseat" class="form-select">
-                        <option v-for="opt in seatOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                        <option v-for="opt in seatOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                       </select>
                     </td>
                   </tr>
@@ -285,8 +285,9 @@ function openHelp(type: string) {
 
 onMounted(async () => {
   try {
-      const resSeat = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E2', cmpycd: authStore.cmpycd, gbncd: '313' } })
-      seatOptions.value = resSeat.data.map((i: any) => ({ CODE: i.codecd || i.CODE, cdnm: i.codenm || i.cdnm }))
+
+      const resSeat = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '330' } })
+      seatOptions.value = resSeat.data.map((i: any) => ({ code: i.codecd || i.code, cdnm: i.codenm || i.cdnm }))
   } catch (e) {}
 
   if (poGridRef.value) {

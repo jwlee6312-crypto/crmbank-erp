@@ -94,7 +94,7 @@
                     <th class="required bg-light text-center">입고창고</th>
                     <td>
                       <select v-model="formData.whcd" class="form-select" :disabled="isClosed">
-                        <option v-for="opt in whOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.cdnm }}</option>
+                        <option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                       </select>
                     </td>
                   </tr>
@@ -167,7 +167,7 @@ const searchForm = reactive({ fromdt: firstDay, todt: today, schcustnm: '' })
 const formData = reactive<any>({
   actkind: 'S0', cmpycd: authStore.cmpycd, ioym: today.substring(0, 7).replace('-', ''), iono: '',
   ioymd: today, deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  custcd: '', custnm: '', whcd: '100', remark: '', usernm: authStore.usernm, PKunitYN: 'N', astkind: '2'
+  custcd: '', custnm: '', whcd: '100', remark: '', usernm: authStore.usernm, pkunityn: 'N', astkind: '2'
 })
 
 const closingInfo = reactive({ sclsym: '' })
@@ -229,7 +229,7 @@ const initGrids = () => {
       { title: "수량", field: "ioqty", width: 90, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
       { title: "단가", field: "price", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
       { title: "금액", field: "ioamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
-      { title: "포장용기", field: "PKunitnm", width: 100, visible: formData.PKunitYN === 'Y' },
+      { title: "포장용기", field: "pkunitnm", width: 100, visible: formData.pkunityn === 'Y' },
       { title: "삭제", width: 40, hozAlign: "center",
         formatter: (cell) => cell.getData()._STATE === 'EMPTY' ? "" : "<i class='bi bi-trash text-danger cursor-pointer'></i>",
         cellClick: (e, cell) => handleRowAction(cell.getRow())
@@ -334,7 +334,7 @@ async function handleFullDelete() {
 
 onMounted(async () => {
   api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
-     .then(r => whOptions.value = r.data.map((i: any) => ({ CODE: i.whcd || Object.values(i)[0], cdnm: i.whnm || Object.values(i)[1] })));
+     .then(r => whOptions.value = r.data.map((i: any) => ({ code: i.whcd || Object.values(i)[0], cdnm: i.whnm || Object.values(i)[1] })));
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym;
   });

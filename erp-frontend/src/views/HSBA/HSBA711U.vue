@@ -24,7 +24,7 @@
           <div class="d-flex align-items-center gap-3">
             <div class="input-group input-group-sm flex-nowrap" style="width: 350px;">
               <span class="input-group-text fw-bold border-0 bg-transparent">입금유형명</span>
-              <input v-model="searchForm.IMGBNNM" type="text" class="form-control border-0 bg-white" placeholder="유형명 검색" @keyup.enter="search" />
+              <input v-model="searchForm.imgbnnm" type="text" class="form-control border-0 bg-white" placeholder="유형명 검색" @keyup.enter="search" />
               <button class="btn btn-dark btn-sm" @click="search"><i class="bi bi-search"></i></button>
             </div>
           </div>
@@ -52,22 +52,22 @@
             <tbody>
               <tr>
                 <th class="required">입금유형</th>
-                <td><input v-model="formData.IMGBN" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="3" :readonly="formData.actkind === 'U0'" placeholder="CODE" /></td>
+                <td><input v-model="formData.imgbn" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="3" :readonly="formData.actkind === 'U0'" placeholder="code" /></td>
                 <th class="required">유형명</th>
-                <td><input v-model="formData.IMGBNNM" type="text" class="form-control form-control-sm" maxlength="50" /></td>
+                <td><input v-model="formData.imgbnnm" type="text" class="form-control form-control-sm" maxlength="50" /></td>
                 <th class="required">차변계정</th>
                 <td>
                   <div class="input-group input-group-sm">
-                    <input v-model="formData.Dacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-                    <input v-model="formData.Dacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('D')" />
+                    <input v-model="formData.dacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+                    <input v-model="formData.dacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('D')" />
                     <button class="btn btn-outline-secondary btn-sm px-1" @click="openAccountHelp('D')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
                 <th class="required">대변계정</th>
                 <td>
                   <div class="input-group input-group-sm">
-                    <input v-model="formData.Cacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
-                    <input v-model="formData.Cacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('C')" />
+                    <input v-model="formData.cacctcd" type="text" class="form-control bg-light text-center" style="max-width: 60px;" readonly />
+                    <input v-model="formData.cacctnm" type="text" class="form-control" placeholder="계정 검색" @keyup.enter="openAccountHelp('C')" />
                     <button class="btn btn-outline-secondary btn-sm px-1" @click="openAccountHelp('C')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -117,10 +117,10 @@ const { resetForm } = useFormReset()
 
 // 1. 상태 관리
 const deleteCheck = ref(false)
-const searchForm = reactive({ IMGBNNM: '' })
+const searchForm = reactive({ imgbnnm: '' })
 const formData = reactive({
   actkind: 'A0', cmpycd: authStore.cmpycd, userid: authStore.user_id,
-  IMGBN: '', IMGBNNM: '', Dacctcd: '', Dacctnm: '', Cacctcd: '', Cacctnm: '', useyn: 'Y'
+  imgbn: '', imgbnnm: '', dacctcd: '', dacctnm: '', cacctcd: '', cacctnm: '', useyn: 'Y'
 })
 
 const gridElement = ref<HTMLElement | null>(null); const grid = ref<Tabulator | null>(null); const activeItemCount = ref(0)
@@ -132,12 +132,12 @@ const initGrid = () => {
     layout: "fitColumns", height: "100%", pagination: "local", paginationSize: 15,
     placeholder: "조회된 데이터가 없습니다.", columnDefaults: { headerSort: false, headerHozAlign: "center" },
     columns: [
-      { title: "유형코드", field: "IMGBN", width: 100, hozAlign: "center", cssClass: "fw-bold bg-light" },
-      { title: "유형명칭", field: "IMGBNNM", width: 180, cssClass: "text-primary fw-bold" },
-      { title: "차변코드", field: "Dacctcd", width: 90, hozAlign: "center" },
-      { title: "차변계정명", field: "Dacctnm", widthGrow: 1 },
-      { title: "대변코드", field: "Cacctcd", width: 90, hozAlign: "center" },
-      { title: "대변계정명", field: "Cacctnm", widthGrow: 1 },
+      { title: "유형코드", field: "imgbn", width: 100, hozAlign: "center", cssClass: "fw-bold bg-light" },
+      { title: "유형명칭", field: "imgbnnm", width: 180, cssClass: "text-primary fw-bold" },
+      { title: "차변코드", field: "dacctcd", width: 90, hozAlign: "center" },
+      { title: "차변계정명", field: "dacctnm", widthGrow: 1 },
+      { title: "대변코드", field: "cacctcd", width: 90, hozAlign: "center" },
+      { title: "대변계정명", field: "cacctnm", widthGrow: 1 },
       { title: "사용", field: "useyn", width: 70, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
     ]
   })
@@ -153,7 +153,7 @@ const initGrid = () => {
 async function search() {
   try {
     const res = await api.post('/api/hsba/HSBA_711U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, IMGBN: '', IMGBNNM: searchForm.IMGBNNM
+      actkind: 'S0', cmpycd: authStore.cmpycd, imgbn: '', imgbnnm: searchForm.imgbnnm
     })
     if (grid.value) {
       grid.value.setData(res.data || [])
@@ -163,8 +163,8 @@ async function search() {
 }
 
 async function save() {
-  if (!formData.IMGBN || !formData.IMGBNNM) return vAlertError('입금유형 코드와 명칭은 필수입니다.')
-  if (!formData.Dacctcd || !formData.Cacctcd) return vAlertError('차변/대변 계정을 모두 선택하십시오.')
+  if (!formData.imgbn || !formData.imgbnnm) return vAlertError('입금유형 코드와 명칭은 필수입니다.')
+  if (!formData.dacctcd || !formData.cacctcd) return vAlertError('차변/대변 계정을 모두 선택하십시오.')
 
   if (!confirm('설정 정보를 저장하시겠습니까?')) return
 
@@ -199,16 +199,16 @@ function openAccountHelp(mode: 'D' | 'C') {
     data: { gubun: 'AC', ACCT: gbn, cmpycd: authStore.cmpycd },
     defaultField: 'cdnm',
     columns: [
-      { title: '코드', field: 'CODE', width: 100 },
+      { title: '코드', field: 'code', width: 100 },
       { title: '계정명', field: 'cdnm', width: 200 }
     ],
     onConfirm: (selected: any) => {
       if (mode === 'D') {
-        formData.Dacctcd = selected.CODE
-        formData.Dacctnm = selected.cdnm
+        formData.dacctcd = selected.code
+        formData.dacctnm = selected.cdnm
       } else {
-        formData.Cacctcd = selected.CODE
-        formData.Cacctnm = selected.cdnm
+        formData.cacctcd = selected.code
+        formData.cacctnm = selected.cdnm
       }
     }
   })

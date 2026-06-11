@@ -45,11 +45,11 @@
 								<span class="erp-label"><i class="bi bi-dot"></i>유형</span>
 								<div class="d-flex align-items-center gap-1">
 									<select v-model="searchForm.gubun1" class="form-select form-select-sm" style="width: 110px;">
-										<option v-for="opt in taxTypeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.name }}</option>
+										<option v-for="opt in taxTypeOptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
 									</select>
 									<span>~</span>
 									<select v-model="searchForm.gubun2" class="form-select form-select-sm" style="width: 110px;">
-										<option v-for="opt in taxTypeOptions" :key="opt.CODE" :value="opt.CODE">{{ opt.name }}</option>
+										<option v-for="opt in taxTypeOptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
 									</select>
 								</div>
 							</div>
@@ -150,12 +150,12 @@ const fetchOptions = async () => {
 			api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', search: '120' })
 		])
 		taxUnitOptions.value = resU.data || []
-		if (taxUnitOptions.value.length > 0) searchForm.SAUPCD = taxUnitOptions.value[0].CODE
+		if (taxUnitOptions.value.length > 0) searchForm.SAUPCD = taxUnitOptions.value[0].code
 
 		taxTypeOptions.value = resT.data || []
 		if (taxTypeOptions.value.length > 0) {
-			searchForm.gubun1 = taxTypeOptions.value[0].CODE
-			searchForm.gubun2 = taxTypeOptions.value[taxTypeOptions.value.length - 1].CODE
+			searchForm.gubun1 = taxTypeOptions.value[0].code
+			searchForm.gubun2 = taxTypeOptions.value[taxTypeOptions.value.length - 1].code
 		}
 	} catch (e) { console.error(e) }
 }
@@ -189,7 +189,7 @@ const search = async () => {
 			SLIP_REF: row.col8, // slipymd(8) + '-' + slipno(3) + '-' + srowno(3)
 			typenm: row.COL9,
 			elcyn: row.elcyn,
-			SLIPGU: row.SLIPGU,
+			slipgu: row.slipgu,
 			deptcd: row.deptcd
 		}))
 
@@ -278,9 +278,9 @@ onMounted(() => {
 						const d = cell.getData()
 						if (!d.SLIP_REF) return
 						const parts = d.SLIP_REF.split('-')
-						const path = d.SLIPGU === '010' ? '/HASL/HASL010U' : '/HASL/HASL110U'
+						const path = d.slipgu === '010' ? '/HASL/HASL010U' : '/HASL/HASL110U'
 						tabStore.addTab({
-							name: d.SLIPGU === '010' ? '회계전표관리' : '일반전표관리',
+							name: d.slipgu === '010' ? '회계전표관리' : '일반전표관리',
 							path: path,
 							params: { slipymd: parts[0], slipno: parts[1], deptcd: d.deptcd }
 						})

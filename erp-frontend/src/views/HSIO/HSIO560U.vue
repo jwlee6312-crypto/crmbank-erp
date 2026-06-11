@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 출고취소 (HSIO560U)
 	작성일자	: 2025.02.24
-	설명        : 출고 완료된 내역을 선택하여 취소 처리 (ASP 패턴 기반 순차 저장 로직 및 소문자 통일)
+	설명        : 출고 완료된 내역을 선택하여 취소 처리 (창고 로직 표준화 적용)
 	=============================================================
 -->
 
@@ -32,7 +32,7 @@
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold small text-dark" style="min-width: 60px;">출고창고</span>
               <select v-model="searchForm.whcd" class="form-select form-select-sm" style="width: 150px;">
-                <option v-for="opt in whOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+                <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
               </select>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -145,7 +145,7 @@ const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const now = new Date();
 const searchForm = reactive({
-  whcd: '100',
+  whcd: '',
   outymdfr: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
   outymdto: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 })
@@ -180,11 +180,29 @@ const initGrid = () => {
       { title: "합계", field: "iosum", width: 130, hozAlign: "right", cssClass: "fw-bold text-primary", formatter: "money", formatterParams: { precision: 0 } },
       {
         title: "정산여부", field: "jyn", width: 80, hozAlign: "center",
-        formatter: (c) => c.getValue() === 'y' || c.getValue() === 'Y' ? '<span class="badge bg-success">완료</span>' : '<span class="badge bg-secondary">미정산</span>'
+        formatter: (c) => c.getValue() === 'Y' || c.getValue() === 'Y' ? '<span class="badge bg-success">완료</span>' : '<span class="badge bg-secondary">미정산</span>'
       }
     ]
   });
   grid.on("rowSelectionChanged", (data) => { activeItemCount.value = data.length; });
+}
+
+async function fetchWhOptions() {
+  try {
+    const resWh = await api.get('/api/hs00/HS00_000S_STR', {
+      params: { gubun: 'W0', cmpycd: authStore.cmpycd }
+    })
+    whOptions.value = (resWh.data || []).map((i: any) => ({
+      whcd: String(i.whcd || '').trim(),
+      whnm: String(i.whnm || '').trim()
+    }))
+
+    if (whOptions.value.length > 0) {
+      searchForm.whcd = whOptions.value[0].whcd
+    }
+  } catch (e) {
+    whOptions.value = []
+  }
 }
 
 async function fetchCustList() {
@@ -225,18 +243,13 @@ async function fetchDetail(cust: any) {
   } catch (e) { vAlertError('상세 내역 로드 실패'); }
 }
 
-/**
- * 🚀 저장(취소) 로직 (ASP 패턴: 선택 항목별 d0 순차 호출)
- */
 async function saveCancel() {
   const items = grid.value?.getSelectedData() || [];
   if (items.length === 0) return vAlertError('취소할 품목을 선택하세요.');
 
-  // 1. 정산 완료 체크
-  const hasSettled = items.some((i: any) => i.jyn === 'y' || i.jyn === 'Y');
+  const hasSettled = items.some((i: any) => i.jyn === 'Y' || i.jyn === 'Y');
   if (hasSettled) return vAlertError('정산 완료된 자료는 취소할 수 없습니다.');
 
-  // 2. 마감 체크
   const ioymd = String(masterData.ioymd).replace(/-/g, '');
   if (ioymd <= (masterData.clsymd || '')) return vAlertError('회계 마감된 일자입니다.');
   if (ioymd.substring(0, 6) <= (masterData.sclsym || '')) return vAlertError('영업 마감된 월입니다.');
@@ -249,7 +262,7 @@ async function saveCancel() {
 
     for (const item of items) {
       const params = {
-        actkind: 'd0',
+        actkind: 'D0',
         cmpycd: authStore.cmpycd,
         iogbn: '200',
         ioymdfr: ioymdfr,
@@ -263,7 +276,7 @@ async function saveCancel() {
       }
       const res = await api.post('/api/hsio/HSIO_560U_STR', params);
       const resData = res.data?.[0];
-      if (resData && (resData.ioym === '000000' || resData.status === 'y' || resData.erryn === 'y')) {
+      if (resData && (resData.ioym === '000000' || resData.status === 'Y' || resData.erryn === 'Y')) {
           throw new Error(resData.iono || resData.msg || '취소 중 업무 오류가 발생했습니다.');
       }
     }
@@ -282,6 +295,9 @@ function initialize() {
   resetForm(searchForm);
   searchForm.outymdfr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   searchForm.outymdto = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  if (whOptions.value.length > 0) {
+    searchForm.whcd = whOptions.value[0].whcd;
+  }
   custList.value = []; selectedCust.value = null; resetForm(masterData);
   grid?.clearData(); activeItemCount.value = 0;
 }
@@ -296,9 +312,7 @@ onMounted(async () => {
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } })
      .then(r => { if (r.data?.length) { masterData.clsymd = r.data[0].clsymd; masterData.sclsym = r.data[0].sclsym; } })
 
-  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })
-     .then(r => whOptions.value = r.data.map((i:any)=>({code: i.code || i.whcd, cdnm: i.cdnm || i.whnm})));
-
+  await fetchWhOptions();
   nextTick(initGrid);
 })
 

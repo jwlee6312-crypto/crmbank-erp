@@ -144,7 +144,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
 const masterData = reactive<any>({
-  actkind: 's0', cmpycd: authStore.cmpycd,
+  actkind: 'S0', cmpycd: authStore.cmpycd,
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   pumym: today.replace(/-/g, '').substring(0, 6), pumno: '000',
   pumymd: today.replace(/-/g, ''), frymd: today.replace(/-/g, ''), toymd: today.replace(/-/g, ''),
@@ -216,7 +216,7 @@ const initGrids = () => {
 async function fetchMaster() {
   if (!masterData.deptcd) return vAlertError('부서를 선택하세요.');
   try {
-    const res = await api.post('/api/hpio/HPIO_290U_STR', { actkind: 's0', cmpycd: authStore.cmpycd, pumym: masterData.pumym, pumno: masterData.pumno, deptcd: masterData.deptcd, pumgbn: '200' });
+    const res = await api.post('/api/hpio/HPIO_290U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, pumym: masterData.pumym, pumno: masterData.pumno, deptcd: masterData.deptcd, pumgbn: '200' });
     if (res.data?.length) {
       Object.assign(masterData, res.data[0]);
       fetchProducts();
@@ -226,7 +226,7 @@ async function fetchMaster() {
 
 async function fetchProducts() {
   try {
-    const res = await api.post('/api/hpio/HPIO_291U_STR', { actkind: 's0', cmpycd: authStore.cmpycd, pumym: masterData.pumym, pumno: masterData.pumno });
+    const res = await api.post('/api/hpio/HPIO_291U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, pumym: masterData.pumym, pumno: masterData.pumno });
     prodGrid?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
     matGrid?.clearData(); selectedProduct.itemcd = ''; selectedProduct.itemnm = '';
   } catch (e) {}
@@ -236,7 +236,7 @@ async function fetchMaterials(prod: any) {
   selectedProduct.itemcd = prod.itemcd; selectedProduct.itemnm = prod.itemnm;
   if (!prod.itemcd || prod._status === '입력') { matGrid?.clearData(); return; }
   try {
-    const res = await api.post('/api/hpio/HPIO_292U_STR', { actkind: 's', cmpycd: authStore.cmpycd, pumym: masterData.pumym, pumno: masterData.pumno, itemcd: prod.itemcd });
+    const res = await api.post('/api/hpio/HPIO_292U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, pumym: masterData.pumym, pumno: masterData.pumno, itemcd: prod.itemcd });
     matGrid?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
   } catch (e) {}
 }
@@ -250,17 +250,17 @@ async function saveAll() {
   if (!confirm('변경된 모든 정보를 저장하시겠습니까?')) return
 
   try {
-    const mst = { ...masterData, actkind: masterData.pumno === '000' ? 'a0' : 'u0', userid: authStore.userid, pumgbn: '200' };
+    const mst = { ...masterData, actkind: masterData.pumno === '000' ? 'A0' : 'U0', userid: authStore.userid, pumgbn: '200' };
     const resM = await api.post('/api/hpio/HPIO_290U_STR', mst);
     const newYm = resM.data[0]?.pumym || masterData.pumym;
     const newNo = resM.data[0]?.pumno || masterData.pumno;
 
     for (const p of prods) {
-      const pAct = p._status === '입력' ? 'a0' : (p._status === '삭제' ? 'd0' : 'u0');
+      const pAct = p._status === '입력' ? 'A0' : (p._status === '삭제' ? 'D0' : 'U0');
       await api.post('/api/hpio/HPIO_291U_STR', { ...p, actkind: pAct, cmpycd: authStore.cmpycd, pumym: newYm, pumno: newNo, userid: authStore.userid });
     }
     for (const m of mats) {
-      const mAct = m._status === '입력' ? 'a' : (m._status === '삭제' ? 'd' : 'u');
+      const mAct = m._status === '입력' ? 'A' : (m._status === '삭제' ? 'D' : 'U');
       await api.post('/api/hpio/HPIO_292U_STR', { ...m, actkind: mAct, cmpycd: authStore.cmpycd, pumym: newYm, pumno: newNo, itemcd: selectedProduct.itemcd, userid: authStore.userid });
     }
     vAlert('저장되었습니다.');
