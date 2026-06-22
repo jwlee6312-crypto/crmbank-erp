@@ -126,11 +126,12 @@
               <tr>
                 <th class="bg-light text-center">주소</th>
                 <td colspan="5">
-                  <div class="d-flex gap-1">
-                    <input v-model="formData.postno" type="text" class="form-control text-center bg-light" style="width: 70px;" readonly />
-                    <button class="btn btn-outline-secondary px-2" @click="openPostcode"><i class="bi bi-search"></i></button>
-                    <input v-model="formData.address" type="text" class="form-control flex-grow-1" />
-                  </div>
+                  <AddressPopupForm
+                    v-model:postno="formData.postno"
+                    v-model:address="formData.address"
+                    v-model:d_address="formData.d_address"
+                    @open-address="handleOpenHelp('ADDR')"
+                  />
                 </td>
                 <th class="bg-light">전자세금</th>
                 <td>
@@ -244,6 +245,8 @@
       </div>
     </div>
   </div>
+
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
@@ -251,14 +254,18 @@ import { reactive, ref, onMounted, nextTick, computed } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
+import AddressPopupForm from '@/components/AddressPopupForm.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const searchParams = reactive({ custgbn: '000', status: '010', custnm: '' })
 const activeItemCount = ref(0)
@@ -266,8 +273,8 @@ const gridElement = ref<HTMLElement | null>(null)
 let grid: Tabulator | null = null
 
 const formData = reactive<any>({
-  actkind: 'A0', custcd: '', custnm: '', custno: '', JUMINNO: '', legalno: '', custgbn: '010',
-  bossnm: '', custtype: '', custkind: '', postno: '', address: '', telno: '', faxno: '',
+  actkind: 'A0', custcd: '', custnm: '', custno: '', juminno: '', legalno: '', custgbn: '010',
+  bossnm: '', custtype: '', custkind: '', postno: '', address: '', d_address: '', telno: '', faxno: '',
   inprcgbn: '200', outprcgbn: '200', hdamt: 0, rcvdd: 0, gigbcd: '305',
   agrpcd: '000', bgrpcd: '000', cgrpcd: '000', area: '000', cdamdang: '', ctelno: '', cemail: '',
   remark: '', status: '010', banknm: '', gujoa: '', stdymd: '', clsymd: '99991231',
@@ -281,17 +288,24 @@ const options = reactive<any>({
 const uistdymd = computed({ get: () => formatDate(formData.stdymd), set: (v) => formData.stdymd = v.replace(/-/g, '') })
 const uiclsymd = computed({ get: () => formatDate(formData.clsymd), set: (v) => formData.clsymd = v.replace(/-/g, '') })
 
+const normalizekeys = (obj: any) => {
+  const n: any = {};
+  if (!obj) return n;
+  Object.keys(obj).forEach(k => n[k.toLowerCase()] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k]);
+  return n;
+}
+
 async function fetchOptions() {
   const getOptHS = async (gbn: string, cd = '') => {
     try {
       const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: gbn, cmpycd: authStore.cmpycd, gbncd: cd })
-      return (res.data || []).map((i: any) => ({ codecd: String(i.code || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
+      return (res.data || []).map((i: any) => normalizekeys(i)).map((n: any) => ({ codecd: n.code || n.codecd, codenm: n.cdnm || n.codenm }))
     } catch (e) { return [] }
   }
   const getOptHA = async (gbn: string, cd = '') => {
     try {
       const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: gbn, cmpycd: authStore.cmpycd, gbncd: cd })
-      return (res.data || []).map((i: any) => ({ codecd: String(i.code || i.codecd || '').trim(), codenm: String(i.cdnm || i.codenm || '').trim() }))
+      return (res.data || []).map((i: any) => normalizekeys(i)).map((n: any) => ({ codecd: n.code || n.codecd, codenm: n.cdnm || n.codenm }))
     } catch (e) { return [] }
   }
 
@@ -321,10 +335,8 @@ const initGrid = () => {
     ]
   })
   grid.on("rowClick", (e, row) => {
-    const data = row.getData()
-    const cleaned: any = {}
-    Object.keys(data).forEach(k => cleaned[k] = typeof data[k] === 'string' ? data[k].trim() : data[k])
-    Object.assign(formData, cleaned); formData.actkind = 'U0'
+    const data = normalizekeys(row.getData());
+    Object.assign(formData, data); formData.actkind = 'U0'
   })
 }
 
@@ -334,8 +346,9 @@ async function fetchList() {
       actkind: 'S0', cmpycd: authStore.cmpycd,
       custnm: searchParams.custnm, custgbn: searchParams.custgbn === '000' ? '' : searchParams.custgbn, status: searchParams.status === '000' ? '' : searchParams.status
     })
-    grid?.setData(res.data);
-    activeItemCount.value = res.data.length;
+    const processed = (res.data || []).map((i: any) => normalizekeys(i));
+    grid?.setData(processed);
+    activeItemCount.value = processed.length;
   } catch (e) { vAlertError('조회 실패') }
 }
 
@@ -356,9 +369,13 @@ function initialize() {
   });
 }
 
-function openPostcode() {
-  // @ts-ignore
-  new daum.Postcode({ oncomplete: (data: any) => { formData.postno = data.zonecode; formData.address = data.roadAddress } }).open()
+const handleOpenHelp = (type: string) => {
+  if (type === 'ADDR') {
+    if (!formData.custcd) return vAlertError('거래처를 먼저 선택하세요.');
+    openHelp('ADDR', { gubun: 'C5', cmpycd: authStore.cmpycd, gbncd: formData.custcd }, (d: any) => {
+      formData.postno = d.postno; formData.address = d.address;
+    });
+  }
 }
 
 const formatDate = (v: string) => v && v.length === 8 ? `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}` : v

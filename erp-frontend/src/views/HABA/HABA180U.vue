@@ -2,19 +2,21 @@
 	=============================================================
 	프로그램명	: 거래처관리 (haba180u)
 	작성일자	: 2025.03.14
-	설명        : 거래처 정보 관리 (완전 소문자 원칙 적용)
+	설명        : 거래처 정보 관리 (완전 소문자 원칙 적용 및 네비게이션 대응)
 	=============================================================
 -->
 
 <template>
   <AppAlert :show="showalert" :error="showerror" :message="alertmessage" />
 
-  <div class="erp-container">
+  <div class="erp-container h-100 d-flex flex-column bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-1 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 13px;">
         <i class="bi bi-briefcase-fill me-2 text-primary"></i>
-        기본정보 > 기초관리 > <span class="text-primary fw-bolder">거래처관리 (haba180u)</span>
+        기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        기초관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">거래처관리 (haba180u)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
@@ -59,7 +61,7 @@
           <span class="fw-bold small text-dark"><i class="bi bi-pencil-square me-1"></i> 거래처 상세 정보</span>
           <div class="d-flex gap-2">
             <span v-if="masterdata.actkind === 'U0'" class="badge bg-warning text-dark" style="font-size: 10px;">수정 모드</span>
-            <span v-else class="badge bg-primary" style="font-size: 10px;">신규 등록</span>
+            <span v-else class="badge bg-primary text-white px-2" style="font-size: 10px;">신규 등록</span>
           </div>
         </div>
         <div class="card-body p-0 bg-white">
@@ -102,15 +104,14 @@
               </tr>
               <tr>
                 <th>주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소</th>
-                <td colspan="7">
-                  <div class="d-flex gap-1">
-                    <input v-model="masterdata.postno" type="text" class="form-control form-control-sm text-center" style="width: 70px;" readonly />
-                    <button class="btn btn-outline-secondary btn-sm px-2" @click="handleaddresssearch"><i class="bi bi-search"></i></button>
-                    <input v-model="masterdata.address" type="text" class="form-control form-control-sm flex-grow-1" />
-                  </div>
+                <td colspan="9">
+                  <AddressPopupForm
+                    v-model:postno="masterdata.postno"
+                    v-model:address="masterdata.address"
+                    v-model:d_address="masterdata.d_address"
+                    @open-address="handleopenhelp('ADDR')"
+                  />
                 </td>
-                <th>상세주소</th>
-                <td><input v-model="masterdata.address_det" type="text" class="form-control form-control-sm" maxlength="100" /></td>
               </tr>
               <tr>
                 <th>금융기관</th>
@@ -143,11 +144,17 @@
                 </td>
                 <th>전자여부</th>
                 <td>
-                  <div class="form-check form-switch m-0"><input v-model="masterdata.elcyn" class="form-check-input" type="checkbox" true-value="y" false-value="n"> <span class="small fw-bold">전자계산서</span></div>
+                  <div class="form-check form-switch m-0 d-flex align-items-center h-100">
+                    <input v-model="masterdata.elcyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="elcYnSwitch">
+                    <label class="form-check-label ms-2 small fw-bold" for="elcYnSwitch">전자계산서</label>
+                  </div>
                 </td>
                 <th>사용여부</th>
                 <td>
-                  <div class="form-check form-switch m-0"><input v-model="masterdata.useyn" class="form-check-input" type="checkbox" true-value="y" false-value="n"> <span class="small fw-bold">사용</span></div>
+                  <div class="form-check form-switch m-0 d-flex align-items-center h-100">
+                    <input v-model="masterdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useYnSwitch">
+                    <label class="form-check-label ms-2 small fw-bold" for="useYnSwitch">사용</label>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -180,18 +187,23 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { useRoute } from 'vue-router'
 import Modal from '@/components/Modal.vue'
+import AddressPopupForm from '@/components/AddressPopupForm.vue'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 
 const authstore = useAuthStore()
+const route = useRoute()
 const { showAlert: showalert, showError: showerror, alertMessage: alertmessage, vAlert: valert, vAlertError: valerterror } = useAlerts()
 const { resetForm: resetform } = useFormReset()
+const { modalVisible: modalvisible, modalProps: modalprops, openHelp } = useCommonHelp()
 const today = new Date().toISOString().substring(0, 10)
 
 // 1. 상태 관리 (완전 소문자)
-const searchform = reactive({ qcustgbn: '000', qstatus: '010', qcustnm: '' })
+const searchform = reactive({ qcustgbn: '000', qstatus: '010', qcustnm: '', qcustcd: '' })
 const masterdata = reactive<any>({
   actkind: 'i0', cmpycd: authstore.cmpycd, custcd: '', custnm: '', custno: '', custgbn: '010',
-  bossnm: '', legalno: '', postno: '', address: '', address_det: '',
+  bossnm: '', legalno: '', postno: '', address: '', d_address: '',
   custtype: '', custkind: '', telno: '', faxno: '', banknm: '', gujoa: '',
   stdymd: today.replace(/-/g, ''), clsymd: '99991231', singrd: 'A', elcyn: 'N', iogbn: '010', status: '010', useyn: 'Y',
   userid: authstore.userid
@@ -214,6 +226,7 @@ const normalizekeys = (obj: any) => {
   const n: any = {};
   if (!obj) return n;
   Object.keys(obj).forEach(k => n[k.toLowerCase()] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k]);
+  if (n.address_det) n.d_address = n.address_det;
   return n;
 }
 
@@ -235,13 +248,27 @@ const loadinitdata = async () => {
 // 3. 기능 구현
 const search = async () => {
   try {
-    const res = await api.post('/api/haba/haba_180u_str', {
+    const res = await api.post('/api/common/HABA_180U_STR', {
       actkind: 'S0', cmpycd: authstore.cmpycd,
-      custgbn: searchform.qcustgbn, status: searchform.qstatus, custnm: searchform.qcustnm
+      custcd: searchform.qcustcd || '',
+      custnm: searchform.qcustnm,
+      custgbn: searchform.qcustgbn,
+      status: searchform.qstatus
     })
     const list = (res.data || []).map((r: any) => normalizekeys(r));
     maingrid?.setData(list)
     activeitemcount.value = list.length
+
+    // 🚀 네비게이션 처리: 검색 결과가 있고 특정 코드로 넘어온 경우 자동 바인딩
+    if (route.query.custcd && list.length > 0) {
+        const target = list.find(r => String(r.custcd).trim() === String(route.query.custcd).trim()) || list[0];
+        Object.assign(masterdata, target);
+        masterdata.actkind = 'U0';
+    } else if (route.query.custnm && list.length === 1) {
+        Object.assign(masterdata, list[0]);
+        masterdata.actkind = 'U0';
+    }
+
     valert('조회되었습니다.')
   } catch (e) { valerterror('조회 실패') }
 }
@@ -258,9 +285,10 @@ const save = async () => {
       stdymd: masterdata.stdymd.replace(/-/g, ''),
       clsymd: masterdata.clsymd.replace(/-/g, ''),
       custno: (masterdata.custno || '').replace(/-/g, ''),
-      legalno: (masterdata.legalno || '').replace(/-/g, '')
+      legalno: (masterdata.legalno || '').replace(/-/g, ''),
+      address_det: masterdata.d_address
     }
-    const res = await api.post('/api/haba/haba_180u_str', payload)
+    const res = await api.post('/api/common/HABA_180U_STR', payload)
     const resdata = normalizekeys(res.data?.[0]);
     if (resdata.result === 'N' || resdata.erryn === 'Y') valerterror(resdata.msg || '저장 실패')
     else { valert('정상 처리되었습니다.'); search(); initialize(); }
@@ -271,25 +299,32 @@ const initialize = () => {
   resetform(masterdata)
   Object.assign(masterdata, {
     actkind: 'i0', cmpycd: authstore.cmpycd, custgbn: '010', iogbn: '010', status: '010',
-    useyn: 'Y', stdymd: today.replace(/-/g, ''), clsymd: '99991231', singrd: 'A', elcyn: 'N', userid: authstore.userid
+    useyn: 'y', stdymd: today.replace(/-/g, ''), clsymd: '99991231', singrd: 'A', elcyn: 'n', userid: authstore.userid
   })
 }
 
-const handleaddresssearch = () => {
-  // @ts-ignore
-  new window.daum.Postcode({
-    oncomplete: (data: any) => {
-      masterdata.postno = data.zonecode; masterdata.address = data.roadAddress || data.jibunAddress; masterdata.address_det = ''
-    }
-  }).open()
+const handleopenhelp = (type: string) => {
+  if (type === 'ADDR') {
+    if (!masterdata.custcd) return valerterror('거래처를 먼저 선택하세요.');
+    openHelp('ADDR', { gubun: 'C5', cmpycd: authstore.cmpycd, gbncd: masterdata.custcd }, (d: any) => {
+      masterdata.postno = d.postno; masterdata.address = d.address;
+    });
+  }
 }
 
 const excel = () => maingrid?.download("xlsx", `거래처관리_${new Date().toISOString().substring(0, 10)}.xlsx`)
 
-const modalvisible = ref(false); const modalprops = reactive<any>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
 onMounted(async () => {
   await loadinitdata()
+
+  // 🚀 프로그램 네비게이션 처리 (HABA190S 등에서 넘어온 파라미터 처리)
+  if (route.query.custcd || route.query.custnm) {
+    if (route.query.custcd) searchform.qcustcd = String(route.query.custcd)
+    if (route.query.custnm) searchform.qcustnm = String(route.query.custnm)
+    if (route.query.custgbn) searchform.qcustgbn = String(route.query.custgbn)
+    if (route.query.status) searchform.qstatus = String(route.query.status)
+  }
+
   if (maingridelement.value) {
     maingrid = new Tabulator(maingridelement.value, {
       layout: 'fitColumns', height: '100%', selectable: 1,
@@ -303,7 +338,7 @@ onMounted(async () => {
         { title: "연락처", field: "telno", width: 120 },
         { title: "구분", field: "iogbnnm", width: 90 },
         { title: "상태", field: "statusnm", width: 90 },
-        { title: "사용", field: "useyn", width: 60, formatter: (c) => c.getValue()?.toLowerCase() === 'Y' ? 'O' : 'X' }
+        { title: "사용", field: "useyn", width: 60, formatter: (c) => String(c.getValue() || '').toLowerCase() === 'y' ? 'O' : 'X' }
       ]
     })
     maingrid.on('rowClick', (e, row) => {

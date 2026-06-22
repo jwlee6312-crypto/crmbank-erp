@@ -48,9 +48,9 @@
                 </td>
                 <th class="text-center bg-light">발행일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="searchForm.ioymdfr" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="text-muted mx-1">~</span>
-                  <input v-model="searchForm.ioymdto" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
               </tr>
             </tbody>
@@ -81,21 +81,22 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-const now = new Date()
 const searchForm = reactive<any>({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  ioymdfr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  ioymdto: now.toISOString().substring(0, 10)
+  fromdt: firstDay,
+  todt: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null);
@@ -107,8 +108,8 @@ async function fetchList() {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
       iogbn: '100',
-      ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       deptcd: searchForm.deptcd
     });
     grid?.setData(res.data || []);
@@ -120,8 +121,8 @@ function initialize() {
   resetForm(searchForm);
   searchForm.deptcd = authStore.deptcd;
   searchForm.deptnm = authStore.deptnm;
-  searchForm.ioymdfr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
-  searchForm.ioymdto = now.toISOString().substring(0, 10);
+  searchForm.fromdt = firstDay
+  searchForm.todt = today
   grid?.clearData();
 }
 

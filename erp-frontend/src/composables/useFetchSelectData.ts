@@ -39,7 +39,7 @@ export async function fetchSelectDataList<T>(url: string, params?: any): Promise
 			params: requestParams,
 		})
 
-		const list = res.data.data || res.data || []
+		const list = res.data || []
 		return Array.isArray(list) ? list : []
 	} catch (e) {
 		console.error(`[fetchSelectDataList] ${url} 조회 실패:`, e)

@@ -223,7 +223,7 @@ const go_account_detail = (acct_cd: string) => {
 	if (search_form.actkind !== 'S0' || !acct_cd || acct_cd === '9999999') return
 	router.push({
 		path: '/HASL540S',
-		query: { frymd: search_form.ymd.replace(/-/g, ''), toymd: search_form.ymd.replace(/-/g, ''), acctcd: acct_cd }
+		query: { fromdt: search_form.ymd.replace(/-/g, ''), todt: search_form.ymd.replace(/-/g, ''), acctcd: acct_cd }
 	})
 }
 

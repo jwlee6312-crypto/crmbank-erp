@@ -63,7 +63,7 @@
 
     <select id="HSBA_170U_STR" resultType="map">
         exec hsba_170u_str #{actkind}, #{cmpycd}, #{custcd}, #{custnm}, #{rowno}, #{damkind}, #{damgbn},
-        #{damyeo}, #{dammgt}, #{damsel}, #{samhan}, #{rcvdd}, #{frymd}, #{toymd}, #{sounm}, #{bigo}, #{useyn}, #{updemp}
+        #{damyeo}, #{dammgt}, #{damsel}, #{samhan}, #{rcvdd}, #{fromdt}, #{todt}, #{sounm}, #{bigo}, #{useyn}, #{updemp}
      </select>
 
     <select id="HSBA_190U_STR" resultType="map">

@@ -36,9 +36,9 @@
                 <th class="required" style="width: 100px;">판매일자</th>
                 <td style="width: 300px;">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="uifrymd" type="date" class="form-control form-control-sm" />
+                    <input v-model="uifromdt" type="date" class="form-control form-control-sm" />
                     <span>~</span>
-                    <input v-model="uitoymd" type="date" class="form-control form-control-sm" />
+                    <input v-model="uitodt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th style="width: 100px;">거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
@@ -89,21 +89,21 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+const initfromdt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
 
 // 1. 상태 관리
 const searchData = reactive({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  frymd: initfrymd.replace(/-/g, ''),
-  toymd: initymd.replace(/-/g, ''),
+  fromdt: initfromdt.replace(/-/g, ''),
+  todt: initymd.replace(/-/g, ''),
   custcdfr: '',
   custnmfr: '',
   selgbn: '1'
 })
 
-const uifrymd = computed({ get: () => formatDateString(searchData.frymd, '-'), set: (v) => searchData.frymd = v.replace(/-/g, '') })
-const uitoymd = computed({ get: () => formatDateString(searchData.toymd, '-'), set: (v) => searchData.toymd = v.replace(/-/g, '') })
+const uifromdt = computed({ get: () => formatDateString(searchData.fromdt, '-'), set: (v) => searchData.fromdt = v.replace(/-/g, '') })
+const uitodt = computed({ get: () => formatDateString(searchData.todt, '-'), set: (v) => searchData.todt = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
@@ -184,8 +184,8 @@ async function search() {
       deptcd: searchData.deptcd,
       custcdfr: searchData.custcdfr,
       custcdto: searchData.custcdfr, // ASP 로직상 시작/종료를 동일하게 사용하거나 범위 지정
-      frymd: searchData.frymd,
-      toymd: searchData.toymd
+      fromdt: searchData.fromdt,
+      todt: searchData.todt
     })
     if (grid.value) {
       grid.value.setData(res.data)
@@ -201,8 +201,8 @@ const navigateToDetail = (row: any) => {
         query: {
             custcd: row.custcd,
             custnm: row.custnm,
-            frymd: searchData.frymd,
-            toymd: searchData.toymd,
+            fromdt: searchData.fromdt,
+            todt: searchData.todt,
             deptcd: searchData.deptcd
         }
     })
@@ -210,8 +210,8 @@ const navigateToDetail = (row: any) => {
 
 function initialize() {
   resetForm(searchData)
-  searchData.frymd = initfrymd.replace(/-/g, '')
-  searchData.toymd = initymd.replace(/-/g, '')
+  searchData.fromdt = initfromdt.replace(/-/g, '')
+  searchData.todt = initymd.replace(/-/g, '')
   searchData.deptcd = authStore.deptcd
   searchData.deptnm = authStore.deptnm
   grid.value?.clearData()
@@ -219,7 +219,7 @@ function initialize() {
 
 function print(type: string) {
   // 인쇄 또는 엑셀 내보내기 로직 (기존 ASP 팝업 호출 방식 유지 가능)
-  const url = `HSST_100P.asp?selgbn=1&deptcd=${searchData.deptcd}&custcdfr=${searchData.custcdfr}&frymd=${searchData.frymd}&toymd=${searchData.toymd}&PRTGU=${type}`
+  const url = `HSST_100P.asp?selgbn=1&deptcd=${searchData.deptcd}&custcdfr=${searchData.custcdfr}&fromdt=${searchData.fromdt}&todt=${searchData.todt}&PRTGU=${type}`
   window.open(url, 'print', 'width=700,height=650,scrollbars=yes')
 }
 

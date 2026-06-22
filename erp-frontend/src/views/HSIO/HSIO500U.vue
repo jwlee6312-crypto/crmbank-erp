@@ -115,10 +115,9 @@
                     </td>
                     <th class="bg-light text-center">배송담당</th>
                     <td>
-                      <div class="input-group input-group-sm">
-                        <input v-model="form_02.dlv_usernm" class="form-control" readonly />
-                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('EMP_DLV')"><i class="bi bi-search"></i></button>
-                      </div>
+                      <select v-model="form_02.dlv_userid" class="form-select">
+                        <option v-for="item in userData" :key="item.userid" :value="item.userid">{{ item.usernm }}</option>
+                      </select>
                     </td>
                   </tr>
                   <tr>
@@ -134,8 +133,7 @@
                     <th class="required bg-light text-center">현금조건</th>
                     <td>
                       <select v-model="form_02.paycndt" class="form-select">
-                        <option value="1">현금</option>
-                        <option value="2">외상</option>
+                        <option v-for="item in paycndtData" :key="item.code" :value="item.code">{{ item.cdnm }}</option>
                       </select>
                     </td>
                     <th class="bg-light text-center">만기일자</th>
@@ -212,6 +210,7 @@ const form_02 = reactive<any>({
 const closingInfo = reactive({ sclsym: '' })
 const whOptions = ref<any[]>([])
 const userData = ref<any[]>([])
+const paycndtData = ref<any[]>([])
 
 // [2] 그리드 관리
 const tableRef1 = ref<HTMLDivElement | null>(null)
@@ -318,27 +317,84 @@ const updateTotalSum = () => {
   const data = grid2?.getData().filter(r => r._state !== 'EMPTY' && r._status !== '삭제') || [];
   form_02.totsum = data.reduce((sum, r) => sum + Number(r.sumamt || 0), 0);
 }
-
 const handleOpenHelp = (type: string, target?: any) => {
-  if (type === 'DEPT_SCH') openHelp('DEPT', (d) => { form_01.deptcd = d.deptcd; form_01.deptnm = d.deptnm });
-  else if (type === 'DEPT') openHelp('DEPT', (d) => { form_02.deptcd = d.deptcd; form_02.deptnm = d.deptnm });
-  else if (type === 'CUST') openHelp('CUST', (d) => { form_02.custcd = d.custcd; form_02.custnm = d.custnm });
-  else if (type === 'EMP_DLV') openHelp('EMP', (d) => { form_02.dlv_userid = d.userid; form_02.dlv_usernm = d.usernm });
+  // 1. 부서 선택 (조회용 및 등록용 공통)
+  if (type === 'DEPT_SCH' || type === 'DEPT') {
+    Object.assign(modalProps, {
+      title: '부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      defaultField: 'deptnm',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' },
+      columns: [
+        { title: '코드', field: 'deptcd', width: 80, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => {
+        if (type === 'DEPT_SCH') { form_01.deptcd = d.deptcd; form_01.deptnm = d.deptnm }
+        else { form_02.deptcd = d.deptcd; form_02.deptnm = d.deptnm }
+      }
+    })
+    modalVisible.value = true
+  }
+  // 2. 거래처 선택
+  else if (type === 'CUST') {
+    Object.assign(modalProps, {
+      title: '거래처 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      defaultField: 'custnm',
+      data: { gubun: 'C4', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' },
+      columns: [
+        { title: '코드', field: 'custcd', width: 80, hozAlign: 'center' },
+        { title: '거래처명', field: 'custnm', width: 200 }
+      ],
+      onConfirm: (d: any) => { form_02.custcd = d.custcd; form_02.custnm = d.custnm }
+    })
+    modalVisible.value = true
+  }
+  // 3. 배송처 선택 (ADDR) - 상세주소 필드명 d_address 적용
   else if (type === 'ADDR') {
-    openHelp('ADDR', (d) => {
+    if (!form_02.custcd) return vAlertError('거래처를 먼저 선택하세요.')
+    Object.assign(modalProps, {
+      title: '배송처 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      defaultField: 'trannm',
+      data: { gubun: 'C5', cmpycd: authStore.cmpycd, gbncd: form_02.custcd, code: '', remark: '' },
+      columns: [
+        { title: '순번', field: 'trancd', width: 60, hozAlign: 'center' },
+        { title: '배송처명', field: 'trannm', width: 150 },
+        { title: '주소', field: 'address', width: 300 }
+      ],
+      onConfirm: (d: any) => {
         form_02.postno = d.postno;
         form_02.address = d.address;
+        form_02.d_address = d.address_det || d.d_address || '';
         form_02.addrcd = d.trancd;
-    }, { custcd: form_02.custcd });
+      }
+    })
+    modalVisible.value = true
   }
+  // 4. 품목 선택 (그리드 내 행 데이터 업데이트)
   else if (type === 'ITEM') {
-    openHelp('ITEM', (d) => {
-      target.update({
-        itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unitnm: d.unitnm,
-        price: d.outcost || 0, qty: 1, _status: '신규', _state: 'NEW'
-      });
-      calcRow(target);
-    });
+    Object.assign(modalProps, {
+      title: '품목 선택',
+      path: '/api/hs00/HS00_000S_STR',
+      defaultField: 'itemnm',
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', code: '', remark: '' },
+      columns: [
+        { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+        { title: '품목명', field: 'itemnm', width: 200 },
+        { title: '규격', field: 'itsize', width: 150 },
+        { title: '단위', field: 'unitnm', width: 80, hozAlign: 'center' }
+      ],
+      onConfirm: (d: any) => {
+        target.update({
+          itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unitnm: d.unitnm,
+          price: d.outcost || 0, qty: 1, _status: '신규', _state: 'NEW'
+        });
+        calcRow(target);
+      }
+    })
+    modalVisible.value = true
   }
 }
 
@@ -361,7 +417,7 @@ async function search() {
 async function fetchDetail(row: any) {
   Object.assign(form_02, row);
   try {
-    const res = await api.post(`/api/hsio/HSIO_501U_STR`, { actkind: 'S0', cmpycd: authStore.cmpycd, outym: row.ioym, outno: row.iono });
+    const res = await api.post(`/api/hsio/HSIO_501U_STR`, { actkind: 'S', cmpycd: authStore.cmpycd, outym: row.ioym, outno: row.iono });
     setGridDataWithPadding(res.data || []);
     updateTotalSum();
   } catch (e) { vAlertError('상세 로드 실패'); }
@@ -375,8 +431,32 @@ async function save() {
   if (!details.length && !form_02.out_no) return vAlertError('저장할 품목이 없습니다.');
 
   try {
-    const mst = { ...form_02, actkind: form_02.iono ? 'U0' : 'A0', ioymd: form_02.outymd.replace(/-/g, ''), endymd: form_02.endymd.replace(/-/g, ''), updemp: authStore.userid };
-    const dtl = details.map(d => ({ ...d, actkind: d._status === '신규' ? 'A0' : (d._status === '삭제' ? 'D0' : 'U0'), updemp: authStore.userid }));
+    const mst = {
+        ...form_02,
+        actkind: form_02.iono ? 'U' : 'A',
+        ioymd: form_02.outymd.replace(/-/g, ''),
+        endymd: form_02.endymd.replace(/-/g, ''),
+        updemp: authStore.userid
+    };
+
+
+    const dtl = details.map(d => ({
+        ...d,
+        iogbn: form_02.iogbn,
+        deptcd: form_02.deptcd,
+        custcd: form_02.custcd,
+        whcd: form_02.whcd,
+        ioymd: form_02.outymd.replace(/-/g, ''),
+        iotype: form_02.iotype,
+        userid: form_02.sale_userid,
+        cfmyn: form_02.cfmyn,
+        ioqty: Number(d.qty || 0),
+        ioamt: Number(d.amt || 0),
+        iovat: Number(d.vat || 0),
+        actkind: d._status === '신규' ? 'A' : (d._status === '삭제' ? 'D' : 'U'),
+        updemp: authStore.userid
+    }));
+
     await api.post('/api/hsio/HSIO_500U_SAVE', { mst, dtl });
     vAlert('저장되었습니다.'); search();
   } catch (e) { vAlertError('저장 실패'); }
@@ -395,12 +475,19 @@ function deleteSelectedRows() {
 function initialize() {
   resetForm(form_02);
   form_02.cmpycd = authStore.cmpycd;
-  form_02.outymd = today; form_02.endymd = today;
+  form_02.outymd = today;
+  form_02.endymd = today;
   if (whOptions.value.length > 0) form_02.whcd = whOptions.value[0].whcd;
-  form_02.deptcd = authStore.deptcd; form_02.deptnm = authStore.deptnm;
+  form_02.deptcd = authStore.deptcd;
+  form_02.deptnm = authStore.deptnm;
+
+  // 영업담당 및 배송담당 본인 기본 설정
   form_02.sale_userid = authStore.userid;
+  form_02.dlv_userid = authStore.userid;
+  form_02.paycndt = '100';
   form_02.totsum = 0;
-  grid1?.clearData(); setGridDataWithPadding([]);
+  grid1?.clearData();
+  setGridDataWithPadding([]);
 }
 
 async function handleFullDelete() {
@@ -408,14 +495,24 @@ async function handleFullDelete() {
   if (isClosed.value) return vAlertError('마감된 월입니다.');
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_500U_SAVE', { mst: { ...form_02, actkind: 'D0', ioymd: form_02.outymd.replace(/-/g, '') }, dtl: [] });
+    await api.post('/api/hsio/HSIO_500U_SAVE', { mst: { ...form_02, actkind: 'D', ioymd: form_02.outymd.replace(/-/g, '') }, dtl: [] });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }
 
 onMounted(async () => {
   await fetchWhOptions();
-  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SD', cmpycd: authStore.cmpycd }).then(r => { userData.value = r.data; });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' }).then(r => { userData.value = r.data; });
+
+  api.post('/api/hs00/HS00_000S_STR', {
+      gubun: 'E0',
+      cmpycd: authStore.cmpycd,
+      gbncd: '300',
+      code: ''
+  }).then(r => {
+      paycndtData.value = r.data;
+  });
+
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym;
   });

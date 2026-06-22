@@ -80,27 +80,27 @@
     </select>
 
     <!-- 🛠️ 기초 및 관리 프로시저 전체 복구 (누락분 포함) -->
-    <select id="HASL_010U_STR" resultType="map">exec hasl_010u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{keyword},#{slipymd}, #{slipno}, #{acctymd}, #{deptcd}, #{empnm}, #{slipgu}, #{updemp}</select>
+    <select id="HASL_010U_STR" resultType="map">exec hasl_010u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{keyword}, #{slipymd}, #{slipno}, #{acctymd}, #{deptcd}, #{empnm}, #{slipgu}, #{business}, #{updemp}</select>
     <select id="HASL_110U_STR" resultType="map">exec hasl_110u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{keyword},#{slipymd}, #{slipno}, #{acctymd}, #{deptcd}, #{empnm}, #{slipgu}, #{updemp}</select>
     <select id="HASL_011U_STR" resultType="map">exec hasl_011u_str #{actkind}, #{cmpycd}, #{slipymd}, #{slipno}, #{srowno}, #{acctymd}, #{acctcd}, #{deptcd}, #{custcd}, #{bugtcd}, #{prjcd}, #{mgtno}, #{sslipno}, #{dbamt}, #{cramt}, #{remark}, #{paycndt}, #{payymd}, #{docno1}, #{docno2}, #{docno3}, #{docno4}, #{docno5}, #{docno6}, #{docno7}, #{docno8}, #{docno9}, #{updemp}, #{frgnkind}, #{frgnrate}, #{frgnamt}, #{ret_yn}</select>
     <select id="HASL_111U_STR" resultType="map">exec hasl_111u_str #{actkind}, #{cmpycd}, #{slipymd}, #{slipno}, #{srowno}, #{acctymd}, #{acctcd}, #{deptcd}, #{custcd}, #{bugtcd}, #{prjcd}, #{mgtno}, #{sslipno}, #{dbamt}, #{cramt}, #{remark}, #{paycndt}, #{payymd}, #{docno1}, #{docno2}, #{docno3}, #{docno4}, #{docno5}, #{docno6}, #{docno7}, #{docno8}, #{docno9}, #{updemp}, #{frgnkind}, #{frgnrate}, #{frgnamt}, #{ret_yn}</select>
 
     <select id="HASL_020U_STR" resultType="map">exec hasl_020u_str #{actkind}, #{cmpycd}, #{slipymd}, #{acctymd}, #{slipno},#{deptcd}, #{slipkind}, #{slipyn}, #{cofmyn}, #{cofmemp}, #{updemp}</select>
 
-    <select id="HASL_030S_STR" resultType="map">exec hasl_030s_str #{cmpycd}, #{deptcd}, #{frymd}, #{toymd}, #{acctcd1}, #{acctcd2}</select>
-    <select id="HASL_120S_STR" resultType="map">exec hasl_120s_str #{cmpycd}, #{frymd}, #{toymd}, #{acctcd}, #{deptcd}, #{slipamt_f}, #{slipamt_t}</select>
-    <select id="HASL_130S_STR" resultType="map">exec hasl_130s_str #{cmpycd}, #{frymd}, #{toymd}, #{acctcd1}, #{acctcd2}</select>
+    <select id="HASL_030S_STR" resultType="map">exec hasl_030s_str #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}, #{acctcd1}, #{acctcd2}</select>
+    <select id="HASL_120S_STR" resultType="map">exec hasl_120s_str #{cmpycd}, #{fromdt}, #{todt}, #{acctcd}, #{deptcd}, #{slipamt_f}, #{slipamt_t}</select>
+    <select id="HASL_130S_STR" resultType="map">exec hasl_130s_str #{cmpycd}, #{fromdt}, #{todt}, #{acctcd1}, #{acctcd2}</select>
 
     <select id="HASL_510S_STR" resultType="map">exec hasl_510s_str #{actkind}, #{cmpycd}, #{ymd}</select>
     <select id="HASL_520S_STR" resultType="map">exec hasl_520s_str #{actkind}, #{cmpycd}, #{ym}</select>
-    <select id="HASL_530S_STR" resultType="map">exec hasl_530s_str #{cmpycd}, #{acctcd}, #{ymdfr}, #{ymdto}</select>
-    <select id="HASL_540S_STR" resultType="map">exec hasl_540s_str #{cmpycd}, #{acctcd}, #{ymdfr}, #{ymdto}</select>
-    <select id="HASL_550S_STR" resultType="map">exec hasl_550s_str #{cmpycd}, #{acctcd}, #{custcd}, #{ymdfr}, #{ymdto}</select>
-    <select id="HASL_560S_STR" resultType="map">exec hasl_560s_str #{cmpycd}, #{acctcd}, #{mgtno}, #{ymdfr}, #{ymdto}</select>
+    <select id="HASL_530S_STR" resultType="map">exec hasl_530s_str #{cmpycd}, #{acctcd}, #{fromdt}, #{todt}</select>
+    <select id="HASL_540S_STR" resultType="map">exec hasl_540s_str #{cmpycd}, #{acctcd}, #{fromdt}, #{todt}</select>
+    <select id="HASL_550S_STR" resultType="map">exec hasl_550s_str #{cmpycd}, #{acctcd}, #{custcd}, #{fromdt}, #{todt}</select>
+    <select id="HASL_560S_STR" resultType="map">exec hasl_560s_str #{cmpycd}, #{acctcd}, #{mgtno}, #{fromdt}, #{todt}</select>
 
-    <select id="HASL_610S_STR" resultType="map">exec hasl_610s_str #{cmpycd}, #{ymdfr}, #{ymdto}, #{acctcdfr}, #{acctcdto}, #{gbn}</select>
-    <select id="HASL_620S_STR" resultType="map">exec hasl_620s_str #{cmpycd}, #{ymdfr}, #{ymdto}, #{acctcd}, #{custcdfr}, #{custcdto}, #{gbn}</select>
-    <select id="HASL_630S_STR" resultType="map">exec hasl_630s_str #{cmpycd}, #{ymdfr}, #{ymdto}, #{acctcd}, #{mgtnofr}, #{mgtnoto}, #{gbn}</select>
+    <select id="HASL_610S_STR" resultType="map">exec hasl_610s_str #{cmpycd}, #{fromdt}, #{todt}, #{acctcdfr}, #{acctcdto}, #{gbn}</select>
+    <select id="HASL_620S_STR" resultType="map">exec hasl_620s_str #{cmpycd}, #{fromdt}, #{todt}, #{acctcd}, #{custcdfr}, #{custcdto}, #{gbn}</select>
+    <select id="HASL_630S_STR" resultType="map">exec hasl_630s_str #{cmpycd}, #{fromdt}, #{todt}, #{acctcd}, #{mgtnofr}, #{mgtnoto}, #{gbn}</select>
     <select id="HASL_710S_STR" resultType="map">exec hasl_710s_str #{cmpycd}, #{deptcd}, #{toyymm}</select>
 
 </mapper>

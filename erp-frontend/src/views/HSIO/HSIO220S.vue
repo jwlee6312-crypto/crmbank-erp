@@ -36,9 +36,9 @@
 								<th class="border-0 bg-transparent text-end pr-2" style="width: 1%; white-space: nowrap;">할인일자</th>
 								<td class="border-0 bg-transparent" style="width: auto;">
 									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+										<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 										<span class="text-muted mx-1">~</span>
-										<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+										<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 									</div>
 								</td>
 							</tr>
@@ -57,8 +57,8 @@
 						<i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 거래처별 할인 요약 내역
 					</span>
 				</div>
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                  <div ref="mainGridRef" class="tabulator-full-height" />
                 </div>
 			</div>
 		</div>
@@ -82,8 +82,8 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const searchForm = reactive({
-  frymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  toymd: now.toISOString().substring(0, 10)
+  fromdt: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
+  todt: now.toISOString().substring(0, 10)
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
@@ -94,10 +94,10 @@ async function fetchList() {
   try {
     const res = await api.post('/api/hsio/HSIO_220S_STR', {
       cmpycd: authStore.cmpycd,
-      frymd: searchForm.frymd.replace(/-/g, ''),
-      toymd: searchForm.toymd.replace(/-/g, '')
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, '')
     })
-    const data = res.data.data || []
+    const data = res.data || []
     mainGrid?.setData(data)
     activeItemCount.value = data.length
     totals.amt = data.reduce((acc: number, cur: any) => acc + (Number(cur.spyamt) || 0), 0)
@@ -108,8 +108,8 @@ async function fetchList() {
 
 function initialize() {
   resetForm(searchForm);
-  searchForm.frymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
-  searchForm.toymd = now.toISOString().substring(0, 10);
+  searchForm.fromdt = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
+  searchForm.todt = now.toISOString().substring(0, 10);
   mainGrid?.clearData(); totals.amt = 0; totals.hal = 0; activeItemCount.value = 0;
 }
 
@@ -120,7 +120,13 @@ onMounted(() => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 100 },
+			columnDefaults: {
+				headerSort: false,
+				headerHozAlign: "center",
+				hozAlign: 'right', // 🚀 기본값을 우측 정렬로 설정
+				vertAlign: 'middle',
+				minWidth: 100
+			},
 			columns: [
 				{ title: '거래처', field: 'custnm', minWidth: 200, widthGrow: 2, cssClass: 'fw-bold text-dark' },
 				{ title: '품목수', field: 'itmcnt', hozAlign: 'right', width: 200, formatter: 'money', formatterParams: { precision: 0 } },
@@ -132,3 +138,7 @@ onMounted(() => {
     fetchList()
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

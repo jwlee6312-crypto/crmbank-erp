@@ -41,7 +41,7 @@
               <tr>
                 <th class="text-center bg-light border-end">기준일자</th>
                 <td class="border-end px-2">
-                  <input v-model="search_form.payymdt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+                  <input v-model="search_form.todt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
                 </td>
                 <th class="text-center bg-light border-end">카드사</th>
                 <td class="border-end px-2">
@@ -150,7 +150,7 @@ const first_day = new Date(new Date().getFullYear(), new Date().getMonth(), 1).t
 
 // 🔍 검색 조건 (소문자 원칙)
 const search_form = _reactive({
-	payymdt: today,
+	todt: today,
 	custcd: '',
 	custnm: '',
 	mgtno: '',
@@ -184,8 +184,8 @@ const search = async () => {
 		const res = await api.post('/api/hafn/HAFN_620U_STR', {
 			actkind: 'S0',
 			cmpycd: auth_store.cmpycd,
-			payymdf: first_day.replace(/-/g, ''),
-			payymdt: search_form.payymdt.replace(/-/g, ''),
+			fromdt: first_day.replace(/-/g, ''),
+			todt: search_form.todt.replace(/-/g, ''),
 			custcd: search_form.custcd,
 			mgtno: search_form.mgtno
 		})
@@ -292,7 +292,7 @@ const save = async () => {
 const initialize = () => {
 	reset_form(search_form)
 	reset_form(voucher_form)
-	search_form.payymdt = today
+	search_form.todt = today
 	voucher_form.payymd = today
 	voucher_form.deptcd = auth_store.deptcd
 	voucher_form.deptnm = auth_store.deptnm

@@ -5,7 +5,7 @@
     <!-- 자산이력관리 조회 및 처리 -->
     <select id="HAFA_010U_STR" resultType="map">
         exec hafa_010u_str
-            #{actkind}, #{cmpycd}, #{ym}, #{rowno}, #{frymd}, #{toymd},
+            #{actkind}, #{cmpycd}, #{ym}, #{rowno}, #{fromdt}, #{todt},
             #{acctcd}, #{asetcd}, #{asetnm}, #{proctype},
             #{procymd}, #{procqty}, #{procamt}, #{remark}, #{deptcd},
             #{dprstype}, #{costtype}, #{legalyy}, #{gagamyy}, #{asetrate}, #{useyn},

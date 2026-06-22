@@ -27,28 +27,32 @@
     </div>
 
     <!-- 🔍 2. 상단 조회 필터 -->
-    <div class="p-2 pb-0 flex-shrink-0 bg-light">
-      <div class="card border shadow-sm overflow-hidden">
-        <div class="card-body p-2 bg-white">
-          <div class="d-flex align-items-center gap-4">
-            <div class="d-flex align-items-center gap-2">
-              <span class="fw-bold small text-dark" style="min-width: 60px;">입고부서</span>
-              <div class="input-group input-group-sm" style="width: 250px;">
-                <input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                <input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" />
-                <button class="btn btn-outline-secondary px-2" @click="openHelp('S_DEPT')"><i class="bi bi-search"></i></button>
-              </div>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="fw-bold small text-dark" style="min-width: 60px;">정산일자</span>
-              <div class="d-flex align-items-center gap-1">
-                <DateForm v-model:fromdt="searchForm.ioymdfr" v-model:todt="searchForm.ioymdto" />
-              </div>
+    <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+            <div class="card-body p-0 bg-white">
+              <table class="erp-table-dense" width="100%">
+                <colgroup>
+                  <col style="width: 10%" /><col style="width: 40%" />
+                  <col style="width: 10%" /><col style="width: 40%" />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <th class="text-center bg-light">입고부서</th>
+                    <td>
+                      <div class="input-group input-group-sm w-75">
+                        <input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                        <input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" />
+                        <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT_search')"><i class="bi bi-search"></i></button>
+                      </div>
+                    </td>
+                    <th class="text-center bg-light">정산일자</th>
+                    <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                      <DateForm v-model:fromdt="searchForm.fromdt" v-model:todt="searchForm.todt" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
     <div class="flex-grow-1 d-flex flex-column overflow-hidden p-2 gap-2 bg-light">
       <!-- 🅰️ 전표 발행 설정 폼 -->
@@ -56,8 +60,9 @@
         <div class="card-body p-0 bg-white">
           <table class="erp-table-dense w-100">
             <colgroup>
-              <col style="width: 100px;" /><col />
-              <col style="width: 100px;" /><col />
+              <col style="width: 100px;" /><col  style="width: 200px;" />
+              <col style="width: 100px;" /><col  style="width: 350px;" />
+              <col style="width: 100px;" /><col  style="width: 150px;" />
               <col style="width: 100px;" /><col />
             </colgroup>
             <tbody>
@@ -69,22 +74,9 @@
                   <div class="input-group input-group-sm">
                     <input v-model="formData.deptcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
                     <input v-model="formData.deptnm" type="text" class="form-control" readonly />
-                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
-                <th class="required bg-light text-center">사업장/유형</th>
-                <td>
-                  <div class="d-flex gap-1">
-                    <select v-model="formData.taxunit" class="form-select">
-                      <option v-for="opt in saOptions" :key="opt.taxunit" :value="opt.taxunit">{{ opt.unitnm }}</option>
-                    </select>
-                    <select v-model="formData.vattype" class="form-select">
-                      <option v-for="opt in vatOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-                    </select>
-                  </div>
-                </td>
-              </tr>
-              <tr class="bg-light-subtle">
                 <th class="bg-light text-center">카드결제</th>
                 <td>
                   <div class="form-check form-switch m-0 d-flex align-items-center justify-content-center">
@@ -93,10 +85,10 @@
                   </div>
                 </td>
                 <th class="bg-light text-center">카드번호</th>
-                <td colspan="3">
+                <td>
                   <div class="input-group input-group-sm">
                     <input v-model="formData.cardno" type="text" class="form-control" placeholder="카드번호 선택" :readonly="formData.cardyn !== 'Y'" />
-                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('CARD')" :disabled="formData.cardyn !== 'Y'"><i class="bi bi-search"></i></button>
+                    <button class="btn btn-outline-secondary px-2" @click="openHelp('CARD')" :disabled="formData.cardyn !== 'Y'"><i class="bi bi-search"></i></button>
                     <input v-model="formData.cardnm" type="text" class="form-control bg-light" readonly style="flex-grow: 2;" />
                   </div>
                 </td>
@@ -125,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -133,27 +125,28 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-const now = new Date()
 const searchForm = reactive<any>({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  ioymdfr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  ioymdto: now.toISOString().substring(0, 10)
+  fromdt: firstDay,
+  todt: today
 })
 
 const formData = reactive<any>({
   actkind: 'A',
   cmpycd: authStore.cmpycd,
-  pubymd: now.toISOString().substring(0, 10),
+  pubymd: today,
   taxunit: '',
   vattype: '010',
   cardyn: 'N',
@@ -161,6 +154,14 @@ const formData = reactive<any>({
   cardnm: '',
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm
+})
+
+// 카드결제 사용 여부에 따른 카드 정보 초기화
+watch(() => formData.cardyn, (newVal) => {
+  if (newVal === 'N') {
+    formData.cardno = '';
+    formData.cardnm = '';
+  }
 })
 
 const saOptions = ref<any[]>([]);
@@ -180,13 +181,38 @@ async function fetchOptions() {
   } catch (e) {}
 }
 
-const handleOpenHelp = (type: string) => {
-  if (type === 'S_DEPT') {
-    openCommonHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm; });
-  } else if (type === 'DEPT') {
-    openCommonHelp('DEPT', (d) => { formData.deptcd = d.deptcd; formData.deptnm = d.deptnm; });
+const openHelp = (type: string) => {
+  if (type === 'S_DEPT' || type === 'DEPT') {
+    Object.assign(modalProps, {
+      title: '부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      defaultField: 'deptnm',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' },
+      columns: [
+        { title: '코드', field: 'deptcd', width: 80, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => {
+        if (type === 'S_DEPT') { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm; }
+        else { formData.deptcd = d.deptcd; formData.deptnm = d.deptnm; }
+      }
+    });
+    modalVisible.value = true;
   } else if (type === 'CARD') {
-    openCommonHelp('EMP', (d) => { formData.cardno = d.userid; formData.cardnm = d.usernm; });
+
+    Object.assign(modalProps, {
+      title: '카드 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      defaultField: 'usernm',
+      data: { gubun: 'M0', cmpycd: authStore.cmpycd, gbncd: '040', code: '', remark: '' },
+      columns: [
+        { title: '카드번호', field: 'mgtno', width: 100, hozAlign: 'center' },
+        { title: '카드명', field: 'mgtnm', width: 150 },
+        { title: '비고', field: 'soname', width: 150 }
+      ],
+      onConfirm: (d: any) => { formData.cardno = d.mgtno; formData.cardnm = d.mgtnm; }
+    });
+    modalVisible.value = true;
   }
 }
 
@@ -196,10 +222,11 @@ async function fetchList() {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
       iogbn: '100',
-      ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       deptcd: searchForm.deptcd
     });
+    console.log(res.data)
     grid?.setData(res.data.map((i: any) => ({ ...i, procyn: false })));
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
@@ -209,7 +236,8 @@ async function fetchList() {
  * 🚀 저장 로직 (ASP 패턴 기반 순차 저장 - 소문자 통일)
  */
 async function save() {
-  const items = grid?.getData().filter((r: any) => r.procyn === true)
+  const items = grid?.getSelectedData() || [] // 체크된 행 데이터만 즉시 가져옴
+
   if (!items || items.length === 0) return vAlertError('전표 발행할 항목을 선택하세요.')
   if (formData.cardyn === 'Y' && !formData.cardno) return vAlertError('카드번호를 입력하세요.')
   if (!confirm('선택한 항목들에 대해 매입전표를 발행하시겠습니까?')) return
@@ -223,6 +251,8 @@ async function save() {
     const business = slipymd.substring(0, 4) + "년 " + slipymd.substring(4, 6) + "월 매입 건"
 
     // 2. 전표 MASTER 생성 (ASP: HASL_010U_STR)
+
+
     const resmst = await api.post('/api/hasl/HASL_010U_STR', {
         actkind: 'A',
         cmpycd: authStore.cmpycd,
@@ -245,14 +275,14 @@ async function save() {
             actkind: 'U0',
             cmpycd: authStore.cmpycd,
             iogbn: '100',
-            ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
-            ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+            fromdt: searchForm.fromdt.replace(/-/g, ''),
+            todt: searchForm.todt.replace(/-/g, ''),
             deptcd: item.deptcd || item.deptcd || formData.deptcd,
             jsanym: item.jsanym,
             jsanno: item.jsanno,
             jsanymd: (item.jsanymd || '').replace(/-/g, ''),
-            spyamt: String(item.jsanamt || item.spyamt || '0').replace(/,/g, ''),
-            vatamt: String(item.jsanvat || item.vatamt || '0').replace(/,/g, ''),
+            spyamt: String(item.spyamt || item.spyamt || '0').replace(/,/g, ''),
+            vatamt: String(item.vatamt || item.vatamt || '0').replace(/,/g, ''),
             custcd: item.custcd,
             taxunit: formData.taxunit,
             vattype: formData.vattype,
@@ -276,40 +306,40 @@ async function save() {
   }
 }
 
-const toggleAllRows = () => {
-  const rows = grid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === true)
-  rows.forEach(r => r.update({ procyn: allSelected ? false : true }))
-}
-
 function initialize() {
   resetForm(formData);
-  formData.pubymd = now.toISOString().substring(0, 10);
+  formData.pubymd = today
   formData.deptcd = authStore.deptcd; formData.deptnm = authStore.deptnm;
   grid?.clearData();
 }
 
+const toggleAllRows = () => {
+  const rows = grid?.getRows(); if (!rows || rows.length === 0) return
+  const allSelected = grid?.getSelectedRows().length === rows.length
+  if (allSelected) grid?.deselectRow(); else grid?.selectRow()
+}
+
 onMounted(async () => {
   await fetchOptions();
+
   if (mainGridRef.value) {
     grid = new Tabulator(mainGridRef.value, {
-      layout: 'fitColumns', height: '100%',
-      columnDefaults: { headerSort: false, headerHozAlign: "center", vertAlign: "middle" },
+      layout: "fitColumns", height: "100%", placeholder: "품목 없음", selectable: true,
+      columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
       columns: [
-        { title: '선택', field: 'procyn', hozAlign: 'center', width: 60, formatter: 'tickCross', editor: true },
+        { title: '선택', width: 60, hozAlign: 'center', formatter: 'rowSelection', titleFormatter: 'rowSelection', headerSort: false },
         { title: '정산일', field: 'jsanymd', width: 110, hozAlign: 'center', formatter: (c) => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
-        { title: '거래처', field: 'custnm', minWidth: 150, widthGrow: 1, hozAlign: 'left', cssClass: 'fw-bold' },
-        { title: '품목명', field: 'itemnm', minWidth: 150, widthGrow: 1, hozAlign: 'left' },
-        { title: '수량', field: 'jsanqty', width: 80, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-        { title: '공급가', field: 'jsanamt', width: 110, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-        { title: '부가세', field: 'jsanvat', width: 100, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
-        { title: '합계', field: 'jsansum', width: 120, hozAlign: 'right', formatter: 'money', cssClass: 'bg-light fw-bold',
-          mutatorData: (v, d) => Number(d.jsanamt || 0) + Number(d.jsanvat || 0)
-        },
+        { title: '부서', field: 'deptnm', width: 150 },
         { title: '사업장', field: 'unitnm', width: 120 },
-        { title: '유형', field: 'vattypenm', width: 100 }
+        { title: '유형', field: 'vattypenm', width: 100 },
+        { title: '거래처', field: 'custnm', minWidth: 200, widthGrow: 1, hozAlign: 'left', cssClass: 'fw-bold' },
+        { title: '공급가', field: 'spyamt', width: 110, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+        { title: '부가세', field: 'vatamt', width: 100, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+        { title: '합계', field: 'jsansum', width: 120, hozAlign: 'right', formatter: 'money', cssClass: 'bg-light fw-bold',
+          mutatorData: (v, d) => Number(d.spyamt || 0) + Number(d.vatamt || 0)
+        }
       ]
     })
   }

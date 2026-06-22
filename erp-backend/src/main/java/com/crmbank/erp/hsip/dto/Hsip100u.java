@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 public class Hsip100u {
     private String       actkind;
     private String       cmpycd;
+    private String       fromdt;
+    private String       todt;
+    private String       custnm;
     private String       fileno;
     private String       deptcd;
     private String       offerno;

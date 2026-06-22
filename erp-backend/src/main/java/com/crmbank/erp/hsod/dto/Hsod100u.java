@@ -10,15 +10,15 @@ import lombok.Data;
 public class Hsod100u {
     private String actkind;
     private String cmpycd;
-    private String ymdfr;
-    private String ymdto;
+    private String fromdt;
+    private String todt;
+    private String custnm;
     private String ordym;
     private String ordno;
     private String ordkind;
     private String deptcd;
     private String deptnm;
     private String custcd;
-    private String custnm;
     private String whcd;
     private String area;
     private String ordymd;
@@ -28,6 +28,7 @@ public class Hsod100u {
     private String trancd;
     private String postno;
     private String address;
+    private String d_address;
     private String remark;
     private String totsum;
     private String sts;

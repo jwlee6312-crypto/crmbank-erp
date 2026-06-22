@@ -48,9 +48,9 @@
 								<th class="required">입고일자</th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" />
 									</div>
 								</td>
 								<th>입고유형</th>
@@ -95,8 +95,8 @@
 						<i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 입고 상세 내역 현황
 					</span>
 				</div>
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                  <div ref="mainGridRef" class="tabulator-full-height" />
                 </div>
 			</div>
 		</div>
@@ -113,19 +113,20 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { firstDay, today } = getDate()
 
-const now = new Date()
 const searchForm = reactive<any>({
 	whcd: '000',
 	iotype: '000',
-	frymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-	toymd: now.toISOString().substring(0, 10),
+	fromdt: firstDay,
+	todt: today,
 	custcd: '', custnm: '',
 	itemcd: '', itemnm: '', itsize: '', unit: ''
 })
@@ -150,10 +151,10 @@ async function fetchList() {
 		const res = await api.post('/api/hsio/HSIO_210S_STR', {
 			...searchForm,
 			cmpycd: authStore.cmpycd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, '')
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, '')
 		})
-		mainGrid?.setData(res.data.data || [])
+		mainGrid?.setData(res.data || [])
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
@@ -161,20 +162,64 @@ async function fetchList() {
 function initialize() {
 	resetForm(searchForm)
 	searchForm.whcd = '000'; searchForm.iotype = '000'
-	searchForm.frymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
-	searchForm.toymd = now.toISOString().substring(0, 10)
+	searchForm.fromdt = firstDay
+	searchForm.todt = today
 	mainGrid?.clearData()
 }
 
 const print = () => { vAlert('인쇄 기능을 준비 중입니다.') }
-const openHelp = (type: string) => { /* 팝업 구현 */ }
+
 const modalVisible = ref(false); const modalProps = reactive<any>({ title: '', path: '', onConfirm: () => {} })
+
+const openHelp = (type: string) => {
+    if (type === 'CUST') {
+        Object.assign(modalProps, {
+            title: '거래처 선택',
+            path: '/api/ha00/HA00_00P_STR',
+            data: { gubun: 'C4', cmpycd: authStore.cmpycd, code: searchForm.custnm, codenm: '', remark: '' },
+            columns: [
+                { title: '코드', field: 'custcd', width: 100, hozAlign: 'center' },
+                { title: '거래처명', field: 'custnm', width: 200 }
+            ],
+            onConfirm: (d: any) => {
+                searchForm.custcd = d.custcd;
+                searchForm.custnm = d.custnm;
+            }
+        })
+        modalVisible.value = true
+    } else if (type === 'ITEM') {
+        Object.assign(modalProps, {
+            title: '품목 선택',
+            path: '/api/hs00/HS00_000S_STR',
+            data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', code: '', codenm: searchForm.itemnm, remark: '' },
+            columns: [
+                { title: '코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+                { title: '품목명', field: 'itemnm', width: 200 },
+                { title: '규격', field: 'itsize', width: 150 },
+                { title: '단위', field: 'unitnm', width: 80, hozAlign: 'center' }
+            ],
+            onConfirm: (d: any) => {
+                searchForm.itemcd = d.itemcd;
+                searchForm.itemnm = d.itemnm;
+                searchForm.itsize = d.itsize;
+                searchForm.unit = d.unitnm || d.unit;
+            }
+        })
+        modalVisible.value = true
+    }
+}
 
 onMounted(async () => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 100 },
+			columnDefaults: {
+				headerSort: false,
+				headerHozAlign: "center",
+				hozAlign: 'right', // 🚀 기본값을 우측 정렬로 설정
+				vertAlign: 'middle',
+				minWidth: 100
+			},
 			columns: [
 				{ title: '일자', field: 'ioymd', width: 100, hozAlign: 'center',
                   formatter: (c) => { const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v } },
@@ -196,3 +241,7 @@ onMounted(async () => {
 	await loadInitData()
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

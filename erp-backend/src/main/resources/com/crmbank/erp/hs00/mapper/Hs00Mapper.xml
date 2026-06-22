@@ -6,4 +6,8 @@
         exec hs00_000s_str #{gubun}, #{cmpycd}, #{gbncd}, #{code}, #{codenm}, #{etcval}
     </select>
 
+    <select id="HS00_150S_STR" resultType="map">
+        exec hs00_150s_str #{cmpycd}, #{custnm}
+    </select>
+
 </mapper>

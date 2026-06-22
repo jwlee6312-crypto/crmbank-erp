@@ -59,9 +59,9 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">발행일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
-										<input v-model="searchform.frymd" type="date" class="form-control form-control-sm" />
+										<input v-model="searchform.fromdt" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchform.toymd" type="date" class="form-control form-control-sm" />
+										<input v-model="searchform.todt" type="date" class="form-control form-control-sm" />
 									</div>
 								</div>
 							</td>
@@ -128,8 +128,8 @@ const today = now.toISOString().substring(0, 10)
 const searchform = _reactive({
 	deptcd: authstore.deptcd,
 	deptnm: authstore.deptnm,
-	frymd: firstday,
-	toymd: today,
+	fromdt: firstday,
+	todt: today,
 	acctcd1: '',
 	acctnm1: '',
 	acctcd2: '',
@@ -146,8 +146,8 @@ const search = async () => {
 		const res = await api.post('/api/hasl/HASL_030S_STR', {
 			cmpycd: authstore.cmpycd,
 			deptcd: searchform.deptcd,
-			frymd: searchform.frymd.replace(/-/g, ''),
-			toymd: searchform.toymd.replace(/-/g, ''),
+			fromdt: searchform.fromdt.replace(/-/g, ''),
+			todt: searchform.todt.replace(/-/g, ''),
 			acctcd1: searchform.acctcd1,
 			acctcd2: searchform.acctcd2,
 			actkind: 'sr'
@@ -169,8 +169,8 @@ const initialize = () => {
 	reset_form(searchform)
 	searchform.deptcd = authstore.deptcd
 	searchform.deptnm = authstore.deptnm
-	searchform.frymd = firstday
-	searchform.toymd = today
+	searchform.fromdt = firstday
+	searchform.todt = today
 	maingrid?.clearData()
 }
 

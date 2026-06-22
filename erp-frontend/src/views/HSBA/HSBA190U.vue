@@ -70,7 +70,7 @@
                 <th style="width: 50px;">사용</th>
                 <td style="width: 60px;">
                   <div class="form-check form-switch m-0 d-flex justify-content-center">
-                    <input v-model="masterdata.useyn" class="form-check-input" type="checkbox" id="useyn190" true-value="y" false-value="n">
+                    <input v-model="masterdata.useyn" class="form-check-input" type="checkbox" id="useyn190" true-value="Y" false-value="N">
                   </div>
                 </td>
               </tr>
@@ -174,7 +174,7 @@ const initgrids = () => {
         { title: "담당자명", field: "damdang", width: 150 },
         { title: "전화번호", field: "telno", width: 150 },
         { title: "메일주소", field: "email", minWidth: 200, hozAlign: "left" },
-        { title: "사용", field: "useyn", width: 80, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+        { title: "사용", field: "useyn", width: 80, formatter: (c) => c.getValue() === 'Y' ? 'Y' : 'N' }
       ]
     })
     damgrid.on("rowClick", (e, row) => {

@@ -235,7 +235,7 @@ const handle_camp_change = async () => {
         const camp = CAMPAIGNS.value.find(c => c.CAMP_NO === SELECTED_CAMP_NO.value);
         if (camp) {
             const sres = await api.get('/crm/outbound/surv-form', { params: { SURV_GB: camp.SURV_GB } });
-            const list = Array.isArray(sres.data) ? sres.data : (sres.data.data || []);
+            const list = Array.isArray(sres.data) ? sres.data : [];
             SURVEY_QUESTIONS.value = list.map((q: any) => {
                 // 💡 NO:TEXT:POINT 형식 파싱
                 const samples = q.ANSWERS ? q.ANSWERS.split(/ \/ |, /).map((s: string) => {

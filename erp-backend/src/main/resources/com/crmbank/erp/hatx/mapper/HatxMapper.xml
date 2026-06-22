@@ -5,7 +5,7 @@
     <!-- 매입/매출 부가세관리 조회 및 처리 -->
     <select id="HATX_010U_STR" resultType="map">
         exec hatx_010u_str
-            #{actkind}, #{cmpycd}, #{frymd}, #{toymd}, #{taxkind},
+            #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{taxkind},
             #{taxym}, #{taxno}, #{taxunit}, #{custcd}, #{custno},
             #{custnm}, #{bossnm}, #{adrs}, #{custkind}, #{custtype},
             #{pubymd}, #{taxtype}, #{typenm}, #{supyamt}, #{vatamt},
@@ -25,8 +25,8 @@
     <!-- 전자세금계산서발송 처리 -->
     <select id="HATX_080U_STR" resultType="map">
         exec hatx_080u_str
-            #{actkind}, #{cmpycd}, #{taxunit}, #{deptcd}, #{frymd},
-            #{toymd}, #{cfmyn}, #{taxkind}, #{taxym}, #{taxno},
+            #{actkind}, #{cmpycd}, #{taxunit}, #{deptcd}, #{fromdt},
+            #{todt}, #{cfmyn}, #{taxkind}, #{taxym}, #{taxno},
             #{elcyn}, #{userid}
     </select>
 
@@ -86,7 +86,7 @@
     <!-- 매입/매출 부가세접수 처리 -->
     <select id="HATX_060U_STR" resultType="map">
         exec hatx_060u_str
-            #{actkind}, #{cmpycd}, #{taxunit}, #{frymd}, #{toymd},
+            #{actkind}, #{cmpycd}, #{taxunit}, #{fromdt}, #{todt},
             #{cfmyn}, #{taxkind}, #{taxym}, #{taxno}, #{elcyn},
             #{userid}
     </select>

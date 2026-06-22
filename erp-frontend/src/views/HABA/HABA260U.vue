@@ -91,9 +91,9 @@
 							<th class="text-center bg-light-subtle border-end">기 간</th>
 							<td class="bg-white border-end px-2 py-1">
 								<div class="d-flex align-items-center gap-1">
-									<input v-model="masterForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+									<input v-model="masterForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 									<span>~</span>
-									<input v-model="masterForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+									<input v-model="masterForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 								</div>
 							</td>
 							<th class="text-center bg-light-subtle border-end">적 요</th>
@@ -157,8 +157,8 @@ const masterForm = reactive({
 	acctcd: '',
 	UNpayamt: 0,
 	pubymd: today,
-	frymd: firstDay,
-	toymd: today,
+	fromdt: firstDay,
+	todt: today,
 	remark: '',
 	useyn: 'Y'
 })
@@ -208,8 +208,8 @@ const search = async () => {
 
 const save = async () => {
 	if (!masterForm.pubymd) return vAlert('발생일을 선택해 주십시요.')
-	if (!masterForm.frymd) return vAlert('기간(FROM)을 선택해 주십시요.')
-	if (!masterForm.toymd) return vAlert('기간(TO)을 선택해 주십시요.')
+	if (!masterForm.fromdt) return vAlert('기간(FROM)을 선택해 주십시요.')
+	if (!masterForm.todt) return vAlert('기간(TO)을 선택해 주십시요.')
 
 	try {
 		const payload = {
@@ -223,8 +223,8 @@ const save = async () => {
 			acctcd: masterForm.acctcd ? masterForm.acctcd.substring(3) : '',
 			pubymd: masterForm.pubymd.replace(/-/g, ''),
 			UNpayamt: masterForm.UNpayamt || 0,
-			frymd: masterForm.frymd.replace(/-/g, ''),
-			toymd: masterForm.toymd.replace(/-/g, ''),
+			fromdt: masterForm.fromdt.replace(/-/g, ''),
+			todt: masterForm.todt.replace(/-/g, ''),
 			remark: masterForm.remark,
 			useyn: masterForm.useyn,
 			userid: authStore.userid
@@ -252,8 +252,8 @@ const initialize = () => {
 	masterForm.actkind = 'I1'
 	masterForm.acctcd = prevacctcd
 	masterForm.pubymd = today
-	masterForm.frymd = firstDay
-	masterForm.toymd = today
+	masterForm.fromdt = firstDay
+	masterForm.todt = today
 	masterForm.useyn = 'Y'
 }
 
@@ -288,8 +288,8 @@ onMounted(async () => {
 				masterForm.acctcd = d.TYPESUB + d.acctcd
 				masterForm.pubymd = formatDate(d.acctymd)
 				masterForm.UNpayamt = Number(d.amt)
-				masterForm.frymd = formatDate(d.stdymd)
-				masterForm.toymd = formatDate(d.endymd)
+				masterForm.fromdt = formatDate(d.stdymd)
+				masterForm.todt = formatDate(d.endymd)
 				masterForm.remark = d.remark
 				masterForm.useyn = d.useyn
 			}

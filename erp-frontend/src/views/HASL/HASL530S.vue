@@ -49,9 +49,9 @@
                 <th class="text-center bg-light border-end">회계일자</th>
                 <td class="px-2">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="search_form.frymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+                    <input v-model="search_form.fromdt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
                     <span class="text-muted">~</span>
-                    <input v-model="search_form.toymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+                    <input v-model="search_form.todt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
                   </div>
                 </td>
               </tr>
@@ -100,8 +100,8 @@ const first_day = today.substring(0, 8) + '01'
 const search_form = _reactive({
 	acctcd: (route.query.acctcd as string) || '',
 	acctnm: '',
-	frymd: (route.query.frymd as string) || first_day,
-	toymd: (route.query.toymd as string) || today
+	fromdt: (route.query.fromdt as string) || first_day,
+	todt: (route.query.todt as string) || today
 })
 
 const main_grid_ref = _ref<HTMLDivElement | null>(null)
@@ -117,8 +117,8 @@ const search = async () => {
 		const res = await api.post('/api/hasl/HASL_530S_STR', {
 			cmpycd: auth_store.cmpycd,
 			acctcd: search_form.acctcd,
-			ymdfr: search_form.frymd.replace(/-/g, ''),
-			ymdto: search_form.toymd.replace(/-/g, '')
+			fromdt: search_form.fromdt.replace(/-/g, ''),
+			todt: search_form.todt.replace(/-/g, '')
 		})
 
         // 데이터 정규화 (소문자화)
@@ -169,8 +169,8 @@ const search = async () => {
 
 const initialize = () => {
     reset_form(search_form)
-    search_form.frymd = first_day
-    search_form.toymd = today
+    search_form.fromdt = first_day
+    search_form.todt = today
     main_grid?.clearData()
 }
 
@@ -183,8 +183,8 @@ const go_detail = (ymd: string) => {
 	router.push({
 		path: `/${pgmid}`,
 		query: {
-            frymd: ymd.replace(/-/g, ''),
-            toymd: ymd.replace(/-/g, ''),
+            fromdt: ymd.replace(/-/g, ''),
+            todt: ymd.replace(/-/g, ''),
             acctcd: search_form.acctcd.trim(),
             acctnm: search_form.acctnm
         }
@@ -193,7 +193,7 @@ const go_detail = (ymd: string) => {
 
 const print = () => {
 	if (!search_form.acctcd) return v_alert_error('계정과목을 먼저 선택하세요.')
-	const params = `acctcd=${search_form.acctcd}&acctnm=${search_form.acctnm}&frymd=${search_form.frymd.replace(/-/g, '')}&toymd=${search_form.toymd.replace(/-/g, '')}&PRTGU=1`
+	const params = `acctcd=${search_form.acctcd}&acctnm=${search_form.acctnm}&fromdt=${search_form.fromdt.replace(/-/g, '')}&todt=${search_form.todt.replace(/-/g, '')}&PRTGU=1`
 	window.open(`/api/hasl/HASL_530P?${params}`, 'LedgerPrint', 'width=800,height=800,scrollbars=yes')
 }
 

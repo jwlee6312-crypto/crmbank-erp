@@ -13,10 +13,12 @@ public interface HsipMapper {
     // 선적 통지
     List<Map<String, Object>> HSIP_110U_STR(Map<String, Object> params);
     List<Map<String, Object>> HSIP_111U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HSIP_112U_STR(Map<String, Object> params);
     
-    // 통관 입고
-    List<Map<String, Object>> HSIP_120U_STR(Map<String, Object> params);
-    List<Map<String, Object>> HSIP_121U_STR(Map<String, Object> params);
+    // 통관 입고 (DTO 지원을 위해 Object로 변경)
+    List<Map<String, Object>> HSIP_120U_STR(Object params);
+    List<Map<String, Object>> HSIP_121U_STR(Object params);
+    List<Map<String, Object>> HSIP_122U_STR(Map<String, Object> params);
     
     // 수입 비용
     List<Map<String, Object>> HSIP_130U_STR(Map<String, Object> params);

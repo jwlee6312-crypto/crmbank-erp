@@ -142,7 +142,7 @@ const handleExecute = async () => {
 		resultInfo.startdt = new Date().toLocaleTimeString()
 		const res = await api.post('/the/basicInfo/fmf/callFmf2020uStr', { ym, actkind: 'A1', val: '' })
 
-		const d = res.data.data[0]
+		const d = res.data[0]
 		if (d.RESULT === 'N' || d.result === 'N') {
 			vAlertError(d.MESSAGE || d.message)
 		} else {
@@ -163,7 +163,7 @@ const handleCancel = async () => {
 
 	try {
 		const res = await api.post('/the/basicInfo/fmf/callFmf2020uStr', { ym, actkind: 'D0' })
-		vAlert(res.data.data[0].MESSAGE || res.data.data[0].message || '취소되었습니다.')
+		vAlert(res.data[0].MESSAGE || res.data[0].message || '취소되었습니다.')
 		Object.assign(resultInfo, { startdt: '-', enddt: '-', amt_bf: '0', amt_af: '0' })
 	} catch (e) { vAlertError('취소 중 오류 발생') }
 }

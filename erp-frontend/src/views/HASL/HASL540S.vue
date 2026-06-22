@@ -50,9 +50,9 @@
                 <th class="text-center bg-light border-end">회계일자</th>
                 <td class="px-2">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="search_form.frymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+                    <input v-model="search_form.fromdt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
                     <span class="text-muted">~</span>
-                    <input v-model="search_form.toymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+                    <input v-model="search_form.todt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
                   </div>
                 </td>
               </tr>
@@ -108,8 +108,8 @@ const today = now.toISOString().substring(0, 10)
 const search_form = _reactive({
 	acctcd: (route.query.acctcd as string) || '',
 	acctnm: (route.query.acctnm as string) || '',
-	frymd: format_date(route.query.frymd) || first_day,
-	toymd: format_date(route.query.toymd) || today
+	fromdt: format_date(route.query.fromdt) || first_day,
+	todt: format_date(route.query.todt) || today
 })
 
 const main_grid_ref = _ref<HTMLDivElement | null>(null)
@@ -125,8 +125,8 @@ const search = async () => {
 		const res = await api.post('/api/hasl/HASL_540S_STR', {
 			cmpycd: auth_store.cmpycd,
 			acctcd: search_form.acctcd,
-			ymdfr: search_form.frymd.replace(/-/g, ''), // 💡 XML 규격에 맞춤
-			ymdto: search_form.toymd.replace(/-/g, '')  // 💡 XML 규격에 맞춤
+			fromdt: search_form.fromdt.replace(/-/g, ''), // 💡 XML 규격에 맞춤
+			todt: search_form.todt.replace(/-/g, '')  // 💡 XML 규격에 맞춤
 		})
 
 		const raw_data = (res.data || []).map((row: any) => {
@@ -176,8 +176,8 @@ const search = async () => {
 
 const initialize = () => {
 	reset_form(search_form)
-	search_form.frymd = first_day
-	search_form.toymd = today
+	search_form.fromdt = first_day
+	search_form.todt = today
 	main_grid?.clearData()
 }
 
@@ -213,7 +213,7 @@ function open_help(type: string) {
 
 const print = () => {
 	if (!search_form.acctcd) return v_alert_error('계정과목을 먼저 선택하세요.')
-	const params = `acctcd=${search_form.acctcd}&acctnm=${search_form.acctnm}&frymd=${search_form.frymd.replace(/-/g, '')}&toymd=${search_form.toymd.replace(/-/g, '')}&PRTGU=1`
+	const params = `acctcd=${search_form.acctcd}&acctnm=${search_form.acctnm}&fromdt=${search_form.fromdt.replace(/-/g, '')}&todt=${search_form.todt.replace(/-/g, '')}&PRTGU=1`
 	window.open(`/api/hasl/HASL_540P?${params}`, 'Print', 'width=800,height=800')
 }
 

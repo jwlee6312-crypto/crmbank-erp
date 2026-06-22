@@ -263,13 +263,18 @@ const saveData = async () => {
   if (!confirm('변경된 정보를 저장하시겠습니까?')) return
 
   try {
+    // 🚀 [Seed-Model] 루프 저장 루틴 (개별 행 무결성 체크)
     for (const p of prods) {
       const actkind = p._status === '입력' ? 'A0' : (p._status === '삭제' ? 'D0' : 'U0')
-      await api.post('/api/hpio/HPIO_350U_STR', { ...p, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd, progcd: masterInfo.progcd, whcd: masterInfo.whcd, prodcd: '200', userid: authStore.userid });
+      const resP = await api.post('/api/hpio/HPIO_350U_STR', { ...p, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd, progcd: masterInfo.progcd, whcd: masterInfo.whcd, prodcd: '200', userid: authStore.userid });
+      const pValues = resP.data?.[0]?.returnkeyvalue || Object.values(resP.data?.[0] || {});
+      if (pValues[0] === '000000') throw new Error(String(pValues[1] || '제품 실적 저장 중 오류 발생'));
     }
     for (const m of mats) {
       const actkind = m._status === '입력' ? 'A0' : (m._status === '삭제' ? 'D0' : 'U0')
-      await api.post('/api/hpio/HPIO_351U_STR', { ...m, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, itemcd: selectedProduct.itemcd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd, progcd: masterInfo.progcd, whcd: masterInfo.whcd, prodcd: '200', userid: authStore.userid });
+      const resM = await api.post('/api/hpio/HPIO_351U_STR', { ...m, actkind, cmpycd: authStore.cmpycd, linecd: searchForm.linecd, itemcd: selectedProduct.itemcd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd, progcd: masterInfo.progcd, whcd: masterInfo.whcd, prodcd: '200', userid: authStore.userid });
+      const mValues = resM.data?.[0]?.returnkeyvalue || Object.values(resM.data?.[0] || {});
+      if (mValues[0] === '000000') throw new Error(String(mValues[1] || '자재 소모 저장 중 오류 발생'));
     }
     vAlert('저장되었습니다.'); fetchMaster();
   } catch (e) { vAlertError('저장 실패'); }

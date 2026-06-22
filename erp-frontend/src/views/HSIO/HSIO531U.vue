@@ -39,9 +39,9 @@
                 <th class="required">정산일자</th>
                 <td style="width: 300px;">
                   <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="ioymdfr" type="date" class="form-control form-control-sm" />
+                    <input v-model="fromdt" type="date" class="form-control form-control-sm" />
                     <span class="px-1">~</span>
-                    <input v-model="ioymdto" type="date" class="form-control form-control-sm" />
+                    <input v-model="todt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <td></td>
@@ -116,12 +116,12 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  ioymdfr: initfrymd, ioymdto: initymd, salsemp: '000'
+  fromdt: initfromdt, todt: initymd, salsemp: '000'
 })
 
 const registerData = reactive({
@@ -131,8 +131,8 @@ const registerData = reactive({
 
 const sumData = reactive({ spysum: 0, vatsum: 0, totsum: 0 })
 
-const ioymdfr = computed({ get: () => formatDate(searchData.ioymdfr, '-'), set: (v) => searchData.ioymdfr = v.replace(/-/g, '') })
-const ioymdto = computed({ get: () => formatDate(searchData.ioymdto, '-'), set: (v) => searchData.ioymdto = v.replace(/-/g, '') })
+const fromdt = computed({ get: () => formatDate(searchData.fromdt, '-'), set: (v) => searchData.fromdt = v.replace(/-/g, '') })
+const todt = computed({ get: () => formatDate(searchData.todt, '-'), set: (v) => searchData.todt = v.replace(/-/g, '') })
 const uislipymd = computed({ get: () => formatDate(registerData.slipymd, '-'), set: (v) => registerData.slipymd = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -185,7 +185,7 @@ async function search() {
   try {
     const res = await api.post('/api/hsio/HSIO_531U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '200',
-      ioymdfr: searchData.ioymdfr, ioymdto: searchData.ioymdto,
+      fromdt: searchData.fromdt, todt: searchData.todt,
       deptcd: searchData.deptcd, salsemp: searchData.salsemp === '000' ? '' : searchData.salsemp
     })
     if (grid.value) {
@@ -223,16 +223,16 @@ async function issueSlip() {
   try {
     const slipymd = registerData.slipymd
     const business = `${slipymd.substring(0, 4)}년 ${slipymd.substring(4, 6)}월 매출 건`
-    const ioymdfr = searchData.ioymdfr
-    const ioymdto = searchData.ioymdto
+    const fromdt = searchData.fromdt
+    const todt = searchData.todt
 
     // 1. 전표 마스터 발행 (A0) - ASP 패턴: A0로 먼저 번호를 땀
     const mRes = await api.post('/api/hsio/HSIO_531U_STR', {
       actkind: 'A0',
       cmpycd: authStore.cmpycd,
       gubun: '200',
-      ioymdfr: ioymdfr,
-      ioymdto: ioymdto,
+      fromdt: fromdt,
+      todt: todt,
       deptcd: '', // 마스터 발행 시에는 빈값
       jsanym: '',
       jsanno: '',
@@ -260,8 +260,8 @@ async function issueSlip() {
           actkind: 'U0',
           cmpycd: authStore.cmpycd,
           gubun: '200',
-          ioymdfr: ioymdfr,
-          ioymdto: ioymdto,
+          fromdt: fromdt,
+          todt: todt,
           deptcd: item.deptcd || item.deptcd,
           jsanym: item.jsanym,
           jsanno: item.jsanno,
@@ -301,7 +301,7 @@ async function issueSlip() {
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, ioymdfr: initfrymd, ioymdto: initymd, salsemp: '000' })
+  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, fromdt: initfromdt, todt: initymd, salsemp: '000' })
   Object.assign(registerData, { slipymd: initymd, deptcd: authStore.deptcd, deptnm: authStore.deptnm })
   if (grid.value) grid.value.clearData()
   updateTotals()

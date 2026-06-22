@@ -160,15 +160,15 @@ const go_acct_ledger = (row: any) => {
 	const pgmid = 'HASL540S'
 	add_dynamic_route(pgmid, '계정별원장', 'HASL')
 
-	const frymd = `${searchform.ymd.substring(0, 7)}-01`.replace(/-/g, '')
-	const toymd = searchform.ymd.replace(/-/g, '')
+	const fromdt = `${searchform.ymd.substring(0, 7)}-01`.replace(/-/g, '')
+	const todt = searchform.ymd.replace(/-/g, '')
 
 	router.push({
 		path: `/${pgmid}`,
 		query: {
 			acctcd: row.acctcd.trim(),
-			frymd: frymd,
-			toymd: toymd
+			fromdt: fromdt,
+			todt: todt
 		}
 	})
 }
@@ -179,16 +179,16 @@ const go_cust_ledger = (row: any) => {
 	const pgmid = 'HASL550S'
 	add_dynamic_route(pgmid, '거래처원장', 'HASL')
 
-	const frymd = `${searchform.ymd.substring(0, 7)}-01`.replace(/-/g, '')
-	const toymd = searchform.ymd.replace(/-/g, '')
+	const fromdt = `${searchform.ymd.substring(0, 7)}-01`.replace(/-/g, '')
+	const todt = searchform.ymd.replace(/-/g, '')
 
 	router.push({
 		path: `/${pgmid}`,
 		query: {
 			acctcd: row.acctcd ? row.acctcd.trim() : '',
 			custcd: row.custcd.trim(),
-			frymd: frymd,
-			toymd: toymd
+			fromdt: fromdt,
+			todt: todt
 		}
 	})
 }

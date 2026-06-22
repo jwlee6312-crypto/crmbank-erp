@@ -49,9 +49,9 @@
                 </td>
                 <th class="text-center bg-light required">입고일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="proymdfr_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="px-1 opacity-50">~</span>
-                  <input v-model="proymdto_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
                 <th class="text-center bg-light">제 품</th>
                 <td>
@@ -105,14 +105,14 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 const searchData = reactive({
   whcd: '200',
   whnm: '제품창고',
-  proymdfr: firstDay.replace(/-/g, ''),
-  proymdto: today.replace(/-/g, ''),
+  fromdt: firstDay.replace(/-/g, ''),
+  todt: today.replace(/-/g, ''),
   itemcd: '', itemnm: '', itsize: '', unit: ''
 })
 
 const rowCount = ref(0)
-const proymdfr_f = computed({ get: () => formatDate(searchData.proymdfr), set: (v) => { if (v) searchData.proymdfr = v.replace(/-/g, '') } })
-const proymdto_f = computed({ get: () => formatDate(searchData.proymdto), set: (v) => { if (v) searchData.proymdto = v.replace(/-/g, '') } })
+const fromdt = computed({ get: () => formatDate(searchData.fromdt), set: (v) => { if (v) searchData.fromdt = v.replace(/-/g, '') } })
+const todt = computed({ get: () => formatDate(searchData.todt), set: (v) => { if (v) searchData.todt = v.replace(/-/g, '') } })
 
 const tableRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
@@ -142,7 +142,7 @@ async function fetchList() {
   try {
     const res = await api.post('/api/hpio/HPIO_430S_STR', {
       cmpycd: authStore.cmpycd, whcd: searchData.whcd, itemcd: searchData.itemcd || '',
-      proymdF: searchData.proymdfr, proymdT: searchData.proymdto
+      proymdF: searchData.fromdt, proymdT: searchData.todt
     })
     grid?.setData(res.data)
     rowCount.value = res.data.length
@@ -162,11 +162,11 @@ const handleOpenHelp = (type: string) => {
 
 const initialize = () => {
   resetForm(searchData)
-  Object.assign(searchData, { whcd: '200', whnm: '제품창고', proymdfr: firstDay.replace(/-/g, ''), proymdto: today.replace(/-/g, '') })
+  Object.assign(searchData, { whcd: '200', whnm: '제품창고', fromdt: firstDay.replace(/-/g, ''), todt: today.replace(/-/g, '') })
   grid?.clearData(); rowCount.value = 0;
 }
 
-const exportExcel = () => grid?.download("xlsx", `제품입고명세_${searchData.proymdto}.xlsx`)
+const exportExcel = () => grid?.download("xlsx", `제품입고명세_${searchData.todt}.xlsx`)
 const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
 
 onMounted(() => { nextTick(initGrids); fetchList(); })

@@ -37,9 +37,9 @@
               <tr>
                 <th class="text-center bg-light">발주일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="searchParam.frymd" type="date" class="form-control form-control-sm" style="width: 130px;" />
+                  <input v-model="searchParam.fromdt" type="date" class="form-control form-control-sm" style="width: 130px;" />
                   <span class="text-muted">~</span>
-                  <input v-model="searchParam.toymd" type="date" class="form-control form-control-sm" style="width: 130px;" />
+                  <input v-model="searchParam.todt" type="date" class="form-control form-control-sm" style="width: 130px;" />
                 </td>
                 <th class="text-center bg-light">거 래 처</th>
                 <td>
@@ -118,8 +118,8 @@ const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
 const formatDateStr = (date: Date) => date.toISOString().substring(0, 10);
 
 const searchParam = reactive({
-  frymd: formatDateStr(firstDay),
-  toymd: formatDateStr(now),
+  fromdt: formatDateStr(firstDay),
+  todt: formatDateStr(now),
   custcd: '',
   custnm: '',
   ordym: '',
@@ -138,10 +138,8 @@ const empOptions = ref<any[]>([])
 const initGrid = () => {
   if (!gridElement.value) return
   grid.value = new Tabulator(gridElement.value, {
-    layout: "fitColumns",
-    height: "100%",
-    placeholder: "조회된 데이터가 없습니다.",
-    columnDefaults: { headerHozAlign: 'center', minWidth: 80 },
+    layout: "fitColumns", height: "100%", placeholder: "조회된 데이터가 없습니다", selectable: true,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       { title: "발주일자", field: "balymd", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
       { title: "거래처", field: "custnm", minWidth: 150, cssClass: "fw-bold text-dark cursor-pointer", cellClick: (e, cell) => {
@@ -155,12 +153,12 @@ const initGrid = () => {
       }},
       { title: "품목코드", field: "itemcd", width: 100 },
       { title: "품목명", field: "itemnm", minWidth: 180 },
-      { title: "규격", field: "itsize", width: 120 },
+      { title: "규격", field: "itsize", width: 180 },
       { title: "발주량", field: "balqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().qtypnt || 0 } },
       { title: "공급가", field: "balamt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "부가세", field: "balvat", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "입고량", field: "inqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().qtypnt || 0 } },
-      { title: "미입고량", field: "janqty", width: 80, hozAlign: "right", cssClass: "text-danger fw-bold", formatter: (c) => {
+      { title: "부가세", field: "balvat", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "입고량", field: "inqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: (c:any) => c.getData().qtypnt || 0 } },
+      { title: "미입고량", field: "janqty", width: 100, hozAlign: "right", cssClass: "text-danger fw-bold", formatter: (c) => {
         const d = c.getData(); return formatNumber((Number(d.balqty) || 0) - (Number(d.inqty) || 0));
       }}
     ]
@@ -182,8 +180,8 @@ async function fetchList() {
   try {
     const res = await api.post('/api/hsio/HSIO_082S_STR', {
       cmpycd: authStore.cmpycd,
-      ymdfr: searchParam.frymd.replace(/-/g, ''),
-      ymdto: searchParam.toymd.replace(/-/g, ''),
+      fromdt: searchParam.fromdt.replace(/-/g, ''),
+      todt: searchParam.todt.replace(/-/g, ''),
       ordym: searchParam.ordym.replace(/-/g, ''),
       ordno: searchParam.ordno,
       custcd: searchParam.custcd,
@@ -202,7 +200,7 @@ async function fetchList() {
 function initialize() {
   resetForm(searchParam);
   Object.assign(searchParam, {
-    frymd: formatDateStr(firstDay), toymd: formatDateStr(now),
+    fromdt: formatDateStr(firstDay), todt: formatDateStr(now),
     custcd: '', custnm: '', ordym: '', ordno: '', userid: '', ipgoyn: 'Y', remark: ''
   });
   grid.value?.clearData();
@@ -245,10 +243,11 @@ const print = () => vAlert('출력 기능을 준비 중입니다.');
 const excel = () => grid.value?.download("xlsx", "발주상세현황.xlsx", { sheetName: "발주상세" });
 
 onMounted(() => {
-  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd } }).then(r => {
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' } }).then(r => {
+    console.log(r.data);
     empOptions.value = r.data.map((i: any) => ({
-      userid: String(i.userid || i.userid || Object.values(i)[0]).trim(),
-      usernm: String(i.usernm || i.usernm || Object.values(i)[1]).trim()
+      userid: String(i.userid).trim(),
+      usernm: String(i.usernm).trim()
     }))
   })
   nextTick(() => {

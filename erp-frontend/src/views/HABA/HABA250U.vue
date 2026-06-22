@@ -382,7 +382,7 @@ onMounted(() => {
 				masterForm.custnm = d.col6
 				masterForm.mgtno = d.col7
 				masterForm.cramt = Number(d.col8)
-				masterForm.reqymd = formatDate(d.COL9)
+				masterForm.reqymd = formatDate(d.col9)
 				masterForm.remark = d.col10
 				masterForm.useyn = d.col11
 			}

@@ -131,7 +131,7 @@
 							<th class="text-center bg-light-subtle border-end border-top">사용여부</th>
 							<td class="bg-white border-top px-3">
 								<div class="form-check pt-1">
-									<input v-model="masterform.useyn" class="form-check-input" type="checkbox" id="usecheck" true-value="y" false-value="n">
+									<input v-model="masterform.useyn" class="form-check-input" type="checkbox" id="usecheck" true-value="Y" false-value="N">
 									<label class="form-check-label small fw-bold" for="usecheck">사용</label>
 								</div>
 							</td>
@@ -211,8 +211,8 @@ const normalizekeys = (obj: any) => {
 
 const search = async () => {
 	try {
-		const res = await api.post('/api/haba/haba_140u_str', {
-			actkind: searchform.bankcd_t ? 'sr' : 'S1',
+		const res = await api.post('/api/haba/HABA_140U_STR', {
+			actkind: searchform.bankcd_t ? 'SR' : 'S1',
 			cmpycd: authstore.cmpycd,
 			bankcd: searchform.bankcd
 		})
@@ -220,18 +220,18 @@ const search = async () => {
 		const processeddata = (res.data || []).map((r: any) => {
 			const n = normalizekeys(r);
 			return {
-				cardno: n.col0,
-				bankcd: n.col1,
-				banknm: n.col2,
-				cardnm: n.col3,
-				stdymd: formatymd(n.col4),
-				sndymd_yy: n.col5,
-				sndymd_mm: n.col6,
-				chkdd: n.col7,
-				soname: n.col8,
-				gujano: n.col9,
-				remark: n.col10,
-				useyn: n.col11
+				cardno: n.cardno,
+				bankcd: n.bankcd,
+				banknm: n.banknm,
+				cardnm: n.cardnm,
+				stdymd: formatymd(n.stdymd),
+				sndymd_yy: n.sndymd_yy,
+				sndymd_mm: n.sndymd_mm,
+				chkdd: n.chkdd,
+				soname: n.soname,
+				gujano: n.gujano,
+				remark: n.remark,
+				useyn: n.useyn
 			}
 		})
 
@@ -261,7 +261,7 @@ const save = async () => {
 			sndymd: masterform.sndymd_yy + masterform.sndymd_mm
 		}
 
-		const res = await api.post('/api/haba/haba_140u_str', payload)
+		const res = await api.post('/api/haba/HABA_140U_STR', payload)
 		const resdata = normalizekeys(res.data?.[0]);
 
 		if (resdata.ret_yn === 'Y' || resdata.result === 'N') {
@@ -289,29 +289,31 @@ const modalprops = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 
 function openhelp(type: string) {
 	if (type === 'search_bank') {
+
 		Object.assign(modalprops, {
-			title: '발행처 선택', path: '/api/ha00/ha00_00p_str',
-			data: { gubun: 'c0', cmpycd: authstore.cmpycd, search: searchform.bankcd_t, custgbn: '020' },
-			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 180 }],
+			title: '발행처 선택', path: '/api/ha00/HA00_00P_STR',
+			data: { gubun: 'C3', cmpycd: authstore.cmpycd, code: searchform.bankcd_t },
+			columns: [{ title: '코드', field: 'bankcd', width: 80 }, { title: '거래처명', field: 'banknm', width: 180 }],
 			onConfirm: (d: any) => {
 				const n = normalizekeys(d);
-				searchform.bankcd = n.custcd; searchform.bankcd_t = n.custnm
+				searchform.bankcd = n.bankcd; searchform.bankcd_t = n.banknm
 			}
 		})
 	} else if (type === 'bank') {
 		Object.assign(modalprops, {
-			title: '발행처 선택', path: '/api/ha00/ha00_00p_str',
-			data: { gubun: 'c0', cmpycd: authstore.cmpycd, search: masterform.bankcd_t, custgbn: '020' },
-			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 180 }],
+			title: '발행처 선택', path: '/api/ha00/HA00_00P_STR',
+			data: { gubun: 'C3', cmpycd: authstore.cmpycd, code: masterform.bankcd_t },
+			columns: [{ title: '코드', field: 'bankcd', width: 80 }, { title: '거래처명', field: 'banknm', width: 180 }],
 			onConfirm: (d: any) => {
 				const n = normalizekeys(d);
-				masterform.bankcd = n.custcd; masterform.bankcd_t = n.custnm
+				masterform.bankcd = n.bankcd; masterform.bankcd_t = n.banknm
 			}
 		})
 	} else if (type === 'guja') {
+
 		Object.assign(modalprops, {
-			title: '결제계좌 선택', path: '/api/ha00/ha00_00p_str',
-			data: { gubun: 'm0', cmpycd: authstore.cmpycd, search: masterform.gujano, mgtgbn: '010', acctcd: '1120' },
+			title: '결제계좌 선택', path: '/api/ha00/HA00_00P_STR',
+			data: { gubun: 'M0', cmpycd: authstore.cmpycd, code: masterform.gujano, gbncd: '010', remark: '1120' },
 			columns: [{ title: '계좌번호', field: 'mgtno', width: 150 }, { title: '관리항목명', field: 'mgtnm', width: 150 }],
 			onConfirm: (d: any) => {
 				const n = normalizekeys(d);
@@ -329,21 +331,21 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle", headerHozAlign: "center", hozAlign: "center" },
 			columns: [
-				{ title: "카드번호", field: "cardno", width: 150, hozAlign: "left" },
-				{ title: "발행처", field: "banknm", width: 150, hozAlign: "left" },
-				{ title: "발행일", field: "stdymd", width: 100 },
+				{ title: "카드번호", field: "cardno", width: 200, hozAlign: "left" },
+				{ title: "발행처", field: "banknm", width: 250, hozAlign: "left" },
+				{ title: "발행일", field: "stdymd", width: 150 },
 				{
-					title: "유효년월", field: "sndymd_yy", width: 100,
+					title: "유효년월", field: "sndymd", width: 150,
 					formatter: (c) => {
 						const d = c.getData()
 						return `${d.sndymd_yy}-${d.sndymd_mm}`
 					}
 				},
-				{ title: "결제일", field: "chkdd", width: 80, formatter: (c) => c.getValue() + "일" },
-				{ title: "소유자", field: "soname", width: 100 },
-				{ title: "결제계좌", field: "gujano", width: 150 },
+				{ title: "결제일", field: "chkdd", width: 150, formatter: (c) => c.getValue() + "일" },
+				{ title: "소유자", field: "soname", width: 150 },
+				{ title: "결제계좌", field: "gujano", width: 200 },
 				{ title: "비고", field: "remark", minWidth: 150, hozAlign: "left" },
-				{ title: "사용", field: "useyn", width: 60, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+				{ title: "사용", field: "useyn", width: 100, formatter: (c) => c.getValue() === 'Y' ? 'Y' : 'N' }
 			]
 		})
 		maingrid.on('rowClick', (e, row) => {

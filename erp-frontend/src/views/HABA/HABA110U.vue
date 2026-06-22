@@ -190,7 +190,8 @@ const search = async () => {
 	if (!searchform.acctcd_t) return valert('검색하실 계정을 선택해 주십시요.')
 	try {
 		const res = await api.post('/api/haba/haba_110u_str', {
-			actkind: 'S1', cmpycd: authstore.cmpycd, acctcd: searchform.acctcd
+			actkind: 'S1', cmpycd: authstore.cmpycd, acctcd: searchform.acctcd,
+			wonamt: 0, rate: 0, payamt: 0
 		})
 		const processed = (res.data || []).map((r: any) => {
 			const n = normalizekeys(r);
@@ -268,18 +269,18 @@ onMounted(() => {
 			columnDefaults: { headerSort: false, vertAlign: "middle", headerHozAlign: "center", hozAlign: "center" },
 			columns: [
 				{ title: "계좌번호", field: "gujano", width: 150, hozAlign: "left" },
-				{ title: "개설은행", field: "banknm", width: 180, hozAlign: "left" },
+				{ title: "개설은행", field: "banknm", minWidth: 180, hozAlign: "left" },
 				{
-					title: "개설/만기일", field: "stdymd_fmt", width: 110,
+					title: "개설/만기일", field: "stdymd_fmt", width: 200,
 					formatter: (cell) => {
 						const d = cell.getData();
 						return `<div>${d.stdymd_fmt || ''}</div><div class='text-muted small'>${d.endymd_fmt || ''}</div>`
 					}
 				},
-				{ title: "계약금", field: "wonamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "월불입액", field: "payamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "이율", field: "rate", width: 70, hozAlign: "right", formatter: (c) => c.getValue() + "%" },
-				{ title: "사용", field: "useyn", width: 60, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+				{ title: "계약금", field: "wonamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "월불입액", field: "payamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "이율", field: "rate", width: 100, hozAlign: "right", formatter: (c) => c.getValue() + "%" },
+				{ title: "사용", field: "useyn", width: 100, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
 			]
 		})
 		maingrid.on("rowClick", (e, row) => {

@@ -50,9 +50,9 @@
                 <th class="text-center bg-light">발생일자</th>
                 <td>
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                    <input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                     <span class="text-muted small fw-bold">~</span>
-                    <input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                    <input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   </div>
                 </td>
               </tr>
@@ -197,7 +197,7 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const today = new Date().toISOString().slice(0, 10)
 const firstDay = today.slice(0, 8) + '01'
 
-const searchForm = reactive({ acctcd: '', acctnm: '', frymd: firstDay, toymd: today })
+const searchForm = reactive({ acctcd: '', acctnm: '', fromdt: firstDay, todt: today })
 const formData = reactive({ actkind: 'A', ym: '', rowno: '', proctype: '010', asetcd: '', asetnm: '', acctcd: '', acctnm: '', procymd: today, procqty: 0, procamt: 0, dprstype: '010', legalyy: 0, GAGAMyy: 0, asetrate: 0, costtype: '010', deptcd: '', deptnm: '', remark: '', useyn: 'Y' })
 
 const proctypeOptions = ref<any[]>([]); const dprstypeOptions = ref<any[]>([]); const costtypeOptions = ref<any[]>([])
@@ -253,7 +253,7 @@ const fetchOptions = async () => {
 async function search() {
 	if (!searchForm.acctcd) return vAlertError('계정과목을 선택하세요.')
 	try {
-		const res = await api.post('/api/hafa/HAFA_010U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, frymd: searchForm.frymd.replace(/-/g, ''), toymd: searchForm.toymd.replace(/-/g, ''), acctcd: searchForm.acctcd })
+		const res = await api.post('/api/hafa/HAFA_010U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, fromdt: searchForm.fromdt.replace(/-/g, ''), todt: searchForm.todt.replace(/-/g, ''), acctcd: searchForm.acctcd })
     const data = normalizeKeys(res.data || []).map((r: any) => ({
       ...r,
       procymd: r.procymd ? `${r.procymd.slice(0,4)}-${r.procymd.slice(4,6)}-${r.procymd.slice(6,8)}` : ''

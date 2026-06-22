@@ -53,17 +53,18 @@
 								<th>사용</th>
 								<td>
 									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
-										<input v-model="formdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="y" false-value="n" id="useyn030">
+										<input v-model="formdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useyn030">
 									</div>
 								</td>
 							</tr>
 							<tr>
 								<th>주소</th>
 								<td colspan="11">
-                                    <div class="d-flex align-items-center gap-1 w-100">
-                                        <input v-model="formdata.postno" type="text" class="form-control text-center bg-light" style="width: 80px;" readonly />
-                                        <input v-model="formdata.address" type="text" class="form-control flex-grow-1" placeholder="상세 주소를 포함한 주소 입력" />
-                                    </div>
+                  <AddressPopupForm
+                    v-model:postno="formdata.postno"
+                    v-model:address="formdata.address"
+                    v-model:d_address="formdata.d_address"
+                  />
 								</td>
 							</tr>
 						</tbody>
@@ -94,13 +95,14 @@ import { useAuthStore } from '@/stores/authStore'
 import { useAlerts } from '@/composables/useAlerts'
 import { useFormReset } from '@/composables/useFormReset'
 import AppAlert from '@/components/AppAlert.vue'
+import AddressPopupForm from '@/components/AddressPopupForm.vue'
 
 const authstore = useAuthStore()
 const { showAlert: showalert, showError: showerror, alertMessage: alertmessage, vAlert: valert, vAlertError: valerterror } = useAlerts()
 const { resetForm: resetform } = useFormReset()
 
 const formdata = reactive({
-	actkind: 'sr', taxunit: '', unitnm: '', saupno: '', bossnm: '', postno: '', address: '', dspord: '1', useyn: 'Y',
+	actkind: 'sr', taxunit: '', unitnm: '', saupno: '', bossnm: '', postno: '', address: '', d_address: '', dspord: '1', useyn: 'Y',
 	cmpycd: authstore.cmpycd, userid: authstore.userid
 })
 
@@ -129,7 +131,12 @@ async function save() {
 	if (!confirm('저장하시겠습니까?')) return
 	try {
 		const act = formdata.actkind === 'sr' ? 'ar' : 'ur';
-		const res = await api.post('/api/haba/haba_030u_str', { ...formdata, actkind: act })
+    const payload = {
+      ...formdata,
+      actkind: act,
+      address_det: formdata.d_address // 서버 필드명에 맞춤 (추측)
+    }
+		const res = await api.post('/api/haba/haba_030u_str', payload)
 		const resdata = normalizekeys(res.data?.[0]);
 		if (resdata.result === 'N') valerterror(resdata.msg || '저장 실패')
 		else { valert('저장되었습니다.'); search(); initialize() }
@@ -157,6 +164,7 @@ onMounted(() => {
 		})
 		maingrid.on('rowClick', (e, row) => {
 			const d = normalizekeys(row.getData());
+      if (d.address_det) d.d_address = d.address_det;
 			Object.assign(formdata, d);
 			formdata.actkind = 'ur'
 		})

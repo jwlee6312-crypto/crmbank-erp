@@ -36,9 +36,9 @@
                 <th class="required">발행일자</th>
                 <td>
                   <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="ioymdfr" type="date" class="form-control form-control-sm" />
+                    <input v-model="fromdt" type="date" class="form-control form-control-sm" />
                     <span class="px-1">~</span>
-                    <input v-model="ioymdto" type="date" class="form-control form-control-sm" />
+                    <input v-model="todt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
               </tr>
@@ -89,21 +89,21 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  ioymdfr: initfrymd,
-  ioymdto: initymd
+  fromdt: initfromdt,
+  todt: initymd
 })
 
 const closingInfo = reactive({ clsymd: '', sclsym: '' })
 const autoslipinfo = ref('N')
 
-const ioymdfr = computed({ get: () => formatDateString(searchData.ioymdfr, '-'), set: (v) => searchData.ioymdfr = v.replace(/-/g, '') })
-const ioymdto = computed({ get: () => formatDateString(searchData.ioymdto, '-'), set: (v) => searchData.ioymdto = v.replace(/-/g, '') })
+const fromdt = computed({ get: () => formatDateString(searchData.fromdt, '-'), set: (v) => searchData.fromdt = v.replace(/-/g, '') })
+const todt = computed({ get: () => formatDateString(searchData.todt, '-'), set: (v) => searchData.todt = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null)
 let grid: Tabulator | null = null
@@ -158,8 +158,8 @@ const fetchList = async () => {
     const res = await api.post('/api/hsio/HSIO_181U_STR', {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
-      ioymdfr: searchData.ioymdfr,
-      ioymdto: searchData.ioymdto,
+      fromdt: searchData.fromdt,
+      todt: searchData.todt,
       deptcd: searchData.deptcd
     })
     grid?.setData(res.data)
@@ -181,8 +181,8 @@ const deleteData = async () => {
         actkind: 'D0',
         cmpycd: authStore.cmpycd,
         userid: authStore.userid,
-        ioymdfr: searchData.ioymdfr,
-        ioymdto: searchData.ioymdto,
+        fromdt: searchData.fromdt,
+        todt: searchData.todt,
         deptcd: item.deptcd,
         slipymd: item.slipymd,
         slipno: item.slipno
@@ -197,7 +197,7 @@ const deleteData = async () => {
 
 const initialize = () => {
   resetForm(searchData)
-  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, ioymdfr: initfrymd, ioymdto: initymd })
+  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, fromdt: initfromdt, todt: initymd })
   grid?.clearData()
   selectedCount.value = 0
   totalHalAmt.value = 0

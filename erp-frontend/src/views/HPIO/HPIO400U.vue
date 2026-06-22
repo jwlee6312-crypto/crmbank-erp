@@ -50,9 +50,9 @@
                 </td>
                 <th class="text-center bg-light required">생산일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="proymdfr_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="px-1 opacity-50">~</span>
-                  <input v-model="proymdto_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
                 <th class="text-center bg-light required">입고일자</th>
                 <td>
@@ -126,12 +126,12 @@ const { resetForm } = useFormReset()
 
 // [1] 데이터 모델링
 const initymd = today.replace(/-/g, '')
-const initfrymd = firstDay.replace(/-/g, '')
+const initfromdt = firstDay.replace(/-/g, '')
 
 const searchForm = reactive({
   linecd: '010',
-  proymdfr: initfrymd,
-  proymdto: initymd,
+  fromdt: initfromdt,
+  todt: initymd,
   whcd: '200',
   inymd: initymd
 })
@@ -141,8 +141,8 @@ const selectedProg = reactive({ progcd: '', prognm: '' })
 const closingInfo = reactive({ clsymd: '', sclsym: '' })
 
 // 포맷팅 헬퍼 (ui 접두어 제거)
-const proymdfr_f = computed({ get: () => formatDate(searchForm.proymdfr), set: (v) => { if(v) searchForm.proymdfr = v.replace(/-/g, '') } })
-const proymdto_f = computed({ get: () => formatDate(searchForm.proymdto), set: (v) => { if(v) searchForm.proymdto = v.replace(/-/g, '') } })
+const fromdt = computed({ get: () => formatDate(searchForm.fromdt), set: (v) => { if(v) searchForm.fromdt = v.replace(/-/g, '') } })
+const todt = computed({ get: () => formatDate(searchForm.todt), set: (v) => { if(v) searchForm.todt = v.replace(/-/g, '') } })
 const inymd_f = computed({ get: () => formatDate(searchForm.inymd), set: (v) => { if(v) searchForm.inymd = v.replace(/-/g, '') } })
 
 const tableRef1 = ref<HTMLDivElement | null>(null)
@@ -213,7 +213,7 @@ const onProcessSelect = (prog: any) => {
 const fetchGridData = async () => {
   try {
     const res = await api.post('/api/hpio/HPIO_400U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, proymdFR: searchForm.proymdfr, proymdTO: searchForm.proymdto
+      actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, progcd: selectedProg.progcd, proymdFR: searchForm.fromdt, proymdTO: searchForm.todt
     })
     const mapped = res.data.map((item: any) => ({
       ...item,
@@ -237,7 +237,7 @@ const saveReceipt = async () => {
 
   try {
     const masterRes = await api.post('/api/hsio/HSIO_060U_STR', {
-      actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '100', proymdFR: searchForm.proymdfr, proymdTO: searchForm.proymdto,
+      actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '100', proymdFR: searchForm.fromdt, proymdTO: searchForm.todt,
       deptcd: '21000', whcd: searchForm.whcd, Jinymd: inYmd, remark: `생산입고-${searchForm.inymd}`, cfmyn: 'Y', userid: authStore.userid
     })
 
@@ -263,7 +263,7 @@ const saveReceipt = async () => {
 const onLineChange = () => fetchProcesses()
 const initialize = () => {
   resetForm(searchForm);
-  Object.assign(searchForm, { linecd: '010', proymdfr: initfrymd, proymdto: initymd, whcd: '200', inymd: initymd });
+  Object.assign(searchForm, { linecd: '010', fromdt: initfromdt, todt: initymd, whcd: '200', inymd: initymd });
   grid1?.clearData(); grid2?.clearData();
   selectedProg.progcd = ''; selectedProg.prognm = '';
   fetchProcesses();

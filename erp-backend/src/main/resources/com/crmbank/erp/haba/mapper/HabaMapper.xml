@@ -58,7 +58,7 @@
     </select>
 
     <select id="HABA_070U_STR" resultType="map">
-        exec haba_070u_str #{actkind}, #{cmpycd}, #{prjcd}, #{prjnm}, #{frymd}, #{toymd}, #{bigo}, #{dspord}, #{useyn}, #{userid}
+        exec haba_070u_str #{actkind}, #{cmpycd}, #{prjcd}, #{prjnm}, #{fromdt}, #{todt}, #{bigo}, #{dspord}, #{useyn}, #{userid}
     </select>
 
     <select id="HABA_080U_STR" resultType="map">
@@ -137,17 +137,17 @@
     </select>
 
     <select id="HABA_240U_STR" resultType="map">
-        EXEC HABA_240U_STR  #{actkind}, #{cmpycd}, #{frymd}, #{toymd}, #{slipymd}, #{slipno}, #{srowno},
+        EXEC HABA_240U_STR  #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{slipymd}, #{slipno}, #{srowno},
         #{acctcd}, #{custcd}, #{upayamt}, #{payamt}, #{procamt}, #{paycndt}, #{reqymd}, #{remark}, #{useyn}, #{updemp}
     </select>
 
     <select id="HABA_250U_STR" resultType="map">
-        EXEC HABA_250U_STR #{actkind}, #{cmpycd}, #{frymd}, #{toymd}, #{slipymd}, #{slipno}, #{srowno},
+        EXEC HABA_250U_STR #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{slipymd}, #{slipno}, #{srowno},
         #{acctcd}, #{custcd}, #{mgtno}, #{pubymd}, #{upayamt}, #{reqymd}, #{remark}, #{useyn}, #{updemp}
     </select>
 
     <select id="HABA_260U_STR" resultType="map">
-        EXEC HABA_260U_STR #{actkind}, #{cmpycd}, #{frymd}, #{toymd}, #{slipymd}, #{slipno}, #{srowno},
+        EXEC HABA_260U_STR #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{slipymd}, #{slipno}, #{srowno},
         #{acctcd}, #{pubymd}, #{upayamt}, #{stdymd}, #{endymd}, #{remark}, #{useyn}, #{updemp}
     </select>
 

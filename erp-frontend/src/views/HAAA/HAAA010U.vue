@@ -64,7 +64,7 @@
 									<div class="d-flex align-items-center gap-2 px-2">
 										<input v-model="formdata.dspord" type="number" class="form-control text-end" style="width: 60px;" />
 										<div class="form-check form-switch m-0 ms-2">
-											<input v-model="formdata.useyn" class="form-check-input" type="checkbox" true-value="y" false-value="n" id="useyn010">
+											<input v-model="formdata.useyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="useyn010">
 											<label class="form-check-label ms-1 small fw-bold" for="useyn010">사용</label>
 										</div>
 									</div>

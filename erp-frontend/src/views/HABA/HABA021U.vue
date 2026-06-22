@@ -1,41 +1,53 @@
+<!--
+	=============================================================
+	프로그램명	: 재무제표 수식편집 (HABA021U)
+	작성일자	: 2025.03.14
+	설명        : 재무제표 구성 항목 및 계산 수식 설정 (원본 ASP 구성을 충실히 재현 및 HSOD100U 디자인 표준 적용)
+	=============================================================
+-->
+
 <template>
   <AppAlert :show="showalert" :error="showerror" :message="alertmessage" />
   <Modal v-model:visible="modalvisible" :modalProps="modalprops" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
-        <i class="bi bi-list-check me-2 text-primary" style="font-size: 18px;"></i>
+        <i class="bi bi-calculator-fill me-2 text-primary" style="font-size: 18px;"></i>
         기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        <span class="text-primary fw-bolder">재무제표 항목설정 (haba021u)</span>
+        <span class="text-primary fw-bolder">재무제표 수식편집 (HABA021U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
-        <button class="btn-erp btn-init" @click="initialize">신규</button>
-        <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-save" @click="save">저장</button>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="frmReset">신규</button>
+        <button class="btn-erp btn-search" @click="fetchleftgrid">조회</button>
+        <button class="btn-erp btn-save" @click="frmSubmit">저장</button>
       </div>
     </div>
 
-    <div class="flex-grow-1 overflow-hidden p-3 d-flex flex-column gap-3 bg-light">
-      <div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
-        <div class="card-body p-0 bg-white">
-          <table class="erp-table-full border-0">
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+
+      <!-- [상단] Search 필터 영역 (ASP Name="Search" 준수) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-2 bg-white">
+          <table class="erp-table-dense w-100">
             <tbody>
               <tr>
-                <th class="bg-light text-center" style="width: 100px;">연도</th>
-                <td style="width: 150px;"><input v-model="searchform.yyyy" type="number" class="form-control form-control-sm text-center" @change="search" /></td>
-                <th class="bg-light text-center" style="width: 100px;">재무제표</th>
-                <td>
-                  <select v-model="searchform.gubun" class="form-select form-select-sm" style="max-width: 200px;" @change="fetchgroups">
+                <th class="bg-light text-center" style="width: 100px;">적용연도</th>
+                <td style="width: 150px;">
+                  <select v-model="searchform.yyyy" class="form-select form-select-sm fw-bold text-center" @change="fetchleftgrid">
+                    <option v-for="y in yearoptions" :key="y" :value="y">{{ y }}년</option>
+                  </select>
+                </td>
+                <th class="bg-light text-center border-start" style="width: 100px;">제무제표</th>
+                <td style="width: 200px;">
+                  <select v-model="searchform.gubun" class="form-select form-select-sm" @change="fetchleftgrid">
                     <option v-for="opt in statementoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
-                <th class="bg-light text-center" style="width: 100px;">항목그룹</th>
-                <td>
-                  <select v-model="searchform.grpcd" class="form-select form-select-sm" style="max-width: 200px;" @change="search">
-                    <option value="">전체</option>
-                    <option v-for="opt in groupoptions" :key="opt.grpcd" :value="opt.grpcd">{{ opt.codenm }}</option>
-                  </select>
+                <td class="px-3">
+                    <button class="btn btn-sm btn-secondary px-3" @click="fetchleftgrid"><i class="bi bi-search me-1"></i>조회</button>
                 </td>
               </tr>
             </tbody>
@@ -43,37 +55,64 @@
         </div>
       </div>
 
-      <div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
+      <!-- [중간] frmBody 입력 영역 (ASP Name="frmBody" 준수) -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
         <div class="card-body p-0 bg-white">
-          <table class="erp-table-full border-0">
+          <table class="erp-table-dense w-100">
+            <colgroup>
+              <col style="width: 120px;" /><col style="width: 38%;" />
+              <col style="width: 120px;" /><col />
+            </colgroup>
             <tbody>
               <tr>
-                <th class="required bg-light text-center" style="width: 100px;">계정과목</th>
-                <td>
+                <th class="bg-light text-center">제무제표</th>
+                <td class="bg-light-yellow">
+                  <div class="d-flex align-items-center gap-1">
+                    <input v-model="searchform.yyyy" type="text" class="form-control form-control-sm text-center bg-light-fix fw-bold" style="max-width: 80px;" readonly />
+                    <span class="small me-1">년</span>
+                    <select v-model="searchform.gubun" class="form-select form-select-sm" disabled>
+                      <option v-for="opt in statementoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                    </select>
+                  </div>
+                </td>
+                <th class="bg-light text-center border-start">집계계정</th>
+                <td class="bg-light-yellow">
+                  <div class="d-flex align-items-center gap-1">
+                    <input v-model="masterdata.upacct" type="text" class="form-control form-control-sm text-center bg-light-fix fw-bold" style="max-width: 100px;" readonly />
+                    <input v-model="masterdata.upacct_t" type="text" class="form-control form-control-sm bg-light-fix flex-grow-1" readonly />
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th class="bg-light text-center">계정과목</th>
+                <td class="bg-light-yellow">
                   <div class="input-group input-group-sm">
-                    <input v-model="masterdata.acctcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 80px;" readonly />
-                    <input v-model="masterdata.acctcd_t" type="text" class="form-control" placeholder="선택" @keydown.enter="openhelp('acct')" />
+                    <input v-model="masterdata.acctcd" type="text" class="form-control text-center bg-light-fix fw-bold" style="max-width: 80px;" readonly />
+                    <input v-model="masterdata.acctcd_t" type="text" class="form-control" placeholder="계정명 입력 또는 검색" @keydown.enter="openhelp('acct')" />
                     <button class="btn btn-outline-secondary px-2" @click="openhelp('acct')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
-                <th class="bg-light text-center" style="width: 100px;">계산타입</th>
-                <td>
+                <th class="bg-light text-center border-start">연산대상</th>
+                <td class="bg-light-yellow">
                   <select v-model="masterdata.caltype" class="form-select form-select-sm">
+                    <option value="000">선택</option>
                     <option v-for="opt in calctypeoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
-                <th class="bg-light text-center" style="width: 100px;">가감</th>
-                <td>
+              </tr>
+              <tr>
+                <th class="bg-light text-center">연산수식</th>
+                <td class="bg-light-yellow">
                   <select v-model="masterdata.calgagam" class="form-select form-select-sm">
-                    <option value="000">해당없음</option>
-                    <option value="100">더하기(+)</option>
-                    <option value="200">빼기(-)</option>
+                    <option value="000">선택</option>
+                    <option v-for="opt in formulaoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
-                <th class="bg-light text-center" style="width: 100px;">사용</th>
-                <td>
-                  <div class="form-check form-switch m-0 d-flex justify-content-center">
-                    <input v-model="masterdata.useyn" class="form-check-input" type="checkbox" true-value="y" false-value="n">
+                <th class="bg-light text-center border-start">사용여부</th>
+                <td class="bg-light-yellow">
+                  <div class="form-check form-check-inline m-0 ms-2 d-flex align-items-center h-100">
+                    <input v-model="masterdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useSwitch021">
+                    <label class="form-check-label ms-2 small fw-bold" for="useSwitch021">사용</label>
                   </div>
                 </td>
               </tr>
@@ -82,11 +121,32 @@
         </div>
       </div>
 
-      <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-          <div ref="maingridelement" class="tabulator-instance flex-grow-1"></div>
+      <!-- [하단] Grid 영역 (2분할) -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
+
+        <!-- ⬅️ 좌측: iFrame1 ( Master List ) -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden" style="width: 40%;">
+          <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+            <i class="bi bi-list-ul me-2 text-secondary"></i>
+            <span class="fw-bold small text-dark">재무제표 집계항목</span>
+          </div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="leftgridref" class="tabulator-instance flex-grow-1"></div>
+          </div>
+        </div>
+
+        <!-- ➡️ 우측: iFrame2 ( Detail List ) -->
+        <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+          <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+            <i class="bi bi-table me-2 text-primary"></i>
+            <span class="fw-bold small text-dark">세부 구성 항목 리스트</span>
+          </div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="rightgridref" class="tabulator-instance flex-grow-1"></div>
+          </div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
@@ -106,14 +166,19 @@ const { showAlert: showalert, showError: showerror, alertMessage: alertmessage, 
 const { resetForm: resetform } = useFormReset()
 const { modalVisible: modalvisible, modalProps: modalprops, openHelp: commonopenhelp } = useCommonHelp()
 
-const searchform = reactive({ yyyy: new Date().getFullYear(), gubun: '010', grpcd: '' })
+// [1] 데이터 모델링
+const yearoptions = ref<string[]>([])
+const searchform = reactive({ yyyy: '', gubun: '010' })
+
 const masterdata = reactive<any>({
-  actkind: 'i1', cmpycd: authstore.cmpycd, yyyy: new Date().getFullYear(), gubun: '010', grpcd: '',
-  acctcd: '', acctcd_t: '', arowno: '', caltype: '000', calgagam: '000', useyn: 'Y'
+  actkind: 'I1', cmpycd: authstore.cmpycd, yyyy: '', gubun: '',
+  upacct: '', upacct_t: '', acctcd: '', acctcd_t: '', arowno: '',
+  caltype: '000', calgagam: '000', useyn: 'Y', updyn: 'Y'
 })
 
-const statementoptions = ref<any[]>([]); const groupoptions = ref<any[]>([]); const calctypeoptions = ref<any[]>([])
-const maingridelement = ref<HTMLDivElement | null>(null); let maingrid: Tabulator | null = null
+const statementoptions = ref<any[]>([]); const calctypeoptions = ref<any[]>([]); const formulaoptions = ref<any[]>([])
+const leftgridref = ref<HTMLDivElement | null>(null); const rightgridref = ref<HTMLDivElement | null>(null)
+let leftgrid: Tabulator | null = null; let rightgrid: Tabulator | null = null
 
 const normalizekeys = (obj: any) => {
   const n: any = {}; if (!obj) return n;
@@ -121,79 +186,148 @@ const normalizekeys = (obj: any) => {
   return n;
 }
 
-const fetchgroups = async () => {
-  try {
-    const res = await api.post('/api/haba/haba_020u_str', { actkind: 'S2', cmpycd: authstore.cmpycd, gubun: searchform.gubun })
-    groupoptions.value = (res.data || []).map((i: any) => normalizekeys(i));
-    search()
-  } catch (e) { console.error('그룹 로드 실패') }
+// [2] 주요 함수
+const fetchleftgrid = async () => {
+    if (!searchform.yyyy) return;
+	try {
+		const res = await api.post('/api/haba/HABA_021U_STR', { actkind: 'S3', cmpycd: authstore.cmpycd, yyyy: searchform.yyyy, gubun: searchform.gubun })
+		leftgrid?.setData((res.data || []).map((r: any) => normalizekeys(r)));
+        rightgrid?.clearData();
+        frmReset();
+	} catch (e) { valerterror('집계항목 조회 실패') }
 }
 
-const search = async () => {
-  try {
-    const res = await api.post('/api/haba/haba_021u_str', {
-        actkind: 's3', cmpycd: authstore.cmpycd, yyyy: searchform.yyyy, gubun: searchform.gubun, grpcd: searchform.grpcd
+const fetchrightgrid = async (row: any) => {
+	try {
+		const res = await api.post('/api/haba/HABA_021U_STR', { actkind: 'SR', cmpycd: authstore.cmpycd, yyyy: searchform.yyyy, gubun: row.gubun, upacct: row.upacct })
+		rightgrid?.setData((res.data || []).map((r: any) => {
+            const n = normalizekeys(r);
+            return {
+                ...n,
+                caltype_nm: n.caltypenm,
+                calgagam_nm: n.calgagamnm
+            }
+        }));
+	} catch (e) { valerterror('상세 내역 조회 실패') }
+}
+
+const frmSubmit = async () => {
+	if (masterdata.updyn !== 'Y') return valerterror('수정할 수 없습니다.')
+	if (!searchform.gubun || searchform.gubun === '0') return valerterror('재무제표 종류를 선택해주십시요.')
+	if (!masterdata.upacct) return valerterror('집계계정을 선택해주십시요.')
+	if (!masterdata.acctcd) return valerterror('계정코드를 선택해주십시요.')
+	if (masterdata.caltype === '000') return valerterror('연산대상을 선택해 주십시요.')
+	if (masterdata.calgagam === '000') return valerterror('연산수식을 선택해 주십시요.')
+
+	try {
+		masterdata.yyyy = searchform.yyyy; masterdata.gubun = searchform.gubun
+		const res = await api.post('/api/haba/HABA_021U_SAVE', { ...masterdata, cmpycd: authstore.cmpycd, userid: authstore.userid })
+        const resdata = normalizekeys(res.data?.[0]);
+		if (resdata.ret_yn === 'N') { valerterror(resdata.ret_msg) }
+        else { valert('저장되었습니다.'); fetchrightgrid({ gubun: masterdata.gubun, upacct: masterdata.upacct }); frmReset(); }
+	} catch (e) { valerterror('저장 실패') }
+}
+
+const frmReset = () => {
+    const curupacct = masterdata.upacct; const curupacctt = masterdata.upacct_t; const curupdyn = masterdata.updyn;
+    resetform(masterdata);
+    Object.assign(masterdata, {
+        actkind: 'I1', cmpycd: authstore.cmpycd, useyn: 'Y',
+        upacct: curupacct, upacct_t: curupacctt, updyn: curupdyn,
+        caltype: '000', calgagam: '000'
     });
-    const processed = (res.data || []).map((i: any) => normalizekeys(i));
-    maingrid?.setData(processed);
-  } catch (e) { valerterror('조회 실패') }
-}
-
-const save = async () => {
-  if (!masterdata.acctcd) return valerterror('계정과목을 선택하세요.');
-  if (!confirm('저장하시겠습니까?')) return
-  try {
-    const payload = { ...masterdata, yyyy: searchform.yyyy, gubun: searchform.gubun, grpcd: searchform.grpcd }
-    const res = await api.post('/api/haba/haba_021u_str', payload);
-    const resdata = normalizekeys(res.data?.[0]);
-    if (resdata.result === 'Y') { valert('저장되었습니다.'); search(); }
-  } catch (e) { valerterror('저장 실패') }
-}
-
-const initialize = () => {
-  const curyyyy = searchform.yyyy; const curgubun = searchform.gubun; const curgrp = searchform.grpcd
-  resetform(masterdata);
-  Object.assign(masterdata, { actkind: 'i1', cmpycd: authstore.cmpycd, yyyy: curyyyy, gubun: curgubun, grpcd: curgrp, useyn: 'Y', caltype: '000', calgagam: '000' });
 }
 
 function openhelp(type: string) {
-  if (type === 'acct') {
-    commonopenhelp('ACCT', (d) => {
-        const n = normalizekeys(d);
-        masterdata.acctcd = n.acctcd; masterdata.acctcd_t = n.acctnm;
-    });
-  }
+    if (type === 'acct') {
+        commonopenhelp('ACCT', (d) => {
+            const n = normalizekeys(d);
+            masterdata.acctcd = n.acctcd; masterdata.acctcd_t = n.acctnm;
+        }, { gubun: searchform.gubun });
+    }
 }
 
+// [3] 초기화
 onMounted(async () => {
-  // 초기 옵션 로드
-  const p1 = api.post('/api/ha00/ha00_00p_str', { gubun: 'e0', gbncd: '070' })
-  const p2 = api.post('/api/ha00/ha00_00p_str', { gubun: 'e0', gbncd: '090' })
-  const [r1, r2] = await Promise.all([p1, p2])
+    await nextTick();
 
-  statementoptions.value = (r1.data || []).map((i: any) => normalizekeys(i)).filter((n: any) => n.codecd <= '030')
-  calctypeoptions.value = (r2.data || []).map((i: any) => normalizekeys(i))
+    // Grids 초기화
+    if (leftgridref.value) {
+        leftgrid = new Tabulator(leftgridref.value, {
+            layout: 'fitColumns', height: '100%', selectable: 1,
+            columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
+            columns: [
+                { title: "계정코드", field: "upacct", width: 100, cssClass: "fw-bold text-primary border-end" },
+                {
+                    title: "계 정 명", field: "acctnm", hozAlign: "left", widthGrow: 1,
+                    formatter: (cell) => {
+                        const d = normalizekeys(cell.getData()); const code = String(d.upacct);
+                        // ASP Indent Logic 재현
+                        let indent = 0;
+                        if (code.substring(1, 7) === "000000" || ["1990000", "2980000", "3980000", "3990000"].includes(code)) { indent = 0; }
+                        else if (code.substring(2, 7) === "00000") { indent = 10; }
+                        else if (code.substring(3, 7) === "0000") { indent = 20; }
+                        else if (code.substring(5, 7) === "00") { indent = 25; }
+                        else { indent = 30; }
 
-  if (maingridelement.value) {
-    maingrid = new Tabulator(maingridelement.value, {
-      layout: "fitColumns", height: "100%", selectable: 1,
-      columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
-      columns: [
-        { title: "코드", field: "acctcd", width: 100 },
-        { title: "계정과목명", field: "acctnm", minWidth: 200, hozAlign: "left", cssClass: "fw-bold text-primary" },
-        { title: "타입", field: "caltypenm", width: 120 },
-        { title: "가감", field: "calgagamnm", width: 100 },
-        { title: "사용", field: "useyn", width: 80, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
-      ]
-    });
-    maingrid.on("rowClick", (e, row) => {
-      const d = normalizekeys(row.getData());
-      Object.assign(masterdata, d);
-      masterdata.acctcd_t = d.acctnm;
-      masterdata.actkind = 'u1';
-    });
-  }
+                        const color = d.inyn === 'Y' ? '#0d6efd' : '#212529';
+                        return `<div style="padding-left: ${indent}px; color: ${color};">${indent > 0 ? '· ' : ''}${cell.getValue()}</div>`
+                    }
+                },
+                { title: "구분", field: "gubun_nm", width: 100 }
+            ]
+        });
+        leftgrid.on('rowClick', (e, row) => {
+            const d = normalizekeys(row.getData());
+            masterdata.upacct = d.upacct; masterdata.upacct_t = d.acctnm; masterdata.updyn = d.updyn;
+            fetchrightgrid(d); frmReset();
+        });
+    }
 
-  await fetchgroups();
+    if (rightgridref.value) {
+        rightgrid = new Tabulator(rightgridref.value, {
+            layout: 'fitColumns', height: '100%', selectable: 1,
+            columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
+            columns: [
+                { title: "계정과목", field: "acctcd", width: 100, cssClass: "fw-bold text-primary border-end" },
+                { title: "계정명", field: "acctnm", minWidth: 150, widthGrow: 1, hozAlign: "left" },
+                { title: "연산대상", field: "caltype_nm", width: 100 },
+                { title: "연산수식", field: "calgagam_nm", width: 100 },
+                { title: "사용", field: "useyn", width: 70, formatter: (c) => String(c.getValue() || '').toUpperCase() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger fw-bold">X</span>' }
+            ]
+        });
+        rightgrid.on("rowClick", (e, row) => {
+            const d = normalizekeys(row.getData()); Object.assign(masterdata, d);
+            masterdata.acctcd_t = d.acctnm; masterdata.actkind = 'U1';
+        });
+    }
+
+    // 초기 데이터 로드
+	try {
+        const yRes = await api.post('/api/haba/HABA_021U_STR', { actkind: 'S4', cmpycd: authstore.cmpycd });
+        if (yRes.data && yRes.data.length > 0) {
+            yearoptions.value = yRes.data.map((r: any) => String(normalizekeys(r).yyyy));
+            searchform.yyyy = String(normalizekeys(yRes.data[0]).yyyy);
+        }
+
+		const resgbn = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '070', cmpycd: authstore.cmpycd })
+		statementoptions.value = (resgbn.data || []).map((r: any) => normalizekeys(r))
+        if (statementoptions.value.length > 0) searchform.gubun = statementoptions.value[0].codecd;
+
+		const restype = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '080', cmpycd: authstore.cmpycd })
+		calctypeoptions.value = (restype.data || []).map((r: any) => normalizekeys(r))
+
+		const resformula = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '090', cmpycd: authstore.cmpycd })
+		formulaoptions.value = (resformula.data || []).map((r: any) => normalizekeys(r))
+
+        nextTick(() => fetchleftgrid());
+	} catch (e) { console.error('초기 데이터 로드 실패') }
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+:deep(.tabulator-row-selected) { background-color: #e7f1ff !important; }
+.bg-light-yellow { background-color: #f9f6e7 !important; }
+.bg-light-fix { background-color: #f8f9fa !important; }
+</style>

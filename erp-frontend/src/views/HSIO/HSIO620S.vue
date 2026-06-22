@@ -44,9 +44,9 @@
                 <th style="width: 100px;">출고일자</th>
                 <td style="width: 300px;">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="uioutymdfr" type="date" class="form-control form-control-sm" />
+                    <input v-model="searchData.fromdt" type="date" class="form-control form-control-sm" />
                     <span>~</span>
-                    <input v-model="uioutymdto" type="date" class="form-control form-control-sm" />
+                    <input v-model="searchData.todt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th style="width: 100px;">확정여부</th>
@@ -89,7 +89,7 @@
               </span>
             </div>
             <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                <div ref="detailGridElement" class="tabulator-instance flex-grow-1"></div>
+              <div ref="detailGridElement" class="tabulator-instance flex-grow-1"></div>
             </div>
           </div>
         </div>
@@ -109,26 +109,23 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { getDate } from '@/composables/useDate'
 import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const now = new Date();
-const initymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+const { firstDay, today } = getDate()
 
 // 1. 상태 관리
 const searchData = reactive({
   whcd: '000',
-  outymdfr: initymd.replace(/-/g, ''),
-  outymdto: initymd.replace(/-/g, ''),
+  fromdt: firstDay,
+  todt: today,
   slipyn: 'Y',
   custcd: '',
   custnm: ''
 })
-
-const uioutymdfr = computed({ get: () => formatDateString(searchData.outymdfr, '-'), set: (v) => searchData.outymdfr = v.replace(/-/g, '') })
-const uioutymdto = computed({ get: () => formatDateString(searchData.outymdto, '-'), set: (v) => searchData.outymdto = v.replace(/-/g, '') })
 
 const whOptions = ref<any[]>([])
 const selectedMasterInfo = ref<any>(null)
@@ -162,15 +159,21 @@ const initGrids = () => {
 
   if (detailGridElement.value) {
     detailGrid = new Tabulator(detailGridElement.value, {
-      layout: "fitColumns", height: "100%", placeholder: "항목을 선택하세요.",
-      columnDefaults: { headerSort: false },
+        layout: 'fitColumns', height: '100%',
+        columnDefaults: {
+            headerSort: false,
+            headerHozAlign: "center",
+            hozAlign: 'right', // 🚀 기본값 우측 정렬
+            vertAlign: "middle",
+            minWidth: 100
+        },
       columns: [
-        { title: "품목명", field: "itemnm", minWidth: 200, cssClass: "fw-bold" },
-        { title: "규격", field: "itsize", width: 120 },
+        { title: "품목명", field: "itemnm", minWidth: 200, hozAlign: "left", cssClass: "fw-bold" },
+        { title: "규격", field: "itsize", width: 200 },
         { title: "단위", field: "unit", width: 60, hozAlign: "center" },
-        { title: "수량", field: "ioqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
-        { title: "금액", field: "jsanamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-        { title: "부가세", field: "jsanvat", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
+        { title: "수량", field: "ioqty", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 2 } },
+        { title: "금액", field: "jsanamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "부가세", field: "jsanvat", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
       ]
     })
   }
@@ -187,7 +190,16 @@ async function fetchWhOptions() {
 
 async function searchMaster() {
   try {
-    const res = await api.post('/api/hsio/HSIO_620S_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, gubun: '200', whcd: searchData.whcd, outymdfr: searchData.outymdfr, outymdto: searchData.outymdto, custcd: searchData.custcd, slipyn: searchData.slipyn })
+    const res = await api.post('/api/hsio/HSIO_620S_STR', {
+        actkind: 'S1',
+        cmpycd: authStore.cmpycd,
+        iogbn: '200',
+        whcd: searchData.whcd,
+        fromdt: searchData.fromdt.replace(/-/g, ''),
+        todt: searchData.todt.replace(/-/g, ''),
+        custcd: searchData.custcd,
+        slipyn: searchData.slipyn
+    })
     masterGrid?.setData(res.data)
     detailGrid?.clearData()
     selectedMasterInfo.value = null
@@ -196,7 +208,18 @@ async function searchMaster() {
 
 async function fetchDetails(row: any) {
   try {
-    const res = await api.post('/api/hsio/HSIO_620S_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '200', whcd: searchData.whcd, outymdfr: searchData.outymdfr, outymdto: searchData.outymdto, custcd: row.custcd, ioym: row.ioym, iono: row.iono })
+    const res = await api.post('/api/hsio/HSIO_620S_STR', {
+        actkind: 'S0',
+        cmpycd: authStore.cmpycd,
+        iogbn: '200',
+        whcd: searchData.whcd,
+        fromdt: searchData.fromdt,
+        todt: searchData.todt,
+        custcd: row.custcd,
+        ioym: row.ioym,
+        iono: row.iono,
+        slipyn: searchData.slipyn
+    })
     detailGrid?.setData(res.data)
   } catch (e) { vAlertError('상세 로드 실패') }
 }
@@ -211,7 +234,7 @@ function printSlip(type: string) {
 function initialize() {
   resetForm(searchData)
   searchData.whcd = '000'; searchData.slipyn = 'Y';
-  searchData.outymdfr = initymd.replace(/-/g, ''); searchData.outymdto = initymd.replace(/-/g, '');
+  searchData.fromdt = firstDay; searchData.todt = today;
   masterGrid?.clearData(); detailGrid?.clearData(); selectedMasterInfo.value = null
 }
 

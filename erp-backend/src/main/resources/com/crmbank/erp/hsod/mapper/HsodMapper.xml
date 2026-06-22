@@ -4,7 +4,7 @@
 
     <select id="HSOD_100U_STR" resultType="map">
         exec hsod_100u_str
-            #{actkind}, #{cmpycd}, #{ymdfr}, #{ymdto}, #{custnm}, #{ordym}, #{ordno}, #{ordkind},
+            #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm}, #{ordym}, #{ordno}, #{ordkind},
             #{deptcd}, #{custcd}, #{whcd}, #{area}, #{ordymd},
             #{ordemp}, #{paycndt}, #{outymd}, #{trancd}, #{address},
             #{remark}, #{totsum}, #{sts}, #{updemp}, #{tranamt}
@@ -18,17 +18,17 @@
     </select>
 
     <select id="HSOD_110S_STR" resultType="map">
-        exec hsod_110s_str #{cmpycd}, #{deptcd}, #{custcdfr}, #{custcdto}, #{frymd}, #{toymd}
+        exec hsod_110s_str #{cmpycd}, #{deptcd}, #{custcdfr}, #{custcdto}, #{fromdt}, #{todt}
     </select>
 
     <select id="HSOD_120U_STR" resultType="map">
         exec hsod_120u_str #{actkind}, #{cmpycd},
-        #{ordkind}, #{selgbn}, #{ordymd_f}, #{ordymd_t}, #{ordym}, #{ordno}, #{outymd},
+        #{ordkind}, #{selgbn}, #{fromdt}, #{todt}, #{ordym}, #{ordno}, #{outymd},
         #{deptcd}, #{whcd}, #{ordemp}, #{updemp}
     </select>
 
     <select id="HSOD_210U_STR" resultType="map">
-        exec hsod_210u_str #{actkind}, #{cmpycd}, #{gbn}, #{frymd}, #{toymd}, #{ioym}, #{iono},
+        exec hsod_210u_str #{actkind}, #{cmpycd}, #{gbn}, #{fromdt}, #{todt}, #{ioym}, #{iono},
         #{custcd}, #{deptcd}, #{ioymd}, #{ioamt}, #{iovat}, #{remark}, #{updemp}
     </select>
 

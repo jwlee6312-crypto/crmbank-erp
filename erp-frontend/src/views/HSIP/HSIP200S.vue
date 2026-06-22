@@ -5,12 +5,13 @@
     프로그램 ID	: HSIP200S
 	작성일자	    : 25.02.24
 	작성자	      : AI Assistant (Full-Expansion Layout)
-    설명         : 명칭 가독폭 130px 고정, 4열 25% 균등배분, 텍스트 줄바꿈 절대금지(No-Wrap)
+    설명         : 미선적량/미입고량 자동 계산 및 우측 정렬 보정
 	=============================================================
 -->
 
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
 	<div class="erp-container">
 		<!-- 🚀 1. 상단 액션 바 -->
@@ -67,10 +68,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -79,6 +81,12 @@ import { useFormReset } from '@/composables/useFormReset'
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+
+// [도움창 상태 정의]
+const modalVisible = ref(false)
+const modalProps = reactive<any>({
+	title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table'
+})
 
 const searchForm = reactive({
 	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
@@ -108,8 +116,44 @@ function initialize() {
 	mainGrid?.clearData()
 }
 
-const openDeptPopup = () => { vAlert('부서 팝업 준비 중') }
-const openPoPopup = () => { vAlert('PO 팝업 준비 중') }
+/** 🚀 부서 도움창 */
+async function openDeptPopup() {
+	Object.assign(modalProps, {
+		title: '부서 선택',
+		path: '/api/ha00/HA00_00P_STR',
+		data: { gubun: 'D0', cmpycd: authStore.cmpycd, gbncd: '', code: '', codenm: searchForm.deptnm, etcval: '' },
+		columns: [
+			{ title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+			{ title: '부서명', field: 'deptnm', width: 200 }
+		],
+		onConfirm: (d: any) => {
+			searchForm.deptcd = d.deptcd
+			searchForm.deptnm = d.deptnm
+		}
+	})
+	await nextTick()
+	modalVisible.value = true
+}
+
+/** 🚀 PO 도움창 */
+async function openPoPopup() {
+	Object.assign(modalProps, {
+		title: 'PO 선택',
+		path: '/api/hs00/HS00_000S_STR',
+		data: { gubun: 'F0', cmpycd: authStore.cmpycd, gbncd: '1', code: '', codenm: searchForm.fileno, etcval: '' },
+		columns: [
+			{ title: 'PO No', field: 'fileno', width: 150, hozAlign: 'center' },
+			{ title: '거래처', field: 'custnm', minWidth: 200, widthGrow: 1 },
+			{ title: '발주일자', field: 'issymd', width: 120, hozAlign: 'center' }
+		],
+		onConfirm: (d: any) => {
+			searchForm.fileno = d.fileno
+			fetchList()
+		}
+	})
+	await nextTick()
+	modalVisible.value = true
+}
 
 onMounted(async () => {
 	if (mainGridRef.value) {
@@ -118,20 +162,46 @@ onMounted(async () => {
 			height: '100%',
 			selectable: 1,
 			placeholder: '표시할 데이터가 없습니다.',
-			columnDefaults: { headerSort: false, headerHozAlign: 'center', minWidth: 100 },
+			columnDefaults: {
+				headerSort: false,
+				headerHozAlign: 'center',
+				hozAlign: 'right', // 🚀 기본값을 우측 정렬로 설정
+				vertAlign: 'middle',
+				minWidth: 100
+			},
 			columns: [
 				{ title: '품목코드', field: 'itemcd', hozAlign: 'center', width: 110, cssClass: 'fw-bold text-primary border-end' },
 				{ title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 10, cssClass: 'fw-bold' },
 				{ title: '규격', field: 'itsize', width: 250 },
 				{ title: '단위', field: 'unit', hozAlign: 'center', width: 80 },
-				{ title: '발주량', field: 'balqty', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 } },
-				{ title: '선적량', field: 'shipqty', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-success' },
-				{ title: '미선적량', field: 'unshipqty', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().balqty) - Number(c.getData().shipqty)).toLocaleString() },
-				{ title: '통관량', field: 'PASsqty', hozAlign: 'right', width: 150, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-primary' },
-				{ title: '미입고량', field: 'UNPASsqty', hozAlign: 'right', width: 150, formatter: (c) => (Number(c.getData().balqty) - Number(c.getData().PASsqty)).toLocaleString(), cssClass: 'text-danger fw-bold' }
+				{ title: '발주량', field: 'balqty', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 } },
+				{ title: '선적량', field: 'shipqty', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-success' },
+				{
+					title: '미선적량', field: 'unship_calc', hozAlign: 'right', width: 120, cssClass: 'fw-bold',
+					formatter: (c: any) => {
+						const d = c.getData();
+						const val = Number(d.balqty || 0) - Number(d.shipqty || 0);
+						return val.toLocaleString();
+					}
+				},
+				{ title: '통관량', field: 'passqty', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'text-primary' },
+				{
+					title: '미입고량', field: 'unpass_calc', hozAlign: 'right', width: 120, cssClass: 'text-danger fw-bold',
+					formatter: (c: any) => {
+						const d = c.getData();
+						const val = Number(d.balqty || 0) - Number(d.passqty || 0);
+						return val.toLocaleString();
+					}
+				}
 			]
 		})
 	}
+
 	fetchList()
 })
 </script>
+
+<style scoped>
+.erp-table-full th, .erp-table-full td { height: 36px !important; padding: 0 8px !important; font-size: 13px; border: 1px solid #dee2e6; }
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

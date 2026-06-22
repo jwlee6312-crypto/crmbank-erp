@@ -6,14 +6,16 @@ import com.crmbank.erp.hasl.mapper.HaslMapper;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.session.SqlSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -24,65 +26,143 @@ import java.util.stream.Collectors;
 public class HaslController {
 
     private final HaslMapper haslMapper;
+    private final SqlSession sqlSession;
+    private final JdbcTemplate jdbcTemplate;
 
+    @Transactional(rollbackFor = Exception.class)
     @PostMapping("/{procedure}")
-    public Object executeProcedure(
+    public ResponseEntity<?> executeProcedure(
             @PathVariable String procedure,
             @RequestBody Map<String, Object> params,
             HttpSession session) {
         
-        injectSession(params, session);
-        String proc = procedure.trim().toLowerCase();
-
-        // 🚀 복합 저장 로직 (ApiResponse 반환)
-        if (proc.equals("hasl_010u_save")) return saveSlip010(params, session);
-        if (proc.equals("hasl_110u_save")) return saveSlip110(params, session);
-
-        // 🚀 단순 조회 로직 (List 반환)
-        if (proc.equals("hasl_040s_str")) {
-            String rawkeyword = String.valueOf(params.getOrDefault("keyword", "")).trim();
-            if (!rawkeyword.isEmpty() && !rawkeyword.equalsIgnoreCase("null")) {
-                params.put("keywords", modernTokenize(rawkeyword));
-            }
-            return haslMapper.HASL_040S_STR(params);
+        if (session.getAttribute("user_session") == null) {
+            return ResponseEntity.status(401).build();
         }
 
-        log.info("🚀 [hasl] procedure: {}, params: {}", proc, params);
-        
-        switch (proc) {
-            case "hasl_010u_str": return haslMapper.HASL_010U_STR(params);
-            case "hasl_011u_str": return haslMapper.HASL_011U_STR(params);
-            case "hasl_020u_str": return haslMapper.HASL_020U_STR(params);
-            case "hasl_030s_str": return haslMapper.HASL_030S_STR(params);
-            case "hasl_050u_master": return haslMapper.HASL_050U_MASTER(params);
-            case "hasl_050u_str": return haslMapper.HASL_050U_STR(params);
-            case "hasl_110u_str": return haslMapper.HASL_110U_STR(params);
-            case "hasl_111u_str": return haslMapper.HASL_111U_STR(params);
-            case "hasl_120s_str": return haslMapper.HASL_120S_STR(params);
-            case "hasl_130s_str": return haslMapper.HASL_130S_STR(params);
-            case "hasl_510s_str": return haslMapper.HASL_510S_STR(params);
-            case "hasl_520s_str": return haslMapper.HASL_520S_STR(params);
-            case "hasl_530s_str": return haslMapper.HASL_530S_STR(params);
-            case "hasl_540s_str": return haslMapper.HASL_540S_STR(params);
-            case "hasl_550s_str": return haslMapper.HASL_550S_STR(params);
-            case "hasl_560s_str": return haslMapper.HASL_560S_STR(params);
-            case "hasl_610s_str": return haslMapper.HASL_610S_STR(params);
-            case "hasl_620s_str": return haslMapper.HASL_620S_STR(params);
-            case "hasl_630s_str": return haslMapper.HASL_630S_STR(params);
-            case "hasl_710s_str": return haslMapper.HASL_710S_STR(params);
-            default:
-                log.warn("❌ [hasl] Unregistered procedure: {}", proc);
-                return null;
+        injectSession(params, session);
+        String proc = procedure.toUpperCase();
+
+        if (proc.equals("HASL_010U_SAVE")) return saveSlip010(params, session);
+        if (proc.equals("HASL_110U_SAVE")) return saveSlip110(params, session);
+
+        try {
+            fillMissingParameters(proc, params);
+
+            String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
+            log.info("🚀 [hasl] 실행 요청: {}", proc);
+            
+            List<Map<String, Object>> result;
+            if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
+                String positionalSql = buildPositionalSql(proc, params);
+                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+
+                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    List<Object> values = new ArrayList<>();
+                    int colCount = rs.getMetaData().getColumnCount();
+                    for (int i = 1; i <= colCount; i++) {
+                        Object val = rs.getObject(i);
+                        String colName = rs.getMetaData().getColumnLabel(i); 
+                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                        row.put(colName.toLowerCase(), val == null ? "" : val);
+                        values.add(val == null ? "" : val);
+                    }
+                    row.put("returnKeyValue", values); 
+                    return row;
+                });
+                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+            } else {
+                switch (proc) {
+                    case "HASL_010U_STR": result = haslMapper.HASL_010U_STR(params); break;
+                    case "HASL_011U_STR": result = haslMapper.HASL_011U_STR(params); break;
+                    case "HASL_020U_STR": result = haslMapper.HASL_020U_STR(params); break;
+                    case "HASL_030S_STR": result = haslMapper.HASL_030S_STR(params); break;
+                    case "HASL_040S_STR":
+                        String rawkeyword = String.valueOf(params.getOrDefault("keyword", "")).trim();
+                        if (!rawkeyword.isEmpty() && !rawkeyword.equalsIgnoreCase("null")) {
+                            params.put("keywords", modernTokenize(rawkeyword));
+                        }
+                        result = haslMapper.HASL_040S_STR(params);
+                        break;
+                    case "HASL_050U_MASTER": result = haslMapper.HASL_050U_MASTER(params); break;
+                    case "HASL_050U_STR": result = haslMapper.HASL_050U_STR(params); break;
+                    case "HASL_110U_STR": result = haslMapper.HASL_110U_STR(params); break;
+                    case "HASL_111U_STR": result = haslMapper.HASL_111U_STR(params); break;
+                    case "HASL_120S_STR": result = haslMapper.HASL_120S_STR(params); break;
+                    case "HASL_130S_STR": result = haslMapper.HASL_130S_STR(params); break;
+                    case "HASL_510S_STR": result = haslMapper.HASL_510S_STR(params); break;
+                    case "HASL_520S_STR": result = haslMapper.HASL_520S_STR(params); break;
+                    case "HASL_530S_STR": result = haslMapper.HASL_530S_STR(params); break;
+                    case "HASL_540S_STR": result = haslMapper.HASL_540S_STR(params); break;
+                    case "HASL_550S_STR": result = haslMapper.HASL_550S_STR(params); break;
+                    case "HASL_560S_STR": result = haslMapper.HASL_560S_STR(params); break;
+                    case "HASL_610S_STR": result = haslMapper.HASL_610S_STR(params); break;
+                    case "HASL_620S_STR": result = haslMapper.HASL_620S_STR(params); break;
+                    case "HASL_630S_STR": result = haslMapper.HASL_630S_STR(params); break;
+                    case "HASL_710S_STR": result = haslMapper.HASL_710S_STR(params); break;
+                    default:
+                        return ResponseEntity.notFound().build();
+                }
+            }
+
+            if (result == null || result.isEmpty()) {
+                result = List.of(Map.of("res", "OK"));
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("❌ [hasl] executeProcedure Error ({}): {}", proc, e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
-            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
+            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
+                params.put("cmpycd", user.getCmpycd());
+            }
+            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
+                params.put("userid", user.getUserid());
+            }
             params.put("updemp", user.getUserid());
         }
+    }
+
+    private void fillMissingParameters(String proc, Map<String, Object> params) {
+        try {
+            String statementId = HaslMapper.class.getName() + "." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                String prop = pm.getProperty();
+                if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
+                    String cleanProp = prop.trim();
+                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
+                        params.put(cleanProp, "");
+                    }
+                    if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
+                }
+            }
+        } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
+    }
+
+    private String buildPositionalSql(String proc, Map<String, Object> params) {
+        try {
+            String statementId = HaslMapper.class.getName() + "." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+            List<String> values = new ArrayList<>();
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                Object val = params.get(pm.getProperty().trim());
+                if (val == null) values.add("''");
+                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+            }
+            return String.format("EXEC %s %s", proc, String.join(", ", values));
+        } catch (Exception e) { return "EXEC " + proc; }
     }
 
     private List<String> modernTokenize(String query) {
@@ -112,10 +192,25 @@ public class HaslController {
             String actkind = (String) payload.get("actkind");
             injectSession(master, session);
             master.put("actkind", actkind);
-            List<Map<String, Object>> masterresult = haslMapper.HASL_010U_STR(master);
+            
+            String sql = buildPositionalSql("HASL_010U_STR", master);
+            List<Map<String, Object>> masterresult = jdbcTemplate.query(sql, (rs, rowNum) -> {
+                Map<String, Object> row = new LinkedHashMap<>();
+                for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                    row.put(rs.getMetaData().getColumnLabel(i).toLowerCase(), rs.getObject(i));
+                }
+                return row;
+            });
+
             if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
-            String slipno = String.valueOf(masterresult.get(0).get("slipno"));
+            
+            List<Object> mstValues = new ArrayList<>(masterresult.get(0).values());
+            String status = String.valueOf(mstValues.get(0)).trim();
+            if ("000000".equals(status)) throw new RuntimeException(String.valueOf(mstValues.get(1)));
+            
+            String slipno = String.valueOf(mstValues.get(0));
             String slipymd = String.valueOf(master.get("slipymd"));
+
             if (details != null) {
                 for (Map<String, Object> detail : details) {
                     injectSession(detail, session);
@@ -141,10 +236,25 @@ public class HaslController {
             String actkind = (String) payload.get("actkind");
             injectSession(master, session);
             master.put("actkind", actkind);
-            List<Map<String, Object>> masterresult = haslMapper.HASL_110U_STR(master);
+            
+            String sql = buildPositionalSql("HASL_110U_STR", master);
+            List<Map<String, Object>> masterresult = jdbcTemplate.query(sql, (rs, rowNum) -> {
+                Map<String, Object> row = new LinkedHashMap<>();
+                for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                    row.put(rs.getMetaData().getColumnLabel(i).toLowerCase(), rs.getObject(i));
+                }
+                return row;
+            });
+
             if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
-            String slipno = String.valueOf(masterresult.get(0).get("slipno"));
+            
+            List<Object> mstValues = new ArrayList<>(masterresult.get(0).values());
+            String status = String.valueOf(mstValues.get(0)).trim();
+            if ("000000".equals(status)) throw new RuntimeException(String.valueOf(mstValues.get(1)));
+
+            String slipno = String.valueOf(mstValues.get(0));
             String slipymd = String.valueOf(master.get("slipymd"));
+
             if (details != null) {
                 for (Map<String, Object> detail : details) {
                     injectSession(detail, session);

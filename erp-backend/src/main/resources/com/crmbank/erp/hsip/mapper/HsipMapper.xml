@@ -24,6 +24,10 @@
         #{itemcd}, #{itsize}, #{unit}, #{qty}, #{amt}, #{wonamt}, #{updemp}
     </select>
 
+    <select id="HSIP_112U_STR" resultType="map">
+        exec hsip_112u_str #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}
+    </select>
+
     <select id="HSIP_120U_STR" resultType="map">
         exec hsip_120u_str #{actkind}, #{cmpycd}, #{fileno}, #{shipseq}, #{passseq},
         #{passymd}, #{taxorg}, #{passno}, #{whcd}, #{deptcd}, #{ioym}, #{iono}, #{updemp}
@@ -33,6 +37,10 @@
         exec hsip_121u_str #{actkind}, #{cmpycd}, #{fileno}, #{shipseq}, #{passseq},
         #{prowno}, #{itemcd}, #{itsize}, #{unit}, #{gqty}, #{qty}, #{amt},
         #{ioym}, #{iono}, #{iorowno}, #{updemp}
+    </select>
+
+    <select id="HSIP_122U_STR" resultType="map">
+        exec hsip_122u_str #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}
     </select>
 
     <select id="HSIP_130U_STR" resultType="map">
@@ -46,26 +54,26 @@
     </select>
 
     <select id="HSIP_140U_STR" resultType="map">
-        exec hsip_140u_str #{actkind}, #{cmpycd}, #{deptcd}, #{ioymdfr}, #{ioymdto}, #{fileno},
+        exec hsip_140u_str #{actkind}, #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}, #{fileno},
         #{docno}, #{crowno}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
     <select id="HSIP_145U_STR" resultType="map">
-        exec hsip_145u_str #{actkind}, #{cmpycd}, #{costcd}, #{ioymdfr}, #{ioymdto}, #{deptcd},
+        exec hsip_145u_str #{actkind}, #{cmpycd}, #{costcd}, #{fromdt}, #{todt}, #{deptcd},
         #{fileno}, #{docno}, #{crowno}, #{jsanymd}, #{spyamt}, #{vatamt}, #{custcd}, #{taxunit},
         #{vattype}, #{slipymd}, #{slipno}, #{slipkind}, #{hdeptcd}, #{business}, #{updemp}
     </select>
 
     <select id="HSIP_150U_STR" resultType="map">
-        exec hsip_150u_str #{actkind}, #{cmpycd}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
+        exec hsip_150u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
     <select id="HSIP_155U_STR" resultType="map">
-        exec hsip_155u_str #{actkind}, #{cmpycd}, #{ioymdfr}, #{ioymdto}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
+        exec hsip_155u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
     <select id="HSIP_160U_STR" resultType="map">
-        exec hsip_160u_str #{actkind}, #{cmpycd}, #{deptcd}, #{frymd}, #{toymd}, #{divyn},
+        exec hsip_160u_str #{actkind}, #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}, #{divyn},
         #{fileno}, #{shipseq}, #{passseq}, #{updemp}
     </select>
 

@@ -30,9 +30,9 @@
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold small text-dark" style="min-width: 60px;">출고일자</span>
               <div class="d-flex align-items-center gap-1">
-                <input v-model="searchForm.outymdfr" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                <input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 <span class="text-muted">~</span>
-                <input v-model="searchForm.outymdto" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                <input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
               </div>
             </div>
             <button class="btn btn-sm btn-dark px-4 fw-bold ms-auto" @click="fetchCustList">
@@ -148,8 +148,8 @@ const initymd = `${initym}${String(now.getDate()).padStart(2, '0')}`;
 
 const searchForm = reactive({
   whcd: '100',
-  outymdfr: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
-  outymdto: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  fromdt: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
+  todt: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 })
 
 const masterData = reactive<any>({
@@ -193,8 +193,8 @@ async function fetchCustList() {
   try {
     const res = await api.post('/api/hsio/HSIO_560U_STR', {
       actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '200',
-      outymdfr: searchForm.outymdfr.replace(/-/g, ''),
-      outymdto: searchForm.outymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       whcd: searchForm.whcd
     });
     custList.value = res.data || [];
@@ -213,8 +213,8 @@ async function fetchDetail(cust: any) {
   try {
     const res = await api.post('/api/hsio/HSIO_560U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '200',
-      outymdfr: searchForm.outymdfr.replace(/-/g, ''),
-      outymdto: searchForm.outymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       custcd: cust.custcd, whcd: cust.whcd, ioym: cust.ioym, iono: cust.iono
     });
     if (grid.value) {
@@ -244,8 +244,8 @@ async function saveCancel() {
     for (const item of items) {
       await api.post('/api/hsio/HSIO_560U_STR', {
         actkind: 'D0', cmpycd: authStore.cmpycd, iogbn: '200',
-        outymdfr: searchForm.outymdfr.replace(/-/g, ''),
-        outymdto: searchForm.outymdto.replace(/-/g, ''),
+        fromdt: searchForm.fromdt.replace(/-/g, ''),
+        todt: searchForm.todt.replace(/-/g, ''),
         whcd: masterData.whcd, custcd: masterData.custcd,
         ioym: masterData.ioym, iono: masterData.iono, iorowno: item.iorowno,
         updemp: authStore.userid

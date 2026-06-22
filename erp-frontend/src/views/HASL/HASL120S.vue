@@ -44,9 +44,9 @@
 							<th class="text-center border-end">회계일자</th>
 							<td class="bg-white border-end">
 								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" />
+									<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" />
 									<span class="text-muted">~</span>
-									<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" />
+									<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" />
 								</div>
 							</td>
 							<th class="text-center border-end">계정과목</th>
@@ -84,8 +84,8 @@
 		<!-- 📊 그리드 영역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                  <div ref="mainGridRef" class="tabulator-full-height" />
                 </div>
 			</div>
 		</div>
@@ -119,8 +119,8 @@ const today = now.toISOString().substring(0, 10)
 
 // 🔍 검색 조건
 const searchForm = reactive({
-	frymd: firstDay,
-	toymd: today,
+	fromdt: firstDay,
+	todt: today,
 	acctcd: '',
 	acctnm: '',
 	deptcd_h: authStore.deptcd,
@@ -136,8 +136,8 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hasl/HASL_120S_STR', {
 			cmpycd: authStore.cmpycd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, ''),
 			acctcd: searchForm.acctcd,
 			deptcd: searchForm.deptcd_h,
 			slipamt_f: searchForm.slipamt_f,
@@ -150,8 +150,8 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.frymd = firstDay
-	searchForm.toymd = today
+	searchForm.fromdt = firstDay
+	searchForm.todt = today
 	searchForm.deptcd_h = authStore.deptcd
 	searchForm.deptnm_h = authStore.deptnm
 	mainGrid?.clearData()
@@ -224,7 +224,11 @@ onMounted(() => {
 			paginationSize: 50,
 			paginationSizeSelector: [20, 50, 100, 500],
 			paginationCounter: "rows",
-			columnDefaults: { headerSort: false, vertAlign: "middle" },
+			columnDefaults: {
+				headerSort: false,
+				hozAlign: 'right', // 🚀 기본값 우측 정렬
+				vertAlign: "middle"
+			},
 			columns: [
 				{
 					title: "전표번호", field: "slipno", width: 150, cssClass: "fw-bold", hozAlign: "center",
@@ -257,6 +261,10 @@ onMounted(() => {
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>
 
 <style scoped>
 .erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }

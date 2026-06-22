@@ -9,6 +9,9 @@ import lombok.Data;
 public class Hsio010u {
     private String actkind;
     private String cmpycd;
+    private String fromdt;
+    private String todt;
+    private String deptnm;
     private String reqym;
     private String reqno;
     private String asgbn;

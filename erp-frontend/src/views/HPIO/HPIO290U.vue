@@ -73,9 +73,9 @@
                 <th class="required bg-light text-center">계약기간</th>
                 <td colspan="3">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="frymd_f" type="date" class="form-control" />
+                    <input v-model="fromdt_f" type="date" class="form-control" />
                     <span class="px-1 opacity-50">~</span>
-                    <input v-model="toymd_f" type="date" class="form-control" />
+                    <input v-model="todt_f" type="date" class="form-control" />
                   </div>
                 </td>
                 <th class="bg-light text-center">특기사항</th>
@@ -147,7 +147,7 @@ const masterData = reactive<any>({
   actkind: 'S0', cmpycd: authStore.cmpycd,
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   pumym: today.replace(/-/g, '').substring(0, 6), pumno: '000',
-  pumymd: today.replace(/-/g, ''), frymd: today.replace(/-/g, ''), toymd: today.replace(/-/g, ''),
+  pumymd: today.replace(/-/g, ''), fromdt: today.replace(/-/g, ''), todt: today.replace(/-/g, ''),
   custcd: '', custnm: '', remark: ''
 })
 
@@ -156,8 +156,8 @@ const selectedProduct = reactive<any>({ itemcd: '', itemnm: '' })
 // 포맷팅 헬퍼
 const pumym_f = computed({ get: () => masterData.pumym ? `${masterData.pumym.substring(0, 4)}-${masterData.pumym.substring(4, 6)}` : '', set: (v) => { if (v) masterData.pumym = v.replace(/-/g, '') } })
 const pumymd_f = computed({ get: () => formatDate(masterData.pumymd), set: (v) => { if (v) masterData.pumymd = v.replace(/-/g, '') } })
-const frymd_f = computed({ get: () => formatDate(masterData.frymd), set: (v) => { if (v) masterData.frymd = v.replace(/-/g, '') } })
-const toymd_f = computed({ get: () => formatDate(masterData.toymd), set: (v) => { if (v) masterData.toymd = v.replace(/-/g, '') } })
+const fromdt_f = computed({ get: () => formatDate(masterData.fromdt), set: (v) => { if (v) masterData.fromdt = v.replace(/-/g, '') } })
+const todt_f = computed({ get: () => formatDate(masterData.todt), set: (v) => { if (v) masterData.todt = v.replace(/-/g, '') } })
 
 const prodTableRef = ref<HTMLDivElement | null>(null)
 const matTableRef = ref<HTMLDivElement | null>(null)
@@ -251,17 +251,37 @@ async function saveAll() {
 
   try {
     const mst = { ...masterData, actkind: masterData.pumno === '000' ? 'A0' : 'U0', userid: authStore.userid, pumgbn: '200' };
+    // 🚀 [Seed-Model] Step 1. 마스터 저장 실행
     const resM = await api.post('/api/hpio/HPIO_290U_STR', mst);
-    const newYm = resM.data[0]?.pumym || masterData.pumym;
-    const newNo = resM.data[0]?.pumno || masterData.pumno;
+    const mstData = resM.data?.[0];
+
+    // 🚀 [Seed-Model] Step 2. 무결성 키 추출 (0번: 상태/년월, 1번: 메시지/번호)
+    const rowValues = mstData?.returnkeyvalue || Object.values(mstData || {});
+    const key1 = (mstData?.pumym || rowValues[0] || '').toString().trim();
+    const key2 = (mstData?.pumno || rowValues[1] || '').toString().trim();
+
+    // 🚀 [Seed-Model] Step 3. 에러 판별
+    if (key1 === '000000') {
+        throw new Error(key2 || '업무 규칙 위반으로 저장할 수 없습니다.');
+    }
+
+    if (!key1 || !key2) throw new Error('실적번호 수신 실패 (Data Integrity Error)');
+
+    // 🚀 [Seed-Model] Step 4. 상세 내역 연결 (A0 루프)
+    const newYm = key1;
+    const newNo = key2;
 
     for (const p of prods) {
       const pAct = p._status === '입력' ? 'A0' : (p._status === '삭제' ? 'D0' : 'U0');
-      await api.post('/api/hpio/HPIO_291U_STR', { ...p, actkind: pAct, cmpycd: authStore.cmpycd, pumym: newYm, pumno: newNo, userid: authStore.userid });
+      const resP = await api.post('/api/hpio/HPIO_291U_STR', { ...p, actkind: pAct, cmpycd: authStore.cmpycd, pumym: newYm, pumno: newNo, userid: authStore.userid });
+      const pValues = resP.data?.[0]?.returnkeyvalue || Object.values(resP.data?.[0] || {});
+      if (pValues[0] === '000000') throw new Error(String(pValues[1] || '제품 실적 저장 중 오류 발생'));
     }
     for (const m of mats) {
       const mAct = m._status === '입력' ? 'A' : (m._status === '삭제' ? 'D' : 'U');
-      await api.post('/api/hpio/HPIO_292U_STR', { ...m, actkind: mAct, cmpycd: authStore.cmpycd, pumym: newYm, pumno: newNo, itemcd: selectedProduct.itemcd, userid: authStore.userid });
+      const resM = await api.post('/api/hpio/HPIO_292U_STR', { ...m, actkind: mAct, cmpycd: authStore.cmpycd, pumym: newYm, pumno: newNo, itemcd: selectedProduct.itemcd, userid: authStore.userid });
+      const mValues = resM.data?.[0]?.returnkeyvalue || Object.values(resM.data?.[0] || {});
+      if (mValues[0] === '000000') throw new Error(String(mValues[1] || '자재 소모 저장 중 오류 발생'));
     }
     vAlert('저장되었습니다.');
     masterData.pumym = newYm; masterData.pumno = newNo;
@@ -293,7 +313,7 @@ const deleteRows = (type: string) => {
 
 const initialize = () => {
   resetForm(masterData);
-  Object.assign(masterData, { cmpycd: authStore.cmpycd, pumym: today.replace(/-/g, '').substring(0, 6), pumno: '000', pumymd: today.replace(/-/g, ''), frymd: today.replace(/-/g, ''), toymd: today.replace(/-/g, ''), deptcd: authStore.deptcd, deptnm: authStore.deptnm });
+  Object.assign(masterData, { cmpycd: authStore.cmpycd, pumym: today.replace(/-/g, '').substring(0, 6), pumno: '000', pumymd: today.replace(/-/g, ''), fromdt: today.replace(/-/g, ''), todt: today.replace(/-/g, ''), deptcd: authStore.deptcd, deptnm: authStore.deptnm });
   prodGrid?.clearData(); matGrid?.clearData();
   selectedProduct.itemcd = ''; selectedProduct.itemnm = '';
 }

@@ -41,7 +41,7 @@
             </div>
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold small text-dark" style="min-width: 60px;">입고일자</span>
-              <DateForm v-model:fromdt="searchForm.ioymdfr" v-model:todt="searchForm.ioymdto" />
+              <DateForm v-model:fromdt="searchForm.fromdt" v-model:todt="searchForm.todt" />
             </div>
           </div>
         </div>
@@ -125,8 +125,8 @@ const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  ioymdfr: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-  ymdto: new Date().toISOString().substring(0, 10)
+  fromdt: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
+  todt: new Date().toISOString().substring(0, 10)
 })
 
 const formData = reactive<any>({
@@ -143,8 +143,8 @@ const fetchCustList = async () => {
   try {
     const res = await api.post('/api/hsio/HSIO_170U_STR', {
       actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '100',
-      ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       deptcd: searchForm.deptcd
     })
     poGrid?.setData(res.data || [])
@@ -157,8 +157,8 @@ const fetchDetail = async (row: any) => {
   try {
     const res = await api.post('/api/hsio/HSIO_170U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '100',
-      ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       custcd: row.custcd, deptcd: searchForm.deptcd
     })
     itemGrid?.setData(res.data || [])

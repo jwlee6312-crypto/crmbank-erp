@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 public class Hsio190u {
     private String actkind;
     private String cmpycd;
+    private String fromdt;
+    private String todt;
+    private String custnm;
     private String iogbn;
     private String ioym;
     private String iono;

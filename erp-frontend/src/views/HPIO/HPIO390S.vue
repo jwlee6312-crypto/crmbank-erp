@@ -54,9 +54,9 @@
                 </td>
                 <th class="text-center bg-light required">투입일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="proymdf_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="px-1 opacity-50">~</span>
-                  <input v-model="proymdt_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
               </tr>
             </tbody>
@@ -100,16 +100,16 @@ const { resetForm } = useFormReset()
 const searchData = reactive({
   linecd: '010',
   progcd: '',
-  proymdf: firstDay.replace(/-/g, ''),
-  proymdt: today.replace(/-/g, '')
+  fromdt: firstDay.replace(/-/g, ''),
+  todt: today.replace(/-/g, '')
 })
 
 const lineOptions = ref<any[]>([]); const progOptions = ref<any[]>([])
 const rowCount = ref(0)
 
 // 포맷팅 헬퍼 (ui 접두어 제거)
-const proymdf_f = computed({ get: () => formatDate(searchData.proymdf), set: (v) => { if (v) searchData.proymdf = v.replace(/-/g, '') } })
-const proymdt_f = computed({ get: () => formatDate(searchData.proymdt), set: (v) => { if (v) searchData.proymdt = v.replace(/-/g, '') } })
+const fromdt = computed({ get: () => formatDate(searchData.fromdt), set: (v) => { if (v) searchData.fromdt = v.replace(/-/g, '') } })
+const todt = computed({ get: () => formatDate(searchData.todt), set: (v) => { if (v) searchData.todt = v.replace(/-/g, '') } })
 
 const tableRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
@@ -162,7 +162,7 @@ async function fetchList() {
   if (!searchData.linecd) return vAlertError('생산라인을 선택하세요.')
   try {
     const res = await api.post('/api/hpio/HPIO_390S_STR', {
-      cmpycd: authStore.cmpycd, linecd: searchData.linecd, progcd: searchData.progcd || '', proymdF: searchData.proymdf, proymdT: searchData.proymdt
+      cmpycd: authStore.cmpycd, linecd: searchData.linecd, progcd: searchData.progcd || '', proymdF: searchData.fromdt, proymdT: searchData.todt
     })
     grid?.setData(res.data)
     rowCount.value = res.data.length
@@ -172,11 +172,11 @@ async function fetchList() {
 
 const initialize = () => {
   resetForm(searchData)
-  Object.assign(searchData, { linecd: '010', progcd: '', proymdf: firstDay.replace(/-/g, ''), proymdt: today.replace(/-/g, '') })
+  Object.assign(searchData, { linecd: '010', progcd: '', fromdt: firstDay.replace(/-/g, ''), todt: today.replace(/-/g, '') })
   grid?.clearData(); rowCount.value = 0;
 }
 
-const exportExcel = () => grid?.download("xlsx", `품목투입자재현황_${searchData.proymdt}.xlsx`)
+const exportExcel = () => grid?.download("xlsx", `품목투입자재현황_${searchData.todt}.xlsx`)
 const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
 
 onMounted(() => {

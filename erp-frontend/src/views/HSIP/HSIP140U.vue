@@ -41,7 +41,7 @@
               <tr>
                 <th class="text-center bg-light">수입일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <DateForm v-model:fromdt="searchForm.ioymdfr" v-model:todt="searchForm.ioymdto" />
+                  <DateForm v-model:fromdt="searchForm.fromdt" v-model:todt="searchForm.todt" />
                 </td>
                 <th class="text-center bg-light">부서</th>
                 <td>
@@ -179,7 +179,12 @@ const normalizeKeys = (obj: any) => {
 };
 
 // 폼 데이터
-const searchForm = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, ioymdfr: firstDay, ioymdto: today })
+const searchForm = reactive({
+  deptcd: authStore.deptcd, deptnm: authStore.deptnm,
+  fromdt: firstDay,
+  todt: today
+})
+
 const vatForm = reactive({ taxunit: '000', custcd: '', custnm: '', vattype: '000', vatamt: 0 })
 const payInfo = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, payymd: today })
 
@@ -192,7 +197,12 @@ const targetTotalAmt = ref(0); const totalPayAmt = ref(0)
 // 🚀 데이터 조회
 const fetchUnissuedList = async () => {
   try {
-    const params = { actkind: 'S0', cmpycd: authStore.cmpycd, deptcd: searchForm.deptcd, ioymdfr: searchForm.ioymdfr.replace(/-/g, ''), ioymdto: searchForm.ioymdto.replace(/-/g, '') }
+    const params = { 
+    actkind: 'S0', 
+    cmpycd: authStore.cmpycd, 
+    deptcd: searchForm.deptcd, 
+    fromdt: searchForm.fromdt.replace(/-/g, ''), 
+    todt: searchForm.todt.replace(/-/g, '') }
     const res = await api.post('/api/hsip/HSIP_140U_STR', params)
     mainGrid?.setData(res.data || [])
     vAlert('조회되었습니다.')
@@ -224,7 +234,7 @@ const handleGenerateSlip = async () => {
     // [차변] 매입처(vatForm.custcd) 연결
     for (const item of selectedCosts) {
       await api.post('/api/hasl/HASL_011U_STR', { actkind: 'A', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: slipno, srowno: '', acctymd: slipymd, acctcd: '1365', sdeptcd: item.deptcd || payInfo.deptcd, custcd: vatForm.custcd, fileno: item.fileno, costamt: item.costamt, bigo: (item.bigo || item.costnm) + "(" + item.fileno + ")", userid: authStore.userid })
-      await api.post('/api/hsip/HSIP_140U_STR', { actkind: 'U0', cmpycd: authStore.cmpycd, qdeptcd: searchForm.deptcd, ioymdfr: searchForm.ioymdfr.replace(/-/g, ''), ioymdto: searchForm.ioymdto.replace(/-/g, ''), fileno: item.fileno, docno: item.docno, crowno: item.crowno, slipymd: slipymd, slipno: slipno, userid: authStore.userid })
+      await api.post('/api/hsip/HSIP_140U_STR', { actkind: 'U0', cmpycd: authStore.cmpycd, qdeptcd: searchForm.deptcd, fromdt: searchForm.fromdt.replace(/-/g, ''), todt: searchForm.todt.replace(/-/g, ''), fileno: item.fileno, docno: item.docno, crowno: item.crowno, slipymd: slipymd, slipno: slipno, userid: authStore.userid })
     }
     if (vatForm.vattype !== '000') {
       const vt = vatForm.vattype.split('|')[0]

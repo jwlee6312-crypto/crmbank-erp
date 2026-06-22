@@ -118,11 +118,11 @@ async function search() {
 	if (!popupGrid.value) return
 	loading.value = true;
 	try {
-		// 💡 소문자 표준 지침에 따라 파라미터 키를 소문자로 구성
+		// 💡 기존 제공된 데이터를 우선하되, 검색어가 있을 경우에만 덮어씀
 		const body = {
 			...props.modalProps.data,
 			gubun: props.modalProps.data.gubun || '',
-			codenm: filterValue.value || '',
+			codenm: filterValue.value || props.modalProps.data.codenm || '',
 			etcval: props.modalProps.data.etcval || ''
 		}
 
@@ -132,9 +132,13 @@ async function search() {
 			body.code = props.modalProps.data.code;
 		}
 
+		console.log('🚀 [Popup Request]', props.modalProps.path, body)
 		const res = await api.post(props.modalProps.path, body)
+
+		console.log('✅ [Popup Response]', res.data)
+
 		// 💡 인터셉터에서 이미 소문자로 정규화된 데이터를 사용
-		const resData = res.data.data || (Array.isArray(res.data) ? res.data : [])
+		const resData = res.data || (Array.isArray(res.data) ? res.data : [])
 		totalCount.value = resData.length
 
 		if (popupGrid.value) {

@@ -88,8 +88,8 @@
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>거래처 손익 리스트</span>
           <span class="text-muted small" style="font-size: 11px;">* 거래처명을 클릭하면 상세 현황(HAPL220S)으로 이동합니다.</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+          <div ref="mainGridRef" class="tabulator-full-height" />
         </div>
       </div>
 
@@ -105,14 +105,16 @@ import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
-import { useCommonHelp } from '@/composables/useCommonHelp'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
+import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 // [1] 데이터 모델링
 const currentYear = new Date().getFullYear()
@@ -140,7 +142,12 @@ const initGrids = () => {
     layout: "fitColumns",
     height: "100%",
     placeholder: "조회된 데이터가 없습니다.",
-    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columnDefaults: {
+      headerHozAlign: 'center',
+      headerSort: false,
+      hozAlign: 'right', // 🚀 기본값 우측 정렬
+      vertAlign: 'middle'
+    },
     columnCalcs: "table",
     columns: [
       { title: "거래처명", field: "CUSTNM", widthGrow: 1.5, frozen: true, cssClass: "fw-bold text-primary",
@@ -229,7 +236,19 @@ async function search() {
 }
 
 const handleOpenHelp = (type: string) => {
-  if (type === 'DEPT') openHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
+  if (type === 'DEPT') {
+    Object.assign(modalProps, {
+      title: '부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: '', codenm: searchForm.deptnm, remark: '' },
+      columns: [
+        { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
+    })
+    modalVisible.value = true
+  }
 }
 
 const handlePrint = (prtgu: string) => {
@@ -264,7 +283,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tabulator-instance { width: 100% !important; background-color: #fff; }
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
 .bg-light-blue { background-color: #e3f2fd !important; }
 .bg-light-green { background-color: #f1f8e9 !important; }
 </style>

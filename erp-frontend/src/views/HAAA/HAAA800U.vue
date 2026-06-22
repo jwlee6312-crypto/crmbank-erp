@@ -83,7 +83,7 @@
 								<th>사용</th>
 								<td>
 									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
-										<input v-model="formdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="y" false-value="n" id="useyn800">
+										<input v-model="formdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useyn800">
 										<label class="form-check-label ms-2 small fw-bold" for="useyn800">{{ formdata.useyn === 'Y' ? '사용' : '중지' }}</label>
 									</div>
 								</td>

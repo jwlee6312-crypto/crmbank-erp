@@ -46,18 +46,18 @@
 			<div class="card border shadow-sm overflow-hidden flex-shrink-0">
 				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
 					<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-secondary"></i>사용자 정보 상세 관리</div>
-					<div v-if="formData.actkind === 'U0'" class="badge bg-primary-subtle text-primary border border-primary-subtle px-2">수정 모드</div>
+					<div v-if="formData.actkind === 'U0'" class="badge bg-primary-subtle text-primary border border-primary-subtle px-2">수정 중</div>
 					<div v-else class="badge bg-success-subtle text-success border border-success-subtle px-2">신규 등록</div>
 				</div>
 				<div class="card-body p-0 bg-white">
 					<table class="erp-table-dense w-100">
 						<colgroup>
-							<col style="width: 100px;" /><col style="width: 180px;" /> <!-- 아이디 -->
-							<col style="width: 100px;" /><col style="width: 180px;" /> <!-- 성명 -->
-							<col style="width: 100px;" /><col style="width: 180px;" /> <!-- 비밀번호 -->
-							<col style="width: 100px;" /><col  /> <!-- 부서 -->
-							<col style="width: 100px;" /><col style="width: 150px;" /> <!-- 직위 -->
-							<col style="width: 100px;" /><col style="width: 120px;" /> <!-- 내선번호 -->
+							<col style="width: 100px;" /><col style="width: 180px;" />
+							<col style="width: 100px;" /><col style="width: 180px;" />
+							<col style="width: 100px;" /><col style="width: 180px;" />
+							<col style="width: 100px;" /><col  />
+							<col style="width: 100px;" /><col style="width: 150px;" />
+							<col style="width: 100px;" /><col style="width: 120px;" />
 						</colgroup>
 						<tbody>
 							<tr>
@@ -69,17 +69,17 @@
 									</div>
 								</td>
 								<th class="required bg-light text-center">성    명</th>
-								<td><input v-model="formData.usernm" type="text" class="form-control" placeholder="성명" /></td>
+								<td><input v-model="formData.usernm" type="text" class="form-control form-control-sm" placeholder="성명" /></td>
 								<th class="required bg-light text-center">비밀번호</th>
-								<td><input v-model="formData.pw" type="password" class="form-control" maxlength="20" placeholder="비밀번호" /></td>
+								<td><input v-model="formData.pw" type="password" class="form-control form-control-sm" maxlength="20" placeholder="비밀번호" /></td>
 								<th class="required bg-light text-center">부    서</th>
-                                <td>
-                                    <div class="input-group input-group-sm flex-nowrap">
-                                        <input v-model="formData.deptcd" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 70px;" readonly />
-                                        <input v-model="formData.deptnm" type="text" class="form-control" placeholder="부서명" @keyup.enter="handleOpenHelp('DEPT')" />
-                                        <button class="btn btn-outline-secondary px-1" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
-                                    </div>
-                                </td>
+								<td>
+									<div class="input-group input-group-sm flex-nowrap">
+										<input v-model="formData.deptcd" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 60px;" readonly />
+										<input v-model="formData.deptnm" type="text" class="form-control" placeholder="부서명" @keyup.enter="handleOpenHelp('DEPT')" />
+										<button class="btn btn-outline-secondary px-1" @click="handleOpenHelp('DEPT')"><i class="bi bi-search"></i></button>
+									</div>
+								</td>
 								<th class="bg-light text-center border-start">직    위</th>
 								<td>
 									<select v-model="formData.positionoff" class="form-select form-select-sm">
@@ -96,7 +96,7 @@
 								<th class="bg-light text-center border-top">핸 드 폰</th>
 								<td class="border-top"><input v-model="formData.hpno" type="text" class="form-control text-center text-primary fw-bold" placeholder="010-0000-0000" /></td>
 								<th class="bg-light text-center border-top">사    번</th>
-                                <td class="border-top"><input v-model="formData.empno" type="text" class="form-control text-center" /></td>
+								<td class="border-top"><input v-model="formData.empno" type="text" class="form-control text-center" /></td>
 								<th class="bg-light text-center border-top">이 메 일</th>
 								<td class="border-top"><input v-model="formData.email" type="email" class="form-control" placeholder="example@haion.net" /></td>
 								<th class="bg-light text-center border-start border-top">영업여부</th>
@@ -125,11 +125,12 @@
 					<i class="bi bi-table me-2 text-primary"></i>
 					<span class="fw-bold small text-dark">사용자 전체 목록</span>
 				</div>
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                </div>
+				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+					<div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+				</div>
 			</div>
 		</div>
+
 		<!-- 💡 공통 팝업 모달 -->
 		<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 	</div>
@@ -195,27 +196,33 @@ async function save() {
 	if (!formData.userid || !formData.usernm || !formData.pw) return vAlertError('아이디, 비밀번호, 성명은 필수입니다.')
 	try {
 		let act;
-        if (formData.userid === '') {
-            act = 'I1';
-        } else {
-            act = 'U1';
-        }
+		if (formData.userid === '') {
+			act = 'I1';
+		} else {
+			act = 'U1';
+		}
 
-        const cleanFormData = Object.fromEntries(
-          Object.entries(formData).map(([key, value]) => [
-            key,
-            typeof value === 'string' ? value.trim() : value
-          ])
-        );
+		const cleanFormData = Object.fromEntries(
+			Object.entries(formData).map(([key, value]) => [
+				key,
+				typeof value === 'string' ? value.trim() : value
+			])
+		);
 
-		await api.post('/api/haba/HABA_920U_STR', {
+		const res = await api.post('/api/haba/HABA_920U_STR', {
 			...cleanFormData,
 			actkind: act,
 			word: '',
 			updemp: authStore.userid
 		})
-		vAlert('성공적으로 저장되었습니다.')
-		fetchList()
+
+		const resdata = res.data?.[0] || {};
+		if (resdata.res === 'OK') {
+			vAlert('성공적으로 저장되었습니다.')
+			setTimeout(() => { fetchList() }, 500);
+		} else {
+			vAlertError(resdata.msg || '저장 실패')
+		}
 	} catch (e) { vAlertError('저장 실패') }
 }
 
@@ -228,7 +235,7 @@ async function deleteData() {
 			updemp: authStore.userid
 		})
 		vAlert('삭제되었습니다.')
-		fetchList(); initialize()
+		setTimeout(() => { fetchList(); initialize() }, 500);
 	} catch (e) { vAlertError('삭제 중 실패') }
 }
 
@@ -256,37 +263,23 @@ onMounted(async () => {
 			layout: "fitColumns", height: "100%", selectable: 1,
 			placeholder: "표시할 사용자가 없습니다.",
 			columnDefaults: { headerSort: false, headerHozAlign: 'center', vertAlign: "middle" },
-            responsiveLayout: "hide",
+			responsiveLayout: "hide",
 			columns: [
-				{ title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
+				{ title: "No", formatter: "rownum", width: 40 },
 				{ title: "아이디", field: "userid", hozAlign: "center", width: 130, cssClass: "fw-bold text-primary border-end" },
 				{ title: "성명", field: "usernm", hozAlign: "center", width: 120 },
 				{ title: "소속부서", field: "deptnm", widthGrow: 1, cssClass: "border-start", hozAlign: "left" },
-		        { title: "사번", field: "empno", hozAlign: "center", width: 100 },
 				{ title: "직위", field: "positionoffnm", hozAlign: "center", width: 100 },
-				{ title: "핸드폰", field: "hpno", width: 130 },
-				{ title: "내선", field: "inner_no", hozAlign: "center", width: 90 },
-				{ title: "영업", field: "salsyn", hozAlign: "center", width: 60, formatter: (c) => c.getValue() === 'Y' ? '<span class="text-primary fw-bold">Y</span>' : 'N' },
-        		{ title: "사용", field: "useyn", hozAlign: "center", width: 60, formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">Y</span>' : '<span class="text-danger">N</span>' }
+				{ title: "핸드폰", field: "hpno", width: 150 },
+				{ title: "메일", field: "email", width: 200, hozAlign: "left" },
+				{ title: "내선번호", field: "inner_no", hozAlign: "center", width: 100 },
+        		{ title: "사용", field: "useyn", hozAlign: "center", width: 80, formatter: (c) => c.getValue()?.toUpperCase() === 'Y' ? 'O' : 'X' }
 			]
 		})
 		mainGrid.on('rowClick', (e, row) => {
 			const data = row.getData();
-			formData.userid = data.userid;
-			formData.usernm = data.usernm;
-			formData.deptcd = data.deptcd;
-			formData.deptnm = data.deptnm;
-			formData.empno = data.empno;
-			formData.positionoff = data.positionoff;
-			formData.positionoffnm = data.positionoffnm;
-			formData.hpno = data.hpno;
-			formData.telno = data.telno;
-			formData.email = data.email;
-			formData.inner_no = data.inner_no;
-			formData.salsyn = data.salsyn;
-			formData.useyn = data.useyn;
-            formData.pw = '';
-
+			Object.assign(formData, data);
+			formData.pw = '';
 			formData.actkind = 'U0'
 		})
 	}

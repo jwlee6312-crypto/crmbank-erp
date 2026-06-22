@@ -54,9 +54,9 @@
 						<div class="d-flex align-items-center">
 							<span class="erp-label"><i class="bi bi-dot"></i>회계일자</span>
 							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+								<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 								<span>~</span>
-								<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+								<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 							</div>
 						</div>
 					</div>
@@ -102,15 +102,15 @@ const searchForm = reactive({
 	acctcdfrnm: '',
 	acctcdto: '',
 	acctcdtonm: '',
-	frymd: firstDay,
-	toymd: today
+	fromdt: firstDay,
+	todt: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
 const search = async () => {
-	if (!searchForm.frymd || !searchForm.toymd) {
+	if (!searchForm.fromdt || !searchForm.todt) {
 		vAlertError('회계일자를 선택해 주십시오.')
 		return
 	}
@@ -118,8 +118,8 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hasl/HASL_610S_STR', {
 			cmpycd: authStore.cmpycd,
-			ymdfr: searchForm.frymd.replace(/-/g, ''),
-			ymdto: searchForm.toymd.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, ''),
 			acctcdfr: searchForm.acctcdfr,
 			acctcdto: searchForm.acctcdto,
 			gubun: '2' // ASP 코드의 마지막 파라미터 "2" 반영
@@ -167,7 +167,7 @@ function openHelp(type: 'FR' | 'TO') {
 }
 
 const print = () => {
-	const params = `acctcdfr=${searchForm.acctcdfr}&acctcdfrnm=${searchForm.acctcdfrnm}&acctcdto=${searchForm.acctcdto}&acctcdtonm=${searchForm.acctcdtonm}&frymd=${searchForm.frymd.replace(/-/g, '')}&toymd=${searchForm.toymd.replace(/-/g, '')}&PRTGU=1`
+	const params = `acctcdfr=${searchForm.acctcdfr}&acctcdfrnm=${searchForm.acctcdfrnm}&acctcdto=${searchForm.acctcdto}&acctcdtonm=${searchForm.acctcdtonm}&fromdt=${searchForm.fromdt.replace(/-/g, '')}&todt=${searchForm.todt.replace(/-/g, '')}&PRTGU=1`
 	window.open(`/api/hasl/HASL_610P?${params}`, 'StatementPrint', 'width=800,height=800,scrollbars=yes')
 }
 
@@ -180,8 +180,8 @@ const goDetail = (acctCd: string) => {
 	router.push({
 		path: `/${pgmid}`,
 		query: {
-            frymd: searchForm.frymd.replace(/-/g, ''),
-            toymd: searchForm.toymd.replace(/-/g, ''),
+            fromdt: searchForm.fromdt.replace(/-/g, ''),
+            todt: searchForm.todt.replace(/-/g, ''),
             acctcd: search_form.acctcd.trim(),
             acctnm: search_form.acctnm
         }

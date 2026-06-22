@@ -47,7 +47,7 @@
 								<th>사용</th>
 								<td>
 									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
-										<input v-model="masterform.useyn" class="form-check-input mt-0" type="checkbox" true-value="y" false-value="n" id="useyn050">
+										<input v-model="masterform.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useyn050">
 									</div>
 								</td>
 							</tr>
@@ -105,7 +105,12 @@ const normalizekeys = (obj: any) => {
 
 async function search() {
 	try {
-		const res = await api.post('/api/haba/haba_050u_str', { actkind: 'S0', cmpycd: authstore.cmpycd })
+		// 🚀 HabaController의 fillMissingParameters 기능을 테스트하기 위해
+		// bankcd, banknm 등 공백 파라미터를 생략하고 actkind만 전달합니다.
+		const res = await api.post('/api/haba/HABA_050U_STR', {
+		    actkind: 'S0'
+		})
+
 		const processed = (res.data || []).map((i: any) => normalizekeys(i));
 		maingrid?.setData(processed)
 		activeitemcount.value = processed.length
@@ -118,7 +123,7 @@ async function save() {
 	if (!confirm('저장하시겠습니까?')) return
 	try {
 		const act = masterform.actkind === 'S0' ? 'A0' : 'U0';
-		const res = await api.post('/api/haba/haba_050u_str', { ...masterform, actkind: act })
+		const res = await api.post('/api/haba/HABA_050U_STR', { ...masterform, actkind: act })
 		const resdata = normalizekeys(res.data?.[0]);
 		if (resdata.result === 'N') valerterror(resdata.msg || '저장 실패')
 		else { valert('저장되었습니다.'); search(); initialize() }

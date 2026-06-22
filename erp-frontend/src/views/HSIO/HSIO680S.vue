@@ -75,8 +75,8 @@
 		<!-- 📊 6. 중앙 그리드 영역 (상하좌우 중앙 정렬 표준) -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                  <div ref="mainGridRef" class="tabulator-full-height" />
                 </div>
 			</div>
 		</div>
@@ -166,7 +166,13 @@ onMounted(() => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 80 },
+			columnDefaults: {
+				headerSort: false,
+				headerHozAlign: "center",
+				hozAlign: 'right', // 🚀 기본값 우측 정렬
+				vertAlign: "middle",
+				minWidth: 80
+			},
 			columns: [
 				{ title: "거래처명", field: "custnm", minWidth: 180, hozAlign: "left", cssClass: "fw-bold", frozen: true },
 				{
@@ -201,3 +207,7 @@ onMounted(() => {
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

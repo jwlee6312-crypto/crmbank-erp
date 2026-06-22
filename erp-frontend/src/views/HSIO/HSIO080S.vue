@@ -45,9 +45,9 @@
                 </td>
                 <th class="text-center bg-light">발주일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="searchParam.frymd" type="date" class="form-control form-control-sm" style="width: 130px;" @change="fetchList" />
+                  <input v-model="searchParam.fromdt" type="date" class="form-control form-control-sm" style="width: 130px;" @change="fetchList" />
                   <span class="text-muted mx-1">~</span>
-                  <input v-model="searchParam.toymd" type="date" class="form-control form-control-sm" style="width: 130px;" @change="fetchList" />
+                  <input v-model="searchParam.todt" type="date" class="form-control form-control-sm" style="width: 130px;" @change="fetchList" />
                 </td>
                 <th class="text-center bg-light">거 래 처</th>
                 <td>
@@ -98,21 +98,19 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { getDate } from '@/composables/useDate'
 import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-
-const now = new Date();
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-const formatDateStr = (date: Date) => date.toISOString().substring(0, 10);
+const { firstDay, today } = getDate()
 
 const searchParam = reactive({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  frymd: formatDateStr(firstDay),
-  toymd: formatDateStr(now),
+  fromdt: firstDay,
+  todt: today,
   custcd: '',
   custnm: ''
 })
@@ -125,10 +123,8 @@ const totals = reactive({ qty: 0, amt: 0, vat: 0, sum: 0 })
 const initGrid = () => {
   if (!gridElement.value) return
   grid.value = new Tabulator(gridElement.value, {
-    layout: "fitColumns",
-    height: "100%",
-    placeholder: "조회된 데이터가 없습니다.",
-    columnDefaults: { headerHozAlign: 'center', minWidth: 90 },
+    layout: "fitColumns", height: "100%", placeholder: "조회된 데이터가 없습니다", selectable: true,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       { title: "거래처", field: "custnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-dark cursor-pointer", cellClick: (e, cell) => {
         console.log('Navigate to HSIO090S with', cell.getData().custcd);
@@ -136,7 +132,7 @@ const initGrid = () => {
       { title: "구매요청자", field: "usernm", width: 100, hozAlign: "center" },
       { title: "주요품목", field: "itemnm", minWidth: 250, widthGrow: 2, formatter: (cell) => {
         const d = cell.getData();
-        const cnt = Number(d.ITEM_CNT) || 0;
+        const cnt = Number(d.item_cnt) || 0;
         return cnt > 0 ? `${d.itemnm} 외 ${cnt}건` : d.itemnm;
       }},
       { title: "발주량", field: "balqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
@@ -174,10 +170,12 @@ async function fetchList() {
       deptcd: searchParam.deptcd,
       custcd: searchParam.custcd,
       custnm: searchParam.custnm,
-      ymdfr: searchParam.frymd.replace(/-/g, ''),
-      ymdto: searchParam.toymd.replace(/-/g, '')
+      fromdt: searchParam.fromdt.replace(/-/g, ''),
+      todt: searchParam.todt.replace(/-/g, '')
     });
+
     if (grid.value) {
+      console.log(res.data);
       grid.value.setData(res.data);
       updateTotals(res.data);
       vAlert('조회되었습니다.');
@@ -190,8 +188,8 @@ function initialize() {
   Object.assign(searchParam, {
     deptcd: authStore.deptcd,
     deptnm: authStore.deptnm,
-    frymd: formatDateStr(firstDay),
-    toymd: formatDateStr(now)
+    fromdt: firstDay,
+    todt: today
   });
   grid.value?.clearData();
   updateTotals([]);

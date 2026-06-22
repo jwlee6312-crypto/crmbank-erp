@@ -55,9 +55,9 @@
                 </td>
                 <th class="text-center bg-light required">입고일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="frymd_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="fromdt_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="px-1 opacity-50">~</span>
-                  <input v-model="toymd_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="todt_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
               </tr>
               <tr>
@@ -124,8 +124,8 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 const searchData = reactive({
   whcd: '000',
   iotype: '000',
-  frymd: firstDay.replace(/-/g, ''),
-  toymd: today.replace(/-/g, ''),
+  fromdt: firstDay.replace(/-/g, ''),
+  todt: today.replace(/-/g, ''),
   custcd: '', custnm: '',
   itemcd: '', itemnm: '', itsize: '', unit: ''
 })
@@ -134,8 +134,8 @@ const whOptions = ref<any[]>([]); const iotypeOptions = ref<any[]>([])
 const rowCount = ref(0)
 
 // 포맷팅 헬퍼
-const frymd_f = computed({ get: () => formatDate(searchData.frymd), set: (v) => { if (v) searchData.frymd = v.replace(/-/g, '') } })
-const toymd_f = computed({ get: () => formatDate(searchData.toymd), set: (v) => { if (v) searchData.toymd = v.replace(/-/g, '') } })
+const fromdt_f = computed({ get: () => formatDate(searchData.fromdt), set: (v) => { if (v) searchData.fromdt = v.replace(/-/g, '') } })
+const todt_f = computed({ get: () => formatDate(searchData.todt), set: (v) => { if (v) searchData.todt = v.replace(/-/g, '') } })
 
 const tableRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
@@ -187,7 +187,7 @@ const fetchOptions = async () => {
 async function fetchList() {
   try {
     const res = await api.post('/api/hpio/HPIO_710S_STR', {
-      cmpycd: authStore.cmpycd, whcd: searchData.whcd, iotype: searchData.iotype, frymd: searchData.frymd, toymd: searchData.toymd, custcd: searchData.custcd, itemcd: searchData.itemcd
+      cmpycd: authStore.cmpycd, whcd: searchData.whcd, iotype: searchData.iotype, fromdt: searchData.fromdt, todt: searchData.todt, custcd: searchData.custcd, itemcd: searchData.itemcd
     })
     grid?.setData(res.data)
     rowCount.value = res.data.length
@@ -207,11 +207,11 @@ const handleOpenHelp = (type: string) => {
 
 const initialize = () => {
   resetForm(searchData)
-  Object.assign(searchData, { whcd: '000', iotype: '000', frymd: initfrymd, toymd: inittymd })
+  Object.assign(searchData, { whcd: '000', iotype: '000', fromdt: initfromdt, todt: inittymd })
   grid?.clearData(); rowCount.value = 0;
 }
 
-const exportExcel = () => grid?.download("xlsx", `입출고현황_${searchData.toymd}.xlsx`)
+const exportExcel = () => grid?.download("xlsx", `입출고현황_${searchData.todt}.xlsx`)
 const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
 
 onMounted(async () => {

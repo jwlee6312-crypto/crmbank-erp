@@ -47,7 +47,7 @@
                 <th class="bg-light text-center">사용여부</th>
                 <td>
                   <div class="form-check form-switch m-0 d-flex justify-content-center">
-                    <input v-model="masterdata.useyn" class="form-check-input" type="checkbox" true-value="y" false-value="n">
+                    <input v-model="masterdata.useyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N">
                   </div>
                 </td>
               </tr>

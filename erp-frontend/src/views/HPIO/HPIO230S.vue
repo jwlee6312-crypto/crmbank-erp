@@ -49,9 +49,9 @@
                 </td>
                 <th class="text-center bg-light required">지시일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="ordymdf_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="px-1 opacity-50">~</span>
-                  <input v-model="ordymdt_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
               </tr>
             </tbody>
@@ -93,20 +93,20 @@ const { resetForm } = useFormReset()
 // [1] 데이터 모델링
 const searchData = reactive({
   linecd: '010',
-  ordymdf: firstDay.replace(/-/g, ''),
-  ordymdt: today.replace(/-/g, '')
+  fromdt: firstDay.replace(/-/g, ''),
+  todt: today.replace(/-/g, '')
 })
 
 const lineOptions = ref<any[]>([])
 const rowCount = ref(0)
 
-const ordymdf_f = computed({
-  get: () => searchData.ordymdf && searchData.ordymdf.length === 8 ? `${searchData.ordymdf.substring(0, 4)}-${searchData.ordymdf.substring(4, 6)}-${searchData.ordymdf.substring(6, 8)}` : '',
-  set: (v) => { if (v) searchData.ordymdf = v.replace(/-/g, '') }
+const fromdt = computed({
+  get: () => searchData.fromdt && searchData.fromdt.length === 8 ? `${searchData.fromdt.substring(0, 4)}-${searchData.fromdt.substring(4, 6)}-${searchData.fromdt.substring(6, 8)}` : '',
+  set: (v) => { if (v) searchData.fromdt = v.replace(/-/g, '') }
 })
-const ordymdt_f = computed({
-  get: () => searchData.ordymdt && searchData.ordymdt.length === 8 ? `${searchData.ordymdt.substring(0, 4)}-${searchData.ordymdt.substring(4, 6)}-${searchData.ordymdt.substring(6, 8)}` : '',
-  set: (v) => { if (v) searchData.ordymdt = v.replace(/-/g, '') }
+const todt = computed({
+  get: () => searchData.todt && searchData.todt.length === 8 ? `${searchData.todt.substring(0, 4)}-${searchData.todt.substring(4, 6)}-${searchData.todt.substring(6, 8)}` : '',
+  set: (v) => { if (v) searchData.todt = v.replace(/-/g, '') }
 })
 
 const tableRef = ref<HTMLDivElement | null>(null)
@@ -126,7 +126,7 @@ const initGrids = () => {
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
       { title: "지시수량", field: "ordqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
       { title: "생산수량", field: "prodqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-success fw-bold" },
-      { title: "완료예정", field: "toymd", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
+      { title: "완료예정", field: "todt", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
       { title: "주문번호", field: "ord_disp", width: 130, hozAlign: "center", cssClass: "text-secondary" },
       { title: "납품처", field: "custnm", width: 150, hozAlign: "left" }
     ],
@@ -147,8 +147,8 @@ async function fetchList() {
     const res = await api.post("/api/hpio/HPIO_230S_STR", {
         cmpycd: authStore.cmpycd,
         linecd: searchData.linecd,
-        ordymdf: searchData.ordymdf,
-        ordymdt: searchData.ordymdt
+        fromdt: searchData.fromdt,
+        todt: searchData.todt
     })
 
     const mapped = (res.data || []).map((item: any) => ({
@@ -165,12 +165,12 @@ async function fetchList() {
 
 const initialize = () => {
   resetForm(searchData)
-  Object.assign(searchData, { linecd: '010', ordymdf: firstDay.replace(/-/g, ''), ordymdt: today.replace(/-/g, '') })
+  Object.assign(searchData, { linecd: '010', fromdt: firstDay.replace(/-/g, ''), todt: today.replace(/-/g, '') })
   grid?.clearData()
   rowCount.value = 0
 }
 
-const exportExcel = () => grid?.download("xlsx", `생산지시현황_${searchData.ordymdt}.xlsx`)
+const exportExcel = () => grid?.download("xlsx", `생산지시현황_${searchData.todt}.xlsx`)
 
 const formatDate = (v: any) => {
     if (!v) return ''

@@ -223,7 +223,7 @@ async function search() {
     const res = await api.post('/api/hsio/HSIO_570U_STR', {
         actkind: 'S1', gubun: '200',
         deptcd: searchParam.deptcd,
-        frymd: searchParam.fromdt.replace(/-/g, ''), toymd: searchParam.todt.replace(/-/g, '')
+        fromdt: searchParam.fromdt.replace(/-/g, ''), todt: searchParam.todt.replace(/-/g, '')
     });
     grid1?.setData(res.data.map((i: any) => ({ ...i, iono_full: `${i.ioym}-${i.iono}` })));
     vAlert('조회되었습니다.');

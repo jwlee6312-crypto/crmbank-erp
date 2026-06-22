@@ -5,10 +5,16 @@ import com.crmbank.erp.hatx.mapper.HatxMapper;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.session.SqlSession;
+import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -17,120 +23,123 @@ import java.util.Map;
 public class HatxController {
 
     private final HatxMapper hatxMapper;
+    private final SqlSession sqlSession;
+    private final JdbcTemplate jdbcTemplate;
+
+    @Transactional(rollbackFor = Exception.class)
+    @PostMapping("/{procedure}")
+    public ResponseEntity<?> executeProcedure(
+            @PathVariable String procedure,
+            @RequestBody Map<String, Object> params,
+            HttpSession session) {
+        
+        if (session.getAttribute("user_session") == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        injectSession(params, session);
+        String proc = procedure.toUpperCase();
+        String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
+
+        try {
+            fillMissingParameters(proc, params);
+            log.info("🚀 [hatx] 실행 요청: {}", proc);
+            
+            List<Map<String, Object>> result;
+            if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
+                String positionalSql = buildPositionalSql(proc, params);
+                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+
+                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    List<Object> values = new ArrayList<>();
+                    int colCount = rs.getMetaData().getColumnCount();
+                    for (int i = 1; i <= colCount; i++) {
+                        Object val = rs.getObject(i);
+                        String colName = rs.getMetaData().getColumnLabel(i); 
+                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                        row.put(colName.toLowerCase(), val == null ? "" : val);
+                        values.add(val == null ? "" : val);
+                    }
+                    row.put("returnKeyValue", values); 
+                    return row;
+                });
+                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+            } else {
+                switch (proc) {
+                    case "HATX_010U_STR": result = hatxMapper.HATX_010U_STR(params); break;
+                    case "HATX_011U_STR": result = hatxMapper.HATX_011U_STR(params); break;
+                    case "HATX_030S_STR": result = hatxMapper.HATX_030S_STR(params); break;
+                    case "HATX_040S_STR": result = hatxMapper.HATX_040S_STR(params); break;
+                    case "HATX_110S_STR": result = hatxMapper.HATX_110S_STR(params); break;
+                    case "HATX_130S_STR": result = hatxMapper.HATX_130S_STR(params); break;
+                    case "HATX_140S_STR": result = hatxMapper.HATX_140S_STR(params); break;
+                    case "HATX_600S_STR": result = hatxMapper.HATX_600S_STR(params); break;
+                    case "HATX_01AU_STR": result = hatxMapper.HATX_01AU_STR(params); break;
+                    case "HATX_01BU_STR": result = hatxMapper.HATX_01BU_STR(params); break;
+                    case "HATX_060U_STR": result = hatxMapper.HATX_060U_STR(params); break;
+                    case "HATX_080U_STR": result = hatxMapper.HATX_080U_STR(params); break;
+                    default:
+                        return ResponseEntity.notFound().build();
+                }
+            }
+
+            if (result == null || result.isEmpty()) {
+                result = List.of(Map.of("res", "OK"));
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("❌ [hatx] executeProcedure Error ({}): {}", proc, e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
-            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
+            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
+                params.put("cmpycd", user.getCmpycd());
+            }
+            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
+                params.put("userid", user.getUserid());
+            }
+            params.put("updemp", user.getUserid());
         }
     }
 
-    /**
-     * 매입부가세관리 조회 및 처리
-     */
-    @PostMapping("/HATX_010U_STR")
-    public List<Map<String, Object>> executeHatx010U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_010U_STR(params);
+    private void fillMissingParameters(String proc, Map<String, Object> params) {
+        try {
+            String statementId = "com.crmbank.erp.hatx.mapper.HatxMapper." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                String prop = pm.getProperty();
+                if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
+                    String cleanProp = prop.trim();
+                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
+                        params.put(cleanProp, "");
+                    }
+                    if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
+                }
+            }
+        } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
     }
 
-    /**
-     * 매입부가세 품목 상세 처리
-     */
-    @PostMapping("/HATX_011U_STR")
-    public List<Map<String, Object>> executeHatx011U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_011U_STR(params);
-    }
-
-    /**
-     * 매입장 조회
-     */
-    @PostMapping("/HATX_030S_STR")
-    public List<Map<String, Object>> executeHatx030S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_030S_STR(params);
-    }
-
-    /**
-     * 매출장 조회
-     */
-    @PostMapping("/HATX_040S_STR")
-    public List<Map<String, Object>> executeHatx040S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_040S_STR(params);
-    }
-
-    /**
-     * 세금계산서합계표 조회
-     */
-    @PostMapping("/HATX_110S_STR")
-    public List<Map<String, Object>> executeHatx110S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_110S_STR(params);
-    }
-
-    /**
-     * 신용카드매출전표수취명세서 조회
-     */
-    @PostMapping("/HATX_130S_STR")
-    public List<Map<String, Object>> executeHatx130S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_130S_STR(params);
-    }
-
-    /**
-     * 신용카드매출전표등발행금액집계표 조회
-     */
-    @PostMapping("/HATX_140S_STR")
-    public List<Map<String, Object>> executeHatx140S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_140S_STR(params);
-    }
-
-    /**
-     * 수출실적명세서 조회
-     */
-    @PostMapping("/HATX_600S_STR")
-    public List<Map<String, Object>> executeHatx600S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_600S_STR(params);
-    }
-
-    /**
-     * 전표 마스터 처리
-     */
-    @PostMapping("/HATX_01AU_STR")
-    public List<Map<String, Object>> executeHatx01AU(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_01AU_STR(params);
-    }
-
-    /**
-     * 전표 상세 처리
-     */
-    @PostMapping("/HATX_01BU_STR")
-    public List<Map<String, Object>> executeHatx01BU(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_01BU_STR(params);
-    }
-
-    /**
-     * 매출부가세접수 처리
-     */
-    @PostMapping("/HATX_060U_STR")
-    public List<Map<String, Object>> executeHatx060U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_060U_STR(params);
-    }
-
-    /**
-     * 전자세금계산서발송 처리
-     */
-    @PostMapping("/HATX_080U_STR")
-    public List<Map<String, Object>> executeHatx080U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return hatxMapper.HATX_080U_STR(params);
+    private String buildPositionalSql(String proc, Map<String, Object> params) {
+        try {
+            String statementId = "com.crmbank.erp.hatx.mapper.HatxMapper." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+            List<String> values = new ArrayList<>();
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                Object val = params.get(pm.getProperty().trim());
+                if (val == null) values.add("''");
+                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+            }
+            return String.format("EXEC %s %s", proc, String.join(", ", values));
+        } catch (Exception e) { return "EXEC " + proc; }
     }
 }

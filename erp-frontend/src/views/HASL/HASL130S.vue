@@ -47,9 +47,9 @@
 							<th class="text-center border-end">회계일자</th>
 							<td class="bg-white border-end">
 								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" />
+									<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" />
 									<span class="text-muted">~</span>
-									<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" />
+									<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" />
 								</div>
 							</td>
 							<th class="text-center border-end">계정과목</th>
@@ -112,8 +112,8 @@ const today = now.toISOString().substring(0, 10)
 
 // 🔍 검색 데이터
 const searchForm = reactive({
-	frymd: firstDay,
-	toymd: today,
+	fromdt: firstDay,
+	todt: today,
 	acctcd1: '',
 	acctnm1: '',
 	acctcd2: '',
@@ -127,8 +127,8 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hasl/HASL_130S_STR', {
 			cmpycd: authStore.cmpycd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, ''),
 			acctcd1: searchForm.acctcd1,
 			acctcd2: searchForm.acctcd2
 		})
@@ -166,8 +166,8 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.frymd = firstDay
-	searchForm.toymd = today
+	searchForm.fromdt = firstDay
+	searchForm.todt = today
 	mainGrid?.clearData()
 }
 
@@ -176,7 +176,7 @@ const excel = () => {
 }
 
 const print = () => {
-	const params = `frymd=${searchForm.frymd}&toymd=${searchForm.toymd}&acctcd1=${searchForm.acctcd1}&acctcd2=${searchForm.acctcd2}`
+	const params = `fromdt=${searchForm.fromdt}&todt=${searchForm.todt}&acctcd1=${searchForm.acctcd1}&acctcd2=${searchForm.acctcd2}`
 	window.open(`/api/hasl/HASL_130P?${params}`, 'JournalPrint', 'width=800,height=800,scrollbars=yes')
 }
 

@@ -5,11 +5,17 @@ import com.crmbank.erp.hapl.mapper.HaplMapper;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.session.SqlSession;
+import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -18,134 +24,118 @@ import java.util.Map;
 public class HaplController {
 
     private final HaplMapper haplMapper;
+    private final SqlSession sqlSession;
+    private final JdbcTemplate jdbcTemplate;
+
+    @Transactional(rollbackFor = Exception.class)
+    @PostMapping("/{procedure}")
+    public ResponseEntity<?> executeProcedure(
+            @PathVariable String procedure,
+            @RequestBody Map<String, Object> params,
+            HttpSession session) {
+
+        if (session.getAttribute("user_session") == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String proc = procedure.toUpperCase();
+        try {
+            injectSession(params, session);
+            fillMissingParameters(proc, params);
+
+            String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
+            log.info("🚀 [hapl] 실행 요청: {}", proc);
+
+            List<Map<String, Object>> result;
+            if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
+                String positionalSql = buildPositionalSql(proc, params);
+                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+
+                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    List<Object> values = new ArrayList<>();
+                    int colCount = rs.getMetaData().getColumnCount();
+                    for (int i = 1; i <= colCount; i++) {
+                        Object val = rs.getObject(i);
+                        String colName = rs.getMetaData().getColumnLabel(i); 
+                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                        row.put(colName.toLowerCase(), val == null ? "" : val);
+                        values.add(val == null ? "" : val);
+                    }
+                    row.put("returnKeyValue", values); 
+                    return row;
+                });
+                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+            } else {
+                switch (proc) {
+                    case "HAPL_010U_STR": result = haplMapper.HAPL_010U_STR(params); break;
+                    case "HAPL_020U_STR": result = haplMapper.HAPL_020U_STR(params); break;
+                    case "HAPL_030U_STR": result = haplMapper.HAPL_030U_STR(params); break;
+                    case "HAPL_040U_STR": result = haplMapper.HAPL_040U_STR(params); break;
+                    case "HAPL_100U_STR": result = haplMapper.HAPL_100U_STR(params); break;
+                    case "HAPL_110S_STR": result = haplMapper.HAPL_110S_STR(params); break;
+                    case "HAPL_120S_STR": result = haplMapper.HAPL_120S_STR(params); break;
+                    default:
+                        return ResponseEntity.notFound().build();
+                }
+            }
+
+            if (result == null || result.isEmpty()) {
+                result = List.of(Map.of("res", "OK"));
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("❌ [hapl] executeProcedure Error ({}): {}", proc, e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
-            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
-        }
-    }
-
-    /**
-     * 배부기준관리 조회 및 처리
-     */
-    @PostMapping("/HAPL_010U_STR")
-    public List<Map<String, Object>> executeHapl010U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return haplMapper.HAPL_010U_STR(params);
-    }
-
-    /**
-     * 계정별 배부기준관리 조회 및 처리
-     */
-    @PostMapping("/HAPL_020U_STR")
-    public List<Map<String, Object>> executeHapl020U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return haplMapper.HAPL_020U_STR(params);
-    }
-
-    /**
-     * 배부적수관리 조회 및 처리
-     */
-    @PostMapping("/HAPL_030U_STR")
-    public List<Map<String, Object>> executeHapl030U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return haplMapper.HAPL_030U_STR(params);
-    }
-
-    /**
-     * 배부적수관리 일괄 저장
-     */
-    @Transactional
-    @PostMapping("/HAPL_030U_SAVE_BATCH")
-    public void saveHapl030UBatch(@RequestBody Map<String, Object> params, HttpSession session) {
-        String cmpycd = (String) params.get("cmpycd");
-        String stdym = (String) params.get("stdym");
-        String divcd = (String) params.get("divcd");
-        String deptcd = (String) params.get("deptcd");
-        String userid = (String) params.get("userid");
-        List<Map<String, Object>> items = (List<Map<String, Object>>) params.get("ITEMS");
-
-        if (items != null) {
-            for (Map<String, Object> item : items) {
-                item.put("actkind", "A0");
-                item.put("cmpycd", cmpycd);
-                item.put("stdym", stdym);
-                item.put("divcd", divcd);
-                item.put("deptcd", deptcd);
-                item.put("userid", userid);
-                haplMapper.HAPL_030U_STR(item);
+            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
+                params.put("cmpycd", user.getCmpycd());
             }
-        }
-    }
-
-    /**
-     * 부서집계수식 조회 및 처리
-     */
-    @PostMapping("/HAPL_040U_STR")
-    public List<Map<String, Object>> executeHapl040U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return haplMapper.HAPL_040U_STR(params);
-    }
-
-    /**
-     * 부서집계수식 일괄 저장
-     */
-    @Transactional
-    @PostMapping("/HAPL_040U_SAVE_BATCH")
-    public void saveHapl040UBatch(@RequestBody Map<String, Object> params, HttpSession session) {
-        String cmpycd = (String) params.get("cmpycd");
-        String stdym = (String) params.get("stdym");
-        String deptcd = (String) params.get("deptcd");
-        String userid = (String) params.get("userid");
-        List<Map<String, Object>> items = (List<Map<String, Object>>) params.get("ITEMS");
-
-        if (items != null) {
-            for (Map<String, Object> item : items) {
-                item.put("actkind", "A0");
-                item.put("cmpycd", cmpycd);
-                item.put("stdym", stdym);
-                item.put("deptcd", deptcd);
-                item.put("userid", userid);
-                haplMapper.HAPL_040U_STR(item);
+            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
+                params.put("userid", user.getUserid());
             }
+            params.put("updemp", user.getUserid());
         }
     }
 
-    /**
-     * 배부작업 처리
-     */
-    @PostMapping("/HAPL_100U_STR")
-    public List<Map<String, Object>> executeHapl100U(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return haplMapper.HAPL_100U_STR(params);
+    private void fillMissingParameters(String proc, Map<String, Object> params) {
+        try {
+            String statementId = HaplMapper.class.getName() + "." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                String prop = pm.getProperty();
+                if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
+                    String cleanProp = prop.trim();
+                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
+                        params.put(cleanProp, "");
+                    }
+                    if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
+                }
+            }
+        } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
     }
 
-    /**
-     * 손익계산서 조회
-     */
-    @PostMapping("/HAPL_110S_STR")
-    public List<Map<String, Object>> executeHapl110S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return haplMapper.HAPL_110S_STR(params);
-    }
-
-    /**
-     * 손익계산서 초기화 정보 조회
-     */
-    @PostMapping("/HAPL_110S_INIT")
-    public String getHapl110SInit(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return haplMapper.HAPL_110S_INIT(params);
-    }
-
-    /**
-     * 배부현황 조회
-     */
-    @PostMapping("/HAPL_120S_STR")
-    public List<Map<String, Object>> executeHapl120S(@RequestBody Map<String, Object> params, HttpSession session) {
-        injectSession(params, session);
-        return haplMapper.HAPL_120S_STR(params);
+    private String buildPositionalSql(String proc, Map<String, Object> params) {
+        try {
+            String statementId = HaplMapper.class.getName() + "." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+            List<String> values = new ArrayList<>();
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                Object val = params.get(pm.getProperty().trim());
+                if (val == null) values.add("''");
+                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+            }
+            return String.format("EXEC %s %s", proc, String.join(", ", values));
+        } catch (Exception e) { return "EXEC " + proc; }
     }
 }

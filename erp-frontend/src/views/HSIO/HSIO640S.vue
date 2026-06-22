@@ -93,11 +93,11 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
-  fymd: initfrymd,
+  fymd: initfromdt,
   tymd: initymd,
   whcd: '000',
   astkind: '120'
@@ -211,7 +211,7 @@ const navigateToHistory = (row: any) => {
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { fymd: initfrymd, tymd: initymd, whcd: '000', astkind: '120' })
+  Object.assign(searchData, { fymd: initfromdt, tymd: initymd, whcd: '000', astkind: '120' })
   grid.value?.clearData()
   activeItemCount.value = 0
   Object.keys(totals).forEach(key => totals[key as keyof typeof totals] = 0)

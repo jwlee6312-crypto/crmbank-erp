@@ -78,7 +78,7 @@
 							</td>
 							<th class="text-center bg-light-subtle border-end border-top">차입번호</th>
 							<td class="bg-white border-end border-top px-2 py-1">
-								<input v-model="masterForm.LOANNO" type="text" class="form-control form-control-sm" maxlength="20" />
+								<input v-model="masterForm.loanno" type="text" class="form-control form-control-sm" maxlength="20" />
 							</td>
 							<th class="text-center bg-light-subtle border-end border-top">차&nbsp;입&nbsp;처</th>
 							<td class="bg-white border-top px-2 py-1">
@@ -101,7 +101,7 @@
 							<th class="text-center bg-light-subtle border-end border-top">차&nbsp;입&nbsp;금</th>
 							<td class="bg-white border-top px-2 py-1">
 								<div class="input-group input-group-sm">
-									<input v-model="masterForm.LOAnamt" type="number" class="form-control text-end" />
+									<input v-model="masterForm.loanamt" type="number" class="form-control text-end" />
 									<span class="input-group-text">원</span>
 								</div>
 							</td>
@@ -172,12 +172,12 @@ const masterForm = reactive({
 	acctcd: '',
 	acctcd_t: '',
 	custgbn: '',
-	LOANNO: '',
+	loanno: '',
 	bankcd: '',
 	bankcd_t: '',
 	stdymd: '',
 	endymd: '',
-	LOAnamt: 0,
+	loanamt: 0,
 	rate: 0,
 	remark: '',
 	useyn: 'Y'
@@ -194,21 +194,23 @@ const search = async () => {
 		const res = await api.post('/api/haba/HABA_130U_STR', {
 			actkind: 'S1',
 			cmpycd: authStore.cmpycd,
-			acctcd: searchForm.acctcd
+			acctcd: searchForm.acctcd,
+			loanamt: 0,
+            rate: 0
 		})
 
 		const processedData = (res.data || []).map((r: any) => ({
-			acctcd: r.col0,
-			acctnm: r.col1,
-			LOANNO: r.col2,
-			bankcd: r.col3,
-			banknm: r.col4,
-			stdymd: formatYmd(r.col5),
-			endymd: formatYmd(r.col6),
-			LOAnamt: Number(r.col7 || 0),
-			rate: Number(r.col8 || 0),
-			remark: r.COL9,
-			useyn: r.col10
+			acctcd: r.acctcd,
+			acctnm: r.acctnm,
+			loanno: r.loanno,
+			bankcd: r.bankcd,
+			banknm: r.banknm,
+			stdymd: formatYmd(r.stdymd),
+			endymd: formatYmd(r.endymd),
+			loanamt: Number(r.loanamt || 0),
+			rate: Number(r.rate || 0),
+			remark: r.remark,
+			useyn: r.useyn
 		}))
 
 		mainGrid?.setData(processedData)
@@ -218,7 +220,7 @@ const search = async () => {
 
 const save = async () => {
 	if (!masterForm.acctcd) return vAlert('계정코드를 기재해 주십시요.')
-	if (!masterForm.LOANNO) return vAlert('차입번호를 기재해 주십시요.')
+	if (!masterForm.loanno) return vAlert('차입번호를 기재해 주십시요.')
 	if (!masterForm.bankcd) return vAlert('차입처를 기재해 주십시요.')
 
 	try {
@@ -259,12 +261,12 @@ function openHelp(type: string) {
 	if (type === 'search_acct') {
 		Object.assign(modalProps, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: searchForm.acctcd_t, ATRB: '080' },
-			columns: [{ title: '코드', field: 'col0', width: 80 }, { title: '계정명', field: 'col1', width: 180 }],
+			data: { gubun: 'A6', cmpycd: authStore.cmpycd, code: searchForm.acctcd_t, gbncd: '080' },
+			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }],
 			onConfirm: (d: any) => {
-				searchForm.acctcd = d.col0;
-				searchForm.acctcd_t = d.col1;
-				searchForm.custgbn = d.col2;
+				searchForm.acctcd = d.acctcd;
+				searchForm.acctcd_t = d.acctnm;
+				searchForm.custgbn = d.typesub;
 				initialize();
 			}
 		})
@@ -272,9 +274,9 @@ function openHelp(type: string) {
 		if (!masterForm.acctcd) return vAlert('조회 후 입력하시기 바랍니다.')
 		Object.assign(modalProps, {
 			title: '차입처 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'C0', cmpycd: authStore.cmpycd, search: masterForm.bankcd_t, custgbn: masterForm.custgbn },
-			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '차입처명', field: 'custnm', width: 180 }],
-			onConfirm: (d: any) => { masterForm.bankcd = d.custcd; masterForm.bankcd_t = d.custnm }
+			data: { gubun: 'C3', cmpycd: authStore.cmpycd, code: masterForm.bankcd_t, gbncd: '' },
+			columns: [{ title: '코드', field: 'bankcd', width: 80 }, { title: '차입처명', field: 'banknm', width: 180 }],
+			onConfirm: (d: any) => { masterForm.bankcd = d.bankcd; masterForm.bankcd_t = d.banknm }
 		})
 	}
 	modalVisible.value = true
@@ -287,19 +289,19 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "차입번호", field: "LOANNO", width: 150 },
-				{ title: "차입처", field: "banknm", width: 180 },
+				{ title: "차입번호", field: "loanno", width: 180 },
+				{ title: "차입처", field: "banknm", width: 300 },
 				{
-					title: "차입/만기일", field: "stdymd", width: 110, hozAlign: "center",
+					title: "차입/만기일", field: "stdymd", width: 150, hozAlign: "center",
 					formatter: (cell) => {
 						const d = cell.getData()
 						return `<div>${d.stdymd}</div><div class='text-muted'>${d.endymd}</div>`
 					}
 				},
-				{ title: "차입금", field: "LOAnamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "이율", field: "rate", width: 70, hozAlign: "right", formatter: (c) => c.getValue() ? c.getValue() + "%" : "-" },
+				{ title: "차입금", field: "loanamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "이율", field: "rate", width: 150, hozAlign: "right", formatter: (c) => c.getValue() ? c.getValue() + "%" : "-" },
 				{ title: "비고", field: "remark", minWidth: 150 },
-				{ title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross" }
+				{ title: "사용", field: "useyn", width: 100, hozAlign: "center", formatter: "tickCross" }
 			],
 			rowClick: (e, row) => {
 				const d = row.getData()

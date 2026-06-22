@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 품목원가등록 (HSIP180U)
 	작성일자	: 2025.02.24
-	설명        : 수입 품목별 최종 원가 등록 (ASP 패턴 기반 순차 저장 로직 적용 및 소문자 통일)
+	설명        : 수입 품목별 최종 원가 등록 (로컬 팝업 로직 적용 및 직관적 구성)
 	=============================================================
 -->
 
@@ -83,28 +83,30 @@
       </div>
     </div>
   </div>
-
-  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import { useCommonHelp } from '@/composables/useCommonHelp'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-// [1] 데이터 모델링 (소문자 통일)
+// [도움창 상태 정의]
+const modalVisible = ref(false)
+const modalProps = reactive<any>({
+  title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table'
+})
+
+// [1] 데이터 모델링
 const searchForm = reactive({
   fileno: '', shipseq: '', passseq: ''
 })
@@ -118,7 +120,7 @@ const fetchList = async () => {
   }
   try {
     const res = await api.post('/api/hsip/HSIP_180U_STR', {
-      ...searchForm, actkind: 'S0', cmpycd: authStore.cmpycd
+      ...searchForm, actkind: 'S0', cmpycd: authStore.cmpycd, ioamt: 0
     })
     mainGrid?.setData(res.data || [])
     vAlert('조회되었습니다.')
@@ -126,7 +128,7 @@ const fetchList = async () => {
 }
 
 /**
- * 🚀 저장 로직 (ASP 패턴: 상세 루프 호출 및 소문자 통일)
+ * 🚀 저장 로직 (ASP 패턴: 상세 루프 호출)
  */
 const save = async () => {
   const selected = mainGrid?.getSelectedData() || []
@@ -152,7 +154,6 @@ const save = async () => {
       const res = await api.post('/api/hsip/HSIP_180U_STR', params)
       const resData = res.data?.[0]
 
-      // ASP 에러 체크 패턴 적용 (소문자 체크)
       if (resData && (resData.erryn === 'Y' || resData.status === 'Y')) {
         throw new Error(resData.msg || '저장 중 업무 오류가 발생했습니다.')
       }
@@ -171,38 +172,86 @@ function initialize() {
   totalSummaryAmt.value = 0;
 }
 
+/** 🚀 로컬 도움창 핸들러 (HSIP170S 방식) */
 function openPoPopup() {
-  openCommonHelp('COMMON', (d: any) => {
-    searchForm.fileno = d.fileno;
-    searchForm.shipseq = '';
-    searchForm.passseq = '';
-  }, { gubun: 'F0', cmpycd: authStore.cmpycd, gbncd: '1' })
+  Object.assign(modalProps, {
+    title: 'PO 선택', path: '/api/hs00/HS00_000S_STR',
+    data: { gubun: 'F0', cmpycd: authStore.cmpycd, gbncd: '1', code: '', codenm: searchForm.fileno, etcval: '' },
+    columns: [
+      { title: 'PO No', field: 'fileno', width: 150, hozAlign: 'center' },
+      { title: '거래처', field: 'custnm', minWidth: 200, widthGrow: 1 },
+      { title: '발주일자', field: 'issymd', width: 120, hozAlign: 'center' }
+    ],
+    onConfirm: (d: any) => {
+      searchForm.fileno = d.fileno;
+      searchForm.shipseq = '';
+      searchForm.passseq = '';
+    }
+  });
+  modalVisible.value = true;
 }
 
 function openShipPopup() {
   if (!searchForm.fileno) return vAlertError('PO No를 먼저 선택하세요.')
-  openCommonHelp('COMMON', (d: any) => {
-    searchForm.shipseq = d.shipseq;
-    searchForm.passseq = '';
-  }, { gubun: 'F1', cmpycd: authStore.cmpycd, gbncd: searchForm.fileno })
+  Object.assign(modalProps, {
+    title: '선적차수 선택', path: '/api/hs00/HS00_000S_STR',
+    data: { gubun: 'F0', cmpycd: authStore.cmpycd, gbncd: '2', code: searchForm.fileno, codenm: '', etcval: '' },
+    columns: [
+      { title: '선적차수', field: 'shipseq', width: 100, hozAlign: 'center' },
+      { title: 'PO No', field: 'fileno', width: 150 },
+      { title: '거래처', field: 'custnm', minWidth: 200, widthGrow: 1 }
+    ],
+    onConfirm: (d: any) => {
+      searchForm.shipseq = d.shipseq;
+      searchForm.passseq = '';
+    }
+  });
+  modalVisible.value = true;
 }
 
-function openPassPopup() {
+async function openPassPopup() {
   if (!searchForm.fileno || !searchForm.shipseq) return vAlertError('PO No와 선적차수를 먼저 선택하세요.')
-  openCommonHelp('COMMON', (d: any) => {
-    searchForm.passseq = d.passseq;
-  }, { gubun: 'F2', cmpycd: authStore.cmpycd, gbncd: searchForm.fileno, etc: searchForm.shipseq })
+
+  console.log('🔍 [openPassPopup] Preparing Params:', { fileno: searchForm.fileno, shipseq: searchForm.shipseq })
+
+  // 1. 프로시저 파라미터 구조와 100% 일치시킴
+  Object.assign(modalProps, {
+    title: '통관차수 선택',
+    path: '/api/hs00/HS00_000S_STR',
+    data: {
+      gubun: 'F0',
+      cmpycd: authStore.cmpycd,
+      gbncd: '3',
+      code: searchForm.fileno,   // @code: PO번호
+      codenm: searchForm.shipseq, // @codenm: 선적차수
+      etcval: ''
+    },
+    columns: [
+      { title: '통관차수', field: 'passseq', width: 100, hozAlign: 'center' },
+      { title: 'PO No', field: 'fileno', width: 150 },
+      { title: '거래처', field: 'custnm', minWidth: 200, widthGrow: 1 }
+    ],
+    onConfirm: (d: any) => {
+      searchForm.passseq = d.passseq;
+    }
+  });
+
+  // 2. 비동기 반영 대기 후 팝업 표시
+  await nextTick();
+  modalVisible.value = true;
 }
 
 onMounted(() => {
   if (mainGridRef.value) {
     mainGrid = new Tabulator(mainGridRef.value, {
       layout: 'fitColumns', height: '100%', selectable: true,
-      columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
+      columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 40 },
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 60, hozAlign: "center" },
-        { title: '품목코드', field: 'itemcd', width: 120 },
-        { title: '품목 명칭 (규격)', field: 'itemnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
+        { title: '품목코드', field: 'itemcd', width: 120, hozAlign: "center" },
+        { title: '품목명', field: 'itemnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
+        { title: '규격', field: 'itsize', minWidth: 150, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
+        { title: '단위', field: 'unit', Width: 70,  cssClass: 'fw-bold', hozAlign: 'center' },
         { title: '입고일자', field: 'ioymd', width: 110, formatter: (c) => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},

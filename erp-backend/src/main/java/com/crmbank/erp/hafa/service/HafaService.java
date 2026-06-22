@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -127,11 +128,13 @@ public class HafaService {
     private void checkAndThrow(List<Map<String, Object>> result) {
         if (result != null && !result.isEmpty()) {
             Map<String, Object> row = result.get(0);
-            Object firstVal = row.values().iterator().next();
-            if (firstVal != null && "Y".equals(firstVal.toString().trim())) {
-                String errMsg = "전표 상세 생성 중 오류가 발생했습니다.";
-                if (row.size() > 1) {
-                    errMsg = String.valueOf(row.values().toArray()[1]);
+            List<Object> values = new ArrayList<>(row.values());
+            String status = String.valueOf(values.get(0)).trim();
+            
+            if ("000000".equals(status)) {
+                String errMsg = "작업 처리 중 오류가 발생했습니다.";
+                if (values.size() > 1) {
+                    errMsg = String.valueOf(values.get(1));
                 }
                 throw new RuntimeException(errMsg);
             }

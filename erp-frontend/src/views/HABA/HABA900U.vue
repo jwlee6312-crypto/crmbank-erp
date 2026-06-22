@@ -61,11 +61,11 @@
 							<tr>
 								<th class="required">본사주소</th>
 								<td colspan="3">
-									<div class="d-flex gap-1 flex-nowrap">
-										<input v-model="formData.postno" type="text" class="form-control bg-light text-center" style="max-width: 80px; flex-shrink: 0;" readonly />
-										<button class="btn btn-sm btn-outline-secondary px-2 flex-nowrap" style="flex-shrink: 0;" @click="execDaumPostcode"><i class="bi bi-search me-1"></i>우편번호</button>
-										<input v-model="formData.address" type="text" class="form-control flex-grow-1" placeholder="기본 주소 입력" />
-									</div>
+                  <AddressPopupForm
+                    v-model:postno="formData.postno"
+                    v-model:address="formData.address"
+                    v-model:d_address="formData.d_address"
+                  />
 								</td>
 								<th>도메인</th>
 								<td><input v-model="formData.domain" type="text" class="form-control" /></td>
@@ -104,6 +104,7 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import AppAlert from '@/components/AppAlert.vue'
+import AddressPopupForm from '@/components/AddressPopupForm.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
@@ -113,7 +114,7 @@ const formData = reactive({
 	actkind: 'S0',
 	cmpycd: authStore.cmpycd,
 	ltdnm: '', ltdenm: '', saupno: '', bossnm: '', legalno: '',
-	postno: '', address: '', uptae: '', upjong: '', telno: '',
+	postno: '', address: '', d_address: '', uptae: '', upjong: '', telno: '',
 	fondymd: '', clsmm: '12', domain: '', useyn: 'Y'
 })
 
@@ -125,7 +126,10 @@ async function fetchCompanyInfo() {
 			cmpycd: authStore.cmpycd
 		})
 		if (res.data && res.data.length > 0) {
-			Object.assign(formData, res.data[0])
+      const data = res.data[0];
+      // 매핑 (상세주소 필드명 통일)
+      if (data.address_det) data.d_address = data.address_det;
+			Object.assign(formData, data)
 			if (formData.fondymd && formData.fondymd.length === 8) {
 				formData.fondymd = `${formData.fondymd.substring(0, 4)}-${formData.fondymd.substring(4, 6)}-${formData.fondymd.substring(6, 8)}`
 			}
@@ -142,7 +146,8 @@ async function save() {
 			saupno: formData.saupno.replace(/-/g, ''),
 			legalno: formData.legalno.replace(/-/g, ''),
 			fondymd: formData.fondymd ? formData.fondymd.replace(/-/g, '') : '',
-			userid: authStore.userid
+			userid: authStore.userid,
+      address_det: formData.d_address // 서버 필드명에 맞게 전달
 		}
 		await api.post('/api/haba/HABA_900U_STR', param)
 		vAlert('저장되었습니다.')
@@ -155,21 +160,7 @@ function initialize() {
 	formData.actkind = 'S0'; formData.cmpycd = authStore.cmpycd; formData.clsmm = '12';
 }
 
-const execDaumPostcode = () => {
-	new (window as any).daum.Postcode({
-		oncomplete: (data: any) => {
-			formData.postno = data.zonecode
-			formData.address = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress
-		}
-	}).open()
-}
-
 onMounted(() => {
-	if (!(window as any).daum) {
-		const script = document.createElement('script')
-		script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
-		document.head.appendChild(script)
-	}
 	fetchCompanyInfo()
 })
 </script>

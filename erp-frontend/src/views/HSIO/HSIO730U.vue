@@ -137,15 +137,17 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import { useCommonHelp } from '@/composables/useCommonHelp'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import ItemHelpModal from '@/components/ItemHelpModal.vue'
+import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 const itemHelpVisible = ref(false)
 const currentTargetRow = ref<any>(null)
@@ -178,7 +180,7 @@ const totalSummary = computed(() => {
 async function fetchPoList() {
   try {
     const res = await api.post('/api/hsio/HSIO_730U_STR', { ...searchForm, actkind: 'S1', cmpycd: authStore.cmpycd })
-    poGrid?.setData(res.data.data || []); itemGrid?.clearData(); vAlert('조회되었습니다.')
+    poGrid?.setData(res.data || []); itemGrid?.clearData(); vAlert('조회되었습니다.')
   } catch (e) { vAlertError('목록 조회 실패') }
 }
 
@@ -186,11 +188,11 @@ async function fetchDetail(row: any) {
   const d = row.getData();
   try {
     const res = await api.post('/api/hsio/HSIO_730U_STR', { ioym: d.ioym, iono: d.iono, actkind: 'S0', cmpycd: authStore.cmpycd })
-    if (res.data.data?.length) {
-      Object.assign(formData, res.data.data[0])
+    if (res.data?.length) {
+      Object.assign(formData, res.data[0])
       const resItems = await api.post('/api/hsio/HSIO_731U_STR', { ioym: d.ioym, iono: d.iono, actkind: 'S0', cmpycd: authStore.cmpycd })
-      itemGrid?.setData(resItems.data.data?.map((i: any) => ({ ...i, upkind: 'U' })) || [])
-      activeItemCount.value = resItems.data.data?.length || 0
+      itemGrid?.setData(resItems.data?.map((i: any) => ({ ...i, upkind: 'U' })) || [])
+      activeItemCount.value = resItems.data?.length || 0
     }
   } catch (e) { vAlertError('상세 조회 실패') }
 }
@@ -214,7 +216,17 @@ async function deleteData() {
 
 function handleOpenHelp(type: string, target?: any) {
   if (type === 'DEPT_search') {
-    openHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
+    Object.assign(modalProps, {
+      title: '부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: '', codenm: searchForm.deptnm, remark: '' },
+      columns: [
+        { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
+    })
+    modalVisible.value = true
   } else if (type === 'ITEM') {
     currentTargetRow.value = target;
     itemHelpVisible.value = true;
@@ -255,7 +267,7 @@ onMounted(async () => {
   if (poGridRef.value) {
     poGrid = new Tabulator(poGridRef.value, {
       layout: 'fitColumns', height: '100%', selectable: 1,
-      columns: [{ title: '해체번호', field: 'iono_DISP', hozAlign: 'center', cssClass: 'fw-bold text-primary', mutatorData: (v, d) => `${d.ioym}-${d.iono}` }]
+      columns: [{ title: '해체번호', field: 'iono_disp', hozAlign: 'center', cssClass: 'fw-bold text-primary', mutatorData: (v, d) => `${d.ioym}-${d.iono}` }]
     })
     poGrid.on('rowClick', (e, row) => fetchDetail(row))
   }

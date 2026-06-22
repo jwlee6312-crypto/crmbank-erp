@@ -5,12 +5,16 @@ import com.crmbank.erp.hsst.mapper.HsstMapper;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.session.SqlSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -19,75 +23,127 @@ import java.util.stream.Collectors;
 public class HsstController {
 
     private final HsstMapper hsstMapper;
+    private final SqlSession sqlSession;
+    private final JdbcTemplate jdbcTemplate;
+
+    @Transactional(rollbackFor = Exception.class)
+    @PostMapping("/{procedure}")
+    public ResponseEntity<?> executeProcedure(
+            @PathVariable String procedure,
+            @RequestBody Map<String, Object> params,
+            HttpSession session) {
+
+        if (session.getAttribute("user_session") == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        injectSession(params, session);
+        String proc = procedure.toUpperCase();
+        String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
+
+        try {
+            fillMissingParameters(proc, params);
+            log.info("🚀 [hsst] 실행 요청: {}", proc);
+
+            List<Map<String, Object>> result;
+            if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
+                String positionalSql = buildPositionalSql(proc, params);
+                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+
+                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    List<Object> values = new ArrayList<>();
+                    int colCount = rs.getMetaData().getColumnCount();
+                    for (int i = 1; i <= colCount; i++) {
+                        Object val = rs.getObject(i);
+                        String colName = rs.getMetaData().getColumnLabel(i); 
+                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                        row.put(colName.toLowerCase(), val == null ? "" : val);
+                        values.add(val == null ? "" : val);
+                    }
+                    row.put("returnKeyValue", values); 
+                    return row;
+                });
+                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+            } else {
+                switch (proc) {
+                    case "HSST_100S_STR": result = hsstMapper.HSST_100S_STR(params); break;
+                    case "HSST_120S_STR": result = hsstMapper.HSST_120S_STR(params); break;
+                    case "HSST_130S_STR": result = hsstMapper.HSST_130S_STR(params); break;
+                    case "HSST_150S_STR": result = hsstMapper.HSST_150S_STR(params); break;
+                    case "HSST_180S_STR": result = hsstMapper.HSST_180S_STR(params); break;
+                    case "HSST_200S_STR": result = hsstMapper.HSST_200S_STR(params); break;
+                    case "HSST_210S_STR": result = hsstMapper.HSST_210S_STR(params); break;
+                    case "HSST_300S_STR": result = hsstMapper.HSST_300S_STR(params); break;
+                    case "HSST_320S_STR": result = hsstMapper.HSST_320S_STR(params); break;
+                    case "HSST_340S_STR": result = hsstMapper.HSST_340S_STR(params); break;
+                    case "HSST_360S_STR": result = hsstMapper.HSST_360S_STR(params); break;
+                    case "HSST_510S_STR": result = hsstMapper.HSST_510S_STR(params); break;
+                    case "HSST_520S_STR": result = hsstMapper.HSST_520S_STR(params); break;
+                    case "HSST_570S_STR": result = hsstMapper.HSST_570S_STR(params); break;
+                    case "HSST_600S_STR": result = hsstMapper.HSST_600S_STR(params); break;
+                    case "HSST_610S_STR": result = hsstMapper.HSST_610S_STR(params); break;
+                    default:
+                        return ResponseEntity.notFound().build();
+                }
+            }
+
+            if (result == null || result.isEmpty()) {
+                result = List.of(Map.of("res", "OK"));
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("❌ [hsst] executeProcedure Error ({}): {}", proc, e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (!params.containsKey("cmpycd")) params.put("cmpycd", user.getCmpycd());
-            if (!params.containsKey("userid")) params.put("userid", user.getUserid());
+            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
+                params.put("cmpycd", user.getCmpycd());
+            }
+            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
+                params.put("userid", user.getUserid());
+            }
             params.put("updemp", user.getUserid());
         }
     }
 
-    @PostMapping("/{procedure}")
-    public ResponseEntity<List<Map<String, Object>>> executeProcedure(
-            @PathVariable String procedure,
-            @RequestBody Map<String, Object> params,
-            HttpSession session) {
-        
-        injectSession(params, session);
-        
-        // 📋 SSMS 실행용 로그 생성
-        log.info("📋 SSMS 실행용: {}", buildSsmsLog(procedure, params));
-        
-        switch (procedure.toUpperCase()) {
-            case "HSST_100S_STR": return ResponseEntity.ok(hsstMapper.HSST_100S_STR(params));
-            case "HSST_120S_STR": return ResponseEntity.ok(hsstMapper.HSST_120S_STR(params));
-            case "HSST_130S_STR": return ResponseEntity.ok(hsstMapper.HSST_130S_STR(params));
-            case "HSST_150S_STR": return ResponseEntity.ok(hsstMapper.HSST_150S_STR(params));
-            case "HSST_180S_STR": return ResponseEntity.ok(hsstMapper.HSST_180S_STR(params));
-            case "HSST_200S_STR": return ResponseEntity.ok(hsstMapper.HSST_200S_STR(params));
-            case "HSST_210S_STR": return ResponseEntity.ok(hsstMapper.HSST_210S_STR(params));
-            case "HSST_300S_STR": return ResponseEntity.ok(hsstMapper.HSST_300S_STR(params));
-            case "HSST_320S_STR": return ResponseEntity.ok(hsstMapper.HSST_320S_STR(params));
-            case "HSST_340S_STR": return ResponseEntity.ok(hsstMapper.HSST_340S_STR(params));
-            case "HSST_360S_STR": return ResponseEntity.ok(hsstMapper.HSST_360S_STR(params));
-            case "HSST_510S_STR": return ResponseEntity.ok(hsstMapper.HSST_510S_STR(params));
-            case "HSST_520S_STR": return ResponseEntity.ok(hsstMapper.HSST_520S_STR(params));
-            case "HSST_570S_STR": return ResponseEntity.ok(hsstMapper.HSST_570S_STR(params));
-            case "HSST_600S_STR": return ResponseEntity.ok(hsstMapper.HSST_600S_STR(params));
-            case "HSST_610S_STR": return ResponseEntity.ok(hsstMapper.HSST_610S_STR(params));
+    private void fillMissingParameters(String proc, Map<String, Object> params) {
+        try {
+            String statementId = "com.crmbank.erp.hsst.mapper.HsstMapper." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
 
-            default:
-                return ResponseEntity.notFound().build();
-        }
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                String prop = pm.getProperty();
+                if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
+                    String cleanProp = prop.trim();
+                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
+                        params.put(cleanProp, "");
+                    }
+                    if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
+                }
+            }
+        } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
     }
 
-    private String buildSsmsLog(String procedure, Map<String, Object> params) {
-        String[] keys;
-        String proc = procedure.toUpperCase();
-        
-        switch (proc) {
-            case "HSST_100S_STR":
-                keys = new String[]{"cmpycd", "selgbn", "deptcd", "custfr", "custto", "ymdfr", "ymdto"};
-                break;
-            case "HSST_120S_STR":
-                keys = new String[]{"cmpycd", "deptcd", "ymd"};
-                break;
-            case "HSST_200S_STR":
-                keys = new String[]{"cmpycd", "ymd", "whcd", "astkind", "itemnm", "pageno", "maxcnt"};
-                break;
-            default:
-                keys = params.keySet().toArray(new String[0]);
-        }
-
-        String values = java.util.Arrays.stream(keys)
-                .map(key -> {
-                    Object val = params.get(key);
-                    return val == null ? "''" : "'" + val.toString().trim() + "'";
-                })
-                .collect(Collectors.joining(", "));
-
-        return String.format("EXEC %s %s", proc, values);
+    private String buildPositionalSql(String proc, Map<String, Object> params) {
+        try {
+            String statementId = "com.crmbank.erp.hsst.mapper.HsstMapper." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+            List<String> values = new ArrayList<>();
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                Object val = params.get(pm.getProperty().trim());
+                if (val == null) values.add("''");
+                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+            }
+            return String.format("EXEC %s %s", proc, String.join(", ", values));
+        } catch (Exception e) { return "EXEC " + proc; }
     }
 }

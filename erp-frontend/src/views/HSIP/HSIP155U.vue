@@ -85,19 +85,21 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
   DEPTCD: authStore.deptcd, DEPTNM: authStore.deptnm,
-  IOYMDFR: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-  IOYMDTO: new Date().toISOString().substring(0, 10)
+  IOYMDFR: firstDay,
+  IOYMDTO: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null

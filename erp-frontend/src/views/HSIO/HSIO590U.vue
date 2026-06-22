@@ -39,9 +39,9 @@
                 <th class="required">판매일자</th>
                 <td style="width: 300px;">
                   <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="ioymdfr" type="date" class="form-control form-control-sm" />
+                    <input v-model="fromdt" type="date" class="form-control form-control-sm" />
                     <span class="px-1">~</span>
-                    <input v-model="ioymdto" type="date" class="form-control form-control-sm" />
+                    <input v-model="todt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th>영업사원</th>
@@ -124,12 +124,12 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  ioymdfr: initfrymd, ioymdto: initymd, salsemp: authStore.userid
+  fromdt: initfromdt, todt: initymd, salsemp: authStore.userid
 })
 
 const registerData = reactive({
@@ -138,8 +138,8 @@ const registerData = reactive({
   clsymd: '', sclsym: ''
 })
 
-const ioymdfr = computed({ get: () => formatDate(searchData.ioymdfr, '-'), set: (v) => searchData.ioymdfr = v.replace(/-/g, '') })
-const ioymdto = computed({ get: () => formatDate(searchData.ioymdto, '-'), set: (v) => searchData.ioymdto = v.replace(/-/g, '') })
+const fromdt = computed({ get: () => formatDate(searchData.fromdt, '-'), set: (v) => searchData.fromdt = v.replace(/-/g, '') })
+const todt = computed({ get: () => formatDate(searchData.todt, '-'), set: (v) => searchData.todt = v.replace(/-/g, '') })
 const pubymd = computed({ get: () => formatDate(registerData.pubymd, '-'), set: (v) => registerData.pubymd = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -193,9 +193,9 @@ async function search() {
   if (!searchData.deptcd) return vAlertError('판매부서를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_590U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '200',
-      ioymdfr: searchData.ioymdfr, ioymdto: searchData.ioymdto,
-      deptcd: searchData.deptcd, salsemp: searchData.salsemp === '000' ? '' : searchData.salsemp
+      actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '200',
+      fromdt: searchData.fromdt, todt: searchData.todt,
+      deptcd: searchData.deptcd, saleuserid: searchData.salsemp === '000' ? '' : searchData.salsemp
     })
     if (grid.value) {
       grid.value.setData(res.data.map((i: any) => {
@@ -228,17 +228,17 @@ async function save() {
 
   if (confirm('정산 작업을 진행하시겠습니까?')) {
     try {
-      const ioymdfr = searchData.ioymdfr
-      const ioymdto = searchData.ioymdto
+      const fromdt = searchData.fromdt
+      const todt = searchData.todt
       const salsemp = searchData.salsemp === '000' ? '' : searchData.salsemp
 
       for (const item of selected) {
         await api.post('/api/hsio/HSIO_590U_STR', {
           actkind: 'U0',
           cmpycd: authStore.cmpycd,
-          gubun: '200',
-          ioymdfr: ioymdfr,
-          ioymdto: ioymdto,
+          iogbn: '200',
+          fromdt: fromdt,
+          todt: todt,
           deptcd: item.deptcd,
           custcd: item.custcd,
           salsemp: salsemp,
@@ -260,7 +260,7 @@ async function save() {
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, ioymdfr: initfrymd, ioymdto: initymd, salsemp: authStore.userid })
+  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, fromdt: initfromdt, todt: initymd, salsemp: authStore.userid })
   Object.assign(registerData, { taxunit: '100', vattype: '010', pubymd: initymd, splamt: 0, vatamt: 0, sumamt: 0 })
   if (grid.value) grid.value.clearData()
   updateTotals()
@@ -293,11 +293,11 @@ onMounted(async () => {
       registerData.sclsym = String(d.sclsym || d.SCLSYM || Object.values(d)[1]).trim()
     }
   })
-  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'sd', cmpycd: authStore.cmpycd, limitoffset: 0, limitrows: 999 } }).then(r => {
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data) empOptions.value = r.data.map((i: any) => ({ codecd: i.userid, codenm: i.usernm }))
   })
   api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd }).then(r => { taxUnitOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.taxunit||Object.values(i)[0]).trim(), codenm:String(i.unitnm||Object.values(i)[1]).trim()})); if(taxUnitOptions.value.length) registerData.taxunit = taxUnitOptions.value[0].codecd; });
-  api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '120', cmpycd: authStore.cmpycd }).then(r => vatTypeOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.codecd||Object.values(i)[0]).trim(), codenm:String(i.codenm||Object.values(i)[1]).trim()})));
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '130', cmpycd: authStore.cmpycd }).then(r => vatTypeOptions.value = (r.data || []).map((i:any)=>({codecd:String(i.codecd||Object.values(i)[0]).trim(), codenm:String(i.codenm||Object.values(i)[1]).trim()})));
 
   nextTick(() => initGrid())
 })

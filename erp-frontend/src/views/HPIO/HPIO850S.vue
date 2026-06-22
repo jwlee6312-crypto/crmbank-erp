@@ -40,9 +40,9 @@
               <tr>
                 <th class="text-center bg-light required">출고일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="outymdfr_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="fromdt_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="px-1 opacity-50">~</span>
-                  <input v-model="outymdto_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="todt_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
                 <th class="text-center bg-light required">생산라인</th>
                 <td>
@@ -151,8 +151,8 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 // [1] 데이터 모델링
 const initymd = today.replace(/-/g, '')
 const searchData = reactive({
-  outymdfr: initymd,
-  outymdto: initymd,
+  fromdt: initymd,
+  todt: initymd,
   linecd: '010',
   slipyn: 'N'
 })
@@ -160,8 +160,8 @@ const searchData = reactive({
 const masterData = reactive<any>({})
 const lineOptions = ref<any[]>([]); const rowCount = ref(0)
 
-const outymdfr_f = computed({ get: () => formatDate(searchData.outymdfr), set: (v) => { if (v) searchData.outymdfr = v.replace(/-/g, '') } })
-const outymdto_f = computed({ get: () => formatDate(searchData.outymdto), set: (v) => { if (v) searchData.outymdto = v.replace(/-/g, '') } })
+const fromdt_f = computed({ get: () => formatDate(searchData.fromdt), set: (v) => { if (v) searchData.fromdt = v.replace(/-/g, '') } })
+const todt_f = computed({ get: () => formatDate(searchData.todt), set: (v) => { if (v) searchData.todt = v.replace(/-/g, '') } })
 
 const tableRef1 = ref<HTMLDivElement | null>(null); const tableRef2 = ref<HTMLDivElement | null>(null)
 let grid1: Tabulator | null = null; let grid2: Tabulator | null = null
@@ -204,7 +204,7 @@ const fetchLineOptions = async () => {
 async function fetchList() {
   try {
     const res = await api.post('/api/hpio/HPIO_850S_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, outymdfr: searchData.outymdfr, outymdto: searchData.outymdto, linecd: searchData.linecd, slipyn: searchData.slipyn
+      actkind: 'S0', cmpycd: authStore.cmpycd, fromdt: searchData.fromdt, todt: searchData.todt, linecd: searchData.linecd, slipyn: searchData.slipyn
     });
     grid1?.setData(res.data.map((i: any) => ({ ...i, io_disp: `${i.ioym}-${i.iono}` })));
     rowCount.value = res.data.length;
@@ -226,7 +226,7 @@ async function fetchDetail(row: any) {
 
 const initialize = () => {
   resetForm(searchData);
-  Object.assign(searchData, { outymdfr: initymd, outymdto: initymd, linecd: '010', slipyn: 'N' });
+  Object.assign(searchData, { fromdt: initymd, todt: initymd, linecd: '010', slipyn: 'N' });
   grid1?.clearData(); grid2?.clearData(); rowCount.value = 0;
   Object.keys(masterData).forEach(key => delete masterData[key]);
 }

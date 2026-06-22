@@ -55,9 +55,9 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">발행일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1" style="max-width: 320px;">
-										<input v-model="searchForm.ioymdfr" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.ioymdto" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" />
 									</div>
 								</div>
 							</td>
@@ -105,8 +105,8 @@ const { resetForm } = useFormReset()
 // 상태 관리 (소문자 통일)
 const searchForm = reactive({
 	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-	ioymdfr: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-	ioymdto: new Date().toISOString().substring(0, 10)
+	fromdt: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
+	todt: new Date().toISOString().substring(0, 10)
 })
 
 const closingInfo = reactive({ clsymd: '', sclsym: '' })
@@ -121,8 +121,8 @@ const fetchIssuedList = async () => {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
             gubun: '200',
-			ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
-			ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, ''),
             deptcd: searchForm.deptcd
 		})
 		mainGrid?.setData(res.data.map((i: any) => ({
@@ -182,8 +182,8 @@ const handleCancelSlip = async () => {
 				actkind: 'D0',
 				cmpycd: authStore.cmpycd,
                 gubun: '200',
-				ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
-				ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+				fromdt: searchForm.fromdt.replace(/-/g, ''),
+				todt: searchForm.todt.replace(/-/g, ''),
                 deptcd: deptcd,
                 slipymd: slipymd,
                 slipno: slipno,
@@ -214,8 +214,8 @@ const toggleAllRows = () => {
 const initialize = () => {
 	resetForm(searchForm);
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
-	searchForm.ioymdfr = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10);
-	searchForm.ioymdto = new Date().toISOString().substring(0, 10);
+	searchForm.fromdt = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10);
+	searchForm.todt = new Date().toISOString().substring(0, 10);
 	mainGrid?.clearData(); activeItemCount.value = 0; totals.sum = 0;
 }
 

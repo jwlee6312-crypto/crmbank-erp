@@ -31,9 +31,9 @@
         <div class="d-flex align-items-center gap-2">
           <span class="fw-bold small text-secondary" style="white-space: nowrap;">▶ 요청일자:</span>
           <div class="d-flex align-items-center gap-1">
-            <input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" @change="fetchList" />
+            <input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" @change="fetchList" />
             <span class="text-muted mx-1">~</span>
-            <input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" @change="fetchList" />
+            <input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" @change="fetchList" />
           </div>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -54,8 +54,8 @@
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
           <span class="fw-bold small text-dark"><i class="bi bi-list-ul me-1 text-primary"></i> 거래처별 요약</span>
         </div>
-          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-            <div ref="poGridRef" class="tabulator-instance flex-grow-1"></div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+            <div ref="poGridRef" class="tabulator-full-height" />
           </div>
       </div>
 
@@ -68,8 +68,8 @@
               <span v-if="selectedCustNm" class="ms-3 badge bg-primary-subtle text-primary border border-primary-subtle fw-medium">거래처: {{ selectedCustNm }}</span>
             </span>
           </div>
-          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-            <div ref="itemGridRef" class="tabulator-instance flex-grow-1"></div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+            <div ref="itemGridRef" class="tabulator-full-height" />
           </div>
         </div>
       </div>
@@ -86,20 +86,21 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
-const now = new Date()
 const searchForm = reactive<any>({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  frymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  toymd: now.toISOString().substring(0, 10),
+  fromdt: firstDay,
+  todt: today,
   custcd: '', custnm: ''
 })
 
@@ -119,8 +120,8 @@ async function fetchList() {
     const res = await api.post('/api/hsio/HSIO_085S_STR', {
       ...searchForm,
       cmpycd: authStore.cmpycd,
-      frymd: searchForm.frymd.replace(/-/g, ''),
-      toymd: searchForm.toymd.replace(/-/g, '')
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, '')
     })
     poGrid?.setData(res.data.data || [])
     itemGrid?.clearData();
@@ -139,8 +140,8 @@ async function fetchDetail(row: any) {
       cmpycd: authStore.cmpycd,
       deptcd: d.deptcd,
       custcd: d.custcd,
-      frymd: searchForm.frymd.replace(/-/g, ''),
-      toymd: searchForm.toymd.replace(/-/g, '')
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, '')
     })
     const data = res.data.data || []
     itemGrid?.setData(data)
@@ -153,8 +154,8 @@ async function fetchDetail(row: any) {
 function initialize() {
   resetForm(searchForm)
   searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm
-  searchForm.frymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
-  searchForm.toymd = now.toISOString().substring(0, 10)
+  searchForm.fromdt = firstDay
+  searchForm.todt = today
   poGrid?.clearData(); itemGrid?.clearData();
   selectedCustNm.value = ''; activeItemCount.value = 0; totals.qty = 0; totals.amt = 0;
 }
@@ -188,6 +189,13 @@ onMounted(() => {
     poGrid = new Tabulator(poGridRef.value, {
       layout: 'fitColumns', height: '100%', selectable: 1,
       placeholder: "데이터가 없습니다.",
+      columnDefaults: {
+        headerSort: false,
+        headerHozAlign: "center",
+        hozAlign: 'right', // 🚀 기본값 우측 정렬
+        vertAlign: 'middle',
+        minWidth: 80
+      },
       columns: [
         { title: '거래처', field: 'custnm', minWidth: 150, widthGrow: 1, cssClass: 'fw-bold text-dark' },
         { title: '요청수량', field: 'reqqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } }
@@ -200,7 +208,13 @@ onMounted(() => {
     itemGrid = new Tabulator(itemGridRef.value, {
       layout: 'fitColumns', height: '100%',
       placeholder: "거래처를 선택하세요.",
-      columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 100 },
+      columnDefaults: {
+        headerSort: false,
+        headerHozAlign: "center",
+        hozAlign: 'right', // 🚀 기본값 우측 정렬
+        vertAlign: 'middle',
+        minWidth: 100
+      },
       columns: [
         { title: '요청일', field: 'reqymd', width: 90, hozAlign: 'center', formatter: (c) => formatDate(c.getValue()) },
         { title: '품명', field: 'itemnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
@@ -218,3 +232,7 @@ onMounted(() => {
   nextTick(() => { fetchList() })
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

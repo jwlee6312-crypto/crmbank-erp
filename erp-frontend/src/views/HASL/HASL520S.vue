@@ -249,7 +249,7 @@ const go_account_detail = (acct_cd: string) => {
 
 	router.push({
 		path: `/${pgmid}`,
-		query: { frymd: first_ymd, toymd: last_ymd, acctcd: acct_cd }
+		query: { fromdt: first_ymd, todt: last_ymd, acctcd: acct_cd }
 	})
 }
 

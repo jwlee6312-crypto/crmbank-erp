@@ -185,7 +185,7 @@ async function fetchDetails() {
 
 async function saveData() {
   if (masterData.ioymd <= closingInfo.clsymd) return vAlertError('회계 마감된 일자입니다.');
-  if (masterData.slipno > '000') return vAlertError('전표가 발행되어 수정할 수 없습니다.');
+  if (masterData.slipno > '000') return vAlertError('입출가 발행되어 수정할 수 없습니다.');
 
   const details = grid?.getData().filter((r: any) => r._status) || [];
   if (!details.length && !masterData.iono) return vAlertError('출고할 품목을 추가하세요.');
@@ -194,17 +194,45 @@ async function saveData() {
 
   try {
     const actkind = !masterData.iono ? 'A' : 'U'
+    // 🚀 [Seed-Model] Step 1. 마스터 저장 실행
     const resM = await api.post('/api/hpio/HPIO_520U_STR', { ...masterData, actkind, cmpycd: authStore.cmpycd, userid: authStore.userid, ioymd: masterData.ioymd });
-    const newIono = resM.data[0]?.outno || masterData.iono;
+    const mstData = resM.data?.[0];
+
+    // 🚀 [Seed-Model] Step 2. 무결성 키 추출 (0번: 상태/년월, 1번: 메시지/번호)
+    const rowValues = mstData?.returnkeyvalue || Object.values(mstData || {});
+    const key1 = (mstData?.ioym || rowValues[0] || '').toString().trim();
+    const key2 = (mstData?.outno || mstData?.iono || rowValues[1] || '').toString().trim();
+
+    // 🚀 [Seed-Model] Step 3. 에러 판별
+    if (key1 === '000000') {
+        throw new Error(key2 || '업무 규칙 위반으로 저장할 수 없습니다.');
+    }
+
+    if (!key1 || !key2) {
+        throw new Error('입출 번호를 서버로부터 수신하지 못했습니다. (Data Integrity Error)');
+    }
+
+    // 🚀 [Seed-Model] Step 4. 상세 내역 연결 저장 (A0 루프)
+    const newIono = key2;
 
     for (const item of details) {
       const act = item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U');
-      await api.post('/api/hpio/HPIO_521U_STR', { ...item, actkind: act, cmpycd: authStore.cmpycd, ioym: masterData.ioym, iono: newIono, linecd: masterData.linecd, progcd: masterData.progcd, ioymd: masterData.ioymd, userid: authStore.userid });
+      const resDtl = await api.post('/api/hpio/HPIO_521U_STR', {
+        ...item, actkind: act, cmpycd: authStore.cmpycd, ioym: key1, iono: newIono,
+        linecd: masterData.linecd, progcd: masterData.progcd, ioymd: masterData.ioymd, userid: authStore.userid
+      });
+
+      // 상세 저장 결과도 무결성 원칙으로 체크
+      const dtlValues = resDtl.data?.[0]?.returnkeyvalue || Object.values(resDtl.data?.[0] || {});
+      if (String(dtlValues[0]).trim() === '000000') {
+          throw new Error(dtlValues[1] || '상세 내역 저장 중 오류 발생');
+      }
     }
+
     vAlert('저장되었습니다.');
     masterData.iono = newIono;
     fetchMaster();
-  } catch (e) { vAlertError('저장 실패'); }
+  } catch (e: any) { vAlertError(e.message || '저장 실패'); }
 }
 
 async function deleteData() {

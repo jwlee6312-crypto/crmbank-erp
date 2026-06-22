@@ -33,9 +33,9 @@
                 <th class="required">주문일자</th>
                 <td style="width: 350px;">
                   <div class="d-flex align-items-center gap-1">
-                    <input v-model="ioymdfr" type="date" class="form-control form-control-sm" />
+                    <input v-model="fromdt" type="date" class="form-control form-control-sm" />
                     <span>~</span>
-                    <input v-model="ioymdto" type="date" class="form-control form-control-sm" />
+                    <input v-model="todt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th class="required">조회대상</th>
@@ -110,18 +110,18 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
-  ioymdfr: initfrymd,
-  ioymdto: initymd,
+  fromdt: initfromdt,
+  todt: initymd,
   selgbn: 'N',
   ordkind: ''
 })
 
-const ioymdfr = computed({ get: () => formatDateString(searchData.ioymdfr, '-'), set: (v) => searchData.ioymdfr = v.replace(/-/g, '') })
-const ioymdto = computed({ get: () => formatDateString(searchData.ioymdto, '-'), set: (v) => searchData.ioymdto = v.replace(/-/g, '') })
+const fromdt = computed({ get: () => formatDateString(searchData.fromdt, '-'), set: (v) => searchData.fromdt = v.replace(/-/g, '') })
+const todt = computed({ get: () => formatDateString(searchData.todt, '-'), set: (v) => searchData.todt = v.replace(/-/g, '') })
 
 const masterGridElement = ref<HTMLElement | null>(null)
 const detailGridElement = ref<HTMLElement | null>(null)
@@ -210,15 +210,15 @@ async function fetchOptions() {
 }
 
 async function search() {
-  if (!searchData.ioymdfr || !searchData.ioymdto) return vAlertError('조회 기간을 입력하세요.')
+  if (!searchData.fromdt || !searchData.todt) return vAlertError('조회 기간을 입력하세요.')
   try {
     const res = await api.post('/api/hsod/HSOD_120U_STR', {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
       ordkind: searchData.ordkind,
       selgbn: searchData.selgbn,
-      ioymdfr: searchData.ioymdfr,
-      ioymdto: searchData.ioymdto
+      fromdt: searchData.fromdt,
+      todt: searchData.todt
     })
     if (masterGrid) {
       const mappedData = res.data.map((i: any) => ({
@@ -311,7 +311,7 @@ const toggleAllSelection = () => {
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { ioymdfr: initfrymd, ioymdto: initymd, selgbn: 'N', ordkind: '' })
+  Object.assign(searchData, { fromdt: initfromdt, todt: initymd, selgbn: 'N', ordkind: '' })
   masterGrid?.clearData()
   detailGrid?.clearData()
   selectedOrderInfo.value = null

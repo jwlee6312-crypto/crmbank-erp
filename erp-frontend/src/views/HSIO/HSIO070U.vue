@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 입고취소 (HSIO070U)
 	작성일자	: 2025.02.24
-	설명        : 입고 완료된 내역을 선택하여 취소 처리 (ASP 패턴 기반 순차 저장 로직 및 소문자 통일)
+	설명        : 입고 완료된 내역을 선택하여 취소 처리 (표준화 적용)
 	=============================================================
 -->
 
@@ -47,7 +47,8 @@
                 </td>
                 <th class="text-center bg-light">입고일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <DateForm v-model:fromdt="searchForm.ymdfr" v-model:todt="searchForm.ymdto" />
+                  <!-- ✅ fromdt, todt로 표준화 -->
+                  <DateForm v-model:fromdt="searchForm.fromdt" v-model:todt="searchForm.todt" />
                 </td>
               </tr>
             </tbody>
@@ -75,7 +76,6 @@
             </span>
             <div class="d-flex align-items-center gap-2">
                <span class="text-danger fw-bold small">선택: {{ activeItemCount }} 건</span>
-               <button class="btn btn-xs btn-outline-secondary px-2" style="height: 22px; font-size: 11px;" @click="toggleAllRows">전체선택</button>
             </div>
           </div>
           <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -98,20 +98,22 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-// [1] 데이터 모델링 (소문자 통일)
+// [1] 데이터 모델링 (fromdt/todt 표준화)
 const searchForm = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  ymdfr: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-  ymdto: new Date().toISOString().substring(0, 10)
+  fromdt: firstDay,
+  todt: today
 })
 
 const clsInfo = reactive({ sclsym: '' })
@@ -130,11 +132,10 @@ async function fetchCustList() {
   try {
     const res = await api.post('/api/hsio/HSIO_070U_STR', {
       actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '100',
-      ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       deptcd: searchForm.deptcd
     });
-    // axios interceptor 에서 resData.data 를 반환하도록 수정했으므로 res.data 사용
     poGrid?.setData(res.data || []); itemGrid?.clearData(); activeItemCount.value = 0;
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
@@ -144,21 +145,20 @@ async function fetchDetail(cust: any) {
   try {
     const res = await api.post('/api/hsio/HSIO_070U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '100',
-      ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       custcd: cust.custcd, deptcd: searchForm.deptcd
     })
     itemGrid?.setData(res.data || [])
-    updateCount()
   } catch (e) { vAlertError('상세 조회 실패') }
 }
 
 /**
- * 🚀 저장(취소) 로직 (ASP 패턴: 선택된 각 행을 d0로 순차 호출)
+ * 🚀 저장(취소) 로직 (getSelectedData 표준 방식 적용)
  */
 async function save() {
-  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'Y')
-  if (!items || items.length === 0) return vAlertError('취소할 항목을 선택하세요.')
+  const items = itemGrid?.getSelectedData() || []
+  if (items.length === 0) return vAlertError('취소할 항목을 선택하세요.')
   if (!confirm('입고처리를 취소하시겠습니까?')) return
 
   try {
@@ -167,8 +167,8 @@ async function save() {
             actkind: 'D0',
             cmpycd: authStore.cmpycd,
             iogbn: '100',
-            ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
-            ioymdto: searchForm.ymdto.replace(/-/g, ''),
+            fromdt: searchForm.fromdt.replace(/-/g, ''),
+            todt: searchForm.todt.replace(/-/g, ''),
             deptcd: searchForm.deptcd,
             custcd: item.custcd,
             ioym: item.ioym,
@@ -183,18 +183,6 @@ async function save() {
     }
     vAlert('정상적으로 취소되었습니다.'); fetchCustList();
   } catch (e: any) { vAlertError(e.message || '취소 처리 실패') }
-}
-
-const toggleAllRows = () => {
-  const rows = itemGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'Y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
-  updateCount()
-}
-
-const updateCount = () => {
-    const data = itemGrid?.getData() || []
-    activeItemCount.value = data.filter((r: any) => r.procyn === 'Y').length
 }
 
 function initialize() {
@@ -223,9 +211,18 @@ onMounted(async () => {
   if (itemGridRef.value) {
     itemGrid = new Tabulator(itemGridRef.value, {
       layout: 'fitColumns', height: '100%',
+      selectable: true, // ✅ 행 선택 활성화
+      selectableCheck: (row) => { // ✅ 정산/마감 데이터 선택 방지
+          const d = row.getData();
+          if (d.jyn === 'Y') return false;
+          const ioym = d.ioymd?.substring(0, 6) || '';
+          if (clsInfo.sclsym && ioym <= clsInfo.sclsym) return false;
+          return true;
+      },
       columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
       columns: [
-        { title: '선택', field: 'procyn', hozAlign: 'center', width: 60, formatter: 'tickCross', editor: true, headerClick: () => toggleAllRows() },
+        // ✅ 표준 체크박스 포맷터 적용
+        { title: '선택', width: 60, hozAlign: 'center', formatter: 'rowSelection', titleFormatter: 'rowSelection', headerSort: false },
         { title: '입고일', field: 'ioymd', width: 110, formatter: (c) => formatDate(c.getValue()) },
         { title: '입고창고', field: 'whnm', minWidth: 120, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
         { title: '입고번호', field: 'iono', width: 120, hozAlign: 'center' },
@@ -234,16 +231,10 @@ onMounted(async () => {
         { title: '부가세', field: 'iovat', hozAlign: 'right', width: 100, formatter: 'money', formatterParams: { precision: 0 } }
       ]
     })
-    itemGrid.on("cellEdited", (cell) => {
-        if (cell.getField() === 'procyn') {
-            const d = cell.getData();
-            if (d.procyn === 'Y') {
-                if (d.jyn === 'Y' || d.jyn === 'Y') { vAlertError('정산 완료된 자료입니다.'); cell.setValue('N'); return; }
-                const ioym = d.ioymd?.substring(0, 6) || '';
-                if (clsInfo.sclsym && ioym <= clsInfo.sclsym) { vAlertError('영업 마감된 월입니다.'); cell.setValue('N'); return; }
-            }
-            updateCount()
-        }
+
+    // ✅ 선택 변경 시 건수 업데이트
+    itemGrid.on("rowSelectionChanged", () => {
+        activeItemCount.value = itemGrid?.getSelectedData().length || 0
     })
   }
   fetchCustList()
@@ -253,7 +244,6 @@ const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(0,4)
 </script>
 
 <style scoped>
-.main-content-wrapper { padding-bottom: 0px !important; }
 .grid-container-right { border-bottom: 3px solid #005a9f !important; }
 .erp-table-dense th, .erp-table-dense td {
   height: 32px !important; padding: 0 8px !important; font-size: 12px; vertical-align: middle; border: 1px solid #dee2e6;

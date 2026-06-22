@@ -47,9 +47,9 @@
                 <th class="required">발행일자</th>
                 <td style="width: 300px;">
                   <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="ioymdfr" type="date" class="form-control form-control-sm" />
+                    <input v-model="fromdt" type="date" class="form-control form-control-sm" />
                     <span class="px-1">~</span>
-                    <input v-model="ioymdto" type="date" class="form-control form-control-sm" />
+                    <input v-model="todt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <td></td>
@@ -96,19 +96,19 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리 (소문자 통일)
 const searchdata = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  ioymdfr: initfrymd, ioymdto: initymd
+  fromdt: initfromdt, todt: initymd
 })
 
 const closinginfo = reactive({ clsymd: '', sclsym: '' })
 const autoslip = ref('N')
 
-const ioymdfr = computed({ get: () => formatDate(searchdata.ioymdfr, '-'), set: (v) => searchdata.ioymdfr = v.replace(/-/g, '') })
-const ioymdto = computed({ get: () => formatDate(searchdata.ioymdto, '-'), set: (v) => searchdata.ioymdto = v.replace(/-/g, '') })
+const fromdt = computed({ get: () => formatDate(searchdata.fromdt, '-'), set: (v) => searchdata.fromdt = v.replace(/-/g, '') })
+const todt = computed({ get: () => formatDate(searchdata.todt, '-'), set: (v) => searchdata.todt = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
@@ -187,7 +187,7 @@ async function search() {
   try {
     const res = await api.post('/api/hsio/HSIO_541U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '200',
-      ioymdfr: searchdata.ioymdfr, ioymdto: searchdata.ioymdto,
+      fromdt: searchdata.fromdt, todt: searchdata.todt,
       deptcd: searchdata.deptcd
     })
     if (grid.value) {
@@ -249,8 +249,8 @@ async function deleteSlips() {
         actkind: 'D0',
         cmpycd: authStore.cmpycd,
         gubun: '200',
-        ioymdfr: searchdata.ioymdfr,
-        ioymdto: searchdata.ioymdto,
+        fromdt: searchdata.fromdt,
+        todt: searchdata.todt,
         deptcd: deptcd,
         slipymd: slipymd,
         slipno: slipno,
@@ -271,7 +271,7 @@ async function deleteSlips() {
 
 function initialize() {
   resetForm(searchdata)
-  Object.assign(searchdata, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, ioymdfr: initfrymd, ioymdto: initymd })
+  Object.assign(searchdata, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, fromdt: initfromdt, todt: initymd })
   if (grid.value) grid.value.clearData()
   updateTotals()
 }

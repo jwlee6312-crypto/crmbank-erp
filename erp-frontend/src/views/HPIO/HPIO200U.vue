@@ -152,7 +152,7 @@ const initGrids = () => {
         formatter: (c) => { const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v; },
         cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
       },
-      { title: "완료일자", field: "toymd", width: 130, hozAlign: "center", editor: "input",
+      { title: "완료일자", field: "todt", width: 130, hozAlign: "center", editor: "input",
         formatter: (c) => { const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v; },
         cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
       },
@@ -196,7 +196,7 @@ const saveData = async () => {
         lotno: item.lotno || '', itemcd: item.itemcd, itsize: item.itsize || '', unit: item.unit || '',
         lotsize: String(item.lotsize || '0').replace(/,/g, ''),
         stymd: (item.stymd || '').replace(/-/g, ''),
-        toymd: (item.toymd || '').replace(/-/g, ''),
+        todt: (item.todt || '').replace(/-/g, ''),
         bigo: item.bigo || '', useyn: item._status === '삭제' ? 'N' : 'Y',
         ordym: searchForm.ordym, ordno: searchForm.ordno
       })

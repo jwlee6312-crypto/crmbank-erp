@@ -65,8 +65,8 @@
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 거래처별 입고/정산/미정산 요약 현황</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+          <div ref="mainGridRef" class="tabulator-full-height" />
         </div>
       </div>
     </div>
@@ -81,22 +81,25 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
+import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-const now = new Date()
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
+
 const searchForm = reactive({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  fymd: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  tymd: now.toISOString().substring(0, 10)
+  fymd: firstDay,
+  tymd: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
@@ -109,7 +112,7 @@ async function fetchList() {
       fymd: searchForm.fymd.replace(/-/g, ''),
       tymd: searchForm.tymd.replace(/-/g, '')
     })
-    const data = res.data.data || []
+    const data = res.data || []
     mainGrid?.setData(data)
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
@@ -118,14 +121,24 @@ async function fetchList() {
 function initialize() {
   resetForm(searchForm);
   searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
-  searchForm.fymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
-  searchForm.tymd = now.toISOString().substring(0, 10);
+  searchForm.fymd = firstDay
+  searchForm.tymd = today
   mainGrid?.clearData();
 }
 
 function openHelp(type: string) {
   if (type === 'DEPT') {
-    openCommonHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
+    Object.assign(modalProps, {
+      title: '입고부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: '', codenm: searchForm.deptnm, remark: '' },
+      columns: [
+        { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
+    })
+    modalVisible.value = true
   }
 }
 
@@ -135,7 +148,13 @@ onMounted(() => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: "center", minWidth: 80 },
+			columnDefaults: {
+				headerSort: false,
+				headerHozAlign: "center",
+				hozAlign: 'right', // 🚀 기본값을 우측 정렬로 설정
+				vertAlign: 'middle',
+				minWidth: 80
+			},
 			columns: [
 				{ title: '거래처 명', field: 'custnm', minWidth: 180, widthGrow: 1.5, cssClass: 'fw-bold text-dark', frozen: true },
 				{
@@ -172,6 +191,10 @@ onMounted(() => {
     fetchList()
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>
 
 <style scoped>
 .main-content-wrapper { padding-bottom: 0vh !important; }

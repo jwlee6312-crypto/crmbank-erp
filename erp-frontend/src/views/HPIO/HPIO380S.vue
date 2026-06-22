@@ -47,9 +47,9 @@
                 </td>
                 <th class="text-center bg-light required">투입일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="proymdf_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="px-1 opacity-50">~</span>
-                  <input v-model="proymdt_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
                 <th class="text-center bg-light">생산공정</th>
                 <td>
@@ -121,11 +121,11 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
 const initymd = today.replace(/-/g, '')
-const initfrymd = firstDay.replace(/-/g, '')
+const initfromdt = firstDay.replace(/-/g, '')
 
 const searchData = reactive<any>({
   linecd: '010', progcd: '', prodcd: '',
-  proymdfr: initfrymd, proymdt: initymd,
+  fromdt: initfromdt, todt: initymd,
   mitemcd: '', mitemnm: '', mitsize: '', munit: '',
   selgbn: '000'
 })
@@ -134,8 +134,8 @@ const gbnOptions = ref<any[]>([]); const lineOptions = ref<any[]>([]); const pro
 const rowCount = ref(0)
 
 // 포맷팅 헬퍼 (ui 접두어 제거)
-const proymdf_f = computed({ get: () => formatDate(searchData.proymdfr), set: (v) => { if (v) searchData.proymdfr = v.replace(/-/g, '') } })
-const proymdt_f = computed({ get: () => formatDate(searchData.proymdt), set: (v) => { if (v) searchData.proymdt = v.replace(/-/g, '') } })
+const fromdt = computed({ get: () => formatDate(searchData.fromdt), set: (v) => { if (v) searchData.fromdt = v.replace(/-/g, '') } })
+const todt = computed({ get: () => formatDate(searchData.todt), set: (v) => { if (v) searchData.todt = v.replace(/-/g, '') } })
 
 const tableRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
@@ -190,7 +190,7 @@ async function fetchList() {
     const res = await api.post('/api/hpio/HPIO_380S_STR', {
       cmpycd: authStore.cmpycd, selgbn: searchData.selgbn, linecd: searchData.linecd,
       progcd: searchData.progcd || '', prodcd: searchData.prodcd || '',
-      mitemcd: searchData.mitemcd || '', proymdF: searchData.proymdfr, proymdT: searchData.proymdt
+      mitemcd: searchData.mitemcd || '', proymdF: searchData.fromdt, proymdT: searchData.todt
     })
     grid?.setData(res.data)
     rowCount.value = res.data.length
@@ -208,11 +208,11 @@ const handleOpenHelp = (type: string) => {
 
 const initialize = () => {
   resetForm(searchData);
-  Object.assign(searchData, { linecd: '010', progcd: '', prodcd: '', proymdfr: initfrymd, proymdt: initymd, selgbn: '000', mitemcd: '', mitemnm: '', mitsize: '', munit: '' });
+  Object.assign(searchData, { linecd: '010', progcd: '', prodcd: '', fromdt: initfromdt, todt: initymd, selgbn: '000', mitemcd: '', mitemnm: '', mitsize: '', munit: '' });
   grid?.clearData(); rowCount.value = 0;
 }
 
-const exportExcel = () => grid?.download("xlsx", `투입자재상세_${searchData.proymdt}.xlsx`)
+const exportExcel = () => grid?.download("xlsx", `투입자재상세_${searchData.todt}.xlsx`)
 const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
 
 onMounted(async () => {
@@ -221,8 +221,8 @@ onMounted(async () => {
     Object.assign(searchData, {
       linecd: String(route.query.linecd),
       selgbn: String(route.query.selgbn || '000'),
-      proymdfr: String(route.query.proymdfr),
-      proymdt: String(route.query.proymdt),
+      fromdt: String(route.query.fromdt),
+      todt: String(route.query.todt),
       mitemcd: String(route.query.mitemcd || '')
     });
     await onLineChange();

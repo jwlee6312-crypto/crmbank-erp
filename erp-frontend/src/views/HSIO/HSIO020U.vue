@@ -133,15 +133,16 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { getDate } from '@/composables/useDate'
 import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { today, currentMonth } = getDate()
 
-const now = new Date();
-const initym = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-const initymd = `${initym}${String(now.getDate()).padStart(2, '0')}`;
+const initym = currentMonth.replace('-', '')
+const initymd = today.replace(/-/g, '')
 
 const searchParam = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, reqym: initym, reqno: '' })
 const masterData = reactive<any>({
@@ -238,18 +239,51 @@ function addRow() { grid.value?.addRow({ upkind: 'A', reqqty: 0, imprice: 0, req
 
 async function save() {
   if (activeItemCount.value === 0) return vAlertError('저장할 품목이 없습니다.');
+
+  if (!confirm('저장하시겠습니까?')) return
+
   try {
     const act = (masterData.reqno === '0000' || !masterData.reqno) ? 'A0' : 'U0';
+    // 🚀 [Seed-Model] Step 1. 마스터 저장 실행
     const mRes = await api.post('/api/hsio/HSIO_020U_STR', { ...masterData, actkind: act, updemp: authStore.userid });
-    if (mRes.data?.length) {
-      const newNo = mRes.data[0].reqno;
-      const items = grid.value!.getData();
-      for (const item of items) {
-        await api.post('/api/hsio/HSIO_021U_STR', { ...item, actkind: (item.upkind || 'U') + '0', cmpycd: authStore.cmpycd, reqym: masterData.reqym, reqno: newNo, deptcd: masterData.deptcd, updemp: authStore.userid });
-      }
-      vAlert('저장되었습니다.'); masterData.reqno = newNo; fetchMaster();
+    const mstData = mRes.data?.[0];
+
+    // 🚀 [Seed-Model] Step 2. 무결성 키 추출 (0번: 상태/년월, 1번: 메시지/번호)
+    const rowValues = mstData?.returnkeyvalue || Object.values(mstData || {});
+    const key1 = (mstData?.reqym || rowValues[0] || '').toString().trim();
+    const key2 = (mstData?.reqno || rowValues[1] || '').toString().trim();
+
+    // 🚀 [Seed-Model] Step 3. 에러 판별
+    if (key1 === '000000') {
+        throw new Error(key2 || '업무 규칙 위반으로 저장할 수 없습니다.');
     }
-  } catch (e) { vAlertError('저장 중 오류 발생') }
+
+    if (!key1 || !key2) {
+        throw new Error('요청 번호를 서버로부터 수신하지 못했습니다. (Data Integrity Error)');
+    }
+
+    // 🚀 [Seed-Model] Step 4. 상세 내역 연결 저장 (A0 루프)
+    const newNo = key2;
+    const items = grid.value!.getData();
+
+    for (const item of items) {
+      const resDtl = await api.post('/api/hsio/HSIO_021U_STR', {
+        ...item, actkind: (item.upkind || 'U') + '0',
+        cmpycd: authStore.cmpycd, reqym: key1, reqno: newNo,
+        deptcd: masterData.deptcd, updemp: authStore.userid
+      });
+
+      // 상세 저장 결과 무결성 체크
+      const dtlValues = resDtl.data?.[0]?.returnkeyvalue || Object.values(resDtl.data?.[0] || {});
+      if (String(dtlValues[0]).trim() === '000000') {
+          throw new Error(dtlValues[1] || '상세 내역 저장 중 오류 발생');
+      }
+    }
+
+    vAlert('저장되었습니다.');
+    masterData.reqno = newNo;
+    fetchMaster();
+  } catch (e: any) { vAlertError(e.message || '저장 중 오류 발생'); }
 }
 
 async function deleteRequest() {
@@ -277,7 +311,7 @@ function openHelp(type: string) {
 function formatNumber(v: any) { return new Intl.NumberFormat().format(Number(v) || 0) }
 
 onMounted(() => {
-  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd } }).then(r => {
+  api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' } }).then(r => {
     if (r.data) {
       empOptions.value = r.data.map((i: any) => ({
         userid: String(i.userid || i.userid || Object.values(i)[0]).trim(),

@@ -94,11 +94,12 @@
               <tr>
                 <th>주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소</th>
                 <td colspan="7">
-                  <div class="d-flex gap-1">
-                    <input v-model="masterData.postno" type="text" class="form-control form-control-sm text-center" style="width: 70px;" readonly />
-                    <button class="btn btn-outline-secondary btn-sm px-2" @click="openPostcode"><i class="bi bi-search"></i></button>
-                    <input v-model="masterData.address" type="text" class="form-control form-control-sm flex-grow-1" />
-                  </div>
+                  <AddressPopupForm
+                    v-model:postno="masterData.postno"
+                    v-model:address="masterData.address"
+                    v-model:d_address="masterData.d_address"
+                    @open-address="handleOpenHelp('ADDR')"
+                  />
                 </td>
                 <th>FAX번호</th>
                 <td><input v-model="masterData.faxno" type="text" class="form-control form-control-sm" maxlength="30" /></td>
@@ -219,21 +220,23 @@ import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
+import AddressPopupForm from '@/components/AddressPopupForm.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // 1. 상태 관리
 const searchParams = reactive({ qcustgbn: '000', qstatus: '010', qcustnm: '' })
 const masterData = reactive<any>({
   actkind: 'I0', cmpycd: authStore.cmpycd, custcd: '', custno: '', custnm: '', custgbn: '010',
-  bossnm: '', legalno: '', custkind: '', custtype: '', telno: '', faxno: '', postno: '', address: '',
+  bossnm: '', legalno: '', custkind: '', custtype: '', telno: '', faxno: '', postno: '', address: '', d_address: '',
   iogbn: '010', inprcgbn: '190', outprcgbn: '200', hdamt: 0, rcvdd: 0, gigbcd: '305',
   agrpcd: '000', bgrpcd: '000', cgrpcd: '000', area: '000', cdamdang: '', ctelno: '', cemail: '',
   remark: '', status: '010', banknm: '', gujoa: '', fndymd: '', stdymd: '', clsymd: '99991231',
@@ -322,24 +325,13 @@ function initialize() {
 
 const handleCustGbnChange = () => { if(masterData.custgbn === '030') masterData.elcyn = 'N'; }
 
-function openPostcode() {
-  // @ts-ignore
-  new daum.Postcode({ oncomplete: (data: any) => { masterData.postno = data.zonecode; masterData.address = data.roadAddress; } }).open()
-}
-
-const modalVisible = ref(false); const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-function openHelp(type: string) {
-  let config: any = {}
-  if (type === 'AGRP') config = { title: '대분류 선택', path: '/api/hs00/HS00_000S_STR', data: { gubun: 'G0' }, field: 'agrpnm', columns: [{ title: '코드', field: 'agrpcd', width: 80 }, { title: '분류명', field: 'agrpnm', width: 180 }] }
-  else if (type === 'BGRP') config = { title: '중분류 선택', path: '/api/hs00/HS00_000S_STR', data: { gubun: 'G1', code: masterData.agrpcd }, field: 'bgrpnm', columns: [{ title: '코드', field: 'bgrpcd', width: 80 }, { title: '분류명', field: 'bgrpnm', width: 180 }] }
-  else if (type === 'CUST') config = { title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'C4' }, field: 'custnm', columns: [{ title: '코드', field: 'custcd', width: 100 }, { title: '거래처명', field: 'custnm', width: 200 }] }
-  if (!config.path) return
-  Object.assign(modalProps, { title: config.title, path: config.path, defaultField: config.field, data: { ...config.data, cmpycd: authStore.cmpycd }, columns: config.columns, onConfirm: (data: any) => {
-    if (type === 'AGRP') { masterData.agrpcd = (data.agrpcd || data.code || '').trim(); masterData.agrpnm = (data.agrpnm || data.cdnm || '').trim(); }
-    else if (type === 'BGRP') { masterData.bgrpcd = (data.bgrpcd || data.code || '').trim(); masterData.bgrpnm = (data.bgrpnm || data.cdnm || '').trim(); }
-    else if (type === 'CUST') { masterData.IN_custcd = (data.custcd || data.code || '').trim(); masterData.IN_custnm = (data.custnm || data.cdnm || '').trim(); }
-  }})
-  modalVisible.value = true
+const handleOpenHelp = (type: string) => {
+  if (type === 'ADDR') {
+    if (!masterData.custcd) return vAlertError('거래처를 먼저 선택하세요.');
+    openHelp('ADDR', { gubun: 'C5', cmpycd: authStore.cmpycd, gbncd: masterData.custcd }, (d: any) => {
+      masterData.postno = d.postno; masterData.address = d.address;
+    });
+  }
 }
 
 onMounted(async () => { await fetchOptions(); nextTick(() => { initGrid(); search() }) })

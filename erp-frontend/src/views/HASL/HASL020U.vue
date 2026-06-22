@@ -47,9 +47,9 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label">발행일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
-										<input v-model="searchForm.frymd" type="date" class="form-control" />
+										<input v-model="searchForm.fromdt" type="date" class="form-control" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.toymd" type="date" class="form-control" />
+										<input v-model="searchForm.todt" type="date" class="form-control" />
 									</div>
 								</div>
 							</td>
@@ -178,8 +178,8 @@ const today = now.toISOString().substring(0, 10)
 
 // 🔍 검색 데이터
 const searchForm = reactive({
-	frymd: firstDay,
-	toymd: today,
+	fromdt: firstDay,
+	todt: today,
 	deptcd: '',
 	deptnm: '',
 	slipkind: '000',
@@ -223,8 +223,8 @@ const fetchSlips = async () => {
 		const res = await api.post('/api/hasl/HASL_020U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			slipymd: searchForm.frymd.replace(/-/g, ''),
-			acctymd: searchForm.toymd.replace(/-/g, ''),
+			slipymd: searchForm.fromdt.replace(/-/g, ''),
+			acctymd: searchForm.todt.replace(/-/g, ''),
 			deptcd: searchForm.deptcd,
 			slipkind: searchForm.slipkind,
 			slipyn: searchForm.slipyn
@@ -264,8 +264,8 @@ const save = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.frymd = firstDay
-	searchForm.toymd = today
+	searchForm.fromdt = firstDay
+	searchForm.todt = today
 	searchForm.slipyn = 'N'
 	resetForm(masterForm)
 	masterForm.acctymd = today
@@ -328,10 +328,10 @@ onMounted(() => {
 				if (d.slipymd) masterForm.slipymd = `${d.slipymd.substring(0, 4)}-${d.slipymd.substring(4, 6)}-${d.slipymd.substring(6, 8)}`
 				if (d.acctymd && d.acctymd !== '00000000') {
 					masterForm.acctymd = `${d.acctymd.substring(0, 4)}-${d.acctymd.substring(4, 6)}-${d.acctymd.substring(6, 8)}`
-					masterForm.COFMYN = true
+					masterForm.cofmyn = true
 				} else {
 					masterForm.acctymd = today
-					masterForm.COFMYN = false
+					masterForm.cofmyn = false
 				}
 			}
 		})

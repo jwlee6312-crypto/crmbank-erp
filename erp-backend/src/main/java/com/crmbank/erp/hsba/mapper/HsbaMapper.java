@@ -10,6 +10,8 @@ public interface HsbaMapper {
     List<Map<String, Object>> HSBA_020U_STR(Map<String, Object> params);
     List<Map<String, Object>> HSBA_030U_STR(Map<String, Object> params);
     List<Map<String, Object>> HSBA_040U_STR(Map<String, Object> params);
+
+    List<Map<String, Object>> HSBA_050U_STR(Map<String, Object> params);
     List<Map<String, Object>> HSBA_060U_STR(Map<String, Object> params);
     List<Map<String, Object>> HSBA_065U_STR(Map<String, Object> params);
     List<Map<String, Object>> HSBA_090U_STR(Map<String, Object> params);
@@ -19,6 +21,8 @@ public interface HsbaMapper {
     List<Map<String, Object>> HSBA_140U_STR(Map<String, Object> params);
     List<Map<String, Object>> HSBA_170U_STR(Map<String, Object> params);
     List<Map<String, Object>> HSBA_190U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HSBA_210U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HSBA_211U_STR(Map<String, Object> params);
 
     List<Map<String, Object>> HSBA_280U_STR(Map<String, Object> params);
 

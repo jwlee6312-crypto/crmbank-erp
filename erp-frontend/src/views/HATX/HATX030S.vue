@@ -96,8 +96,8 @@
 		<!-- 📊 그리드 영역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                  <div ref="mainGridRef" class="tabulator-full-height" />
                 </div>
 			</div>
 		</div>
@@ -232,7 +232,11 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
-			columnDefaults: { headerSort: false, vertAlign: "middle" },
+			columnDefaults: {
+				headerSort: false,
+				hozAlign: 'right', // 🚀 기본값 우측 정렬
+				vertAlign: "middle"
+			},
 			columns: [
 				{
 					title: "발행일", field: "pubymd", width: 90, hozAlign: "center", frozen: true,
@@ -291,6 +295,10 @@ onMounted(() => {
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>
 
 <style scoped>
 .erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }

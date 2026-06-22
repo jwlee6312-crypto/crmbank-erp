@@ -27,13 +27,6 @@ public class Hs00Controller {
             params.putIfAbsent("cmpycd", user.getCmpycd());
             params.putIfAbsent("userid", user.getUserid());
         }
-        // 💡 HS00_000S_STR 명세(@iGUBUN, @iCMPYCD, @iGBNCD, @iCODE, @iCODENM, @iETCVAL) 6개 변수 보장
-        params.putIfAbsent("gubun", "");
-        params.putIfAbsent("cmpycd", "");
-        params.putIfAbsent("gbncd", "");
-        params.putIfAbsent("code", "");
-        params.putIfAbsent("codenm", "");
-        params.putIfAbsent("etcval", "");
     }
 
     @GetMapping("/{procedure}")
@@ -50,31 +43,32 @@ public class Hs00Controller {
 
     private ResponseEntity<List<Map<String, Object>>> execute(String procedure, Map<String, Object> params, HttpSession session) {
         injectSession(params, session);
-        // 📋 SSMS 실행용 로그 출력 (6개 변수 규격)
-        log.info("📋 [HS00] SSMS 실행용: {}", buildSsmsLog(procedure, params));
+        
+        String proc = procedure.toUpperCase();
         
         try {
             List<Map<String, Object>> result;
-            if ("HS00_000S_STR".equalsIgnoreCase(procedure)) {
+            if ("HS00_000S_STR".equals(proc)) {
+                // 💡 명세 보장
+                params.putIfAbsent("gubun", "");
+                params.putIfAbsent("gbncd", "");
+                params.putIfAbsent("code", "");
+                params.putIfAbsent("codenm", "");
+                params.putIfAbsent("etcval", "");
+                log.info("📋 [HS00] EXEC {} '{}', '{}', '{}', '{}', '{}', '{}'", proc, params.get("gubun"), params.get("cmpycd"), params.get("gbncd"), params.get("code"), params.get("codenm"), params.get("etcval"));
                 result = hs00Mapper.HS00_000S_STR(params);
+            } else if ("HS00_150S_STR".equals(proc)) {
+                params.putIfAbsent("custnm", "");
+                log.info("📋 [HS00] EXEC {} '{}', '{}'", proc, params.get("cmpycd"), params.get("custnm"));
+                result = hs00Mapper.HS00_150S_STR(params);
             } else {
                 return ResponseEntity.notFound().build();
             }
+
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("❌ [HS00] 에러: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
-    }
-
-    private String buildSsmsLog(String procedure, Map<String, Object> params) {
-        String[] keys = {"gubun", "cmpycd", "gbncd", "code", "codenm", "etcval"};
-        String values = java.util.Arrays.stream(keys)
-                .map(key -> {
-                    Object val = params.get(key);
-                    return val == null ? "''" : "'" + val.toString().trim() + "'";
-                })
-                .collect(Collectors.joining(", "));
-        return String.format("EXEC %s %s", procedure.toUpperCase(), values);
     }
 }

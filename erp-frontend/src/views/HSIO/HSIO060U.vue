@@ -51,7 +51,7 @@
                 </td>
                 <th class="text-center bg-light">발주일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <DateForm v-model:fromdt="searchForm.ymdfr" v-model:todt="searchForm.ymdto" />
+                  <DateForm v-model:fromdt="searchForm.fromdt" v-model:todt="searchForm.todt" />
                 </td>
               </tr>
             </tbody>
@@ -134,24 +134,26 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  ymdfr: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-  ymdto: new Date().toISOString().substring(0, 10)
+  fromdt: firstDay,
+  todt: today
 })
 
 const formData = reactive<any>({
   custcd: '', custnm: '', whcd: '',
-  ioymd: new Date().toISOString().substring(0, 10),
+  ioymd: today,
   remark: ''
 })
 
@@ -184,8 +186,8 @@ async function fetchCustList() {
   try {
     const res = await api.post('/api/hsio/HSIO_060U_STR', {
       ...searchForm, iogbn: '100', actkind: 'S1',
-      ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ymdto.replace(/-/g, '')
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, '')
     })
     poGrid?.setData(res.data || [])
     itemGrid?.clearData();
@@ -200,8 +202,8 @@ async function fetchDetail(cust: any) {
     const res = await api.post('/api/hsio/HSIO_060U_STR', {
       ...searchForm, iogbn: '100', actkind: 'S0',
       custcd: cust.custcd,
-      ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ymdto.replace(/-/g, '')
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, '')
     })
     const detailData = (res.data || []).map((i: any) => ({ ...i, ioqty: i.janqty, procyn: 'Y' }))
     itemGrid?.setData(detailData)
@@ -209,7 +211,8 @@ async function fetchDetail(cust: any) {
 }
 
 async function save() {
-  const items = itemGrid?.getData().filter((r: any) => r.procyn === 'Y')
+
+  const items = itemGrid?.getSelectedData() || [] // 체크된 행 데이터만 즉시 가져옴
   if (!items || items.length === 0) return vAlertError('입고 항목을 선택하세요.')
   if (!confirm('입고작업을 하시겠습니까?')) return
 
@@ -218,8 +221,8 @@ async function save() {
         actkind: 'A0',
         cmpycd: authStore.cmpycd,
         iogbn: '100',
-        ioymdfr: searchForm.ymdfr.replace(/-/g, ''),
-        ioymdto: searchForm.ymdto.replace(/-/g, ''),
+        fromdt: searchForm.fromdt.replace(/-/g, ''),
+        todt: searchForm.todt.replace(/-/g, ''),
         deptcd: searchForm.deptcd,
         custcd: formData.custcd,
         ioym: '',
@@ -227,7 +230,7 @@ async function save() {
         ioymd: formData.ioymd.replace(/-/g, ''),
         iotype: '100',
         whcd: formData.whcd,
-        addres: '',
+        address: '',
         remark: formData.remark || '',
         cfmyn: 'Y',
         updemp: authStore.userid
@@ -278,15 +281,9 @@ async function save() {
   } catch (e: any) { vAlertError(e.message || '저장 실패') }
 }
 
-const toggleAllRows = () => {
-  const rows = itemGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'Y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
-}
-
 function initialize() {
   resetForm(formData);
-  formData.ioymd = new Date().toISOString().substring(0, 10);
+  formData.ioymd = today
   if (whOptions.value.length > 0) {
     formData.whcd = whOptions.value[0].whcd;
   }
@@ -313,11 +310,10 @@ onMounted(async () => {
 
   if (itemGridRef.value) {
     itemGrid = new Tabulator(itemGridRef.value, {
-      layout: 'fitColumns', height: '100%',
-      columnCalcs: "table",
-      columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
+    layout: "fitColumns", height: "100%", placeholder: "품목 없음", selectable: true,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
       columns: [
-        { title: '선택', field: 'procyn', hozAlign: 'center', width: 60, formatter: 'tickCross', editor: true, headerClick: () => toggleAllRows() },
+        { title: '선택', width: 60, hozAlign: 'center', formatter: 'rowSelection', titleFormatter: 'rowSelection', headerSort: false },
         { title: '발주일', field: 'balymd', width: 110, formatter: (c) => formatDate(c.getValue()) },
         { title: '품목명', field: 'itemnm', minWidth: 180, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
         { title: '규격', field: 'itsize', width: 120, hozAlign: 'left' },

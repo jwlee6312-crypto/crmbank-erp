@@ -105,22 +105,24 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
-  IOYMDFR: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-  IOYMDTO: new Date().toISOString().substring(0, 10)
+  IOYMDFR: firstDay,
+  IOYMDTO: today
 })
 
 const formData = reactive<any>({
-  FILENO: '', PUBYMD: new Date().toISOString().substring(0, 10), JSANYN: 'N'
+  FILENO: '', PUBYMD: today, JSANYN: 'N'
 })
 
 const totalCostAmt = ref(0)
@@ -169,7 +171,7 @@ const save = async () => {
         FILENO: formData.FILENO,
         DOCNO: item.DOCNO,
         CROWNO: item.ROWNO || item.crowno,
-        JSANYMD: formData.PUBYMD.replace(/-/g, ''),
+        jsanymD: formData.PUBYMD.replace(/-/g, ''),
         spyamt: item.costamt || item.costamt,
         vatamt: item.vatamt || 0,
         CUSTCD: item.CUSTCD,
@@ -207,7 +209,7 @@ const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 
 const initialize = () => {
   resetForm(formData);
-  formData.PUBYMD = new Date().toISOString().substring(0, 10);
+  formData.PUBYMD = today
   formData.JSANYN = 'N';
   mainGrid?.clearData();
   totalCostAmt.value = 0;

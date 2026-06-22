@@ -167,8 +167,8 @@ const formatYmdShort = (v: string) => v && v.length === 8 ? `${v.substring(2, 4)
 const loadInitData = async () => {
 	try {
 		const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'A7', search: '110' })
-		acctOptions.value = res.data.map((r: any) => ({ CD: r.col0, NM: r.col1 }))
-		if (acctOptions.value.length > 0) searchForm.acctcd = acctOptions.value[0].CD
+		acctOptions.value = res.data.map((r: any) => ({ cd: r.col0, nm: r.col1 }))
+		if (acctOptions.value.length > 0) searchForm.acctcd = acctOptions.value[0].cd
 
 		const resCls = await api.post('/api/ha00/HA00_010S_STR', { gubun: 'P1', cmpycd: authStore.cmpycd })
 		if (resCls.data) voucherForm.clsymd = resCls.data[0].clsymd || '00000000'
@@ -193,7 +193,7 @@ const search = async () => {
 			custcd: row.col4,
 			period: `${formatYmdShort(row.col6)} ~ ${formatYmdShort(row.col7)}`,
 			total_amt: Number(row.col8 || 0),
-			repay_amt: Number(row.COL9 || 0),
+			repay_amt: Number(row.col9 || 0),
 			jan_amt: Number(row.col10 || 0),
 			payamt: Number(row.col11 || 0), // 당기 상계액
 			SELECT: true

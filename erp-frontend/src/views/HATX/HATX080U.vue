@@ -51,9 +51,9 @@
 						<div class="d-flex align-items-center">
 							<span class="erp-label"><i class="bi bi-dot"></i>발행일</span>
 							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 135px;" />
+								<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 135px;" />
 								<span>~</span>
-								<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 135px;" />
+								<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 135px;" />
 							</div>
 						</div>
 						<div class="d-flex align-items-center">
@@ -103,8 +103,8 @@ const searchForm = reactive({
 	taxunit: '',
 	deptcd: authStore.deptcd || '',
 	deptnm: authStore.deptnm || '',
-	frymd: firstDay,
-	toymd: today,
+	fromdt: firstDay,
+	todt: today,
 	cfmyn: 'N'
 })
 
@@ -124,8 +124,8 @@ const search = async () => {
 	if (!searchForm.deptcd) return vAlertError('발행부서를 선택하세요.')
 
 	// 2011-07-01 이후 로직 반영
-	const frYmd = searchForm.frymd.replace(/-/g, '')
-	const toYmd = searchForm.toymd.replace(/-/g, '')
+	const frYmd = searchForm.fromdt.replace(/-/g, '')
+	const toYmd = searchForm.todt.replace(/-/g, '')
 	if (frYmd < '20110701' || toYmd < '20110701') {
 		return vAlertError('2011년 07월 01일 이후 발행계산서만 조회 가능합니다.')
 	}
@@ -136,8 +136,8 @@ const search = async () => {
 			cmpycd: authStore.cmpycd,
 			taxunit: searchForm.taxunit,
 			deptcd: searchForm.deptcd,
-			frymd: frYmd,
-			toymd: toYmd,
+			fromdt: frYmd,
+			todt: toYmd,
 			cfmyn: searchForm.cfmyn,
 			taxkind: '200' // 매출
 		})
@@ -188,8 +188,8 @@ const handleBatchAction = async (gbn: string) => {
 				cmpycd: authStore.cmpycd,
 				taxunit: searchForm.taxunit,
 				deptcd: searchForm.deptcd,
-				frymd: searchForm.frymd.replace(/-/g, ''),
-				toymd: searchForm.toymd.replace(/-/g, ''),
+				fromdt: searchForm.fromdt.replace(/-/g, ''),
+				todt: searchForm.todt.replace(/-/g, ''),
 				cfmyn: searchForm.cfmyn,
 				taxkind: '200',
 				taxym: row.taxym,

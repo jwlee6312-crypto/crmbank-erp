@@ -40,9 +40,9 @@
 						<div class="d-flex align-items-center">
 							<span class="erp-label"><i class="bi bi-dot"></i>발행일</span>
 							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 135px;" />
+								<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 135px;" />
 								<span>~</span>
-								<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 135px;" />
+								<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 135px;" />
 							</div>
 						</div>
 						<div class="d-flex align-items-center">
@@ -86,8 +86,8 @@ const taxUnitOptions = ref<any[]>([])
 
 const searchForm = reactive({
 	taxunit: '',
-	frymd: firstDay,
-	toymd: today,
+	fromdt: firstDay,
+	todt: today,
 	cfmyn: 'N'
 })
 
@@ -110,8 +110,8 @@ const search = async () => {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
 			taxunit: searchForm.taxunit,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, ''),
 			cfmyn: searchForm.cfmyn,
 			taxkind: '100' // 매입
 		})
@@ -151,8 +151,8 @@ const handleBatchSave = async () => {
 				actkind: 'U0',
 				cmpycd: authStore.cmpycd,
 				taxunit: searchForm.taxunit,
-				frymd: searchForm.frymd.replace(/-/g, ''),
-				toymd: searchForm.toymd.replace(/-/g, ''),
+				fromdt: searchForm.fromdt.replace(/-/g, ''),
+				todt: searchForm.todt.replace(/-/g, ''),
 				cfmyn: searchForm.cfmyn,
 				taxkind: '100', // 매입
 				taxym: row.taxym,

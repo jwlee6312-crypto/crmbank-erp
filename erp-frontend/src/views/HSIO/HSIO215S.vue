@@ -49,9 +49,9 @@
 								<th class="required">입고일자</th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.outymdfr" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.outymdto" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" />
 									</div>
 								</td>
 								<th>거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
@@ -83,8 +83,8 @@
 				<div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center">
 					<span class="fw-bold small text-dark"><i class="bi bi-list-check me-1"></i> 입고증 대상 목록</span>
 				</div>
-                  <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                    <div ref="poGridRef" class="tabulator-instance flex-grow-1"></div>
+                  <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                    <div ref="poGridRef" class="tabulator-full-height" />
                   </div>
 			</div>
 
@@ -98,8 +98,8 @@
 						</span>
 						<span v-if="selectedInfo" class="badge bg-primary-subtle text-primary">번호: {{ selectedInfo }}</span>
 					</div>
-                      <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                        <div ref="itemGridRef" class="tabulator-instance flex-grow-1"></div>
+                      <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                        <div ref="itemGridRef" class="tabulator-full-height" />
                       </div>
 				</div>
 			</div>
@@ -118,18 +118,19 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { firstDay, today } = getDate()
 
-const now = new Date()
 const searchForm = reactive<any>({
   whcd: '000',
-  outymdfr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  outymdto: now.toISOString().substring(0, 10),
+  fromdt: firstDay,
+  todt: today,
   custcd: '', custnm: '',
   slipyn: 'N'
 })
@@ -151,11 +152,11 @@ async function fetchCustList() {
   try {
     const res = await api.post('/api/hsio/HSIO_215S_STR', {
       actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '100',
-      outymdfr: searchForm.outymdfr.replace(/-/g, ''),
-      outymdto: searchForm.outymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       whcd: searchForm.whcd, custcd: searchForm.custcd, slipyn: searchForm.slipyn
     });
-    poGrid?.setData(res.data.data || []);
+    poGrid?.setData(res.data || []);
     itemGrid?.clearData();
     selectedInfo.value = '';
     vAlert('조회되었습니다.')
@@ -169,23 +170,40 @@ async function fetchDetail(row: any) {
     const res = await api.post('/api/hsio/HSIO_215S_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '100',
       whcd: searchForm.whcd, custcd: d.custcd, ioym: d.ioym, iono: d.iono,
-      outymdfr: searchForm.outymdfr.replace(/-/g, ''),
-      outymdto: searchForm.outymdto.replace(/-/g, '')
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, '')
     })
-    itemGrid?.setData(res.data.data || [])
+    itemGrid?.setData(res.data || [])
   } catch (e) { vAlertError('상세 내역 조회 실패') }
 }
 
 function initialize() {
   resetForm(searchForm);
   searchForm.whcd = '000'; searchForm.slipyn = 'N';
-  searchForm.outymdfr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
-  searchForm.outymdto = now.toISOString().substring(0, 10);
+  searchForm.fromdt = firstDay;
+  searchForm.todt = today;
   poGrid?.clearData(); itemGrid?.clearData(); selectedInfo.value = '';
 }
 
 const print = () => { vAlert('인쇄 기능을 준비 중입니다.') }
-const openHelp = (type: string) => { /* 팝업 구현 */ }
+const openHelp = (type: string) => {
+    if (type === 'CUST') {
+        Object.assign(modalProps, {
+            title: '거래처 선택',
+            path: '/api/ha00/HA00_00P_STR',
+            data: { gubun: 'C4', cmpycd: authStore.cmpycd, code: searchForm.custnm, codenm: '' , remark: '' },
+            columns: [
+                { title: '코드', field: 'custcd', width: 100, hozAlign: 'center' },
+                { title: '거래처명', field: 'custnm', width: 200 }
+            ],
+            onConfirm: (d: any) => {
+                searchForm.custcd = d.custcd;
+                searchForm.custnm = d.custnm;
+            }
+        })
+        modalVisible.value = true
+    }
+}
 const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 
 onMounted(async () => {
@@ -195,9 +213,16 @@ onMounted(async () => {
   if (poGridRef.value) {
     poGrid = new Tabulator(poGridRef.value, {
       layout: 'fitColumns', height: '100%', selectable: 1,
+      columnDefaults: {
+        headerSort: false,
+        headerHozAlign: "center",
+        hozAlign: 'right',
+        vertAlign: 'middle',
+        minWidth: 80
+      },
       columns: [
-        { title: '거래처', field: 'custnm', minWidth: 150, widthGrow: 1, cssClass: 'fw-bold' },
-        { title: '입고번호', field: 'iono_DISP', width: 120, hozAlign: 'center', mutatorData: (v, d) => `${d.ioym}-${d.iono}` }
+        { title: '거래처', field: 'custnm', minWidth: 150, hozAlign: 'left', widthGrow: 1, cssClass: 'fw-bold' },
+        { title: '입고번호', field: 'iono_disp', width: 120, hozAlign: 'center', mutatorData: (v, d) => `${d.ioym}-${d.iono}` }
       ]
     })
     poGrid.on('rowClick', (e, row) => fetchDetail(row))
@@ -206,9 +231,15 @@ onMounted(async () => {
   if (itemGridRef.value) {
     itemGrid = new Tabulator(itemGridRef.value, {
       layout: 'fitColumns', height: '100%',
-      columnDefaults: { headerSort: false, headerHozAlign: 'center' },
+      columnDefaults: {
+        headerSort: false,
+        headerHozAlign: 'center',
+        hozAlign: 'right', // 🚀 기본값 우측 정렬
+        vertAlign: 'middle',
+        minWidth: 100
+      },
       columns: [
-        { title: '품목명', field: 'itemnm', minWidth: 200, widthGrow: 1, cssClass: 'fw-bold' },
+        { title: '품목명', field: 'itemnm', minWidth: 200, hozAlign: 'left', widthGrow: 1, cssClass: 'fw-bold' },
         { title: '규격', field: 'itsize', width: 150 },
         { title: '단위', field: 'unit', width: 60, hozAlign: 'center' },
         { title: '수량', field: 'ioqty', hozAlign: 'right', width: 90, formatter: 'money', formatterParams: { precision: 0 } },
@@ -224,3 +255,7 @@ onMounted(async () => {
 
 const modalVisible = ref(false); const modalProps = reactive<any>({ title: '', path: '', onConfirm: () => {} })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

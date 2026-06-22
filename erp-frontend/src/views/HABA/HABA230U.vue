@@ -381,7 +381,7 @@ onMounted(() => {
 				{ title: "관 리 번 호 명", field: "col5", minWidth: 200 },
 				{ title: "차 변", field: "col7", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 } },
 				{ title: "대 변", field: "col8", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 } },
-				{ title: "잔 액", field: "COL9", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 } }
+				{ title: "잔 액", field: "col9", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 } }
 			],
 			rowClick: (e, row) => {
 				const d = row.getData()

@@ -6,7 +6,7 @@
     <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-1 px-3 sticky-top shadow-sm flex-shrink-0">
       <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 13px;">
         <i class="bi bi-shield-check me-2 text-primary"></i>
-        기본정보 > <span class="text-primary fw-bolder">거래처 담보관리 (hsba170u)</span>
+        기본정보 > <span class="text-primary fw-bolder">거래처 담보관리 (HSBA170U)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1">
         <button class="btn-erp btn-init" @click="initialize(false)">초기화</button>
@@ -35,7 +35,7 @@
         <div class="card-header py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
           <span class="fw-bold small text-dark"><i class="bi bi-pencil-square me-1"></i> 담보 설정 정보</span>
           <div class="d-flex gap-2 align-items-center">
-            <span v-if="masterdata.actkind === 'U0'" class="badge bg-warning text-dark" style="font-size: 10px;">수정 중</span>
+            <span v-if="masterdata.actkind === 'U0'" class="badge bg-warning text-dark" style="font-size: 10px;">수정 중 (행번: {{ masterdata.rowno }})</span>
             <span v-else class="badge bg-primary" style="font-size: 10px;">신규 등록</span>
           </div>
         </div>
@@ -90,9 +90,9 @@
               </tr>
               <tr>
                 <th class="required">설&nbsp;&nbsp;정&nbsp;&nbsp;일</th>
-                <td><input v-model="uifrymd" type="date" class="form-control form-control-sm" /></td>
+                <td><input v-model="fromdt" type="date" class="form-control form-control-sm" /></td>
                 <th class="required">유&nbsp;&nbsp;효&nbsp;&nbsp;일</th>
-                <td><input v-model="uitoymd" type="date" class="form-control form-control-sm" /></td>
+                <td><input v-model="todt" type="date" class="form-control form-control-sm" /></td>
                 <th>비&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;고</th>
                 <td colspan="3"><input v-model="masterdata.bigo" type="text" class="form-control form-control-sm w-100" maxlength="100" /></td>
               </tr>
@@ -150,14 +150,14 @@ const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0
 
 const searchdata = reactive({ qcustnm: '' })
 const masterdata = reactive<any>({
-  actkind: 'A0', cmpycd: authstore.cmpycd, custcd: '', custnm: '', drowno: '',
+  actkind: 'A0', cmpycd: authstore.cmpycd, custcd: '', custnm: '', rowno: '',
   damkind: '100', damyeo: '100', dmmgt: '', sounm: '',
-  damsel: '0', samhan: '0', rcvdd: '0', frymd: initymd, toymd: '', bigo: '', useyn: 'Y'
+  damsel: '0', samhan: '0', rcvdd: '0', fromdt: initymd, todt: '', bigo: '', useyn: 'Y'
 })
 
 const damkindoptions = ref<any[]>([]); const damyeooptions = ref<any[]>([]); const selectedcustname = ref('')
-const uifrymd = computed({ get: () => formatdate(masterdata.frymd, '-'), set: (v) => masterdata.frymd = v.replace(/-/g, '') })
-const uitoymd = computed({ get: () => formatdate(masterdata.toymd, '-'), set: (v) => masterdata.toymd = v.replace(/-/g, '') })
+const fromdt = computed({ get: () => formatdate(masterdata.fromdt, '-'), set: (v) => masterdata.fromdt = v.replace(/-/g, '') })
+const todt = computed({ get: () => formatdate(masterdata.todt, '-'), set: (v) => masterdata.todt = v.replace(/-/g, '') })
 
 const custgridelement = ref<HTMLElement | null>(null); const damgridelement = ref<HTMLElement | null>(null)
 let custgrid: Tabulator | null = null; let damgrid: Tabulator | null = null
@@ -184,7 +184,7 @@ const initgrids = () => {
     })
     custgrid.on("rowClick", (e, row) => {
       const d = normalizekeys(row.getData()); masterdata.custcd = d.custcd; masterdata.custnm = d.custnm;
-      selectedcustname.value = d.custnm; masterdata.actkind = 'A0'; masterdata.drowno = '';
+      selectedcustname.value = d.custnm; masterdata.actkind = 'A0'; masterdata.rowno = '';
       fetchdamlist()
     })
   }
@@ -194,21 +194,28 @@ const initgrids = () => {
       layout: "fitColumns", height: "100%", placeholder: "내역 없음",
       columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
       columns: [
-        { title: "No", field: "rowno", width: 60 },
+        { title: "행번", field: "rowno", width: 70 },
         { title: "담보구분", field: "damkindnm", width: 120 },
         { title: "종류", field: "damyeonm", width: 120 },
         { title: "한도액", field: "samhan", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         { title: "기한(일)", field: "rcvdd", width: 80 },
-        { title: "설정일", field: "frymd_fmt", width: 110 },
-        { title: "유효일", field: "toymd_fmt", width: 110 },
+        { title: "설정일", field: "frymd", width: 110 },
+        { title: "유효일", field: "toymd", width: 110 },
         { title: "증권번호", field: "dmmgt", width: 130 },
         { title: "비고", field: "bigo", minWidth: 150, hozAlign: "left" }
       ]
     })
+
     damgrid.on("rowClick", (e, row) => {
-      const data = normalizekeys(row.getData()); Object.assign(masterdata, data);
-      masterdata.damsel = formatnumber(data.damsel); masterdata.samhan = formatnumber(data.samhan);
-      masterdata.actkind = 'U0'; masterdata.drowno = data.rowno;
+      const data = normalizekeys(row.getData());
+      Object.assign(masterdata, data);
+      masterdata.damsel = formatnumber(data.damsel);
+      masterdata.samhan = formatnumber(data.samhan);
+      masterdata.actkind = 'U0';
+      masterdata.rowno = data.rowno;
+      masterdata.fromdt = data.frymd;
+      masterdata.todt = data.toymd;
+
     })
   }
 }
@@ -233,7 +240,7 @@ async function search() {
     const res = await api.post('/api/hsba/HSBA_170U_STR', {
       actkind: 'S1', cmpycd: authstore.cmpycd, custcd: '', custnm: searchdata.qcustnm || '',
       rowno: '', damkind: '', damgbn: '', damyeo: '', dmmgt: '', damsel: 0, samhan: 0, rcvdd: 0,
-      frymd: '', toymd: '', sounm: '', bigo: '', useyn: '', userid: authstore.userid
+      fromdt: '', todt: '', sounm: '', bigo: '', useyn: '', userid: authstore.userid
     })
     const processed = (res.data || []).map((i: any) => normalizekeys(i));
     custgrid?.setData(processed)
@@ -245,11 +252,11 @@ async function fetchdamlist() {
     const res = await api.post('/api/hsba/HSBA_170U_STR', {
       actkind: 'S0', cmpycd: authstore.cmpycd, custcd: masterdata.custcd,
       custnm: '', rowno: '', damkind: '', damgbn: '', damyeo: '', dmmgt: '', damsel: 0, samhan: 0, rcvdd: 0,
-      frymd: '', toymd: '', sounm: '', bigo: '', useyn: '', userid: authstore.userid
+      fromdt: '', todt: '', sounm: '', bigo: '', useyn: '', userid: authstore.userid
     })
     const mapped = (res.data || []).map((i: any) => {
       const item = normalizekeys(i);
-      return { ...item, frymd_fmt: formatdate(item.frymd, '-'), toymd_fmt: formatdate(item.toymd, '-') }
+      return { ...item, fromdt_fmt: formatdate(item.fromdt, '-'), todt_fmt: formatdate(item.todt, '-') }
     })
     damgrid?.setData(mapped)
   } catch (e) { valerterror('내역 조회 실패') }
@@ -257,18 +264,28 @@ async function fetchdamlist() {
 
 async function save() {
   if (!masterdata.custcd) return valerterror('거래처를 선택하세요.')
-  if (!masterdata.frymd || !masterdata.toymd) return valerterror('설정일과 유효일은 필수입니다.')
+  if (!masterdata.fromdt || !masterdata.todt) return valerterror('설정일과 유효일은 필수입니다.')
   if (!confirm('저장하시겠습니까?')) return
   try {
-    const payload = { ...masterdata, damsel: String(masterdata.damsel).replace(/,/g, ''), samhan: String(masterdata.samhan).replace(/,/g, ''), rcvdd: String(masterdata.rcvdd).replace(/,/g, ''), userid: authstore.userid }
+    const payload = {
+        ...masterdata,
+        damsel: String(masterdata.damsel).replace(/,/g, ''),
+        samhan: String(masterdata.samhan).replace(/,/g, ''),
+        rcvdd: String(masterdata.rcvdd).replace(/,/g, ''),
+        fromdt: masterdata.fromdt.replace(/-/g, ''),
+        todt: masterdata.todt.replace(/-/g, ''),
+        userid: authstore.userid
+    }
     await api.post('/api/hsba/HSBA_170U_STR', payload)
-    valert('정상 처리되었습니다.'); fetchdamlist(); initialize(true)
+    valert('정상 처리되었습니다.');
+    fetchdamlist();
+    initialize(true)
   } catch (e) { valerterror('저장 실패') }
 }
 
 function initialize(keepcust = false) {
   const cd = masterdata.custcd; const nm = masterdata.custnm; resetform(masterdata)
-  Object.assign(masterdata, { actkind: 'A0', cmpycd: authstore.cmpycd, damkind: '100', damyeo: '100', damsel: '0', samhan: '0', rcvdd: '0', frymd: initymd, useyn: 'Y' })
+  Object.assign(masterdata, { actkind: 'A0', cmpycd: authstore.cmpycd, damkind: '100', damyeo: '100', damsel: '0', samhan: '0', rcvdd: '0', fromdt: initymd, useyn: 'Y', rowno: '' })
   if (keepcust) { masterdata.custcd = cd; masterdata.custnm = nm } else { selectedcustname.value = ''; damgrid?.clearData() }
 }
 

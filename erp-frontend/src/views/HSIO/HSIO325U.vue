@@ -49,7 +49,7 @@
                 </td>
                 <th class="required bg-light text-center">입금일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <DateForm v-model:fromdt="searchdata.imymdfr" v-model:todt="searchdata.imymdto" />
+                  <DateForm v-model:fromdt="searchdata.fromdt" v-model:todt="searchdata.todt" />
                 </td>
                 <th class="bg-light text-center">영업사원</th>
                 <td>
@@ -137,12 +137,12 @@ const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const now = new Date()
 const initymd = now.toISOString().substring(0, 10)
-const initfrymd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
+const initfromdt = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
 
 // [1] 데이터 모델링 (소문자 통일)
 const searchdata = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  imymdfr: initfrymd, imymdto: initymd, salsemp: ''
+  fromdt: initfromdt, todt: initymd, salsemp: ''
 })
 
 const slipmaster = reactive({
@@ -199,8 +199,8 @@ async function search() {
   try {
     const res = await api.post('/api/hsio/HSIO_325U_STR', {
       actkind: 'S', cmpycd: authStore.cmpycd,
-      deptcd: searchdata.deptcd, imymdfr: searchdata.imymdfr.replace(/-/g, ''),
-      imymdto: searchdata.imymdto.replace(/-/g, ''), salsemp: searchdata.salsemp
+      deptcd: searchdata.deptcd, fromdt: searchdata.fromdt.replace(/-/g, ''),
+      todt: searchdata.todt.replace(/-/g, ''), salsemp: searchdata.salsemp
     })
     const data = (res.data || []).map((i: any) => ({
         ...i, selected: false,
@@ -231,8 +231,8 @@ async function issueSlip() {
         const baseParams = {
             cmpycd: authStore.cmpycd,
             deptcd: item.deptcd || slipmaster.deptcd,
-            imymdfr: searchdata.imymdfr.replace(/-/g, ''),
-            imymdto: searchdata.imymdto.replace(/-/g, ''),
+            fromdt: searchdata.fromdt.replace(/-/g, ''),
+            todt: searchdata.todt.replace(/-/g, ''),
             userid: searchdata.salsemp || authStore.userid,
             iogbn: '200',
             imym: item.imym,
@@ -253,7 +253,7 @@ async function issueSlip() {
 
         // 2. 실제 정산 저장 (actkind: 'U')
         const resU = await api.post('/api/hsio/HSIO_325U_STR', { ...baseParams, actkind: 'U', slipno: slipno })
-        if (resU.data?.[0]?.jsanym === '000000' || resU.data?.[0]?.JSANYM === '000000') {
+        if (resU.data?.[0]?.jsanym === '000000' || resU.data?.[0]?.jsanym === '000000') {
             throw new Error('전표 저장 중 오류 발생')
         }
     }
@@ -281,7 +281,7 @@ async function deleteSlip() {
 }
 
 function initialize() {
-  resetForm(searchdata); searchdata.imymdfr = initfrymd; searchdata.imymdto = initymd;
+  resetForm(searchdata); searchdata.fromdt = initfromdt; searchdata.todt = initymd;
   resetForm(slipmaster); slipmaster.slipymd = initymd;
   grid?.clearData(); activeitemcount.value = 0; sumtotal.value = 0;
 }

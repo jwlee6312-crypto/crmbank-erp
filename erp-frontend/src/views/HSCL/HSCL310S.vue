@@ -211,8 +211,8 @@ onMounted(() => {
 							path: '/HSST/HSST110S',
 							query: {
 								selgbn: '2',
-								frymd: firstDay,
-								toymd: d.lastdd,
+								fromdt: firstDay,
+								todt: d.lastdd,
 								deptcd: searchForm.deptcd,
 								custcd: d.custcd,
 								custnm: d.custnm

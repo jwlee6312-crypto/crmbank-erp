@@ -10,8 +10,11 @@ import { checkVer } from '@/composables/useVersionCheck'
  * 문제 해결: DB가 LINECD 혹은 A.LINECD로 주더라도 JS에서는 linecd로 접근하게 함.
  */
 const standardizeKeys = (obj: any): any => {
-	if (obj === null || typeof obj !== 'object' || obj instanceof FormData) return obj
+	if (obj === null || obj instanceof FormData) return obj
+	if (typeof obj === 'string') return obj.trim() // 🚀 문자열 자동 Trim 다시 적용
 	if (Array.isArray(obj)) return obj.map(standardizeKeys)
+	if (typeof obj !== 'object') return obj
+
 	const newObj: any = {}
 	for (const key in obj) {
 		if (Object.prototype.hasOwnProperty.call(obj, key)) {

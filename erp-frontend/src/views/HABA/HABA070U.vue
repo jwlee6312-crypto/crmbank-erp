@@ -93,11 +93,11 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end border-top">시&nbsp;작&nbsp;일</th>
 							<td class="bg-white border-end border-top px-2 py-1">
-								<input v-model="masterdata.frymd" type="date" class="form-control form-control-sm" />
+								<input v-model="masterdata.fromdt" type="date" class="form-control form-control-sm" />
 							</td>
 							<th class="text-center bg-light-subtle border-end border-top">종&nbsp;료&nbsp;일</th>
 							<td class="bg-white border-end border-top px-2 py-1">
-								<input v-model="masterdata.toymd" type="date" class="form-control form-control-sm" />
+								<input v-model="masterdata.todt" type="date" class="form-control form-control-sm" />
 							</td>
 							<th class="text-center bg-light-subtle border-end border-top">출현순서</th>
 							<td class="bg-white border-top px-2 py-1">
@@ -107,7 +107,7 @@
 						<tr>
 							<th class="text-center bg-light-subtle border-end border-top">개&nbsp;&nbsp;&nbsp;&nbsp;요</th>
 							<td colspan="5" class="bg-white border-top px-2 py-1">
-								<textarea v-model="masterdata.remark" class="form-control form-control-sm" rows="2" maxlength="200"></textarea>
+								<textarea v-model="masterdata.bigo" class="form-control form-control-sm" rows="2" maxlength="200"></textarea>
 							</td>
 						</tr>
 					</tbody>
@@ -150,7 +150,7 @@ import type { ModalProps } from '@/types/modal'
 const authstore = useAuthStore()
 const { showAlert: showalert, showError: showerror, alertMessage: alertmessage, vAlert: valert, vAlertError: valerterror } = useAlerts()
 const { resetForm: resetform } = useFormReset()
-const { modalVisible: modalvisible, modalProps: modalprops, openHelp: commonopenhelp } = useCommonHelp()
+const { modalVisible: modalvisible, modalProps: modalprops } = useCommonHelp()
 
 const today = new Date().toISOString().substring(0, 10)
 
@@ -165,9 +165,9 @@ const masterdata = reactive({
 	actkind: 'A',
 	prjcd: '',
 	prjnm: '',
-	frymd: today,
-	toymd: today,
-	remark: '',
+	fromdt: today,
+	todt: today,
+	bigo: '',
 	dspord: 0,
 	useyn: 'Y'
 })
@@ -187,7 +187,7 @@ const search = async () => {
 	if (!searchform.prjcd) return valert('프로젝트를 선택하시기 바랍니다.')
 	try {
 		// 1. 마스터 조회
-		const resmaster = await api.post('/api/haba/haba_070u_str', {
+		const resmaster = await api.post('/api/haba/HABA_070U_STR', {
 			actkind: 'S0',
 			cmpycd: authstore.cmpycd,
 			prjcd: searchform.prjcd
@@ -199,16 +199,16 @@ const search = async () => {
 				actkind: 'U',
 				prjcd: m.prjcd,
 				prjnm: m.prjnm,
-				frymd: formatymd(m.frymd),
-				toymd: formatymd(m.toymd),
-				remark: m.bigo,
+				fromdt: formatymd(m.fromdt),
+				todt: formatymd(m.todt),
+				bigo: m.bigo,
 				dspord: Number(m.dspord || 0),
 				useyn: m.useyn
 			})
 		}
 
 		// 2. 디테일(투입인원) 조회
-		const resdetail = await api.post('/api/haba/haba_071u_str', {
+		const resdetail = await api.post('/api/haba/HABA_071U_STR', {
 			actkind: 'S0',
 			cmpycd: authstore.cmpycd,
 			prjcd: searchform.prjcd
@@ -221,9 +221,9 @@ const search = async () => {
                 rowno: n.rowno,
                 userid: n.userid,
                 usernm: n.usernm,
-                sfrymd: formatymd(n.frymd),
-                stoymd: formatymd(n.toymd),
-                sbigo: n.bigo
+                fromdt: formatymd(n.fromdt),
+                todt: formatymd(n.todt),
+                bigo: n.bigo
             }
 		})
 
@@ -235,7 +235,7 @@ const search = async () => {
 const save = async () => {
 	if (!masterdata.prjcd) return valert('프로젝트 코드를 입력하시기 바랍니다.')
 	if (!masterdata.prjnm) return valert('프로젝트 명을 입력하시기 바랍니다.')
-	if (!masterdata.frymd || !masterdata.toymd) return valert('일자를 입력하시기 바랍니다.')
+	if (!masterdata.fromdt || !masterdata.todt) return valert('일자를 입력하시기 바랍니다.')
 
     if (!confirm('저장하시겠습니까?')) return
 	try {
@@ -245,12 +245,12 @@ const save = async () => {
 			actkind: masterdata.actkind + '0',
 			cmpycd: authstore.cmpycd,
 			userid: authstore.userid,
-			frymd: masterdata.frymd.replace(/-/g, ''),
-			toymd: masterdata.toymd.replace(/-/g, ''),
-            bigo: masterdata.remark
+			fromdt: masterdata.fromdt.replace(/-/g, ''),
+			todt: masterdata.todt.replace(/-/g, ''),
+            bigo: masterdata.bigo
 		}
 
-		const resmaster = await api.post('/api/haba/haba_070u_str', masterpayload)
+		const resmaster = await api.post('/api/haba/HABA_070U_STR', masterpayload)
         const resmdata = normalizekeys(resmaster.data?.[0]);
 		if (resmdata.ret_yn === 'Y' || resmdata.result === 'N') return valerterror(resmdata.ret_msg || resmdata.msg)
 
@@ -267,12 +267,12 @@ const save = async () => {
 				prjcd: masterdata.prjcd,
 				rowno: n.rowno || '',
 				userid: n.userid,
-				sfrymd: (n.sfrymd || '').replace(/-/g, ''),
-				stoymd: (n.stoymd || '').replace(/-/g, ''),
-				sbigo: n.sbigo || '',
+				fromdt: (n.fromdt || '').replace(/-/g, ''),
+				todt: (n.todt || '').replace(/-/g, ''),
+				bigo: n.bigo || '',
 				mgr_userid: authstore.userid
 			}
-			await api.post('/api/haba/haba_071u_str', detailpayload)
+			await api.post('/api/haba/HABA_071U_STR', detailpayload)
 		}
 
 		valert('정상으로 작업이 되었습니다.')
@@ -283,7 +283,7 @@ const save = async () => {
 const deletedata = async () => {
 	if (!confirm('해당 자료를 삭제하시겠습니까?')) return
 	try {
-		await api.post('/api/haba/haba_070u_str', {
+		await api.post('/api/haba/HABA_070U_STR', {
 			actkind: 'D0',
 			cmpycd: authstore.cmpycd,
 			prjcd: masterdata.prjcd
@@ -296,8 +296,8 @@ const deletedata = async () => {
 const initialize = () => {
 	resetform(masterdata)
 	masterdata.actkind = 'A'
-	masterdata.frymd = today
-	masterdata.toymd = today
+	masterdata.fromdt = today
+	masterdata.todt = today
 	masterdata.useyn = 'Y'
     masterdata.cmpycd = authstore.cmpycd
 	detailgrid?.setData([])
@@ -306,25 +306,66 @@ const initialize = () => {
 }
 
 const addrow = () => {
-	detailgrid?.addRow({ upkind: 'A', sfrymd: masterdata.frymd, stoymd: masterdata.toymd }, true)
+	detailgrid?.addRow({ upkind: 'A', fromdt: masterdata.fromdt, todt: masterdata.todt }, true)
 }
 
 let activerow: any = null
 
-function openhelp(type: string, row?: any) {
+async function openhelp(type: string, row?: any) {
 	if (type === 'search_prj') {
-		commonopenhelp('PRJ', (d) => {
-            const n = normalizekeys(d);
+		// 🚀 프로젝트 도움창 직접 조회 패턴
+		const res = await api.post('/api/haba/HABA_070U_STR', {
+			actkind: 'S0',
+			cmpycd: authstore.cmpycd,
+			prjcd: ''
+		});
+		Object.assign(modalprops, {
+			title: '프로젝트 선택',
+			data: (res.data || []).map((i: any) => normalizekeys(i)),
+			columns: [
+				{ title: '코드', field: 'prjcd', width: 100, hozAlign: 'center' },
+				{ title: '프로젝트명', field: 'prjnm', width: 250 }
+			],
+			onConfirm: (d: any) => {
+				const n = normalizekeys(d);
 				searchform.prjcd = n.prjcd;
 				searchform.prjnm = n.prjnm;
 				search();
+			},
+			type: 'table'
 		});
+		modalvisible.value = true;
 	} else if (type === 'user') {
 		activerow = row;
-		commonopenhelp('USER', (d: any) => {
-            const n = normalizekeys(d);
-				activerow.update({ userid: n.userid, usernm: n.usernm, upkind: activerow.getData().rowno ? 'U' : 'A' });
+		const currentData = activerow.getData();
+
+		// 🚀 요청하신 사용자 도움창 직접 조회 패턴 적용 (HA00_00P_STR 'SD','COIT','','')
+		const res = await api.post('/api/ha00/HA00_00P_STR', {
+			gubun: 'SD',
+			cmpycd: authstore.cmpycd,
+			gbncd: '',
+			code: ''
 		});
+
+		Object.assign(modalprops, {
+			title: '투입인원 선택',
+			data: (res.data || []).map((i: any) => normalizekeys(i)),
+			columns: [
+				{ title: '아이디', field: 'userid', width: 100, hozAlign: 'center' },
+				{ title: '성명', field: 'usernm', width: 120, hozAlign: 'center' },
+				{ title: '부서', field: 'deptnm', width: 150 }
+			],
+			onConfirm: (d: any) => {
+				const n = normalizekeys(d);
+				activerow.update({
+					userid: n.userid || n.codecd,
+					usernm: n.usernm || n.codenm,
+					upkind: currentData.rowno ? 'U' : 'A'
+				});
+			},
+			type: 'table'
+		});
+		modalvisible.value = true;
 	}
 }
 
@@ -352,9 +393,9 @@ onMounted(() => {
 						}
 					}
 				},
-				{ title: "투입일", field: "sfrymd", width: 130, editor: "date" },
-				{ title: "종료일", field: "stoymd", width: 130, editor: "date" },
-				{ title: "비고", field: "sbigo", editor: "input", hozAlign: "left" },
+				{ title: "투입일", field: "fromdt", width: 130, editor: "date" },
+				{ title: "종료일", field: "todt", width: 130, editor: "date" },
+				{ title: "비고", field: "bigo", editor: "input", hozAlign: "left" },
 				{
 					title: "삭제", width: 60,
 					formatter: () => '<i class="bi bi-x-circle text-danger cursor-pointer"></i>',
@@ -363,7 +404,7 @@ onMounted(() => {
 						if (d.rowno) {
 							if (confirm('이 인원을 프로젝트에서 삭제하시겠습니까?')) {
 								try {
-									await api.post('/api/haba/haba_071u_str', {
+									await api.post('/api/haba/HABA_071U_STR', {
 										actkind: 'D0',
 										cmpycd: authstore.cmpycd,
 										prjcd: masterdata.prjcd,

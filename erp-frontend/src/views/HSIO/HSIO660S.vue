@@ -1,9 +1,9 @@
 <!--
 	=============================================================
-	프로그램명	: 배송자별 상차현황 (Loading Status by Delivery) [디자인 원칙 13가지 완벽 준수]
+	프로그램명	: 배송자별 상차현황 (Loading Status by Delivery)
 	작성일자	: 25.02.24
 	작성자	    : AI Assistant
-	설명        : 배송담당자별/일자별 상차 내역 및 집계 조회
+	설명        : 배송담당자별 상차 내역을 상세 조회하는 표준 화면
 	=============================================================
 -->
 
@@ -11,7 +11,6 @@
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
 	<div class="erp-container">
-		<!-- 🚀 1, 11, 12. 상단 액션 바: 버튼 그룹 우측 상단 정렬 및 표준 색상 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-truck me-2 text-primary" style="font-size: 18px;"></i>
@@ -20,22 +19,12 @@
 				<span class="text-primary fw-bolder">배송자별 상차현황 (HSIO660S)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기화
-				</button>
-				<button class="btn-erp btn-search" @click="search">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-excel" @click="excel">
-					<i class="bi bi-file-earmark-excel"></i> 엑셀
-				</button>
-				<button class="btn-erp btn-print" @click="print">
-					<i class="bi bi-printer"></i> 인쇄
-				</button>
+				<button class="btn-erp btn-init" @click="initialize"><i class="bi bi-arrow-clockwise"></i> 초기화</button>
+				<button class="btn-erp btn-search" @click="search"><i class="bi bi-search"></i> 조회</button>
+				<button class="btn-erp btn-excel" @click="excel"><i class="bi bi-file-earmark-excel"></i> 엑셀</button>
 			</div>
 		</div>
 
-		<!-- 🔍 9. 최상단 검색 항목 영역 (단일행 균등 배분 적용) -->
 		<div class="p-2 pb-0 flex-shrink-0">
 			<div class="card border shadow-sm overflow-hidden">
 				<table class="erp-table-full" style="table-layout: fixed;">
@@ -69,27 +58,20 @@
 			</div>
 		</div>
 
-		<!-- 📊 6. 중앙 그리드 영역 (상하좌우 중앙 정렬 표준) -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
-					<span class="fw-bold small text-dark d-flex align-items-center">
-						<i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i> 상차 명세 리스트
-					</span>
-				</div>
                 <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                  <div ref="mainGridRef" class="tabulator-full-height" />
                 </div>
 			</div>
 		</div>
-
 	</div>
 
 	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -104,15 +86,12 @@ const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 
-// 13. 모든 변수명 대문자 고수
 const searchForm = reactive({
 	TRNEMP: authStore.userid,
 	TRNempnm: authStore.usernm,
 	OUtymd: new Date().toISOString().substring(0, 10)
 })
 
-const rowCount = ref(0)
-const totalQty = ref(0)
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const search = async () => {
@@ -120,12 +99,9 @@ const search = async () => {
 		const res = await api.post('/api/hsio/HSIO_660S_STR', {
 			...searchForm,
 			cmpycd: authStore.cmpycd,
-			OUtymd: searchForm.OUtymd.replace(/-/g, '')
+			OUtymd: searchForm.OUtymd?.replace(/-/g, '') || ''
 		})
-		const data = res.data || []
-		mainGrid?.setData(data)
-		rowCount.value = data.length
-		totalQty.value = data.reduce((acc: number, cur: any) => acc + (Number(cur.qty) || 0), 0)
+		mainGrid?.setData(res.data || [])
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
@@ -135,11 +111,10 @@ const initialize = () => {
 	searchForm.TRNEMP = authStore.userid;
 	searchForm.TRNempnm = authStore.usernm;
 	searchForm.OUtymd = new Date().toISOString().substring(0, 10);
-	mainGrid?.clearData(); rowCount.value = 0; totalQty.value = 0;
+	mainGrid?.clearData();
 }
 
 const excel = () => mainGrid?.download("xlsx", "배송자별상차현황.xlsx")
-const print = () => vAlert('인쇄 기능을 준비 중입니다.')
 
 const modalVisible = ref(false);
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
@@ -156,26 +131,25 @@ function openHelp(type: string) {
 	modalVisible.value = true
 }
 
-const formatNumber = (val: any) => Number(val || 0).toLocaleString()
-
 onMounted(() => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
+			placeholder: "조회된 자료가 없습니다.",
+			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: 'right', vertAlign: "middle" },
 			columns: [
 				{ title: "품목명", field: "itemnm", minWidth: 250, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold" },
 				{ title: "규격", field: "itsize", width: 150, hozAlign: "left" },
-				{ title: "단위", field: "unit", width: 80 },
-				{ title: "배송지역", field: "areaNM", width: 180 },
-				{ title: "수량", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: (c:any)=>c.getData().qtypnt || 0 } },
+				{ title: "단위", field: "unit", width: 80, hozAlign: "center" },
+				{ title: "배송지역", field: "areanm", width: 180, hozAlign: "left" },
+				{ title: "수량", field: "ioqty", width: 110, formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "비고", field: "remark", minWidth: 200, hozAlign: "left" }
-			],
-			groupBy: "itemnm", // ASP의 소계 로직을 위해 품목별 그룹화 적용
-			groupHeader: function(value, count, data, group){
-				return value + " (합계: " + data.reduce((a, b) => a + Number(b.qty), 0).toLocaleString() + " 건)";
-			},
+			]
 		})
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

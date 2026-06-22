@@ -54,9 +54,9 @@
 						<div class="d-flex align-items-center">
 							<span class="erp-label"><i class="bi bi-dot"></i>회계일자</span>
 							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+								<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 								<span>~</span>
-								<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+								<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 							</div>
 						</div>
 					</div>
@@ -104,8 +104,8 @@ const searchForm = reactive({
 	mgtno: (route.query.mgtno as string) || '',
 	mgtnm: '', // 관리번호 명칭 (필요시)
 	mgtgbn: '', // 계정에 따른 관리항목 구분
-	frymd: (route.query.frymd as string) || firstDay,
-	toymd: (route.query.toymd as string) || today
+	fromdt: (route.query.fromdt as string) || firstDay,
+	todt: (route.query.todt as string) || today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
@@ -126,8 +126,8 @@ const search = async () => {
 			cmpycd: authStore.cmpycd,
 			acctcd: searchForm.acctcd,
 			mgtno: searchForm.mgtno,
-			ymdfr: searchForm.frymd.replace(/-/g, ''),
-			ymdto: searchForm.toymd.replace(/-/g, '')
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, '')
 		})
 
 		// SQL Alias 대응을 위해 키를 소문자로 변환하여 처리
@@ -274,7 +274,7 @@ function openHelp(type: 'ACCT' | 'MGT') {
 
 const print = () => {
 	if (!searchForm.acctcd || !searchForm.mgtno) return vAlertError('계정 및 관리번호를 먼저 선택하세요.')
-	const params = `acctcd=${searchForm.acctcd}&acctnm=${searchForm.acctnm}&mgtno=${searchForm.mgtno}&frymd=${searchForm.frymd.replace(/-/g, '')}&toymd=${searchForm.toymd.replace(/-/g, '')}&PRTGU=1`
+	const params = `acctcd=${searchForm.acctcd}&acctnm=${searchForm.acctnm}&mgtno=${searchForm.mgtno}&fromdt=${searchForm.fromdt.replace(/-/g, '')}&todt=${searchForm.todt.replace(/-/g, '')}&PRTGU=1`
 	window.open(`/api/hasl/HASL_560P?${params}`, 'ManagementLedgerPrint', 'width=800,height=800,scrollbars=yes')
 }
 

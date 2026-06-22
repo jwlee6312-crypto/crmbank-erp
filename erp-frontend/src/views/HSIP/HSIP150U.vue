@@ -91,19 +91,21 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
   DEPTCD: authStore.deptcd, DEPTNM: authStore.deptnm,
-  IOYMDFR: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10),
-  IOYMDTO: new Date().toISOString().substring(0, 10)
+  IOYMDFR: firstDay,
+  IOYMDTO: today
 })
 
 const autoSlip = ref('N')
@@ -216,7 +218,7 @@ onMounted(async () => {
         { title: "부서명", field: "DEPTNM", width: 120 },
         { title: "비용종류", field: "COSTNM", width: 150 },
         { title: "PO No.", field: "FILENO", width: 180 },
-        { title: "정산일", field: "JSANYMD", width: 110, formatter: (c) => {
+        { title: "정산일", field: "jsanymD", width: 110, formatter: (c) => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
         { title: "비용금액", field: "spyamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },

@@ -61,9 +61,9 @@
 								<div class="d-flex align-items-center px-2">
 									<span class="erp-label me-2">입금일자</span>
 									<div class="d-flex align-items-center gap-1 flex-grow-1">
-										<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" />
+										<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" />
 									</div>
 								</div>
 							</td>
@@ -87,8 +87,8 @@
 		<!-- 📊 중앙 그리드 영역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                  <div ref="mainGridRef" class="tabulator-full-height" />
                 </div>
 			</div>
 		</div>
@@ -123,8 +123,8 @@ const today = now.toISOString().substring(0, 10);
 const searchForm = reactive({
 	deptcd: authStore.deptcd,
 	deptnm: authStore.deptnm,
-	frymd: firstDay,
-	toymd: today,
+	fromdt: firstDay,
+	todt: today,
 	custcd: '',
 	custnm: ''
 })
@@ -142,8 +142,8 @@ const search = async () => {
 			cmpycd: authStore.cmpycd,
 			deptcd: searchForm.deptcd,
 			custcd: searchForm.custcd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, '')
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, '')
 		})
 		const data = res.data || []
 		mainGrid?.setData(data)
@@ -155,14 +155,14 @@ const initialize = () => {
 	resetForm(searchForm);
 	searchForm.deptcd = authStore.deptcd;
 	searchForm.deptnm = authStore.deptnm;
-	searchForm.frymd = firstDay;
-	searchForm.toymd = today;
+	searchForm.fromdt = firstDay;
+	searchForm.todt = today;
 	mainGrid?.clearData();
 }
 
 const excel = () => mainGrid?.download("xlsx", "거래처별입금현황.xlsx")
 const print = () => {
-	const params = `deptcd=${searchForm.deptcd}&deptnm=${searchForm.deptnm}&custcd=${searchForm.custcd}&custnm=${searchForm.custnm}&frymd=${searchForm.frymd}&toymd=${searchForm.toymd}`;
+	const params = `deptcd=${searchForm.deptcd}&deptnm=${searchForm.deptnm}&custcd=${searchForm.custcd}&custnm=${searchForm.custnm}&fromdt=${searchForm.fromdt}&todt=${searchForm.todt}`;
 	window.open(`/api/hsio/HSIO_410P?${params}`, 'Print', 'width=1000,height=800');
 }
 
@@ -192,7 +192,13 @@ onMounted(() => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
+			columnDefaults: {
+				headerSort: false,
+				headerHozAlign: "center",
+				hozAlign: 'right', // 🚀 기본값을 우측 정렬로 설정
+				vertAlign: 'middle',
+				minWidth: 100
+			},
 			columns: [
 				{
 					title: "입금일", field: "imymd", width: 100, formatter: (cell) => {
@@ -257,3 +263,7 @@ onMounted(() => {
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

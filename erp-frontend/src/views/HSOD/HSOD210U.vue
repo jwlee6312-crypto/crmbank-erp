@@ -36,9 +36,9 @@
                 <th class="required">등록일자</th>
                 <td>
                   <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="uifrymd" type="date" class="form-control form-control-sm" />
+                    <input v-model="uifromdt" type="date" class="form-control form-control-sm" />
                     <span class="px-1">~</span>
-                    <input v-model="uitoymd" type="date" class="form-control form-control-sm" />
+                    <input v-model="uitodt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
               </tr>
@@ -137,13 +137,13 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
   gbn: '001',
-  frymd: initfrymd,
-  toymd: initymd
+  fromdt: initfromdt,
+  todt: initymd
 })
 
 const formData = reactive<any>({
@@ -158,8 +158,8 @@ const formData = reactive<any>({
   ioym: '', iono: '' // 수정용 키값
 })
 
-const uifrymd = computed({ get: () => formatDateString(searchData.frymd, '-'), set: (v) => searchData.frymd = v.replace(/-/g, '') })
-const uitoymd = computed({ get: () => formatDateString(searchData.toymd, '-'), set: (v) => searchData.toymd = v.replace(/-/g, '') })
+const uifromdt = computed({ get: () => formatDateString(searchData.fromdt, '-'), set: (v) => searchData.fromdt = v.replace(/-/g, '') })
+const uitodt = computed({ get: () => formatDateString(searchData.todt, '-'), set: (v) => searchData.todt = v.replace(/-/g, '') })
 const uiioymd = computed({ get: () => formatDateString(formData.ioymd, '-'), set: (v) => formData.ioymd = v.replace(/-/g, '') })
 
 const gridElement = ref<HTMLElement | null>(null)
@@ -203,8 +203,8 @@ const search = async () => {
       actkind: 'S',
       cmpycd: authStore.cmpycd,
       gbn: searchData.gbn,
-      frymd: searchData.frymd,
-      toymd: searchData.toymd
+      fromdt: searchData.fromdt,
+      todt: searchData.todt
     })
     grid?.setData(res.data)
     itemCount.value = res.data.length
@@ -227,8 +227,8 @@ const save = async () => {
       userid: authStore.userid
     })
 
-    if (res.data?.[0]?.ERRYN === 'Y' || (res.data?.[0]?.RTN_CD && res.data[0].RTN_CD !== '000000')) {
-      vAlertError(res.data[0].RTN_MSG || '저장 중 오류 발생')
+    if (res.data?.[0]?.erryn === 'Y' || (res.data?.[0]?.rtn_cd && res.data[0].rtn_cd !== '000000')) {
+      vAlertError(res.data[0].rtn_msg || '저장 중 오류 발생')
     } else {
       vAlert('저장되었습니다.')
       search()

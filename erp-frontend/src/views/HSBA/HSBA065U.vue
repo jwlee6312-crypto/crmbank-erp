@@ -111,7 +111,7 @@ async function fetchList() {
       actkind: 'S0', cmpycd: authStore.cmpycd,
       SCH_astkind: searchForm.SCH_astkind, SCH_itemnm: searchForm.SCH_itemnm, selgbn: searchForm.selgbn
     })
-    grid?.setData(res.data.data || [])
+    grid?.setData(res.data || [])
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
 }

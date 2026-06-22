@@ -47,9 +47,9 @@
 						<div class="d-flex align-items-center">
 							<span class="erp-label"><i class="bi bi-dot"></i>발생일</span>
 							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+								<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 								<span>~</span>
-								<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+								<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
 							</div>
 						</div>
 					</div>
@@ -170,8 +170,8 @@ const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 2).to
 const searchForm = reactive({
 	acctcd: '',
 	acctnm: '',
-	frymd: firstDay,
-	toymd: today
+	fromdt: firstDay,
+	todt: today
 })
 
 // 📝 마스터 데이터
@@ -217,8 +217,8 @@ const search = async () => {
 		const res = await api.post('/api/haba/HABA_240U_STR', {
 			actkind: 'SR',
 			cmpycd: authStore.cmpycd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, ''),
 			slipymd: '',
 			slipno: '',
 			srowno: '',
@@ -239,8 +239,8 @@ const save = async () => {
 		const payload = {
 			actkind: masterForm.actkind,
 			cmpycd: authStore.cmpycd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, ''),
 			slipymd: masterForm.slipymd.replace(/-/g, ''),
 			slipno: masterForm.slipno,
 			srowno: masterForm.srowno,
@@ -364,7 +364,7 @@ onMounted(() => {
 				masterForm.custnm = d.col6
 				masterForm.slipymd = formatDate(d.col0)
 				masterForm.Upayamt = Number(d.col7)
-				masterForm.paycndt = d.COL9
+				masterForm.paycndt = d.col9
 				masterForm.reqymd = formatDate(d.col10)
 				masterForm.remark = d.col11
 				masterForm.useyn = d.col12

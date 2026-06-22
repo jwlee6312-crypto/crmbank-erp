@@ -13,7 +13,7 @@
     <select id="HPBA_210U_STR" resultType="map">
         exec hpba_210u_str #{actkind}, #{cmpycd}, #{itemcd}, #{linecd}, #{progcd},
         #{mitemcd}, #{mitsize}, #{munit}, #{inqty}, #{losrate}, #{calgbn},
-        #{ingbn}, #{jodgbn}, #{befprog}, #{frymd}, #{toymd}, #{useyn}, #{updemp}
+        #{ingbn}, #{jodgbn}, #{befprog}, #{fromdt}, #{todt}, #{useyn}, #{updemp}
     </select>
 
     <!-- 생산라인 관리 -->

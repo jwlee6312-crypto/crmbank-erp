@@ -42,7 +42,7 @@
             <div class="d-flex align-items-center gap-2">
               <span class="fw-bold small text-dark" style="min-width: 60px;">정산일자</span>
               <div class="d-flex align-items-center gap-1">
-                <DateForm v-model:fromdt="searchform.ioymdfr" v-model:todt="searchform.ioymdto" />
+                <DateForm v-model:fromdt="searchform.fromdt" v-model:todt="searchform.todt" />
               </div>
             </div>
           </div>
@@ -81,21 +81,22 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
-const now = new Date()
 const searchform = reactive<any>({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  ioymdfr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  ioymdto: now.toISOString().substring(0, 10)
+  fromdt: firstDay,
+  todt: today
 })
 
 const gridelement = ref<HTMLDivElement | null>(null);
@@ -117,8 +118,8 @@ async function fetchList() {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
       iogbn: '100',
-      ioymdfr: searchform.ioymdfr.replace(/-/g, ''),
-      ioymdto: searchform.ioymdto.replace(/-/g, ''),
+      fromdt: searchform.fromdt.replace(/-/g, ''),
+      todt: searchform.todt.replace(/-/g, ''),
       deptcd: searchform.deptcd
     });
     grid?.setData(res.data || []);
@@ -166,8 +167,8 @@ async function save() {
         actkind: 'D0',
         cmpycd: authStore.cmpycd,
         iogbn: '100',
-        ioymdfr: searchform.ioymdfr.replace(/-/g, ''),
-        ioymdto: searchform.ioymdto.replace(/-/g, ''),
+        fromdt: searchform.fromdt.replace(/-/g, ''),
+        todt: searchform.todt.replace(/-/g, ''),
         deptcd: deptcd,
         slipymd: slipymd,
         slipno: slipno,
@@ -199,8 +200,8 @@ const toggleAllRows = () => {
 function initialize() {
   resetForm(searchform);
   searchform.deptcd = authStore.deptcd; searchform.deptnm = authStore.deptnm;
-  searchform.ioymdfr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10);
-  searchform.ioymdto = now.toISOString().substring(0, 10);
+  searchform.fromdt = firstDay
+  searchform.todt = today
   grid?.clearData(); activeitemcount.value = 0;
 }
 

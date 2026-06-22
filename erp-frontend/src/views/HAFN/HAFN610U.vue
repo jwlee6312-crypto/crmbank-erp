@@ -48,7 +48,7 @@
 								</td>
 								<th class="text-center bg-light border-end">기준일자</th>
 								<td class="bg-white px-2">
-									<input v-model="search_form.payymdt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
+									<input v-model="search_form.todt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
 								</td>
 							</tr>
 						</tbody>
@@ -156,7 +156,7 @@ const format_ymd = (v: string) => (v && v.length === 8) ? `${v.substring(0, 4)}-
 
 // 🔍 검색 및 마스터 데이터 (소문자 원칙)
 const search_form = _reactive({
-	payymdt: today,
+	todt: today,
 	custcd: '',
 	custnm: ''
 })
@@ -199,8 +199,8 @@ const search = async () => {
 		const res_target = await api.post('/api/hafn/HAFN_610U_STR', {
 			actkind: 'S0',
 			cmpycd: auth_store.cmpycd,
-			payymdf: first_day.replace(/-/g, ''),
-			payymdt: search_form.payymdt.replace(/-/g, ''),
+			fromdt: first_day.replace(/-/g, ''),
+			todt: search_form.todt.replace(/-/g, ''),
 			custcd: search_form.custcd
 		})
 
@@ -288,7 +288,7 @@ const save = async () => {
 
 const initialize = () => {
 	reset_form(search_form); reset_form(voucher_form);
-	search_form.payymdt = today; voucher_form.payymd = today;
+	search_form.todt = today; voucher_form.payymd = today;
 	target_grid?.clearData(); method_grid?.clearData();
 	total_target_pay_amt.value = 0; total_method_pay_amt.value = 0;
 }

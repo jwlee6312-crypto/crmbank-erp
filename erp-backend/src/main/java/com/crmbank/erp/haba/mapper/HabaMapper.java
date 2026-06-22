@@ -16,6 +16,7 @@ public interface HabaMapper {
     List<Map<String, Object>> HABA_050U_STR(Map<String, Object> params);
     List<Map<String, Object>> HABA_060U_STR(Map<String, Object> params);
     List<Map<String, Object>> HABA_070U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HABA_071U_STR(Map<String, Object> params);
     List<Map<String, Object>> HABA_080U_STR(Map<String, Object> params);
     List<Map<String, Object>> HABA_090U_STR(Map<String, Object> params);
     List<Map<String, Object>> HABA_100U_STR(Map<String, Object> params);

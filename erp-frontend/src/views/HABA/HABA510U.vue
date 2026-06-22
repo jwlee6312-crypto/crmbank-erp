@@ -15,7 +15,7 @@
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-credit-card-2-back me-2 text-primary" style="font-size: 18px;"></i>
-				기본정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
 				<span class="text-primary fw-bolder">지불계정관리 (HABA510U)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -110,6 +110,14 @@ const masterForm = reactive({
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
+// 🚀 필드명 정규화 (대소문자 처리)
+const normalizekeys = (obj: any) => {
+  const n: any = {};
+  if (!obj) return n;
+  Object.keys(obj).forEach(k => n[k.toLowerCase()] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k]);
+  return n;
+}
+
 const search = async () => {
 	try {
 		const res = await api.post('/api/haba/HABA_510U_STR', {
@@ -117,8 +125,9 @@ const search = async () => {
 			cmpycd: authStore.cmpycd
 		})
 
-		mainGrid?.setData(res.data || [])
-		if (res.data?.length > 0) vAlert('조회되었습니다.')
+		const processedData = (res.data || []).map((r: any) => normalizekeys(r))
+		mainGrid?.setData(processedData)
+		if (processedData.length > 0) vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 중 오류 발생') }
 }
 
@@ -139,9 +148,10 @@ const save = async () => {
 		}
 
 		const res = await api.post('/api/haba/HABA_510U_STR', payload)
+		const resData = normalizekeys(res.data?.[0]);
 
-		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].ret_msg)
+		if (resData.ret_yn === 'Y' || resData.res === 'FAIL') {
+			vAlertError(resData.ret_msg || '저장 중 오류가 발생했습니다.')
 		} else {
 			vAlert('정상으로 작업이 되었습니다.')
 			search()
@@ -161,9 +171,10 @@ const deleteData = async () => {
 			paygbn: masterForm.paygbn,
 			userid: authStore.userid
 		})
+		const resData = normalizekeys(res.data?.[0]);
 
-		if (res.data?.[0]?.ret_yn === 'Y') {
-			vAlertError(res.data[0].ret_msg)
+		if (resData.ret_yn === 'Y') {
+			vAlertError(resData.ret_msg)
 		} else {
 			vAlert('정상적으로 삭제되었습니다.')
 			search()
@@ -191,8 +202,9 @@ function openHelp() {
 			{ title: '계정명', field: 'acctnm', width: 250 }
 		],
 		onConfirm: (d: any) => {
-			masterForm.acctcd = d.acctcd
-			masterForm.acctnm = d.acctnm
+			const data = normalizekeys(d);
+			masterForm.acctcd = data.acctcd
+			masterForm.acctnm = data.acctnm
 		}
 	})
 	modalVisible.value = true
@@ -205,21 +217,21 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "유형", field: "paygbn", width: 100, hozAlign: "center" },
+				{ title: "유형", field: "paygbn", width: 100, hozAlign: "center", cssClass: "fw-bold text-primary" },
 				{ title: "유형명", field: "paygbnm", width: 250 },
 				{ title: "계정과목", field: "acctcd", width: 120, hozAlign: "center" },
 				{ title: "계정과목 명", field: "acctnm", minWidth: 250 }
-			],
-			rowClick: (e, row) => {
-				const d = row.getData()
-				masterForm.actkind = 'U0'
-				masterForm.paygbn = d.paygbn
-				masterForm.paygbnm = d.paygbnm
-				masterForm.acctcd = d.acctcd
-				masterForm.acctnm = d.acctnm
-			}
+			]
 		})
-		search()
+
+		// 🚀 그리드 행 클릭 이벤트: 상단 폼에 데이터 바인딩
+		mainGrid.on("rowClick", (e, row) => {
+			const d = row.getData()
+			Object.assign(masterForm, d)
+			masterForm.actkind = 'U0'
+		})
+
+		nextTick(() => search())
 	}
 })
 </script>

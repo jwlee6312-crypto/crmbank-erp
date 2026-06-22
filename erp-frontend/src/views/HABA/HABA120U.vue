@@ -218,8 +218,8 @@ const formatYmd = (v: string) => v && v.length === 8 ? `${v.substring(0, 4)}-${v
 const loadInitData = async () => {
 	try {
 		// 증권종류 (140)
-		const resGbn = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', search: '140' })
-		bondKindOptions.value = (resGbn.data || []).map((r: any) => ({ CD: r.col0, NM: r.col1 }))
+		const resGbn = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '140' })
+		bondKindOptions.value = (resGbn.data || []).map((r: any) => ({ CD: r.codecd, NM: r.codenm }))
 	} catch (e) { console.error('초기 데이터 로드 실패') }
 }
 
@@ -229,25 +229,29 @@ const search = async () => {
 		const res = await api.post('/api/haba/HABA_120U_STR', {
 			actkind: 'S1',
 			cmpycd: authStore.cmpycd,
-			acctcd: searchForm.acctcd
+			acctcd: searchForm.acctcd,
+			puchqty: 0,
+            issuamt: 0,
+            puchamt: 0,
+            rate: 0
 		})
 
 		const processedData = (res.data || []).map((r: any) => ({
-			acctcd: r.col0,
-			acctnm: r.col1,
-			bondno: r.col2,
-			bankcd: r.col3,
-			banknm: r.col4,
-			stdymd: formatYmd(r.col5),
-			endymd: formatYmd(r.col6),
-			puchqty: Number(r.col7 || 0),
-			issuamt: Number(r.col8 || 0),
-			puchamt: Number(r.COL9 || 0),
-			rate: Number(r.col10 || 0),
-			bondkind_NM: r.col11,
-			bondkind: r.col12,
-			useyn: r.col13,
-			remark: r.col14
+			acctcd: r.acctcd,
+			acctnm: r.acctnm,
+			bondno: r.bondno,
+			bankcd: r.bankcd,
+			banknm: r.banknm,
+			stdymd: formatYmd(r.stdymd),
+			endymd: formatYmd(r.endymd),
+			puchqty: Number(r.puchqty || 0),
+			issuamt: Number(r.issuamt || 0),
+			puchamt: Number(r.puchamt || 0),
+			rate: Number(r.rate || 0),
+			bondkind_nm: r.bondkindnm,
+			bondkind: r.bondkind,
+			useyn: r.useyn,
+			remark: r.remark
 		}))
 
 		mainGrid?.setData(processedData)
@@ -298,22 +302,24 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 
 function openHelp(type: string) {
 	if (type === 'search_acct') {
+
 		Object.assign(modalProps, {
 			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: searchForm.acctcd_t, ATRB: '040' },
-			columns: [{ title: '코드', field: 'col0', width: 80 }, { title: '계정명', field: 'col1', width: 180 }],
+			data: { gubun: 'A6', cmpycd: authStore.cmpycd, code: searchForm.acctcd_t, gbncd: '040' },
+			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }],
 			onConfirm: (d: any) => {
-				searchForm.acctcd = d.col0;
-				searchForm.acctcd_t = d.col1;
-				searchForm.custgbn = d.col2;
+				searchForm.acctcd = d.acctcd;
+				searchForm.acctcd_t = d.acctnm;
+				searchForm.custgbn = d.typesub;
 				initialize();
 			}
 		})
 	} else if (type === 'BANK') {
 		if (!masterForm.acctcd) return vAlert('조회 후 입력하시기 바랍니다.')
+
 		Object.assign(modalProps, {
 			title: '발행처 선택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'C0', cmpycd: authStore.cmpycd, search: masterForm.bankcd_t, custgbn: masterForm.custgbn },
+			data: { gubun: 'C5', cmpycd: authStore.cmpycd, code: masterForm.bankcd_t, gbncd: '' },
 			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '발행처명', field: 'custnm', width: 180 }],
 			onConfirm: (d: any) => { masterForm.bankcd = d.custcd; masterForm.bankcd_t = d.custnm }
 		})
@@ -347,7 +353,7 @@ onMounted(() => {
 				},
 				{ title: "매수", field: "puchqty", width: 60, hozAlign: "center" },
 				{ title: "이율", field: "rate", width: 70, hozAlign: "right", formatter: (c) => c.getValue() + "%" },
-				{ title: "종류", field: "bondkind_NM", width: 100, hozAlign: "center" },
+				{ title: "종류", field: "bondkind_nm", width: 100, hozAlign: "center" },
 				{ title: "비고", field: "remark", minWidth: 150 },
 				{ title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross" }
 			],

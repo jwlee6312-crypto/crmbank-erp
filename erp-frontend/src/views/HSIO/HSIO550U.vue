@@ -25,19 +25,35 @@
       </div>
     </div>
 
-    <!-- 🔍 2. 상단 조회 필터 -->
-    <div class="search-bar bg-white border-bottom p-2 px-3 d-flex align-items-center flex-shrink-0 gap-4 shadow-sm">
-      <div class="d-flex align-items-center gap-2">
-        <span class="fw-bold small text-secondary">출고창고:</span>
-        <select v-model="searchParam.whcd" class="form-select form-select-sm" style="width: 120px;">
-          <option value="">전체</option>
-          <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
-        </select>
-      </div>
-      <div class="d-flex align-items-center gap-2">
-        <span class="fw-bold small text-secondary">▶ 납품일자:</span>
-        <div class="d-flex align-items-center gap-1 flex-nowrap">
-          <DateForm v-model:fromdt="searchParam.frymd" v-model:todt="searchParam.toymd" />
+    <!-- 🔍 2. 상단 조회 필터 (HSOD100U 표준 테이블 레이아웃 적용) -->
+    <div class="p-2 pb-0 flex-shrink-0 bg-light">
+      <div class="card border shadow-sm overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 10%" /><col style="width: 23%" />
+              <col style="width: 10%" /><col style="width: 23%" />
+              <col style="width: 10%" /><col style="width: 24%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light required">출고창고</th>
+                <td>
+                  <select v-model="searchParam.whcd" class="form-select form-select-sm">
+                    <option value="">전체</option>
+                    <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
+                  </select>
+                </td>
+                <th class="text-center bg-light required">납품일자</th>
+                <td>
+                  <div class="d-flex align-items-center gap-1">
+                    <DateForm v-model:fromdt="searchParam.fromdt" v-model:todt="searchParam.todt" />
+                  </div>
+                </td>
+                <td colspan="2" class="bg-light"></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -86,17 +102,24 @@
                 </tr>
                 <tr>
                   <th class="bg-light text-center">배 송 처</th>
-                  <td><input v-model="masterData.address" class="form-control" placeholder="배송지 정보" /></td>
-                  <th class="bg-light text-center">배송방법</th>
-                  <td>
-                    <div class="input-group input-group-sm flex-nowrap">
-                        <input v-model="masterData.trancd" type="text" class="form-control bg-light text-center" style="max-width: 50px;" readonly />
-                        <input v-model="masterData.trannm" type="text" class="form-control border-start-0" readonly />
-                        <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('TRAN')"><i class="bi bi-search"></i></button>
-                    </div>
+                  <td colspan="3">
+                    <AddressPopupForm
+                      v-model:postno="masterData.postno"
+                      v-model:address="masterData.address"
+                      v-model:d_address="masterData.d_address"
+                      @open-address="handleOpenHelp('ADDR')"
+                    />
                   </td>
+                  <th class="bg-light text-center">배송담당</th>
+                  <td>
+                    <select v-model="masterData.trnemp" class="form-select">
+                      <option v-for="user in userData" :key="user.userid" :value="user.userid">{{ user.usernm }}</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
                   <th class="bg-light text-center">특기사항</th>
-                  <td><input v-model="masterData.remark" class="form-control" placeholder="비고" /></td>
+                  <td colspan="5"><input v-model="masterData.remark" class="form-control" placeholder="비고" /></td>
                 </tr>
               </tbody>
             </table>
@@ -127,31 +150,34 @@ import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
+import AddressPopupForm from '@/components/AddressPopupForm.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import { useCommonHelp } from '@/composables/useCommonHelp'
+import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 const now = new Date()
 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
 const initymd = now.toISOString().substring(0, 10)
 
 // [1] 데이터 모델링
-const searchParam = reactive({ whcd: '', frymd: firstDay, toymd: initymd })
+const searchParam = reactive({ whcd: '', fromdt: firstDay, todt: initymd })
 const masterData = reactive<any>({
   cmpycd: authStore.cmpycd, ioymd: initymd, whcd: '', custcd: '', custnm: '',
-  address: '', trancd: '', trannm: '', remark: '', trnemp: '', area: ''
+  postno: '', address: '', d_address: '', trancd: '', remark: '', trnemp: authStore.userid, area: ''
 })
 
 const custGridRef = ref<HTMLElement | null>(null); let custGrid: Tabulator | null = null;
 const detailGridRef = ref<HTMLElement | null>(null); let detailGrid: Tabulator | null = null;
-const whOptions = ref<any[]>([])
+const whOptions = ref<any[]>([]); const userData = ref<any[]>([])
 
 // [2] 그리드 초기화
 const initGrids = () => {
@@ -169,7 +195,7 @@ const initGrids = () => {
       columnCalcs: "table",
       columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
       columns: [
-        { title: "선택", field: "procyn", hozAlign: "center", width: 50, formatter: "tickCross", editor: true },
+        { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection", headerSort: false },
         { title: "주문부서", field: "deptnm", width: 140, hozAlign: "left" },
         { title: "주문일", field: "ordymd", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
         { title: "납품일", field: "outymd", width: 100, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
@@ -204,28 +230,55 @@ const fetchWhOptions = async () => {
 const fetchCustList = async () => {
   try {
     const res = await api.post('/api/hsio/HSIO_550U_STR', {
-        actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '200',
-        ioymdfr: searchParam.frymd.replace(/-/g, ''), ioymdto: searchParam.toymd.replace(/-/g, '')
+        actkind: 'S1',
+        cmpycd: authStore.cmpycd,
+        iogbn: '200',
+        fromdt: searchParam.fromdt.replace(/-/g, ''),
+        todt: searchParam.todt.replace(/-/g, ''),
+        whcd: searchParam.whcd || '',
+        userid: authStore.userid,
+        totsum: '0',
+        updemp: authStore.userid
     });
     custGrid?.setData(res.data || []);
   } catch (e) { vAlertError('조회 실패') }
 }
 
 const fetchDetails = async (row: any) => {
-  masterData.custcd = row.custcd; masterData.custnm = row.custnm;
+  // 🚀 좌측 그리드에서 조회된 정보를 우측 마스터 정보 폼에 즉시 전달 (주소 및 배송 정보 포함)
+  masterData.custcd = row.custcd || '';
+  masterData.custnm = row.custnm || '';
+  masterData.postno = row.postno || '';
+  masterData.address = row.address || '';
+  masterData.d_address = row.d_address || '';
+  masterData.trancd = row.trancd || '';
+  masterData.trannm = row.trannm || '';
+  masterData.trnemp = row.trnemp || '';
+
   try {
     const res = await api.post('/api/hsio/HSIO_550U_STR', {
-        actkind: 'S1', cmpycd: authStore.cmpycd, custcd: row.custcd, whcd: searchParam.whcd,
-        iogbn: '200', ioymdfr: searchParam.frymd.replace(/-/g, ''), ioymdto: searchParam.toymd.replace(/-/g, '')
+        actkind: 'S0',
+        cmpycd: authStore.cmpycd,
+        custcd: row.custcd,
+        iogbn: '200',
+        fromdt: searchParam.fromdt.replace(/-/g, ''),
+        todt: searchParam.todt.replace(/-/g, ''),
+        whcd: searchParam.whcd || '',
+        userid: authStore.userid,
+        iotype: '0',
+        totsum: '0',
+        updemp: authStore.userid
     });
-    const detailData = (res.data || []).map((i: any) => ({ ...i, ioqty: i.janqty, procyn: 'Y' }));
-    detailGrid?.setData(detailData);
+    const detailData = (res.data || []).map((i: any) => ({ ...i, ioqty: i.janqty }));
+    detailGrid?.setData(detailData).then(() => {
+        detailGrid?.selectRow(); // 🚀 조회 시 전체 선택 기본값 (Standard)
+    });
   } catch (e) { vAlertError('상세 조회 실패') }
 }
 
 const save = async () => {
-  const items = detailGrid?.getData().filter((r: any) => r.procyn === 'Y' && Number(r.ioqty) > 0) || [];
-  if (!items.length) return vAlertError('출고 수량을 입력하세요.');
+  const items = detailGrid?.getSelectedData().filter((r: any) => Number(r.ioqty) > 0) || [];
+  if (!items.length) return vAlertError('출고 항목을 선택하고 수량을 확인하세요.');
   if (!masterData.whcd) return vAlertError('출고 창고를 선택하세요.');
 
   const ioymd = masterData.ioymd.replace(/-/g, '');
@@ -253,24 +306,39 @@ const save = async () => {
 
     const masterParams = {
         actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200',
-        ioymdfr: searchParam.frymd.replace(/-/g, ''), ioymdto: searchParam.toymd.replace(/-/g, ''),
+        fromdt: searchParam.fromdt.replace(/-/g, ''), todt: searchParam.todt.replace(/-/g, ''),
         custcd: masterData.custcd, deptcd: authStore.deptcd, ioym: '', iono: '', ioymd: ioymd,
         iotype: '100', whcd: masterData.whcd, area: masterData.area || '', userid: authStore.userid,
-        trnemp: masterData.trnemp || '', trancd: masterData.trancd || '', addres: masterData.address || '',
-        remark: masterData.remark || '', cfmyn: 'Y', amtsum: totalAmtSum, updemp: authStore.userid
+        trnemp: masterData.trnemp || '', trancd: masterData.trancd || '', address: masterData.address || '',
+        d_address: masterData.d_address || '',
+        remark: masterData.remark || '', cfmyn: 'Y', totsum: totalAmtSum, updemp: authStore.userid
     }
+    // 🚀 [Seed-Model 표준 루틴] Step 1. 마스터 저장 실행
     const resMst = await api.post('/api/hsio/HSIO_550U_STR', masterParams);
     const mstData = resMst.data?.[0];
+    console.log('📦 [Seed-Model] Master Save Result:', mstData);
 
-    if (mstData && (mstData.ioym === '000000')) {
-        throw new Error(mstData.iono || '마스터 저장 오류');
+    // 🚀 [Seed-Model 표준 루틴] Step 2. 무결성 키 추출 (알리아스 우선 + 순서 보정)
+    const rowValues = mstData?.returnkeyvalue || [];
+    const key1 = (mstData?.ioym || rowValues[0] || '').toString().trim();
+    const key2 = (mstData?.iono || rowValues[1] || '').toString().trim();
+
+    // 🚀 [Seed-Model 표준 루틴] Step 3. 에러 판별 ('000000'은 약속된 업무 에러)
+    if (key1 === '000000') {
+        throw new Error(key2 || '업무 규칙 위반으로 저장할 수 없습니다.');
     }
 
-    const keyioym = mstData?.ioym; const keyiono = mstData?.iono;
+    if (!key1 || !key2) {
+        throw new Error(`전표 번호 수신 실패!\n받은 알리아스: ${JSON.stringify(Object.keys(mstData || {}))}`);
+    }
 
+    console.log(`🎯 최종 키 결정 -> key1: [${key1}], key2: [${key2}]`);
+
+    // 🚀 [Seed-Model 표준 루틴] Step 4. 상세 내역 연결 저장 (A0 루프)
     for (const item of detailItems) {
         const detailParams = {
-            actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200', ioym: keyioym, iono: keyiono,
+            actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200',
+            ioym: key1, iono: key2, // 🚀 따낸 고유키 주입
             iorowno: '', deptcd: item.deptcd || authStore.deptcd, custcd: masterData.custcd,
             whcd: masterData.whcd, area: masterData.area || '', userid: item.ordemp || authStore.userid,
             ioymd: ioymd, iotype: '100', itemcd: item.itemcd, itsize: item.itsize, unit: item.unit,
@@ -278,8 +346,12 @@ const save = async () => {
             browno: item.orowno, cfmyn: 'Y', updemp: authStore.userid
         }
         const resDtl = await api.post('/api/hsio/HSIO_551U_STR', detailParams);
-        if (resDtl.data?.[0]?.ioym === '000000') {
-            throw new Error(resDtl.data[0].iono || '상세 저장 오류');
+        const dtlData = resDtl.data?.[0];
+
+        // 상세 저장 결과도 동일한 무결성 원칙으로 체크
+        const dtlValues = dtlData?.returnkeyvalue || Object.values(dtlData || {});
+        if (String(dtlValues[0]).trim() === '000000') {
+            throw new Error(String(dtlValues[1] || '상세 내역 저장 중 오류 발생'));
         }
     }
 
@@ -290,8 +362,8 @@ const save = async () => {
 
 const toggleAllRows = () => {
   const rows = detailGrid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === 'Y')
-  rows.forEach(r => r.update({ procyn: allSelected ? 'N' : 'Y' }))
+  const allSelected = detailGrid?.getSelectedRows().length === rows.length
+  if (allSelected) detailGrid?.deselectRow(); else detailGrid?.selectRow();
 }
 
 function initialize() {
@@ -301,14 +373,34 @@ function initialize() {
 }
 
 function handleOpenHelp(type: string) {
-    if (type === 'TRAN') openHelp('CUST', (d) => { masterData.trancd = d.custcd; masterData.trannm = d.custnm });
-    else if (type === 'DEPT_search') openHelp('DEPT', (d) => { searchParam.deptcd = d.deptcd; searchParam.deptnm = d.deptnm });
+    if (type === 'ADDR') {
+        Object.assign(modalProps, {
+            title: '배송처 선택',
+            path: '/api/ha00/HA00_00P_STR',
+            defaultField: 'trannm',
+            data: { gubun: 'C5', cmpycd: authStore.cmpycd, gbncd: masterData.custcd, code: '', remark: '' },
+            columns: [
+                { title: '순번', field: 'trancd', width: 60, hozAlign: 'center' },
+                { title: '배송처명', field: 'trannm', width: 150 },
+                { title: '주소', field: 'address', width: 300 }
+            ],
+            onConfirm: (d: any) => {
+                masterData.postno = d.postno;
+                masterData.address = d.address;
+                masterData.trancd = d.trancd; // 🚀 trancd를 주소지코드로 매핑
+            }
+        })
+        modalVisible.value = true
+    }
 }
 
 const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val;
 
 onMounted(async () => {
   await fetchWhOptions();
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' }).then(r => {
+      userData.value = r.data;
+  });
   nextTick(() => { initGrids(); fetchCustList(); });
 })
 </script>

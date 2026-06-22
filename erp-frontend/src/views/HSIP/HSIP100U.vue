@@ -38,19 +38,16 @@
                 <col style="width: 10%" /><col style="width: 40%" />
             </colgroup>
             <tbody>
-              <tr>
-                <th class="text-center bg-light">발주부서</th>
-                <td>
-                  <div class="input-group input-group-sm w-50">
-                    <input v-model="searchForm.deptnm" class="form-control" readonly />
-                    <button class="btn btn-outline-secondary" @click="handleOpenHelp('DEPT_SCH')"><i class="bi bi-search"></i></button>
-                  </div>
+            <tr>
+                <th class="text-center bg-light">발주일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="searchForm.fromdt" v-model:todt="searchForm.todt" />
                 </td>
-                <th class="text-center bg-light">PO No</th>
+                <th class="text-center bg-light">거래처명</th>
                 <td>
-                  <input v-model="searchForm.fileno" class="form-control form-control-sm" placeholder="PO 번호 입력" @keyup.enter="search" />
+                  <input v-model="searchForm.custnm" class="form-control form-control-sm" placeholder="거래처명 검색" @keyup.enter="search" />
                 </td>
-              </tr>
+            </tr>
             </tbody>
           </table>
         </div>
@@ -90,7 +87,7 @@
                       </div>
                     </td>
                     <th class="bg-light text-center">PO No</th>
-                    <td><input v-model="formData.fileno" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
+                    <td><input v-model="formData.fileno" class="form-control bg-light text-primary fw-bold text-center" placeholder="PO 번호 입력" /></td>
                     <th class="required bg-light text-center">발주일자</th>
                     <td><input v-model="formData.issymd" type="date" class="form-control" /></td>
                     <th class="required bg-light text-center">수입구분</th>
@@ -161,18 +158,18 @@
                     <th class="bg-light text-center">소요비용</th>
                     <td>
                       <div class="d-flex gap-1 align-items-center">
-                        <span class="small">L/C:</span>
+                        <span class="small  text-nowrap">L/C:</span>
                         <input v-model="formData.lcamt" type="number" class="form-control text-end" @input="updateTotals" />
-                        <span class="small">통관:</span>
+                        <span class="small  text-nowrap">통관:</span>
                         <input v-model="formData.xtamt" type="number" class="form-control text-end" @input="updateTotals" />
                       </div>
                     </td>
                     <th class="bg-light text-center">B/L 합계</th>
                     <td colspan="3">
                       <div class="d-flex gap-1 align-items-center">
-                        <span class="small">외화:</span>
+                        <span class="small  text-nowrap">외화:</span>
                         <input :value="formData.frgnamt?.toLocaleString()" class="form-control text-end bg-light" readonly />
-                        <span class="small">원화:</span>
+                        <span class="small  text-nowrap">원화:</span>
                         <input :value="formData.wonamt?.toLocaleString()" class="form-control text-end bg-light" readonly />
                       </div>
                     </td>
@@ -228,14 +225,16 @@ import { useRoute } from 'vue-router'
 const authStore = useAuthStore()
 const searchStore = useSearchStore()
 const route = useRoute()
-const { today } = getDate()
+
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링 (HSOD100U 기준 소문자 원칙)
-const searchForm = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, fileno: '' })
+const searchForm = reactive({ fromdt: firstDay, todt: today, custnm: '' })
 const formData = reactive<any>({
+  _isNew: true, // 신규 등록 여부 플래그
   actkind: 'S0', cmpycd: authStore.cmpycd, fileno: '', deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   issymd: today, custcd: '', custnm: '', nacd: '',
   currcd: '', frgnrate: 1350, pricond: '', paycond: '', imptgbn: '',
@@ -257,11 +256,12 @@ const initGrids = () => {
     data: [], // 🚀 초기 데이터 설정
     layout: "fitColumns", height: "100%", placeholder: "데이터 없음",
     columns: [
-      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
-      { title: "발주일자", field: "issymd", hozAlign: "center", width: 100, formatter: (c) => {
+      { title: "No", formatter: "rownum", width: 30, hozAlign: "center", headerSort: false },
+      { title: "발주일자", field: "issymd", hozAlign: "center", width: 90, formatter: (c) => {
           const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
       }},
-      { title: "PO No", field: "fileno", hozAlign: "center", width: 130, cssClass: "fw-bold text-primary", headerSort: false }
+      { title: "PO No", field: "fileno", hozAlign: "center", width: 100, cssClass: "fw-bold text-primary", headerSort: false },
+      { title: "수입처", field: "custnm", hozAlign: "left", minWidth: 100, cssClass: "fw-bold text-primary", headerSort: false }
     ],
   });
   grid1.on("rowClick", (e, row) => fetchDetail(row.getData().fileno));
@@ -282,12 +282,12 @@ const initGrids = () => {
       { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary',
         cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow())
       },
-      { title: "규격", field: "itsize", width: 150 },
-      { title: "단위", field: "unitnm", width: 70, hozAlign: "center" },
-      { title: "수량", field: "qty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
-      { title: "단가", field: "price", width: 110, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
-      { title: "금액", field: "amt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>",
+      { title: "규격", field: "itsize", width: 200 },
+      { title: "단위", field: "unit", width: 80, hozAlign: "center" },
+      { title: "수량", field: "qty", width: 150, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
+      { title: "단가", field: "price", width: 150, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
+      { title: "금액", field: "amt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "삭제", width: 50, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>",
         cellClick: (e, cell) => handleRowAction(cell.getRow())
       }
     ]
@@ -311,16 +311,70 @@ const updateTotals = () => {
 }
 
 const handleOpenHelp = (type: string, target?: any) => {
-  if (type === 'CUST') openHelp('CUST', (d) => { formData.custcd = d.custcd; formData.custnm = d.custnm });
-  else if (type === 'DEPT') openHelp('DEPT', (d) => { formData.deptcd = d.deptcd; formData.deptnm = d.deptnm });
-  else if (type === 'DEPT_SCH') openHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
-  else if (type === 'ITEM') {
-    openHelp('ITEM', (d) => {
-      target.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unitnm: d.unit, price: d.outcost || 0, qty: 1, amt: d.outcost || 0, _status: '입력', _state: 'NEW' });
-      updateTotals();
-    });
+  if (type === 'DEPT') {
+    Object.assign(modalProps, {
+      title: '부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      defaultField: 'deptnm',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' },
+      columns: [
+        { title: '코드', field: 'deptcd', width: 80, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => { formData.deptcd = d.deptcd; formData.deptnm = d.deptnm }
+    })
+    modalVisible.value = true
+  } else if (type === 'CUST') {
+    Object.assign(modalProps, {
+      title: '거래처 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      defaultField: 'custnm',
+      data: { gubun: 'C7', cmpycd: authStore.cmpycd, gbncd: '100', code: '', remark: '' },
+      columns: [
+        { title: '코드', field: 'custcd', width: 80, hozAlign: 'center' },
+        { title: '거래처명', field: 'custnm', width: 200 }
+      ],
+      onConfirm: (d: any) => {
+          formData.custcd = d.custcd;
+          formData.custnm = d.custnm,
+          formData.nacd = d.nacd,
+          formData.shipport = d.shipport,
+          formData.arvport = d.arvport,
+          formData.currcd = d.currcd,
+          formData.paycond = d.paycond,
+          formData.pricond = d.pricond
+      }
+    })
+    modalVisible.value = true
+  } else if (type === 'ITEM') {
+    Object.assign(modalProps, {
+      title: '품목 선택',
+      path: '/api/hs00/HS00_000S_STR',
+      defaultField: 'itemnm',
+      data: { gubun: 'I9', cmpycd: authStore.cmpycd, gbncd: '', code: '', codenm: '', etcval: '' },
+      columns: [
+        { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+        { title: '품목명', field: 'itemnm', width: 200 },
+        { title: '규격', field: 'itsize', width: 150 },
+        { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+      ],
+      onConfirm: (d: any) => {
+        const price = d.outcost || 0;
+        const vat = Math.floor(price * 0.1);
+        target.update({
+          itemcd: d.itemcd,
+          itemnm: d.itemnm,
+          itsize: d.itsize,
+          unit: d.unit || 'EA',
+          _status: '입력',
+          _state: 'NEW'
+        })
+      }
+    })
+    modalVisible.value = true
   }
 }
+
 
 const handleRowAction = (row: any) => {
   const d = row.getData();
@@ -331,7 +385,13 @@ const handleRowAction = (row: any) => {
 
 async function search() {
   try {
-    const res = await api.post('/api/hsip/HSIP_100U_STR', { ...searchForm, actkind: 'S1' });
+    const res = await api.post('/api/hsip/HSIP_100U_STR', {
+        actkind: 'L0',
+        fromdt: searchForm.fromdt.replace(/-/g, ''),
+        todt: searchForm.todt.replace(/-/g, ''),
+        custnm: searchForm.custnm,
+        frgnrate: 0, lcamt: 0, wonamt: 0, frgnamt: 0, xtamt: 0
+    });
     const list = res.data?.data || res.data || [];
     grid1?.setData(list); vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }
@@ -339,13 +399,30 @@ async function search() {
 
 async function fetchDetail(fileNo: string) {
   try {
-    const res = await api.post('/api/hsip/HSIP_100U_STR', { fileno: fileNo, actkind: 'S0' });
-    if (res.data?.data?.length) {
-      Object.assign(formData, res.data.data[0]);
-      // 품목 상세 조회
-      const itemRes = await api.post('/api/hsip/HSIP_101U_STR', { fileno: fileNo, actkind: 'S0' });
-      // itemRes.data.data를 사용하여 그리드 세팅
-      mainGrid?.setData((itemRes.data.data || []).map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
+    const res = await api.post('/api/hsip/HSIP_100U_STR', {
+        fileno: fileNo,
+        actkind: 'S0',
+        cmpycd: authStore.cmpycd,
+        fromdt: '',
+        todt: '',
+        custnm: '',
+        frgnrate: 0, lcamt: 0, wonamt: 0, frgnamt: 0, xtamt: 0
+    });
+    if (res.data?.length) {
+      // 🚀 전역 axios 인터셉터가 이미 data를 파싱하므로 res.data로 바로 접근
+      const master = res.data[0];
+      Object.assign(formData, {...master,
+        issymd: master.issymd && master.issymd.length === 8
+          ? `${master.issymd.substring(0, 4)}-${master.issymd.substring(4, 6)}-${master.issymd.substring(6, 8)}`
+          : master.issymd
+      });
+
+      formData._isNew = false; // 🚀 기존 자료이므로 '수정' 모드로 변경
+
+      const itemRes = await api.post('/api/hsip/HSIP_101U_STR', {
+          fileno: fileNo, actkind: 'S0', qty: 0, amt: 0
+      });
+      mainGrid?.setData((itemRes.data || []).map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
       updateTotals();
     }
   } catch (e) { vAlertError('상세 로드 실패'); }
@@ -354,25 +431,51 @@ async function fetchDetail(fileNo: string) {
 async function save() {
   if (!formData.custcd) return vAlertError('거래처를 선택하세요.');
   const details = mainGrid?.getData().filter(r => r._status) || [];
-  if (!details.length && formData.fileno === '0000') return vAlertError('품목을 추가하세요.');
+  if (!formData.fileno) return vAlertError('PO번호를 입력하세요.');
+  if (formData._isNew === true && !details.length) return vAlertError('품목을 추가하세요.');
+
+  if (!confirm('저장하시겠습니까?')) return
 
   try {
-    const mst = { ...formData, actkind: formData.fileno === '0000' || !formData.fileno ? 'A0' : 'U0', issymd: formData.issymd.replace(/-/g, ''), userid: authStore.userid };
-    const resM = await api.post('/api/hsip/HSIP_100U_STR', mst);
-    const mstData = resM.data?.data?.[0] || resM.data?.[0];
-    if (mstData) {
-      const newFileNo = mstData.fileno;
-      for (const item of details) {
-        await api.post('/api/hsip/HSIP_101U_STR', { ...item, actkind: item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0'), fileno: newFileNo, userid: authStore.userid });
-      }
-      vAlert('저장되었습니다.'); search(); fetchDetail(newFileNo);
+    // 🚀 [Service-Base] 백엔드 통합 저장 서비스 호출 (트랜잭션 보장)
+    const payload = {
+        mst: {
+            ...formData,
+            actkind: formData._isNew ? 'A0' : 'U0',
+            issymd: formData.issymd.replace(/-/g, '')
+        },
+        dtl: details.map(item => ({
+            ...item,
+            actkind: item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0')
+        }))
+    };
+
+    const res = await api.post('/api/hsip/HSIP_100U_SAVE', payload);
+
+    if (res.data?.status === 'success') {
+        vAlert('저장되었습니다.');
+        const newFileNo = res.data.data?.fileno || formData.fileno;
+        search();
+        fetchDetail(newFileNo);
+    } else {
+        throw new Error(res.data?.message || '저장 중 오류가 발생했습니다.');
     }
-  } catch (e) { vAlertError('저장 실패'); }
+  } catch (e: any) {
+    vAlertError(e.message || '저장 실패');
+  }
 }
 
 function initialize() {
   resetForm(formData);
-  Object.assign(formData, { cmpycd: authStore.cmpycd, deptcd: authStore.deptcd, deptnm: authStore.deptnm, fileno: '0000', issymd: today, frgnrate: 1350 });
+  Object.assign(formData, {
+      cmpycd: authStore.cmpycd,
+      deptcd: authStore.deptcd,
+      deptnm: authStore.deptnm,
+       _isNew: true,
+      fileno: '',
+      issymd: today,
+      frgnrate: 1350
+  });
   if (grid1) grid1.setData([]);
   if (mainGrid) mainGrid.setData([]);
   updateTotals();

@@ -47,9 +47,9 @@
 						<div class="d-flex align-items-center">
 							<span class="erp-label"><i class="bi bi-dot"></i>발행일</span>
 							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 135px;" />
+								<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 135px;" />
 								<span>~</span>
-								<input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 135px;" />
+								<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 135px;" />
 							</div>
 						</div>
 					</div>
@@ -363,8 +363,8 @@ const paymentOptions = ref<any[]>([])
 const searchForm = reactive({
 	taxunit: '',
 	taxtype: '000',
-	frymd: firstDay,
-	toymd: today
+	fromdt: firstDay,
+	todt: today
 })
 
 // --- 폼 데이터 ---
@@ -419,7 +419,7 @@ const search = async () => {
 	try {
 		const res = await api.post('/api/hatx/HATX_010U_STR', {
 			actkind: 'SR', cmpycd: authStore.cmpycd, taxunit: searchForm.taxunit,
-			frymd: searchForm.frymd.replace(/-/g, ''), toymd: searchForm.toymd.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''), todt: searchForm.todt.replace(/-/g, ''),
 			taxtype: searchForm.taxtype, taxkind: '100'
 		})
 		mainGrid?.setData((res.data || []).map((d: any) => ({

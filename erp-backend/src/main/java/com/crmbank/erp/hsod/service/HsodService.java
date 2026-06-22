@@ -4,8 +4,10 @@ import com.crmbank.erp.hsod.mapper.HsodMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import com.crmbank.erp.hsod.dto.Hsod100uRequest;
 import com.crmbank.erp.hsod.dto.Hsod101u;
 
@@ -29,10 +31,12 @@ public class HsodService {
         }
 
         Map<String, Object> mstRow = res.get(0);
-        String ordym = String.valueOf(mstRow.get("ordym")).trim();
-        String ordno = String.valueOf(mstRow.get("ordno")).trim();
+        // 🚀 [Position-First] 알리아스 무관하게 첫 번째/두 번째 컬럼값 추출
+        List<Object> mstValues = new ArrayList<>(mstRow.values());
+        String ordym = String.valueOf(mstValues.get(0)).trim();
+        String ordno = String.valueOf(mstValues.get(1)).trim();
 
-        // Business Error Check for Master
+        // Business Error Check for Master (첫 번째 컬럼이 '000000'이면 에러)
         if ("000000".equals(ordym)) {
             throw new Exception(ordno);
         }
@@ -55,11 +59,12 @@ public class HsodService {
                 List<Map<String, Object>> dtlRes = hsodMapper.HSOD_101U_STR(dtl);
                 if (dtlRes != null && !dtlRes.isEmpty()) {
                     Map<String, Object> dtlRow = dtlRes.get(0);
-                    String dStatus = String.valueOf(dtlRow.get("ordym")).trim();
-                    String dMessage = String.valueOf(dtlRow.get("ordno")).trim();
+                    List<Object> dtlValues = new ArrayList<>(dtlRow.values());
+                    String dStatus = String.valueOf(dtlValues.get(0)).trim();
+                    String dMessage = String.valueOf(dtlValues.get(1)).trim();
                     
                     if ("000000".equals(dStatus)) {
-                        throw new Exception(dMessage);
+                        throw new Error(dMessage); // Business error from DB
                     }
                 }
             }

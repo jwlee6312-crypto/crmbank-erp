@@ -56,9 +56,9 @@
                 </td>
                 <th class="text-center bg-light required">입고일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <input v-model="inymdfr_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                   <span class="px-1 opacity-50">~</span>
-                  <input v-model="inymdto_f" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                  <input v-model="todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
                 </td>
               </tr>
             </tbody>
@@ -117,13 +117,13 @@ const { resetForm } = useFormReset()
 
 // [1] 데이터 모델링
 const initymd = today.replace(/-/g, '')
-const initfrymd = firstDay.replace(/-/g, '')
+const initfromdt = firstDay.replace(/-/g, '')
 
 const searchData = reactive({
   linecd: '010',
   whcd: '200',
-  inymdfr: initfrymd,
-  inymdto: initymd
+  fromdt: initfromdt,
+  todt: initymd
 })
 
 const lineOptions = ref<any[]>([]); const whOptions = ref<any[]>([])
@@ -131,8 +131,8 @@ const selectedProg = reactive({ progcd: '', prognm: '' })
 const closingInfo = reactive({ clsymd: '', sclsym: '', pclsym: '' })
 
 // 포맷팅 헬퍼 (ui 접두어 제거)
-const inymdfr_f = computed({ get: () => formatDate(searchData.inymdfr), set: (v) => { if(v) searchData.inymdfr = v.replace(/-/g, '') } })
-const inymdto_f = computed({ get: () => formatDate(searchData.inymdto), set: (v) => { if(v) searchData.inymdto = v.replace(/-/g, '') } })
+const fromdt = computed({ get: () => formatDate(searchData.fromdt), set: (v) => { if(v) searchData.fromdt = v.replace(/-/g, '') } })
+const todt = computed({ get: () => formatDate(searchData.todt), set: (v) => { if(v) searchData.todt = v.replace(/-/g, '') } })
 
 const tableRef1 = ref<HTMLDivElement | null>(null)
 const tableRef2 = ref<HTMLDivElement | null>(null)
@@ -203,7 +203,7 @@ const onProcessSelect = (prog: any) => {
 const fetchGridData = async () => {
   try {
     const res = await api.post('/api/hpio/HPIO_410U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchData.linecd, progcd: selectedProg.progcd, whcd: searchData.whcd, inymdFR: searchData.inymdfr, inymdTO: searchData.inymdto
+      actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchData.linecd, progcd: selectedProg.progcd, whcd: searchData.whcd, fromdt: searchData.fromdt, todt: searchData.todt
     })
     grid2?.setData(res.data)
     vAlert('조회되었습니다.')
@@ -234,7 +234,7 @@ const saveCancellation = async () => {
 const onLineChange = () => fetchProcesses()
 const initialize = () => {
   resetForm(searchData);
-  Object.assign(searchData, { linecd: '010', whcd: '200', inymdfr: initfrymd, inymdto: initymd });
+  Object.assign(searchData, { linecd: '010', whcd: '200', fromdt: initfromdt, todt: initymd });
   grid1?.clearData(); grid2?.clearData();
   selectedProg.progcd = ''; selectedProg.prognm = '';
   fetchProcesses();

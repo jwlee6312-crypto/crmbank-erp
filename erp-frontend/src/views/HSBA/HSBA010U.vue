@@ -1,14 +1,25 @@
-<template>
-  <appalert :show="showalert" :error="showerror" :message="alertmessage" />
+<!--
+	=============================================================
+	프로그램명	: 품목등록 (HSBA010U)
+	작성일자	: 2025.02.24
+	설명        : 영업/재고 품목 마스터 관리 (HSOD100U 디자인 표준 준수 및 누락 항목 추가)
+	=============================================================
+-->
 
-  <div class="erp-container">
+<template>
+  <AppAlert :show="showalert" :error="showerror" :message="alertmessage" />
+  <Modal v-model:visible="modalvisible" :modalProps="modalprops" />
+
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-1 px-3 sticky-top shadow-sm flex-shrink-0">
-      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 13px;">
-        <i class="bi bi-tags-fill me-2 text-primary"></i>
-        기본정보 > 품목관리 > <span class="text-primary fw-bolder">품목등록 (hsba010u)</span>
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-tags-fill me-2 text-primary" style="font-size: 18px;"></i>
+        기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        품목관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">품목등록 (HSBA010U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
+      <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="search">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
@@ -16,145 +27,163 @@
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-y-auto p-2 d-flex flex-column gap-2 bg-light">
-      <!-- 🅰️ 조회 조건 -->
-      <div class="card border shadow-sm flex-shrink-0">
-        <div class="card-body p-1 bg-white">
-          <div class="d-flex align-items-center gap-3">
-            <div class="input-group input-group-sm flex-nowrap" style="width: 250px;">
-              <span class="input-group-text fw-bold border-0 bg-transparent">재고자산</span>
-              <select v-model="searchdata.sch_astkind" class="form-select border-0 bg-light" @change="handleassetchange">
-                <option v-for="opt in assetoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-              </select>
-            </div>
-            <div class="input-group input-group-sm flex-nowrap" style="width: 350px;">
-              <span class="input-group-text fw-bold border-0 bg-transparent">품목검색</span>
-              <input v-model="searchdata.sch_itemnm" type="text" class="form-control border-0 bg-light" placeholder="품목명 또는 코드" @keyup.enter="search" />
-              <button class="btn btn-dark btn-sm" @click="search"><i class="bi bi-search"></i></button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-      <!-- 🅱️ 품목 상세 정보 -->
-      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
-        <div class="card-header py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
-          <span class="fw-bold small text-dark"><i class="bi bi-pencil-square me-1"></i> 품목 상세 정보</span>
-          <div class="d-flex gap-2 align-items-center">
-            <span v-if="masterdata.actkind === 'U0'" class="badge bg-warning text-dark" style="font-size: 10px;">수정 중</span>
-            <span v-else class="badge bg-primary" style="font-size: 10px;">신규 등록</span>
-          </div>
-        </div>
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
         <div class="card-body p-0 bg-white">
-          <table class="erp-table-full border-0">
+          <table class="erp-table-dense" width="100%">
             <colgroup>
-              <col style="width: 75px;" /><col />
-              <col style="width: 75px;" /><col />
-              <col style="width: 75px;" /><col />
-              <col style="width: 75px;" /><col />
-              <col style="width: 75px;" /><col />
+                <col style="width: 100px" /><col style="width: 250px" />
+                <col style="width: 100px" /><col />
             </colgroup>
             <tbody>
               <tr>
-                <th class="required">품목코드</th>
-                <td><input v-model="masterdata.itemcd" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="7" :readonly="masterdata.actkind === 'U0'" /></td>
-                <th class="required">품목명</th>
-                <td><input v-model="masterdata.itemnm" type="text" class="form-control form-control-sm" /></td>
-                <th class="required">규격</th>
-                <td><input v-model="masterdata.itsize" type="text" class="form-control form-control-sm" /></td>
-                <th class="required">단위</th>
+                <th class="text-center bg-light">재고자산</th>
                 <td>
-                  <select v-model="masterdata.unit" class="form-select form-select-sm">
-                    <option v-for="opt in unitoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-                  </select>
-                </td>
-                <th class="required">재고자산</th>
-                <td>
-                  <select v-model="masterdata.astkind" class="form-select form-select-sm">
+                  <select v-model="searchdata.sch_astkind" class="form-select form-select-sm" @change="handleassetchange">
                     <option v-for="opt in assetoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
                   </select>
                 </td>
-              </tr>
-              <tr>
-                <th>영문명</th>
-                <td><input v-model="masterdata.itemenm" type="text" class="form-control form-control-sm" /></td>
-                <th>적정재고</th>
-                <td><input v-model="masterdata.stock" type="number" class="form-control form-control-sm text-end" /></td>
-                <th>대분류</th>
-                <td>
-                  <div class="input-group input-group-sm">
-                    <input v-model="masterdata.agrpnm" type="text" class="form-control bg-light" readonly />
-                    <button class="btn btn-outline-secondary btn-sm px-1" @click="openhelp('agrp')"><i class="bi bi-search"></i></button>
-                  </div>
+                <th class="text-center bg-light border-start">품목검색</th>
+                <td class="d-flex align-items-center gap-2 border-0">
+                  <input v-model="searchdata.sch_itemnm" type="text" class="form-control form-control-sm" style="width: 300px;" placeholder="품목명 또는 코드" @keyup.enter="search" />
+                  <button class="btn btn-sm btn-secondary px-3" @click="search"><i class="bi bi-search me-1"></i>조회</button>
                 </td>
-                <th>중분류</th>
-                <td>
-                  <div class="input-group input-group-sm">
-                    <input v-model="masterdata.bgrpnm" type="text" class="form-control bg-light" readonly />
-                    <button class="btn btn-outline-secondary btn-sm px-1" @click="openhelp('bgrp')"><i class="bi bi-search"></i></button>
-                  </div>
-                </td>
-                <th>바코드</th>
-                <td><input v-model="masterdata.barcode" type="text" class="form-control form-control-sm" /></td>
-              </tr>
-              <tr>
-                <th>HS Code</th>
-                <td><input v-model="masterdata.hscode" type="text" class="form-control form-control-sm" /></td>
-                <th>제조사</th>
-                <td><input v-model="masterdata.maker" type="text" class="form-control form-control-sm" /></td>
-                <th class="required">매입처</th>
-                <td colspan="3">
-                  <div class="input-group input-group-sm">
-                    <input v-model="masterdata.in_custcd" type="text" class="form-control text-center fw-bold" style="max-width: 80px;" placeholder="코드" readonly />
-                    <input v-model="masterdata.in_custnm" type="text" class="form-control bg-light" placeholder="거래처명을 선택하세요" readonly />
-                    <button class="btn btn-outline-secondary btn-sm px-1" @click="openhelp('cust')"><i class="bi bi-search"></i></button>
-                  </div>
-                </td>
-                <th>사용/세트</th>
-                <td>
-                  <div class="d-flex gap-2">
-                    <div class="form-check form-switch m-0"><input v-model="masterdata.useyn" class="form-check-input" type="checkbox" true-value="y" false-value="n" id="swuse"> <label class="small fw-bold" for="swuse">사용</label></div>
-                    <div class="form-check form-switch m-0"><input v-model="masterdata.setyn" class="form-check-input" type="checkbox" true-value="y" false-value="n" id="swset"> <label class="small fw-bold" for="swset">세트</label></div>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <th>매입단위</th>
-                <td>
-                  <select v-model="masterdata.inunit" class="form-select form-select-sm">
-                    <option v-for="opt in unitoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-                  </select>
-                </td>
-                <th>매입환산</th>
-                <td><input v-model="masterdata.inqty" type="number" class="form-control form-control-sm text-end fw-bold" /></td>
-                <th>매출단위</th>
-                <td>
-                  <select v-model="masterdata.outunit" class="form-select form-select-sm">
-                    <option v-for="opt in unitoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-                  </select>
-                </td>
-                <th>매출환산</th>
-                <td><input v-model="masterdata.outqty" type="number" class="form-control form-control-sm text-end fw-bold" /></td>
-                <th>비고</th>
-                <td colspan="1"><input v-model="masterdata.remark" type="text" class="form-control form-control-sm w-100" /></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Ⓒ 품목 리스트 -->
-      <div class="card border shadow-sm erp-main-grid overflow-hidden d-flex flex-column">
+      <!-- [중간] 품목 상세 정보 (HSOD100U 8컬럼 표준 적용) -->
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
+        <div class="card-header py-1 px-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #f0f7ff !important;">
+          <span class="fw-bold small text-primary"><i class="bi bi-pencil-square me-1"></i> 품목 상세 정보</span>
+          <div class="d-flex gap-2 align-items-center">
+            <span v-if="masterdata.actkind === 'U0'" class="badge bg-warning text-dark" style="font-size: 10px;">수정 모드</span>
+            <span v-else class="badge bg-primary" style="font-size: 10px;">신규 등록</span>
+          </div>
+        </div>
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense w-100">
+            <colgroup>
+              <col style="width: 110px;" /><col />
+              <col style="width: 110px;" /><col />
+              <col style="width: 110px;" /><col />
+              <col style="width: 110px;" /><col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="required bg-light">품목코드</th>
+                <td><input v-model="masterdata.itemcd" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="7" :readonly="masterdata.actkind === 'U0'" /></td>
+                <th class="required bg-light border-start">품목명</th>
+                <td><input v-model="masterdata.itemnm" type="text" class="form-control form-control-sm" /></td>
+                <th class="required bg-light border-start">규격</th>
+                <td><input v-model="masterdata.itsize" type="text" class="form-control form-control-sm" /></td>
+                <th class="required bg-light border-start">단위</th>
+                <td>
+                  <select v-model="masterdata.unit" class="form-select form-select-sm">
+                    <option v-for="opt in unitoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th class="required bg-light">재고자산</th>
+                <td>
+                  <select v-model="masterdata.astkind" class="form-select form-select-sm">
+                    <option v-for="opt in assetoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  </select>
+                </td>
+                <th class="bg-light border-start">영문명</th>
+                <td><input v-model="masterdata.itemenm" type="text" class="form-control form-control-sm" /></td>
+                <th class="bg-light border-start">적정재고</th>
+                <td><input v-model="masterdata.stock" type="number" class="form-control form-control-sm text-end" /></td>
+                <th class="bg-light border-start">바코드</th>
+                <td><input v-model="masterdata.barcode" type="text" class="form-control form-control-sm" /></td>
+              </tr>
+              <tr>
+                <th class="bg-light">대분류</th>
+                <td>
+                  <div class="input-group input-group-sm">
+                    <input v-model="masterdata.agrpnm" class="form-control bg-light" readonly />
+                    <button class="btn btn-outline-secondary px-2" @click="openhelp('agrp')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="bg-light border-start">중분류</th>
+                <td>
+                  <div class="input-group input-group-sm">
+                    <input v-model="masterdata.bgrpnm" class="form-control bg-light" readonly />
+                    <button class="btn btn-outline-secondary px-2" @click="openhelp('bgrp')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="bg-light border-start">HS Code</th>
+                <td><input v-model="masterdata.hscode" type="text" class="form-control form-control-sm" /></td>
+                <th class="bg-light border-start">제조사</th>
+                <td><input v-model="masterdata.maker" type="text" class="form-control form-control-sm" /></td>
+              </tr>
+              <tr>
+                <th class="required bg-light">매입처</th>
+                <td colspan="3">
+                  <div class="input-group input-group-sm">
+                    <input v-model="masterdata.in_custcd" type="text" class="form-control text-center fw-bold bg-light" style="max-width: 80px;" readonly />
+                    <input v-model="masterdata.in_custnm" class="form-control bg-light" placeholder="거래처 선택" readonly />
+                    <button class="btn btn-outline-secondary px-2" @click="openhelp('cust')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="bg-light border-start">사용/세트</th>
+                <td colspan="3">
+                  <div class="d-flex gap-3 align-items-center h-100 ps-2">
+                    <div class="form-check form-switch m-0"><input v-model="masterdata.useyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="swuse"> <label class="small fw-bold" for="swuse">사용</label></div>
+                    <div class="form-check form-switch m-0"><input v-model="masterdata.setyn" class="form-check-input" type="checkbox" true-value="Y" false-value="N" id="swset"> <label class="small fw-bold" for="swset">세트</label></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th class="bg-light">매입단위</th>
+                <td>
+                  <select v-model="masterdata.inunit" class="form-select form-select-sm">
+                    <option v-for="opt in unitoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  </select>
+                </td>
+                <th class="bg-light border-start">매입환산</th>
+                <td><input v-model="masterdata.inqty" type="number" class="form-control form-control-sm text-end fw-bold" /></td>
+                <th class="bg-light border-start">매출단위</th>
+                <td>
+                  <select v-model="masterdata.outunit" class="form-select form-select-sm">
+                    <option v-for="opt in unitoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  </select>
+                </td>
+                <th class="bg-light border-start">매출환산</th>
+                <td><input v-model="masterdata.outqty" type="number" class="form-control form-control-sm text-end fw-bold" /></td>
+              </tr>
+              <tr>
+                <th class="bg-light">총중량</th>
+                <td><input v-model="masterdata.g_weight" type="number" class="form-control form-control-sm text-end" /></td>
+                <th class="bg-light border-start">순중량</th>
+                <td><input v-model="masterdata.net_weight" type="number" class="form-control form-control-sm text-end" /></td>
+                <th class="bg-light border-start">부피(CBM)</th>
+                <td colspan="3"><input v-model="masterdata.cbm" type="number" class="form-control form-control-sm text-end" /></td>
+              </tr>
+              <tr>
+                <th class="bg-light">비&nbsp;&nbsp;&nbsp;&nbsp;고</th>
+                <td colspan="7"><input v-model="masterdata.remark" type="text" class="form-control form-control-sm" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- [하단] 품목 리스트 그리드 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 품목 리스트 ({{ activeitemcount }} 건)</span>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+        <div class="card-body p-0 flex-grow-1 overflow-hidden d-flex flex-column">
           <div ref="gridelement" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
     </div>
-
-    <modal v-model:visible="modalvisible" :modalprops="modalprops" />
   </div>
 </template>
 
@@ -162,8 +191,8 @@
 import { reactive, ref, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import appalert from '@/components/AppAlert.vue'
-import modal from '@/components/Modal.vue'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -182,7 +211,8 @@ const masterdata = reactive<any>({
   agrpcd: '', agrpnm: '', bgrpcd: '', bgrpnm: '',
   stock: 0, qtypnt: 0, vatyn: 'Y', sotaxyn: 'N', udogyn: 'N',
   barcode: '', hscode: '', remark: '', useyn: 'Y',
-  in_custcd: '', in_custnm: '', maker: '', updemp: authstore.userid
+  in_custcd: '', in_custnm: '', maker: '', updemp: authstore.userid,
+  g_weight: 0, net_weight: 0, cbm: 0
 })
 
 const assetoptions = ref<any[]>([]); const unitoptions = ref<any[]>([])
@@ -259,7 +289,8 @@ function initialize() {
     actkind: 'A0', cmpycd: authstore.cmpycd, unit: 'EA', astkind: currentasset,
     setyn: 'N', useyn: 'Y', stock: 0, qtypnt: 0, imprice: 0, omprice: 0,
     vatyn: 'Y', sotaxyn: 'N', udogyn: 'N', inunit: 'EA', inqty: 1, outunit: 'EA', outqty: 1,
-    updemp: authstore.userid, in_custcd: '', in_custnm: '', agrpcd: '', agrpnm: '', bgrpcd: '', bgrpnm: '', maker: ''
+    updemp: authstore.userid, in_custcd: '', in_custnm: '', agrpcd: '', agrpnm: '', bgrpcd: '', bgrpnm: '', maker: '',
+    g_weight: 0, net_weight: 0, cbm: 0
   })
 }
 

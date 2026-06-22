@@ -62,8 +62,8 @@ const fetchDepts = async () => {
       cmpycd: String(props.cmpycd)
     })
     if (grid.value) {
-      // 💡 데이터 셋업 (인터셉터 언랩 로직이 없으므로 res.data 가 배열인지 확인)
-      const list = res.data.data || (Array.isArray(res.data) ? res.data : []);
+      // 💡 데이터 셋업 (인터셉터에서 추출된 res.data 사용)
+      const list = res.data || (Array.isArray(res.data) ? res.data : []);
       await grid.value.setData(list)
       setTimeout(() => grid.value?.redraw(true), 10)
     }

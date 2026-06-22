@@ -40,9 +40,9 @@
         <div class="d-flex align-items-center gap-2">
           <span class="fw-bold small text-secondary">▶ 발행일자:</span>
           <div class="d-flex align-items-center gap-1">
-            <input v-model="searchForm.ioymdfr" type="date" class="form-control form-control-sm" style="width: 140px;" />
+            <input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 140px;" />
             <span class="text-muted mx-1">~</span>
-            <input v-model="searchForm.ioymdto" type="date" class="form-control form-control-sm" style="width: 140px;" />
+            <input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
           </div>
         </div>
       </div>
@@ -86,8 +86,8 @@ const now = new Date()
 const searchForm = reactive<any>({
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm,
-  ioymdfr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
-  ioymdto: now.toISOString().substring(0, 10)
+  fromdt: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10),
+  todt: now.toISOString().substring(0, 10)
 })
 
 // 마감일 정보
@@ -111,8 +111,8 @@ async function fetchList() {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
       iogbn: '100',
-      ioymdfr: searchForm.ioymdfr.replace(/-/g, ''),
-      ioymdto: searchForm.ioymdto.replace(/-/g, ''),
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, ''),
       deptcd: searchForm.deptcd
     });
     grid?.setData(res.data.map((i: any) => ({ ...i, procyn: null })));
@@ -166,8 +166,8 @@ const toggleAllRows = () => {
 function initialize() {
   resetForm(searchForm);
   searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
-  searchForm.ioymdfr = new Date().toISOString().substring(0, 7) + '-01';
-  searchForm.ioymdto = now.toISOString().substring(0, 10);
+  searchForm.fromdt = new Date().toISOString().substring(0, 7) + '-01';
+  searchForm.todt = now.toISOString().substring(0, 10);
   grid?.clearData();
 }
 

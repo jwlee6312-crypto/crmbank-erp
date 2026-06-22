@@ -44,7 +44,7 @@
 			v-model="d_address_val"
 			type="text"
 			class="form-control form-control-sm"
-			style="width: 25%;"
+			style="flex: 0 0 35%;"
 			placeholder="상세주소 입력"
 		/>
 	</div>

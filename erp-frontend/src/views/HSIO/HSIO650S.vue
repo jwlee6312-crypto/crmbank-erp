@@ -96,11 +96,11 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
-  fymd: (route.query.fymd as string) || initfrymd,
+  fymd: (route.query.fymd as string) || initfromdt,
   tymd: (route.query.tymd as string) || initymd,
   whcd: (route.query.whcd as string) || '000',
   astkind: (route.query.astkind as string) || '120',
@@ -240,7 +240,7 @@ const navigateToOrigin = (row: any) => {
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { fymd: initfrymd, tymd: initymd, whcd: '000', astkind: '120', itemcd: '', itemnm: '', itsize: '', unit: '' })
+  Object.assign(searchData, { fymd: initfromdt, tymd: initymd, whcd: '000', astkind: '120', itemcd: '', itemnm: '', itsize: '', unit: '' })
   grid.value?.clearData()
   activeItemCount.value = 0
   totals.IN = 0; totals.OUT = 0; totals.stock = 0;

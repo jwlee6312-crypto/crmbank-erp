@@ -1,337 +1,294 @@
 <!--
 	=============================================================
-	프로그램명	: 보조원장-거래처
+	프로그램명	: 보조원장-거래처 (HASL550S)
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 특정 계정과목 및 거래처에 대한 상세 전표 내역 및 잔액 조회 (HASL030S 표준화 및 SQL 알리아스 적용)
+	설명        : 계정과목 및 거래처별 보조원장 조회 (Seed-Model 표준 적용)
 	=============================================================
 -->
 
 <template>
-	<app_alert :show="show_alert" :error="show_error" :message="alert_message" />
+	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
 	<div class="erp-container">
 		<!-- 🚀 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-person-lines-fill me-2 text-primary" style="font-size: 18px;"></i>
+				<i class="bi bi-journal-text me-2 text-primary" style="font-size: 18px;"></i>
+				회계관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
 				장부관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
 				<span class="text-primary fw-bolder">보조원장-거래처 (HASL550S)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
+				<button class="btn-erp btn-init" @click="initialize">
+					<i class="bi bi-arrow-clockwise"></i> 초기화
+				</button>
 				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
-				<button class="btn-erp btn-print" @click="print">
+				<button class="btn-erp btn-print" @click="printReport('Print')">
 					<i class="bi bi-printer"></i> 인쇄
+				</button>
+				<button class="btn-erp btn-excel" @click="exportExcel">
+					<i class="bi bi-file-earmark-excel"></i> 엑셀
 				</button>
 			</div>
 		</div>
 
 		<!-- 🔍 검색 조건 영역 -->
 		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm bg-white overflow-hidden">
-				<div class="card-body p-2 bg-light">
-					<div class="d-flex align-items-center flex-wrap gap-3 small">
-						<!-- 계정과목 -->
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>계정과목</span>
-							<div class="input-group input-group-sm" style="width: 250px;">
-								<input v-model="searchform.acctcd" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
-								<input v-model="searchform.acctnm" type="text" class="form-control" @keydown.enter="open_help('ACCT')" placeholder="계정명 입력" />
-								<button class="btn btn-outline-secondary px-2" @click="open_help('ACCT')"><i class="bi bi-search"></i></button>
-							</div>
-						</div>
-						<!-- 거래처 -->
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>거&nbsp;래&nbsp;처</span>
-							<div class="input-group input-group-sm" style="width: 250px;">
-								<input v-model="searchform.custcd" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
-								<input v-model="searchform.custnm" type="text" class="form-control" @keydown.enter="open_help('CUST')" placeholder="거래처명 입력" />
-								<button class="btn btn-outline-secondary px-2" @click="open_help('CUST')"><i class="bi bi-search"></i></button>
-							</div>
-						</div>
-						<!-- 회계일자 -->
-						<div class="d-flex align-items-center">
-							<span class="erp-label"><i class="bi bi-dot"></i>회계일자</span>
-							<div class="d-flex align-items-center gap-1">
-								<input v-model="searchform.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
-								<span>~</span>
-								<input v-model="searchform.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
-							</div>
-						</div>
-					</div>
-				</div>
+			<div class="card border shadow-sm overflow-hidden bg-light">
+				<table class="erp-table-full" style="table-layout: fixed;">
+					<colgroup>
+						<col style="width: 100px;" /><col />
+						<col style="width: 100px;" /><col />
+						<col style="width: 100px;" /><col />
+					</colgroup>
+					<tbody>
+						<tr>
+							<th class="text-center border-end required">계정과목</th>
+							<td class="bg-white border-end px-2">
+								<div class="input-group input-group-sm">
+									<input v-model="searchForm.acctcd" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
+									<input v-model="searchForm.acctnm" type="text" class="form-control" placeholder="계정 선택" @keydown.enter="handleOpenHelp('ACCT')" />
+									<button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('ACCT')"><i class="bi bi-search"></i></button>
+								</div>
+							</td>
+							<th class="text-center border-end required">거 래 처</th>
+							<td class="bg-white border-end px-2">
+								<div class="input-group input-group-sm">
+									<input v-model="searchForm.custcd" type="text" class="form-control text-center bg-light" style="max-width: 80px;" readonly />
+									<input v-model="searchForm.custnm" type="text" class="form-control" placeholder="거래처 선택" @keydown.enter="handleOpenHelp('CUST')" />
+									<button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('CUST')"><i class="bi bi-search"></i></button>
+								</div>
+							</td>
+							<th class="text-center border-end required">회계일자</th>
+							<td class="bg-white px-2">
+								<div class="d-flex align-items-center gap-1">
+									<input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" />
+									<span class="text-muted">~</span>
+									<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" />
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 		</div>
 
-		<!-- 📊 그리드 영역 -->
+		<!-- 📊 조회 그리드 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
+				<div class="card-header py-1 px-2 bg-light d-flex justify-content-between align-items-center border-bottom text-secondary">
+					<span class="fw-bold small"><i class="bi bi-list-ul me-1"></i> 원장 내역</span>
+					<span class="badge bg-primary" v-if="rowCount > 0">총 {{ rowCount }} 건</span>
+				</div>
                 <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="maingridref" class="tabulator-instance flex-grow-1"></div>
+                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
                 </div>
 			</div>
 		</div>
 	</div>
 
-	<modal_component v-model:visible="modal_visible" :modalProps="modal_props" />
+	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
-import { ref as _ref, reactive as _reactive, onMounted as _on_mounted } from 'vue'
-import { TabulatorFull as tabulator } from 'tabulator-tables'
+import { ref, reactive, onMounted, nextTick } from 'vue'
+import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import { useAlerts as use_alerts } from '@/composables/useAlerts'
+import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
-import { useAuthStore as use_auth_store } from '@/stores/authStore'
-import { useRouter as use_router, useRoute as use_route } from 'vue-router'
-import app_alert from '@/components/AppAlert.vue'
-import modal_component from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
+import { useAuthStore } from '@/stores/authStore'
+import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
+import Modal from '@/components/Modal.vue'
 
-const authstore = use_auth_store()
-const router = use_router()
-const route = use_route()
-const { showAlert: show_alert, showError: show_error, alertMessage: alert_message, vAlert: v_alert, vAlertError: v_alert_error } = use_alerts()
+const authStore = useAuthStore()
+const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
+const { resetForm } = useFormReset()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const { today, firstDayOfMonth } = getDate()
 
-// 💡 날짜 포맷팅 함수 (20260601 -> 2026-06-01)
-const format_date = (val: any) => {
-	if (!val || typeof val !== 'string' || val.length !== 8) return val
-	return `${val.substring(0, 4)}-${val.substring(4, 6)}-${val.substring(6, 8)}`
-}
-
-const now = new Date()
-const first_day = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
-const today = now.toISOString().substring(0, 10)
-
-const searchform = _reactive({
-	acctcd: (route.query.acctcd as string) || '',
-	acctnm: (route.query.acctnm as string) || '',
-	custcd: (route.query.custcd as string) || '',
-	custnm: (route.query.custnm as string) || '',
+// 🔍 검색 데이터
+const searchForm = reactive({
+	acctcd: '',
+	acctnm: '',
+	custcd: '',
+	custnm: '',
 	custgbn: '',
-	frymd: format_date(route.query.frymd) || first_day,
-	toymd: format_date(route.query.toymd) || today
+	fromdt: firstDayOfMonth,
+	todt: today
 })
 
-const maingridref = _ref<HTMLDivElement | null>(null)
-let maingrid: tabulator | null = null
+const mainGridRef = ref<HTMLDivElement | null>(null)
+let mainGrid: Tabulator | null = null
+const rowCount = ref(0)
+
+const formatMoney = (val: any) => Number(val || 0).toLocaleString()
+const formatYmdShort = (v: string) => v && v.length === 8 ? `${v.substring(2, 4)}.${v.substring(4, 6)}.${v.substring(6, 8)}` : v
 
 const search = async () => {
-	if (!searchform.acctcd) return v_alert_error('계정과목을 선택해 주십시오.')
-	if (!searchform.custcd) return v_alert_error('거래처를 선택해 주십시오.')
+	if (!searchForm.acctcd) return vAlertError('계정과목을 선택하십시오.')
+	if (!searchForm.custcd) return vAlertError('거래처를 선택하십시오.')
 
 	try {
 		const res = await api.post('/api/hasl/HASL_550S_STR', {
-			cmpycd: authstore.cmpycd,
-			acctcd: searchform.acctcd,
-			custcd: searchform.custcd,
-			frymd: searchform.frymd.replace(/-/g, ''),
-			toymd: searchform.toymd.replace(/-/g, '')
+			cmpycd: authStore.cmpycd,
+			acctcd: searchForm.acctcd,
+			custcd: searchForm.custcd,
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, '')
 		})
 
-		// 💡 소문자 정규화: SQL 알리아스(ACCTYMD, DESCNM, dbamt, cramt 등)를 소문자로 변환하여 일관된 접근 지원
-		const raw_data = (res.data || []).map((item: any) => {
-			return Object.fromEntries(
-				Object.entries(item).map(([k, v]) => [k.toLowerCase(), v])
-			)
-		})
+		const rawData = res.data || []
+		const processedData: any[] = []
+		let janAmt = 0
 
-		const processed_data: any[] = []
+		if (rawData.length > 0) {
+			// 기초잔액 로직 (ASP 소스 분석 반영)
+			const baseRow = rawData[0]
+			const dbMmTot = Number(baseRow.col8 || 0)
+			const crMmTot = Number(baseRow.col9 || 0)
+			const dbcr = baseRow.col10
+			janAmt = (dbcr === 'D') ? (dbMmTot - crMmTot) : (crMmTot - dbMmTot)
 
-		if (raw_data.length > 0) {
-			// 첫 번째 행 (전기이월/시작잔액 행)
-			let carry_row = raw_data[0]
-			let db_mm_tot = Number(carry_row.dbamt || 0)
-			let cr_mm_tot = Number(carry_row.cramt || 0)
-			let dbcr = carry_row.dbcr // 'D' or 'C'
-			let jan_amt = dbcr === 'D' ? (db_mm_tot - cr_mm_tot) : (cr_mm_tot - db_mm_tot)
-
-			processed_data.push({
+			processedData.push({
 				acctymd: '',
-				descnm: carry_row.descnm,
+				descnm: baseRow.col1,
 				slipno: '',
-				dbamt: db_mm_tot,
-				cramt: cr_mm_tot,
-				janamt: jan_amt,
-				is_summary: true
+				dbamt: dbMmTot,
+				cramt: crMmTot,
+				janamt: janAmt,
+				temp: '',
+				is_special: true
 			})
 
-			let i = 1
-			while (i < raw_data.length) {
-				let current_ym = String(raw_data[i].acctymd).substring(0, 6)
-				let db_mm_amt = 0; let cr_mm_amt = 0;
+			// 전표 데이터 루프
+			let monthlyDb = 0
+			let monthlyCr = 0
+			let currentYm = rawData[0].col0 ? rawData[0].col0.substring(0, 6) : ''
 
-				while (i < raw_data.length && String(raw_data[i].acctymd).substring(0, 6) === current_ym) {
-					const row = raw_data[i]
-					const db = Number(row.dbamt || 0)
-					const cr = Number(row.cramt || 0)
+			for (let i = 0; i < rawData.length; i++) {
+				const row = rawData[i]
+				if (!row.col0) continue // 기초정보행 제외
 
-					if (dbcr === 'D') jan_amt += (db - cr)
-					else jan_amt += (cr - db)
+				const rowYm = row.col0.substring(0, 6)
 
-					// 💡 알리아스 기반 세부내역 조립
-					let details: string[] = []
-					if (row.deptnm) details.push(String(row.deptnm).trim())
-					if (row.subnm) details.push(String(row.subnm).trim())
-					if (row.mgtno) details.push(String(row.mgtno).trim())
-					if (row.bugtnm) details.push(String(row.bugtnm).trim())
-					if (row.prjnm) details.push(String(row.prjnm).trim())
-					if (row.sname) details.push(String(row.sname).trim())
-					if (row.issubank) details.push('은행: ' + String(row.issubank).trim())
-					if (row.issuman) details.push('발행: ' + String(row.issuman).trim())
-
-					// 서비스료, 봉사료
-					if (Number(row.srvamt || 0) !== 0) details.push('서비스료: ' + new Intl.NumberFormat().format(row.srvamt))
-					if (Number(row.bongamt || 0) !== 0) details.push('봉사료: ' + new Intl.NumberFormat().format(row.bongamt))
-
-					// 외화 정보
-					if (row.frgnyn === 'Y') {
-						if (row.frgnnm) details.push(String(row.frgnnm).trim())
-						if (Number(row.frgnrate || 0) !== 0) details.push('환율: ' + new Intl.NumberFormat().format(row.frgnrate))
-						if (Number(row.frgnamt || 0) !== 0) details.push('외화: ' + new Intl.NumberFormat().format(row.frgnamt))
-					}
-
-					processed_data.push({
-						acctymd: row.acctymd,
-						descnm: row.descnm + (row.sslipno && String(row.sslipno).trim() !== '' ? ` (${row.sslipno})` : ''),
-						slipno: row.slipno,
-						dbamt: db,
-						cramt: cr,
-						janamt: jan_amt,
-						detail_str: details.join(' | '),
-						is_data: true
-					})
-
-					db_mm_amt += db
-					cr_mm_amt += cr
-					i++
+				// 월계/누계 처리 (ASP Do While 패턴 구현)
+				if (currentYm !== rowYm) {
+					processedData.push({ descnm: '월  계', dbamt: monthlyDb, cramt: monthlyCr, is_subtotal: true })
+					monthlyDb = 0; monthlyCr = 0
+					currentYm = rowYm
 				}
 
-				// 월계
-				processed_data.push({
-					acctymd: '', descnm: '월   계', dbamt: db_mm_amt, cramt: cr_mm_amt, janamt: null, is_monthly: true
+				const dbamt = Number(row.col8 || 0)
+				const cramt = Number(row.col9 || 0)
+
+				if (row.col10 === 'D') janAmt += (dbamt - cramt)
+				else janAmt += (cramt - dbamt)
+
+				// 세부내역(TEMP) 조립
+				let temp = row.col4 || '' // Dept
+				if (row.col3) temp += ` | ${row.col3}` // Cust
+				if (row.col7) temp += ` | ${row.col7}` // MgtNo
+				if (row.col5) temp += ` | ${row.col5}` // Bugt
+				if (row.col6) temp += ` | ${row.col6}` // Prj
+
+				processedData.push({
+					acctymd: row.col0,
+					descnm: row.col1 + (row.col11 ? ` (${row.col11})` : ''),
+					slipno: row.col2,
+					dbamt: dbamt,
+					cramt: cramt,
+					janamt: janAmt,
+					temp: temp
 				})
 
-				db_mm_tot += db_mm_amt
-				cr_mm_tot += cr_mm_amt
-
-				// 누계
-				processed_data.push({
-					acctymd: '', descnm: '누   계', dbamt: db_mm_tot, cramt: cr_mm_tot, janamt: jan_amt, is_total: true
-				})
+				monthlyDb += dbamt
+				monthlyCr += cramt
 			}
+
+			// 마지막 월계/누계
+			processedData.push({ descnm: '월  계', dbamt: monthlyDb, cramt: monthlyCr, is_subtotal: true })
 		}
 
-		maingrid?.setData(processed_data)
-		if (processed_data.length > 0) v_alert('조회되었습니다.')
-		else v_alert('데이터가 존재하지 않습니다.')
-	} catch (e) {
-		v_alert_error('조회 중 오류 발생')
-	}
+		mainGrid?.setData(processedData)
+		rowCount.value = rawData.length
+		vAlert('조회되었습니다.')
+	} catch (e) { vAlertError('조회 실패') }
 }
 
-// 팝업 설정
-const modal_visible = _ref(false)
-const modal_props = _reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-function open_help(type: 'ACCT' | 'CUST') {
+const handleOpenHelp = (type: string) => {
 	if (type === 'ACCT') {
-		Object.assign(modal_props, {
-			title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'acctnm',
-			data: { gubun: 'A0', cmpycd: authstore.cmpycd, search: searchform.acctnm },
-			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 180 }, { title: '구분', field: 'TYPESUB', width: 50, visible: false }],
-			onConfirm: (d: any) => {
-				searchform.acctcd = d.acctcd; searchform.acctnm = d.acctnm; searchform.custgbn = d.TYPESUB || '';
-				searchform.custcd = ''; searchform.custnm = '';
-			}
-		})
-	} else {
-		Object.assign(modal_props, {
-			title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'custnm',
-			data: { gubun: 'c4', cmpycd: 'coit', search: searchform.custnm },
-			columns: [{ title: '코드', field: 'custcd', width: 100 }, { title: '거래처명', field: 'custnm', width: 250 }],
-			onConfirm: (d: any) => { searchform.custcd = d.custcd; searchform.custnm = d.custnm; search() }
-		})
+		openHelp('ACCT', (d: any) => {
+			searchForm.acctcd = d.acctcd;
+			searchForm.acctnm = d.acctnm;
+			searchForm.custgbn = d.typesub || ''; // ASP TYPESUB 매핑
+			searchForm.custcd = ''; searchForm.custnm = '';
+		}, { code: searchForm.acctnm }) // SEARCH 대신 code 사용
+	} else if (type === 'CUST') {
+		if (!searchForm.acctcd) return vAlertError('계정과목을 먼저 선택하십시오.')
+		openHelp('CUST', (d: any) => {
+			searchForm.custcd = d.custcd;
+			searchForm.custnm = d.custnm;
+		}, { custgbn: searchForm.custgbn, code: searchForm.custnm }) // SEARCH 대신 code 사용
 	}
-	modal_visible.value = true
 }
 
-const print = () => {
-	if (!searchform.acctcd || !searchform.custcd) return v_alert_error('계정 및 거래처를 먼저 선택하세요.')
-	const params = `acctcd=${searchform.acctcd}&acctnm=${searchform.acctnm}&custcd=${searchform.custcd}&custnm=${searchform.custnm}&frymd=${searchform.frymd.replace(/-/g, '')}&toymd=${searchform.toymd.replace(/-/g, '')}&PRTGU=1`
-	window.open(`/api/hasl/HASL_550P?${params}`, 'Print', 'width=800,height=800')
+const initialize = () => {
+	resetForm(searchForm)
+	searchForm.fromdt = firstDayOfMonth
+	searchForm.todt = today
+	mainGrid?.clearData()
+	rowCount.value = 0
 }
 
-const go_slip_detail = (slip_no: string) => {
-	if (!slip_no || slip_no.length < 10) return
-	const ymd = slip_no.substring(0, 8); const no = slip_no.substring(9);
-	router.push({ path: '/HASL110U', query: { slipymd: ymd, slipno: no } })
+const printReport = (prtgu: string) => {
+	if (!searchForm.acctcd || !searchForm.custcd) return vAlertError('조회 조건을 완료하십시오.')
+	const url = `/api/hasl/HASL_550P?ACCTCD=${searchForm.acctcd}&ACCTNM=${searchForm.acctnm}&CUSTCD=${searchForm.custcd}&CUSTNM=${searchForm.custnm}&FRYMD=${searchForm.fromdt}&TOYMD=${searchForm.todt}&PRTGU=${prtgu}`
+	window.open(url, 'ledger_print', 'width=800,height=800,scrollbars=yes')
 }
 
-_on_mounted(async () => {
-	if (maingridref.value) {
-		maingrid = new tabulator(maingridref.value, {
+const exportExcel = () => {
+	mainGrid?.download("xlsx", `보조원장_거래처_${today}.xlsx`)
+}
+
+onMounted(() => {
+	if (mainGridRef.value) {
+		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
+				{ title: "일자", field: "acctymd", width: 100, hozAlign: "center", formatter: (c) => formatYmdShort(c.getValue()) },
 				{
-					title: "일자", field: "acctymd", width: 90, hozAlign: "center",
-					formatter: (cell) => {
-						const v = cell.getValue()
-						return v && v.length === 8 ? `${v.substring(2, 4)}.${v.substring(4, 6)}.${v.substring(6, 8)}` : ''
+					title: "적요 / 세부내역", field: "descnm", minWidth: 300,
+					formatter: (c) => {
+						const d = c.getData();
+						if (d.is_special || d.is_subtotal) return `<span class="fw-bold">${d.descnm}</span>`;
+						return `<div class="d-flex flex-column">
+									<div class="fw-bold text-dark">${d.descnm}</div>
+									<div class="small text-muted opacity-75">${d.temp || ''}</div>
+								</div>`
 					}
 				},
-				{
-					title: "적요 / 세부내역", field: "descnm", widthGrow: 2.5,
-					formatter: (cell) => {
-						const d = cell.getData()
-						if (d.is_data) return `<div>${cell.getValue()}</div><div class="small text-secondary fw-normal mt-1" style="font-size: 11px;">${d.detail_str}</div>`
-						return cell.getValue()
-					}
-				},
-				{
-					title: "전표번호", field: "slipno", width: 120, hozAlign: "center",
-					formatter: (cell) => {
-						const v = cell.getValue()
-						return v ? `<span class="text-primary text-decoration-underline cursor-pointer">${v}</span>` : ''
-					},
-					cellClick: (e, cell) => { go_slip_detail(cell.getValue()) }
-				},
+				{ title: "전표번호", field: "slipno", width: 130, hozAlign: "center", cssClass: "text-primary cursor-pointer" },
 				{ title: "차변", field: "dbamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "대변", field: "cramt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "잔액", field: "janamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
+				{ title: "잔액", field: "janamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-subtle fw-bold" }
 			],
 			rowFormatter: (row) => {
 				const d = row.getData()
-				if (d.is_monthly || d.is_total || d.is_summary) { row.getElement().style.backgroundColor = "#f8f9fa"; row.getElement().style.fontWeight = "bold"; }
+				if (d.is_special) row.getElement().style.backgroundColor = "#f8f9fa"
+				if (d.is_subtotal) row.getElement().style.backgroundColor = "#eef2ff"
 			}
 		})
-	}
-
-	if (searchform.acctcd && searchform.custcd) {
-		// 💡 전달받은 명칭이 있으면 즉시 조회 실행 (404 오류 방지 및 최적화)
-		if (searchform.acctnm && searchform.custnm) {
-			search()
-		} else {
-			try {
-				const res = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authstore.cmpycd, gubun: 'A0', search: '', acctcd: searchform.acctcd })
-				if (res.data?.length > 0) {
-					searchform.acctnm = res.data[0].col0 || res.data[0].acctnm; searchform.custgbn = res.data[0].TYPESUB
-					if (searchform.custcd) {
-						const res_cust = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authstore.cmpycd, gubun: 'C0', TYPESUB: searchform.custgbn, search: searchform.custcd })
-						if (res_cust.data?.length > 0) { searchform.custnm = res_cust.data[0].col0 || res_cust.data[0].custnm; search() }
-					}
-				}
-			} catch (e) {}
-		}
 	}
 })
 </script>
 
 <style scoped>
-.erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
-:deep(.tabulator-cell) { border-right: 1px solid #dee2e6 !important; }
-:deep(.tabulator-header .tabulator-col) { border-right: 1px solid #dee2e6 !important; background-color: #f8f9fa !important; }
+.tabulator-instance { font-size: 13px; }
+.bg-light-subtle { background-color: #f8f9fa !important; }
 </style>

@@ -278,19 +278,34 @@ async function save() {
   const details = grid2?.getData().filter((r: any) => r._status) || [];
   if (!details.length && !form_02.iono) return vAlertError('항목을 추가하세요.');
 
+  if (!confirm('저장하시겠습니까?')) return
+
   try {
-    const mst = { ...form_02, actkind: form_02.iono ? 'U' : 'A', ioymd: form_02.ioymd.replace(/-/g, ''), userid: authStore.userid };
-    const mRes = await api.post('/api/hsio/HSIO_190U_STR', mst);
-    if (mRes.data?.length) {
-      const ioym = mRes.data[0].ioym; const iono = mRes.data[0].iono;
-      for (const item of details) {
-        await api.post('/api/hsio/HSIO_191U_STR', {
-          ...item, actkind: item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U'),
-          cmpycd: authStore.cmpycd, ioym, iono, deptcd: form_02.deptcd, whcd: form_02.whcd, ioymd: mst.ioymd, userid: authStore.userid
-        });
-      }
-      vAlert('저장되었습니다.'); search();
+    // 🚀 [Service-Base] 백엔드 통합 저장 서비스 호출 (트랜잭션 보장)
+    const payload = {
+      mst: {
+        ...form_02,
+        actkind: form_02.iono ? 'U' : 'A',
+        ioymd: form_02.ioymd.replace(/-/g, '')
+      },
+      dtl: details.map(item => ({
+        ...item,
+        actkind: item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U')
+      }))
+    };
+
+    const res = await api.post('/api/hsio/HSIO_190U_SAVE', payload);
+
+    if (res.data?.status === 'success') {
+      vAlert('저장되었습니다.');
+      search();
+    } else {
+      throw new Error(res.data?.message || '저장 중 오류가 발생했습니다.');
     }
+  } catch (e: any) {
+    vAlertError(e.message || '저장 실패');
+  }
+}
   } catch (e) { vAlertError('저장 실패'); }
 }
 

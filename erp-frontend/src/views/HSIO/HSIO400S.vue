@@ -43,9 +43,9 @@
 								<th class="required">입금일자</th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
-										<input v-model="searchForm.frymd" type="date" class="form-control" />
+										<input v-model="searchForm.fromdt" type="date" class="form-control" />
 										<span class="text-muted">~</span>
-										<input v-model="searchForm.toymd" type="date" class="form-control" />
+										<input v-model="searchForm.todt" type="date" class="form-control" />
 									</div>
 								</td>
 								<th>영업사원</th>
@@ -91,10 +91,8 @@
 						<span class="text-muted text-primary fw-bold">합계: {{ formatMoney(totalSum) }}</span>
 					</div>
 				</div>
-				<div class="card-body p-0 flex-grow-1 overflow-hidden bg-white">
-                    <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                        <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                    </div>
+				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+                    <div ref="mainGridRef" class="tabulator-full-height" />
 				</div>
 			</div>
 		</div>
@@ -111,19 +109,17 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { getDate } from '@/composables/useDate'
 import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-
-const now = new Date()
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
-const lastDay = now.toISOString().substring(0, 10)
+const { firstDay, today } = getDate()
 
 const searchForm = reactive({
 	deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-	frymd: firstDay, toymd: lastDay, salsemp: '000',
+	fromdt: firstDay, todt: today, salsemp: '000',
 	custcdfr: '', custnmfr: '', custcdto: '', custnmto: ''
 })
 
@@ -139,8 +135,8 @@ async function fetchList() {
 		const res = await api.post('/api/comm/executeHS00_000S_STR', {
 			cmpycd: authStore.cmpycd,
 			deptcd: searchForm.deptcd,
-			frymd: searchForm.frymd.replace(/-/g, ''),
-			toymd: searchForm.toymd.replace(/-/g, ''),
+			fromdt: searchForm.fromdt.replace(/-/g, ''),
+			todt: searchForm.todt.replace(/-/g, ''),
 			custcdfr: searchForm.custcdfr,
 			custcdto: searchForm.custcdto,
 			salsemp: searchForm.salsemp
@@ -154,7 +150,7 @@ async function fetchList() {
 
 function initialize() {
 	resetForm(searchForm)
-	searchForm.frymd = firstDay; searchForm.toymd = lastDay; searchForm.salsemp = '000'
+	searchForm.fromdt = firstDay; searchForm.todt = today; searchForm.salsemp = '000'
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm
 	mainGrid?.clearData(); listCount.value = 0; totalSum.value = 0
 }
@@ -189,7 +185,12 @@ onMounted(async () => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
 			placeholder: '조회된 데이터가 없습니다.',
-			columnDefaults: { headerHozAlign: 'center', headerSort: false },
+			columnDefaults: {
+				headerHozAlign: 'center',
+				headerSort: false,
+				hozAlign: 'right', // 🚀 기본값 우측 정렬
+				vertAlign: 'middle'
+			},
 			columns: [
 				{ title: '거래처 명칭', field: 'custnm', minWidth: 200, widthGrow: 2, cssClass: 'fw-bold' },
 				{ title: '현금', field: 'cashamt', hozAlign: 'right', formatter: "money", formatterParams: { precision: 0 }, width: 110 },
@@ -202,8 +203,12 @@ onMounted(async () => {
 			]
 		})
 	}
-	api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd } }).then(r => {
+	api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' } }).then(r => {
 		if (r.data) empOptions.value = r.data.map((i: any) => ({ userid: String(i.userid || i.userid || Object.values(i)[0]).trim(), usernm: String(i.usernm || i.usernm || Object.values(i)[1]).trim() }))
 	})
 })
 </script>
+
+<style scoped>
+.tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+</style>

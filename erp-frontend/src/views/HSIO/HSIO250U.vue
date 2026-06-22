@@ -107,7 +107,11 @@
                       </div>
                     </td>
                     <th class="bg-light text-center">작업자</th>
-                    <td><input v-model="formData.usernm" class="form-control bg-light text-center" readonly /></td>
+                    <td>
+                      <select v-model="formData.userid" class="form-select">
+                        <option v-for="user in userData" :key="user.userid" :value="user.userid">{{ user.usernm }}</option>
+                      </select>
+                    </td>
                     <th class="bg-light text-center">특기사항</th>
                     <td colspan="3"><input v-model="formData.remark" class="form-control" :readonly="isClosed" /></td>
                   </tr>
@@ -149,10 +153,10 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import { useCommonHelp } from '@/composables/useCommonHelp'
 import { getDate } from '@/composables/useDate'
 import { useSearchStore } from '@/stores/useSearchStore'
 import { useRoute } from 'vue-router'
+import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const searchStore = useSearchStore()
@@ -160,18 +164,21 @@ const route = useRoute()
 const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 // [1] 데이터 모델링
 const searchForm = reactive({ fromdt: firstDay, todt: today, schcustnm: '' })
 const formData = reactive<any>({
   actkind: 'S0', cmpycd: authStore.cmpycd, ioym: today.substring(0, 7).replace('-', ''), iono: '',
   ioymd: today, deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  custcd: '', custnm: '', whcd: '100', remark: '', usernm: authStore.usernm, pkunityn: 'N', astkind: '2'
+  custcd: '', custnm: '', whcd: '100', remark: '', userid: authStore.userid, usernm: authStore.usernm, pkunityn: 'N', astkind: '2'
 })
 
 const closingInfo = reactive({ sclsym: '' })
 const whOptions = ref<any[]>([])
+const userData = ref<any[]>([])
 
 // [2] 그리드 관리
 const tableRef1 = ref<HTMLDivElement | null>(null)
@@ -257,17 +264,52 @@ const calcRow = (row: any) => {
 
 const handleOpenHelp = (type: string, target?: any) => {
   if (isClosed.value) return;
-  if (type === 'DEPT') openHelp('DEPT', (d) => { formData.deptcd = d.deptcd; formData.deptnm = d.deptnm });
-  else if (type === 'CUST') openHelp('CUST', (d) => { formData.custcd = d.custcd; formData.custnm = d.custnm });
-  else if (type === 'ITEM') {
+
+  if (type === 'DEPT') {
+    Object.assign(modalProps, {
+      title: '입고부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: '', codenm: formData.deptnm, remark: '' },
+      columns: [
+        { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => { formData.deptcd = d.deptcd; formData.deptnm = d.deptnm }
+    })
+    modalVisible.value = true
+  } else if (type === 'CUST') {
+    Object.assign(modalProps, {
+      title: '매입처 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      data: { gubun: 'C4', cmpycd: authStore.cmpycd, code: '', codenm: formData.custnm, remark: '' },
+      columns: [
+        { title: '거래처코드', field: 'custcd', width: 100, hozAlign: 'center' },
+        { title: '거래처명', field: 'custnm', width: 200 }
+      ],
+      onConfirm: (d: any) => { formData.custcd = d.custcd; formData.custnm = d.custnm }
+    })
+    modalVisible.value = true
+  } else if (type === 'ITEM') {
     if (!formData.custcd) return vAlertError('매입처를 먼저 선택하세요.');
-    openHelp('ITEM', (d) => {
-      target.update({
-        itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit || d.unitnm,
-        price: d.incost || d.price || 0, ioqty: 1, ioamt: d.incost || 0, upkind: 'A', _STATE: 'NEW'
-      });
-      calcRow(target);
-    });
+    Object.assign(modalProps, {
+      title: '품목 선택',
+      path: '/api/hs00/HS00_000S_STR',
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', code: '', codenm: '', remark: '' },
+      columns: [
+        { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+        { title: '품목명', field: 'itemnm', width: 200 },
+        { title: '규격', field: 'itsize', width: 150 },
+        { title: '단위', field: 'unitnm', width: 80, hozAlign: 'center' }
+      ],
+      onConfirm: (d: any) => {
+        target.update({
+          itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit || d.unitnm,
+          price: d.incost || d.price || 0, ioqty: 1, ioamt: d.incost || 0, upkind: 'A', _STATE: 'NEW'
+        });
+        calcRow(target);
+      }
+    })
+    modalVisible.value = true
   }
 }
 
@@ -280,9 +322,9 @@ const handleRowAction = (row: any) => {
 
 async function search() {
   try {
-    const params = { actkind: 'S0', cmpycd: authStore.cmpycd, frymd: searchForm.fromdt.replace(/-/g, ''), toymd: searchForm.todt.replace(/-/g, ''), custnm: searchForm.schcustnm };
+    const params = { actkind: 'S0', cmpycd: authStore.cmpycd, fromdt: searchForm.fromdt.replace(/-/g, ''), todt: searchForm.todt.replace(/-/g, ''), custnm: searchForm.schcustnm };
     const res = await api.post('/api/hsio/HSIO_250U_STR', params);
-    grid1?.setData(res.data.data || res.data);
+    grid1?.setData(res.data || res.data);
     vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }
 }
@@ -291,7 +333,7 @@ async function fetchDetail(row: any) {
   Object.assign(formData, row);
   try {
     const res = await api.post('/api/hsio/HSIO_251U_STR', { ...formData, actkind: 'S0' });
-    setGridDataWithPadding((res.data.data || res.data).map((i: any) => ({ ...i, upkind: 'U' })));
+    setGridDataWithPadding((res.data || res.data).map((i: any) => ({ ...i, upkind: 'U' })));
   } catch (e) { vAlertError('상세 로드 실패'); }
 }
 
@@ -337,6 +379,9 @@ onMounted(async () => {
      .then(r => whOptions.value = r.data.map((i: any) => ({ code: i.whcd || Object.values(i)[0], cdnm: i.whnm || Object.values(i)[1] })));
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym;
+  });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' }).then(r => {
+    userData.value = r.data;
   });
   initGrids(); initialize();
 })

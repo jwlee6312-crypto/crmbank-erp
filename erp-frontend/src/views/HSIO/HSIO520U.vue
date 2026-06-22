@@ -36,9 +36,9 @@
                 <th class="required">정산일자</th>
                 <td>
                   <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="ioymdfr" type="date" class="form-control form-control-sm" />
+                    <input v-model="fromdt" type="date" class="form-control form-control-sm" />
                     <span class="px-1">~</span>
-                    <input v-model="ioymdto" type="date" class="form-control form-control-sm" />
+                    <input v-model="todt" type="date" class="form-control form-control-sm" />
                   </div>
                 </td>
                 <th>거&nbsp;&nbsp;래&nbsp;&nbsp;처</th>
@@ -105,19 +105,19 @@ const { resetForm } = useFormReset()
 
 const now = new Date()
 const initymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-const initfrymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
+const initfromdt = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}01`
 
 // 1. 상태 관리
 const searchData = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  ioymdfr: initfrymd, ioymdto: initymd, custcd: '', custnm: ''
+  fromdt: initfromdt, todt: initymd, custcd: '', custnm: ''
 })
 
 const closingInfo = reactive({ clsymd: '', sclsym: '' })
 const selectedCust = reactive({ custcd: '', custnm: '' })
 
-const ioymdfr = computed({ get: () => formatDateString(searchData.ioymdfr, '-'), set: (v) => searchData.ioymdfr = v.replace(/-/g, '') })
-const ioymdto = computed({ get: () => formatDateString(searchData.ioymdto, '-'), set: (v) => searchData.ioymdto = v.replace(/-/g, '') })
+const fromdt = computed({ get: () => formatDateString(searchData.fromdt, '-'), set: (v) => searchData.fromdt = v.replace(/-/g, '') })
+const todt = computed({ get: () => formatDateString(searchData.todt, '-'), set: (v) => searchData.todt = v.replace(/-/g, '') })
 
 const custGridElement = ref<HTMLElement | null>(null)
 const settleGridElement = ref<HTMLElement | null>(null)
@@ -173,7 +173,7 @@ const initGrids = () => {
 
 // 마감 및 상태 체크
 const checkCanCancel = (row: any) => {
-  const jsanymd = row.jsanymd || row.JSANYMD || ''
+  const jsanymd = row.jsanymd || row.jsanymD || ''
   const jsanyym = String(jsanymd).substring(0, 6)
   const slipymd = row.slipymd || row.SLIPYMD || ''
   const prtymd = row.prtymd || row.PRTYMD || ''
@@ -192,8 +192,8 @@ async function fetchCustomerList() {
       actkind: 'S1',
       cmpycd: authStore.cmpycd,
       gubun: '200',
-      ioymdfr: searchData.ioymdfr,
-      ioymdto: searchData.ioymdto,
+      fromdt: searchData.fromdt,
+      todt: searchData.todt,
       deptcd: searchData.deptcd,
       custcd: searchData.custcd
     })
@@ -211,8 +211,8 @@ async function fetchSettlementList() {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
       gubun: '200',
-      ioymdfr: searchData.ioymdfr,
-      ioymdto: searchData.ioymdto,
+      fromdt: searchData.fromdt,
+      todt: searchData.todt,
       deptcd: searchData.deptcd,
       custcd: selectedCust.custcd
     })
@@ -244,8 +244,8 @@ async function cancelSettlement() {
         actkind: 'D0',
         cmpycd: authStore.cmpycd,
         gubun: '200',
-        ioymdfr: searchData.ioymdfr,
-        ioymdto: searchData.ioymdto,
+        fromdt: searchData.fromdt,
+        todt: searchData.todt,
         deptcd: searchData.deptcd,
         custcd: selectedCust.custcd,
         jsanym: item.jsanym,
@@ -268,7 +268,7 @@ async function cancelSettlement() {
 
 function initialize() {
   resetForm(searchData)
-  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, ioymdfr: initfrymd, ioymdto: initymd })
+  Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, fromdt: initfromdt, todt: initymd })
   selectedCust.custcd = ''
   selectedCust.custnm = ''
   custGrid?.clearData()

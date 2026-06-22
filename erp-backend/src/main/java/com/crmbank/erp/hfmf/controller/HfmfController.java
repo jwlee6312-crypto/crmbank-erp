@@ -5,13 +5,16 @@ import com.crmbank.erp.hfmf.mapper.HfmfMapper;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.session.SqlSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -20,55 +23,127 @@ import java.util.stream.Collectors;
 public class HfmfController {
 
     private final HfmfMapper hfmfMapper;
+    private final SqlSession sqlSession;
+    private final JdbcTemplate jdbcTemplate;
 
-    private void injectSession(Map<String, Object> params, HttpSession session) {
-        Map<String, Object> upperMap = new HashMap<>();
-        params.forEach((k, v) -> upperMap.put(k.toUpperCase(), v));
-        params.clear();
-        params.putAll(upperMap);
-
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user != null) {
-            params.putIfAbsent("cmpycd", user.getCmpycd());
-            params.putIfAbsent("userid", user.getUserid());
-            params.put("updemp", user.getUserid());
-        }
-        
-        params.replaceAll((key, value) -> {
-            if (value == null) return null;
-            String str = value.toString().trim();
-            return str.isEmpty() ? null : str;
-        });
-    }
-
+    @Transactional(rollbackFor = Exception.class)
     @PostMapping("/{procedure}")
-    public ResponseEntity<List<Map<String, Object>>> executeProcedure(
+    public ResponseEntity<?> executeProcedure(
             @PathVariable String procedure,
             @RequestBody Map<String, Object> params,
             HttpSession session) {
-        
-        injectSession(params, session);
-        log.info("🚀 [HFMF] {} 호출: {}", procedure.toUpperCase(), params);
-        
-        switch (procedure.toUpperCase()) {
-            case "FMF1020U_STR": return ResponseEntity.ok(hfmfMapper.FMF1020U_STR(params));
-            case "FMF1040U_STR": return ResponseEntity.ok(hfmfMapper.FMF1040U_STR(params));
-            case "FMF1050U_STR": return ResponseEntity.ok(hfmfMapper.FMF1050U_STR(params));
-            case "FMF2010U_STR": return ResponseEntity.ok(hfmfMapper.FMF2010U_STR(params));
-            case "FMF2020U_STR": return ResponseEntity.ok(hfmfMapper.FMF2020U_STR(params));
-            case "FMF2060R_STR": return ResponseEntity.ok(hfmfMapper.FMF2060R_STR(params)); 
-            case "FMF2070U_STR": return ResponseEntity.ok(hfmfMapper.FMF2070U_STR(params));
-            case "FMF2110U_STR": return ResponseEntity.ok(hfmfMapper.FMF2110U_STR(params));
-            case "FMF2120R_STR": return ResponseEntity.ok(hfmfMapper.FMF2120R_STR(params));
-            case "FMF2140R_STR": return ResponseEntity.ok(hfmfMapper.FMF2140R_STR(params));
-            case "FMF2150R_STR": return ResponseEntity.ok(hfmfMapper.FMF2150R_STR(params));
-            case "FMF2160R_STR": return ResponseEntity.ok(hfmfMapper.FMF2160R_STR(params));
-            case "FMF2180R_STR": return ResponseEntity.ok(hfmfMapper.FMF2180R_STR(params));
-            case "FMF2190R_STR": return ResponseEntity.ok(hfmfMapper.FMF2190R_STR(params));
-            case "FMF2210R_STR": return ResponseEntity.ok(hfmfMapper.FMF2210R_STR(params));
-            case "FMF3010U_STR": return ResponseEntity.ok(hfmfMapper.FMF3010U_STR(params));
-            default:
-                return ResponseEntity.notFound().build();
+
+        if (session.getAttribute("user_session") == null) {
+            return ResponseEntity.status(401).build();
         }
+
+        injectSession(params, session);
+        String proc = procedure.toUpperCase();
+        String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
+
+        try {
+            fillMissingParameters(proc, params);
+            log.info("🚀 [hfmf] 실행 요청: {}", proc);
+
+            List<Map<String, Object>> result;
+            if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
+                String positionalSql = buildPositionalSql(proc, params);
+                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+
+                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    List<Object> values = new ArrayList<>();
+                    int colCount = rs.getMetaData().getColumnCount();
+                    for (int i = 1; i <= colCount; i++) {
+                        Object val = rs.getObject(i);
+                        String colName = rs.getMetaData().getColumnLabel(i); 
+                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                        row.put(colName.toLowerCase(), val == null ? "" : val);
+                        values.add(val == null ? "" : val);
+                    }
+                    row.put("returnKeyValue", values); 
+                    return row;
+                });
+                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+            } else {
+                switch (proc) {
+                    case "FMF1020U_STR": result = hfmfMapper.FMF1020U_STR(params); break;
+                    case "FMF1040U_STR": result = hfmfMapper.FMF1040U_STR(params); break;
+                    case "FMF1050U_STR": result = hfmfMapper.FMF1050U_STR(params); break;
+                    case "FMF2010U_STR": result = hfmfMapper.FMF2010U_STR(params); break;
+                    case "FMF2020U_STR": result = hfmfMapper.FMF2020U_STR(params); break;
+                    case "FMF2060R_STR": result = hfmfMapper.FMF2060R_STR(params); break; 
+                    case "FMF2070U_STR": result = hfmfMapper.FMF2070U_STR(params); break;
+                    case "FMF2110U_STR": result = hfmfMapper.FMF2110U_STR(params); break;
+                    case "FMF2120R_STR": result = hfmfMapper.FMF2120R_STR(params); break;
+                    case "FMF2140R_STR": result = hfmfMapper.FMF2140R_STR(params); break;
+                    case "FMF2150R_STR": result = hfmfMapper.FMF2150R_STR(params); break;
+                    case "FMF2160R_STR": result = hfmfMapper.FMF2160R_STR(params); break;
+                    case "FMF2180R_STR": result = hfmfMapper.FMF2180R_STR(params); break;
+                    case "FMF2190R_STR": result = hfmfMapper.FMF2190R_STR(params); break;
+                    case "FMF2210R_STR": result = hfmfMapper.FMF2210R_STR(params); break;
+                    case "FMF3010U_STR": result = hfmfMapper.FMF3010U_STR(params); break;
+                    default:
+                        return ResponseEntity.notFound().build();
+                }
+            }
+
+            if (result == null || result.isEmpty()) {
+                result = List.of(Map.of("res", "OK"));
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("❌ [hfmf] executeProcedure Error ({}): {}", proc, e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    private void injectSession(Map<String, Object> params, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user != null) {
+            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
+                params.put("cmpycd", user.getCmpycd());
+            }
+            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
+                params.put("userid", user.getUserid());
+            }
+            params.put("updemp", user.getUserid());
+        }
+    }
+
+    private void fillMissingParameters(String proc, Map<String, Object> params) {
+        try {
+            String statementId = "com.crmbank.erp.hfmf.mapper.HfmfMapper." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                String prop = pm.getProperty();
+                if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
+                    String cleanProp = prop.trim();
+                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
+                        params.put(cleanProp, "");
+                    }
+                    if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
+                }
+            }
+        } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
+    }
+
+    private String buildPositionalSql(String proc, Map<String, Object> params) {
+        try {
+            String statementId = "com.crmbank.erp.hfmf.mapper.HfmfMapper." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(params);
+            List<String> values = new ArrayList<>();
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                Object val = params.get(pm.getProperty().trim());
+                if (val == null) values.add("''");
+                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+            }
+            return String.format("EXEC %s %s", proc, String.join(", ", values));
+        } catch (Exception e) { return "EXEC " + proc; }
     }
 }

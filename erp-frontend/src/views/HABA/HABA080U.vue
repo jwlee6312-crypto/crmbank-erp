@@ -15,7 +15,7 @@
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-calculator me-2 text-primary" style="font-size: 18px;"></i>
-				기본정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
 				<span class="text-primary fw-bolder">예산코드등록 (HABA080U)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
@@ -46,7 +46,7 @@
 							<td class="bg-white border-end px-2">
 								<select v-model="searchForm.costtype" class="form-select form-select-sm">
 									<option value="0">선택</option>
-									<option v-for="opt in costTypeOptions" :key="opt.col0" :value="opt.col0">{{ opt.col1 }}</option>
+									<option v-for="opt in costTypeOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
 								</select>
 							</td>
 							<th class="text-center border-end">예 산 명</th>
@@ -88,14 +88,14 @@
 							<td class="bg-white border-top px-2 py-1">
 								<select v-model="masterForm.costtype" class="form-select form-select-sm">
 									<option value="0">선택</option>
-									<option v-for="opt in costTypeOptions" :key="opt.col0" :value="opt.col0">{{ opt.col1 }}</option>
+									<option v-for="opt in costTypeOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
 								</select>
 							</td>
 						</tr>
 						<tr>
 							<th class="text-center bg-light-subtle border-end border-top">비&nbsp;&nbsp;&nbsp;&nbsp;고</th>
 							<td colspan="3" class="bg-white border-end border-top px-2 py-1">
-								<input v-model="masterForm.remark" type="text" class="form-control form-control-sm" maxlength="100" />
+								<input v-model="masterForm.bigo" type="text" class="form-control form-control-sm" maxlength="100" />
 							</td>
 							<th class="text-center bg-light-subtle border-end border-top">사용여부</th>
 							<td class="bg-white border-top px-3">
@@ -127,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -151,7 +151,7 @@ const masterForm = reactive({
 	bugtcd: '',
 	bugtnm: '',
 	costtype: '0',
-	remark: '',
+	bigo: '',
 	useyn: 'Y'
 })
 
@@ -159,16 +159,24 @@ const costTypeOptions = ref<any[]>([])
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
+const normalizekeys = (obj: any) => {
+  const n: any = {};
+  if (!obj) return n;
+  Object.keys(obj).forEach(k => n[k.toLowerCase()] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k]);
+  return n;
+}
+
 // 초기 데이터 로드
 const loadInitData = async () => {
 	try {
 		// 비용구분 로드 (HA00_00P_STR 'E0',' ','110')
 		const res = await api.post('/api/ha00/HA00_00P_STR', {
 			gubun: 'E0',
-			search: '110',
+			gbncd: '110',
 			cmpycd: authStore.cmpycd
 		})
-		costTypeOptions.value = res.data || []
+		// 🚀 normalizekeys 적용하여 대소문자 문제 해결
+		costTypeOptions.value = (res.data || []).map((i: any) => normalizekeys(i))
 
 		// 페이지 초기화 프로시저 실행 (ASP 상단 Str2 로직)
 		await api.post('/api/haba/HABA_080U_STR', {
@@ -191,18 +199,21 @@ const search = async () => {
 			bugtcd: '',
 			bugtnm: searchForm.bugtnm,
 			costtype: searchForm.costtype,
-			remark: '',
+			bigo: '',
 			useyn: ''
 		})
 
-		const processedData = (res.data || []).map((r: any) => ({
-			bugtcd: r.bugtcd,
-			bugtnm: r.bugtnm,
-			costtype: r.costtype,
-			codenm: r.codenm,
-			bigo: r.bigo,
-			useyn: r.useyn
-		}))
+		const processedData = (res.data || []).map((r: any) => {
+			const n = normalizekeys(r)
+			return {
+				bugtcd: n.bugtcd,
+				bugtnm: n.bugtnm,
+				costtype: n.costtype,
+				costtypenm: n.costtypenm,
+				bigo: n.bigo,
+				useyn: n.useyn
+			}
+		})
 
 		mainGrid?.setData(processedData)
 		vAlert('조회되었습니다.')
@@ -253,22 +264,25 @@ onMounted(async () => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "예산코드", field: "bugtcd", width: 100, hozAlign: "center" },
+				{ title: "예산코드", field: "bugtcd", width: 120, hozAlign: "center", cssClass: "fw-bold text-primary" },
 				{ title: "예 산 명", field: "bugtnm", minWidth: 200 },
-				{ title: "비용구분", field: "codenm", width: 120, hozAlign: "center" },
-				{ title: "비고", field: "bigo", minWidth: 200 },
-				{ title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
-			],
-			rowClick: (e, row) => {
-				const d = row.getData()
-				masterForm.actkind = 'U0'
-				masterForm.bugtcd = d.bugtcd
-				masterForm.bugtnm = d.bugtnm
-				masterForm.costtype = d.costtype
-				masterForm.remark = d.bigo
-				masterForm.useyn = d.useyn
-			}
+				{ title: "비용구분", field: "costtypenm", width: 150, hozAlign: "center" },
+				{ title: "비고", field: "bigo", minWidth: 250 },
+				{ title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? 'Y' : 'N' }
+			]
 		})
+
+		mainGrid.on("rowClick", (e, row) => {
+			const d = normalizekeys(row.getData())
+			masterForm.actkind = 'U0'
+			masterForm.bugtcd = d.bugtcd
+			masterForm.bugtnm = d.bugtnm
+			masterForm.costtype = d.costtype
+			masterForm.bigo = d.bigo
+			masterForm.useyn = d.useyn
+		})
+
+		nextTick(() => search())
 	}
 })
 </script>
