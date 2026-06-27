@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 타계정출고 (HSIO570U)
 	작성일자	: 2025.02.24
-	설명        : 타계정 출고 마스터/상세 관리 (HSOD100U 표준 구조 및 소문자 원칙 적용)
+	설명        : 타계정 출고 마스터/상세 관리 (HSIO_570U_SAVE 통합 저장 및 직관적 API 구성)
 	=============================================================
 -->
 
@@ -61,7 +61,7 @@
       <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
 
         <!-- ⬅️ 좌측: 목록 그리드 -->
-        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 350px; min-width: 350px;">
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 400px; min-width: 400px;">
           <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">출고 목록</div>
           <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
             <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
@@ -128,8 +128,6 @@
       </div>
     </div>
   </div>
-
-  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
@@ -143,14 +141,13 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import { useCommonHelp } from '@/composables/useCommonHelp'
 import { getDate } from '@/composables/useDate'
+import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const searchParam = reactive({ fromdt: firstDay, todt: today, deptcd: authStore.deptcd, deptnm: authStore.deptnm })
 const masterData = reactive<any>({
@@ -161,7 +158,6 @@ const masterData = reactive<any>({
 })
 
 const displayIoNo = computed(() => (!masterData.iono || masterData.iono === '0000') ? '' : `${masterData.ioym}-${masterData.iono}`)
-watch(() => masterData.ioymd, (nv) => { if (nv) masterData.ioym = nv.replace(/-/g, '').substring(0, 6) })
 
 const closingInfo = reactive({ sclsym: '' })
 const whOptions = ref<any[]>([])
@@ -182,8 +178,9 @@ const initGrids = () => {
       { title: "출고일자", field: "ioymd", hozAlign: "center", width: 100, formatter: (c) => {
           const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
       }},
-      { title: "출고번호", field: "iono_full", hozAlign: "center", width: 110, cssClass: "fw-bold text-primary", headerSort: false }
-    ],
+      { title: "출고번호", field: "iono_full", hozAlign: "center", width: 100, cssClass: "fw-bold text-primary", headerSort: false },
+      { title: "출고부서", field: "deptnm", hozAlign: "center", width: 150, cssClass: "fw-bold text-primary", headerSort: false }
+   ],
   });
   grid1.on("rowClick", (e, row) => fetchDetail(row.getData()));
 
@@ -199,13 +196,13 @@ const initGrids = () => {
           if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
           return '';
       }},
+      { title: "유형", field: "iotypenm", width: 120, cellClick: (e, cell) => handleOpenHelp('iotype', cell.getRow()) },
       { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary', cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow()) },
       { title: "규격", field: "itsize", width: 120 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
       { title: "수량", field: "ioqty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
       { title: "단가", field: "price", width: 110, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
       { title: "금액", field: "ioamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "유형", field: "iotypenm", width: 120, cellClick: (e, cell) => handleOpenHelp('iotype', cell.getRow()) },
       { title: "사용부서", field: "usedeptnm", width: 120, cellClick: (e, cell) => handleOpenHelp('IDEPT', cell.getRow()) },
       { title: "삭제", width: 40, hozAlign: "center", formatter: (c) => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
     ]
@@ -221,21 +218,51 @@ const calcRow = (row: any) => {
 async function search() {
   try {
     const res = await api.post('/api/hsio/HSIO_570U_STR', {
-        actkind: 'S1', gubun: '200',
+        actkind: 'L',
+        iogbn: '200',
         deptcd: searchParam.deptcd,
-        fromdt: searchParam.fromdt.replace(/-/g, ''), todt: searchParam.todt.replace(/-/g, '')
+        deptnm: searchParam.deptnm,
+        fromdt: searchParam.fromdt.replace(/-/g, ''),
+        todt: searchParam.todt.replace(/-/g, '')
     });
-    grid1?.setData(res.data.map((i: any) => ({ ...i, iono_full: `${i.ioym}-${i.iono}` })));
-    vAlert('조회되었습니다.');
-  } catch (e) { vAlertError('조회 실패'); }
+
+    const data = (res.data || []).map((i: any) => {
+      const item = Object.fromEntries(
+        Object.entries(i).map(([k, v]) => [k.toLowerCase(), v])
+      );
+      return {
+        ...item,
+        iono_full: `${item.ioym}-${item.iono}`
+      };
+    });
+
+    grid1?.setData(data);
+    if (data.length > 0) vAlert('조회되었습니다.');
+    else vAlert('조회된 자료가 없습니다.');
+  } catch (e) {
+    vAlertError('조회 실패');
+  }
 }
 
 async function fetchDetail(row: any) {
   const fYmd = (d: string) => d && d.length === 8 ? `${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6, 8)}` : today;
   Object.assign(masterData, { ...row, ioymd: fYmd(row.ioymd) });
   try {
-    const res = await api.post('/api/hsio/HSIO_571U_STR', { actkind: 'S', gubun: '200', ioym: row.ioym, iono: row.iono });
-    grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
+    const res = await api.post('/api/hsio/HSIO_571U_STR', {
+        actkind: 'S',
+        iogbn: '200',
+        ioym: row.ioym,
+        iono: row.iono,
+        ioqty: 0,
+        ioamt: 0,
+        iovat: 0
+     });
+    const data = (res.data || []).map((i: any) => {
+      const item = Object.fromEntries(Object.entries(i).map(([k, v]) => [k.toLowerCase(), v]));
+      // 🚀 서버 필드(usedept)를 그리드 필드(usedeptcd)로 매핑
+      return { ...item, usedeptcd: item.usedept || '', _state: 'EXIST', _status: '' };
+    });
+    grid2?.setData(data);
   } catch (e) { vAlertError('상세 로드 실패'); }
 }
 
@@ -246,34 +273,119 @@ async function save() {
   const details = grid2?.getData().filter((r: any) => r._status) || [];
   if (!details.length && masterData.iono === '0000') return vAlertError('항목을 추가하세요.');
 
-  try {
-    const mst = { ...masterData, actkind: masterData.iono === '0000' ? 'A' : 'U', ioymd: masterData.ioymd.replace(/-/g, ''), gubun: '200', userid: authStore.userid };
-    const mRes = await api.post('/api/hsio/HSIO_570U_STR', mst);
+  // 🚀 저장 시점에만 ioym을 출고일자(ioymd) 기준으로 추출하여 전송 (마스터 키 원칙 준수)
+  const targetIoym = masterData.ioymd.replace(/-/g, '').substring(0, 6);
 
-    if (mRes.data?.length) {
-      const ioym = mRes.data[0].ioym; const iono = mRes.data[0].iono;
-      for (const item of details) {
-        await api.post('/api/hsio/HSIO_571U_STR', {
-          ...item, actkind: item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U'),
-          gubun: '200', ioym, iono, deptcd: masterData.deptcd, whcd: masterData.whcd, ioymd: mst.ioymd, userid: authStore.userid
-        });
-      }
-      vAlert('저장되었습니다.'); search();
-    }
-  } catch (e) { vAlertError('저장 실패'); }
+  try {
+    const payload = {
+      mst: {
+        ...masterData,
+        actkind: masterData.iono === '0000' ? 'A' : 'U',
+        ioym: targetIoym,
+        ioymd: masterData.ioymd.replace(/-/g, ''),
+        iogbn: '200',
+        iotype: '300',
+        custcd: '',
+        inyn: 'N',
+        ino: '',
+        cfmyn: 'Y',
+        userid: authStore.userid
+      },
+      dtl: details.map((item: any) => ({
+        ...item,
+        actkind: item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U'),
+        iogbn: '200',
+        ioym: targetIoym,
+        deptcd: masterData.deptcd,
+        custcd: '',
+        whcd: masterData.whcd,
+        ioymd: masterData.ioymd.replace(/-/g, ''),
+        iovat: 0,
+        cfmyn: 'Y',
+        userid: authStore.userid,
+        usedept: item.usedeptcd
+      }))
+    };
+
+    await api.post('/api/hsio/HSIO_570U_SAVE', payload);
+    vAlert('저장되었습니다.');
+    search();
+  } catch (e) {
+    vAlertError('저장 실패');
+  }
 }
 
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
+
 const handleOpenHelp = (type: string, target?: any) => {
-  if (type === 'DEPT_SCH') openHelp('DEPT', (d) => { searchParam.deptcd = d.deptcd; searchParam.deptnm = d.deptnm });
-  else if (type === 'DEPT') openHelp('DEPT', (d) => { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm });
-  else if (type === 'ITEM') openHelp('ITEM', (d) => target.update({ itemcd: d.itemcd, itemnm: d.itemnm, unit: d.unit || d.unitnm, price: d.outcost || 0, ioqty: 1, ioamt: d.outcost || 0, _status: '입력', _state: 'NEW' }));
-  else if (type === 'iotype') openHelp('COMMON', (d) => target.update({ iotype: d.code, iotypenm: d.cdnm }), { gbncd: '130' });
-  else if (type === 'IDEPT') openHelp('DEPT', (d) => target.update({ usedeptcd: d.deptcd, usedeptnm: d.deptnm }));
+  if (isClosed.value) return;
+  switch (type) {
+    case 'DEPT_SCH': // 조회부서
+      Object.assign(modalProps, {
+        title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, codenm: searchParam.deptnm },
+        columns: [{ title: '코드', field: 'deptcd', width: 100 }, { title: '부서명', field: 'deptnm', width: 200 }],
+        onConfirm: (d: any) => { searchParam.deptcd = d.deptcd; searchParam.deptnm = d.deptnm }
+      }); modalVisible.value = true;
+      break;
+
+    case 'DEPT': // 마스터부서
+      Object.assign(modalProps, {
+        title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, codenm: masterData.deptnm },
+        columns: [{ title: '코드', field: 'deptcd', width: 100 }, { title: '부서명', field: 'deptnm', width: 200 }],
+        onConfirm: (d: any) => { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm }
+      }); modalVisible.value = true;
+      break;
+
+    case 'ITEM': // 품목
+      Object.assign(modalProps, {
+        title: '품목 선택',
+        path: '/api/hs00/HS00_000S_STR',
+        defaultField: 'itemnm',
+        data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', code: '', remark: '' },
+        columns: [
+          { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+          { title: '품목명', field: 'itemnm', width: 200 },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: (d: any) => {
+          target.update({
+            itemcd: d.itemcd,
+            itemnm: d.itemnm,
+            itsize: d.itsize,
+            unit: d.unit || 'EA',
+            price: d.incost || 0,
+            ioqty: 1,
+            ioamt: d.incost || 0,
+            _status: '입력',
+            _state: 'NEW'
+          });
+        }
+      }); modalVisible.value = true;
+      break;
+
+    case 'iotype': // 출고유형
+      Object.assign(modalProps, {
+        title: '출고유형 선택', path: '/api/hs00/HS00_000S_STR', data: { gubun: 'E0', gbncd: '130', cmpycd: authStore.cmpycd, code: '1' },
+        columns: [{ title: '코드', field: 'code', width: 100 }, { title: '유형명', field: 'cdnm', width: 200 }],
+        onConfirm: (d: any) => { target.update({ iotype: d.code, iotypenm: d.cdnm }); }
+      }); modalVisible.value = true;
+      break;
+
+    case 'IDEPT': // 사용부서
+      Object.assign(modalProps, {
+        title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+        columns: [{ title: '코드', field: 'deptcd', width: 100 }, { title: '부서명', field: 'deptnm', width: 200 }],
+        onConfirm: (d: any) => { target.update({ usedeptcd: d.deptcd, usedeptnm: d.deptnm }); }
+      }); modalVisible.value = true;
+      break;
+  }
 }
 
 const handleRowAction = (row: any) => { const d = row.getData(); if (d._state === 'NEW') row.delete(); else row.update({ _status: d._status === '삭제' ? '' : '삭제' }); }
 const deleteSelectedRows = () => { const sel = grid2?.getSelectedRows(); if (sel?.length) sel.forEach(row => handleRowAction(row)); }
-const addRow = () => grid2?.addRow({ ioqty: 0, price: 0, ioamt: 0, _status: '입력', _state: 'NEW' }, true);
+const addRow = () => grid2?.addRow({ usedeptcd: '', usedeptnm: '', ioqty: 0, price: 0, ioamt: 0, _status: '입력', _state: 'NEW' }, true);
 
 function initialize() {
   resetForm(masterData);
@@ -285,16 +397,20 @@ function initialize() {
 async function handleFullDelete() {
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_570U_STR', { ...masterData, actkind: 'D', gubun: '200' });
+    await api.post('/api/hsio/HSIO_570U_STR', {
+        ...masterData,
+        actkind: 'D',
+        iogbn: '200',
+        cfmyn: 'Y'
+    });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }
 
 onMounted(async () => {
     nextTick(initGrids);
-    // 💡 [정상화] cmpycd 파라미터 제거하여 백엔드 세션 주입 활용
-    api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0' } }).then(r => { whOptions.value = r.data; });
-    api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL' } }).then(r => { if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym; });
+    api.post('/api/hs00/HS00_000S_STR', { gubun: 'W0', cmpycd: authStore.cmpycd }).then(r => { whOptions.value = r.data; });
+    api.post('/api/hp00/HP00_000S_STR', { gubun: 'CL', cmpycd: authStore.cmpycd }).then(r => { if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym; });
     initialize();
 })
 </script>

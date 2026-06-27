@@ -25,5 +25,7 @@ public class Hsio511u {
     private String jsanqty;
     private String jsanamt;
     private String jsanvat;
+    private String fromdt; // 💡 통일성을 위해 추가
+    private String todt;   // 💡 통일성을 위해 추가
     private String updemp;
 }

@@ -18,7 +18,7 @@ public class Hsio501u {
     private String custcd;
     private String whcd;
     private String area;
-    private String userid;
+    private String saleuserid;
     private String ioymd;
     private String iotype;
     private String itemcd;

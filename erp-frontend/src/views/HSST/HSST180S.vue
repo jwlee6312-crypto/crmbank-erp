@@ -119,7 +119,7 @@ const searchForm = reactive({
 })
 
 const rowCount = ref(0)
-const totals = reactive({ SMamt: 0, SYamt: 0 })
+const totals = reactive({ smamt: 0, syamt: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const search = async () => {
@@ -134,8 +134,8 @@ const search = async () => {
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
-		totals.SMamt = data.reduce((acc: number, cur: any) => acc + (Number(cur.SMamt) || 0), 0)
-		totals.SYamt = data.reduce((acc: number, cur: any) => acc + (Number(cur.SYamt) || 0), 0)
+		totals.smamt = data.reduce((acc: number, cur: any) => acc + (Number(cur.smamt) || 0), 0)
+		totals.syamt = data.reduce((acc: number, cur: any) => acc + (Number(cur.syamt) || 0), 0)
 
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -146,7 +146,7 @@ const initialize = () => {
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
 	searchForm.fymd = firstDay; searchForm.tymd = today;
 	mainGrid?.clearData(); rowCount.value = 0;
-	totals.SMamt = 0; totals.SYamt = 0;
+	totals.smamt = 0; totals.syamt = 0;
 }
 
 const excel = () => mainGrid?.download("xlsx", "영업사원별판매현황.xlsx")
@@ -185,19 +185,19 @@ onMounted(() => {
 				{
 					title: "당월 실적 (Current Month)",
 					columns: [
-						{ title: "매출액", field: "SMamt", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "VMamt", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "TMamt", hozAlign: "right", width: 200, formatter: "money", cssClass: "bg-light text-primary fw-bold",
-						  mutatorData: (v,d) => Number(d.SMamt||0) + Number(d.VMamt||0) }
+						{ title: "매출액", field: "smamt", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "vmamt", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "tmamt", hozAlign: "right", width: 200, formatter: "money", cssClass: "bg-light text-primary fw-bold",
+						  mutatorData: (v,d) => Number(d.smamt||0) + Number(d.vmamt||0) }
 					]
 				},
 				{
 					title: "누계 실적 (Cumulative)",
 					columns: [
-						{ title: "매출액", field: "SYamt", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "VYamt", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "TYamt", hozAlign: "right", width: 200, formatter: "money", cssClass: "bg-light text-warning fw-bold",
-						  mutatorData: (v,d) => Number(d.SYamt||0) + Number(d.VYamt||0) }
+						{ title: "매출액", field: "syamt", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "vyamt", hozAlign: "right", width: 200, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "tyamt", hozAlign: "right", width: 200, formatter: "money", cssClass: "bg-light text-warning fw-bold",
+						  mutatorData: (v,d) => Number(d.syamt||0) + Number(d.vyamt||0) }
 					]
 				}
 			]
@@ -205,4 +205,16 @@ onMounted(() => {
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+
+/* 🚀 2단 헤더에서 단일 컬럼의 타이틀을 수직 중앙 정렬 */
+:deep(.tabulator-header .tabulator-col:not(.tabulator-col-group) .tabulator-col-content) {
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+</style>
 

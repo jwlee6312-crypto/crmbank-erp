@@ -222,14 +222,20 @@ const calcRow = (row: any) => {
 async function search() {
   try {
     const res = await api.post('/api/hsio/HSIO_052U_STR', {
-      actkind: 'L', cmpycd: authStore.cmpycd, fromdt: form_01.fromdt.replace(/-/g, ''), todt: form_01.todt.replace(/-/g, ''),
-      gubun: '2', custnm: form_01.custnm,
+      actkind: 'L',
+      cmpycd: authStore.cmpycd,
+      fromdt: form_01.fromdt.replace(/-/g, ''),
+      todt: form_01.todt.replace(/-/g, ''),
+      gubun: '2',
+      custnm: form_01.custnm,
       balym: '', balno: '', balymd: '', reqymd: '', custcd: '', deptcd: '', remark: '', updemp: authStore.userid
     });
     // Normalize keys to lowercase and add balno_full
     const normalizedData = res.data.map((i: any) => {
         const item = Object.fromEntries(Object.entries(i).map(([k, v]) => [k.toLowerCase(), v]));
-        return { ...item, balno_full: `${item.balym}-${item.balno}` };
+        const balym = (item.balym || '').trim();
+        const balno = (item.balno || '').trim();
+        return { ...item, balym, balno, balno_full: `${balym}-${balno}` };
     });
     grid1?.setData(normalizedData);
     vAlert('조회되었습니다.');
@@ -262,9 +268,12 @@ async function save() {
   const details = grid2?.getData().filter((r: any) => r._status) || [];
   if (!details.length && form_02.balno === '0000') return vAlertError('항목을 추가하세요.');
   try {
-    const mst = { ...form_02,
+    const mst = {
+        ...form_02,
         actkind: form_02.balno === '0000' ? 'A' : 'U',
         gubun: '2',
+        deptcd: form_02.deptcd,
+        custcd: form_02.custcd,
         balymd: form_02.balymd.replace(/-/g, ''),
         reqymd: form_02.reqymd.replace(/-/g, ''),
         updemp: authStore.userid

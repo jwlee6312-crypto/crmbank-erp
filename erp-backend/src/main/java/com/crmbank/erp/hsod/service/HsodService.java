@@ -31,14 +31,19 @@ public class HsodService {
         }
 
         Map<String, Object> mstRow = res.get(0);
-        // 🚀 [Position-First] 알리아스 무관하게 첫 번째/두 번째 컬럼값 추출
-        List<Object> mstValues = new ArrayList<>(mstRow.values());
-        String ordym = String.valueOf(mstValues.get(0)).trim();
-        String ordno = String.valueOf(mstValues.get(1)).trim();
 
-        // Business Error Check for Master (첫 번째 컬럼이 '000000'이면 에러)
+        // 🚀 순수하게 알리아스(Key)로만 수신
+        String ordym = mstRow.get("ordym") != null ? String.valueOf(mstRow.get("ordym")).trim() : "";
+        String ordno = mstRow.get("ordno") != null ? String.valueOf(mstRow.get("ordno")).trim() : "";
+
+        // 비즈니스 에러 체크 (000000)
         if ("000000".equals(ordym)) {
-            throw new Exception(ordno);
+            throw new Exception(ordno.isEmpty() ? "마스터 저장 오류" : ordno);
+        }
+
+        // 채번 누락 체크
+        if (ordym.isEmpty() || ordno.isEmpty()) {
+            throw new Exception("정산 채번 실패: 알리아스(ordym, ordno)를 확인할 수 없습니다.");
         }
 
         // 2. Detail Save

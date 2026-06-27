@@ -442,10 +442,17 @@ const totaldebit = ref(0); const totalcredit = ref(0)
 const balance = computed(() => totaldebit.value - totalcredit.value)
 const formatmoney = (val: any) => Number(val || 0).toLocaleString()
 
+// 💡 행 상태 변경 감지
+const updateRowStatus = (row: any) => {
+    const d = row.getData();
+    if (d._state === 'EXIST' && !d._status) row.update({ _status: '수정' });
+}
+
 // 💡 실시간 동기화 (사이드 패널 -> 그리드)
 watch(selectedrow, (newval) => {
     if (newval && activecomponent) {
         activecomponent.update(newval);
+        updateRowStatus(activecomponent);
         updateautoremark();
     }
 }, { deep: true });
@@ -500,6 +507,13 @@ const initgrids = () => {
     },
     columns: [
       { title: "No", field: "srowno", width: 40, hozAlign: "center" },
+      { title: "상태", field: "_status", width: 50, hozAlign: "center", formatter: (c) => {
+          const v = c.getValue();
+          if (v === '입력') return '<span class="badge bg-primary">신규</span>';
+          if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+          if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+          return '';
+      }},
       { title: "차/대", field: "dbcr", width: 70, hozAlign: "center", editor: "list", editorParams: { values: { "d": "차변", "c": "대변" } },
         formatter: (c) => {
             const v = String(c.getValue() || '').trim().toLowerCase();
@@ -509,13 +523,14 @@ const initgrids = () => {
       { title: "계정과목", field: "acctnm", width: 160, cellClick: (e, cell) => handleopenhelp('acct', cell.getRow()), cssClass: "cursor-pointer text-primary fw-bold" },
       { title: "적요", field: "remark", minWidth: 200, editor: "input" },
       { title: "금액", field: "amount", width: 110, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "삭제", width: 40, hozAlign: "center", formatter: () => '<i class="bi bi-trash text-danger"></i>', cellClick: (e, cell) => cell.getRow().delete() }
+      { title: "삭제", width: 40, hozAlign: "center", formatter: () => '<i class="bi bi-trash text-danger"></i>', cellClick: (e, cell) => handlerowaction(cell.getRow()) }
     ]
   });
 
   grid2.on("cellEdited", (cell) => {
     selectedrow.value = normalizekeys(cell.getRow().getData());
     activecomponent = cell.getRow();
+    updateRowStatus(activecomponent);
     updatetotals();
   });
 }
@@ -547,7 +562,8 @@ async function fetchdetail(row: any) {
         return {
             ...d,
             dbcr: (d.dbcr || (Number(d.dbamt || 0) > 0 ? 'D' : 'C')).toLowerCase().trim(),
-            amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt
+            amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt,
+            _state: 'EXIST', _status: ''
         };
     });
     grid2?.setData(details); updatetotals();
@@ -589,19 +605,32 @@ const calcvat = () => { if (String(selectedrow.value?.typeacct || '').trim() ===
 async function save() {
   if (balance.value !== 0) return valerterror('차/대변 금액이 일치하지 않습니다.');
   if (!masterform.business) return valerterror('거래내역을 입력하십시오.');
+
+  const allData = grid2?.getData() || [];
+  const detailsToSave = allData.filter((r: any) => r._status);
+
+  if (detailsToSave.length === 0 && !masterform.slipno) return valerterror('저장할 내역이 없습니다.');
+
   try {
     const payload = {
       actkind: masterform.slipno ? 'U' : 'A',
       master: { ...masterform, slipymd: masterform.slipymd.replace(/-/g, ''), acctymd: masterform.acctymd.replace(/-/g, '') },
-      details: grid2?.getData().map(d => {
+      details: allData.map(d => {
         const item = normalizekeys(d);
         ['docno6', 'docno7', 'payymd'].forEach(key => { if (item[key]) item[key] = item[key].replace(/-/g, ''); });
+
+        let dtlUpkind = item.upkind;
+        if (item._status === '입력') dtlUpkind = 'A';
+        else if (item._status === '삭제') dtlUpkind = 'D';
+        else if (item._status === '수정') dtlUpkind = 'U';
+        else dtlUpkind = masterform.slipno ? 'U' : 'A'; // 기본값
+
         return {
             ...item,
             custcd: item.subcd,
-            dbamt: String(item.dbcr).toLowerCase() === 'D' ? (item.amount || 0) : 0,
-            cramt: String(item.dbcr).toLowerCase() === 'C' ? (item.amount || 0) : 0,
-            upkind: item.upkind || (masterform.slipno ? 'U' : 'A')
+            dbamt: String(item.dbcr).toLowerCase() === 'd' ? (item.amount || 0) : 0,
+            cramt: String(item.dbcr).toLowerCase() === 'c' ? (item.amount || 0) : 0,
+            upkind: dtlUpkind
         };
       })
     };
@@ -618,10 +647,19 @@ const initialize = () => {
 const addrow = () => {
     const data = grid2?.getData() || [];
     const lastrow = data.length > 0 ? normalizekeys(data[data.length - 1]) : null;
-    const newdbcr = lastrow ? (String(lastrow.dbcr).toLowerCase() === 'D' ? 'C' : 'D') : 'D';
-    grid2?.addRow({ dbcr: newdbcr, remark: masterform.business, amount: 0, srowno: data.length + 1 }, false).then(row => {
+    const newdbcr = lastrow ? (String(lastrow.dbcr).toLowerCase() === 'd' ? 'c' : 'd') : 'd';
+    grid2?.addRow({ dbcr: newdbcr, remark: masterform.business, amount: 0, srowno: data.length + 1, _status: '입력', _state: 'NEW' }, false).then(row => {
         nextTick(() => { row.select(); selectedrow.value = normalizekeys(row.getData()); activecomponent = row; });
     });
+}
+
+const handlerowaction = (row: any) => {
+    const d = row.getData();
+    if (d._state === 'NEW') row.delete();
+    else {
+        const newstatus = d._status === '삭제' ? '' : '삭제';
+        row.update({ _status: newstatus });
+    }
 }
 
 async function deletedata() {

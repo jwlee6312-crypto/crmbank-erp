@@ -1,49 +1,60 @@
-<template><AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+<template>
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-  <div class="erp-container">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-        <i class="bi bi- journals me-2 text-primary" style="font-size: 18px;"></i>
-        마감관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-journals me-2 text-primary" style="font-size: 18px;"></i>
+        마감관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        수불관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">수불부 (HSCL200S)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
+      <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-outline-secondary" @click="print('Print')">인쇄</button>
-        <button class="btn-erp btn-outline-success" @click="print('Excel')">엑셀</button>
+        <button class="btn-erp btn-print" @click="print('Print')">인쇄</button>
+        <button class="btn-erp btn-excel" @click="print('Excel')">엑셀</button>
       </div>
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2">
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
       <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
-        <div class="card-body p-0">
-          <table class="erp-table-full">
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+              <col style="width: 100px;" /><col style="width: 300px;" />
+              <col style="width: 100px;" /><col style="width: 200px;" />
+              <col />
+            </colgroup>
             <tbody>
               <tr>
-                <th class="required" style="width: 100px;">조회연월</th>
-                <td style="width: 350px;">
-                  <div class="d-flex align-items-center gap-2">
+                <th class="required bg-light text-center">조회연월</th>
+                <td>
+                  <div class="d-flex align-items-center gap-1">
                     <select v-model="searchData.yy" class="form-select form-select-sm" style="width: 100px;">
                       <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
                     </select>
                     <select v-model="searchData.mm" class="form-select form-select-sm" style="width: 80px;">
                       <option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
                     </select>
-                    <span>~</span>
+                    <span class="px-1 text-muted">~</span>
                     <select v-model="searchData.tomm" class="form-select form-select-sm" style="width: 80px;">
                       <option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
                     </select>
                   </div>
                 </td>
-                <th class="required" style="width: 100px;">재고자산</th>
+                <th class="required bg-light text-center">재고자산</th>
                 <td>
-                  <select v-model="searchData.astkind" class="form-select form-select-sm" style="width: 150px;">
-                    <option v-for="opt in assetOptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  <select v-model="searchData.astkind" class="form-select form-select-sm">
+                    <option v-for="opt in assetOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                   </select>
+                </td>
+                <td class="text-end pe-3">
+                  <span v-if="closingInfo.sclsym" class="badge bg-primary px-2">마감: {{ closingInfo.sclsym_fmt }}</span>
                 </td>
               </tr>
             </tbody>
@@ -51,10 +62,10 @@
         </div>
       </div>
 
-      <!-- 🅱️ 데이터 그리드 영역 (여백 없이 꽉 채움) -->
+      <!-- 🅱️ 데이터 그리드 영역 -->
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-        <div class="card-header bg-white py-1 px-3 border-bottom">
-          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 품목별 월간 수불 현황</span>
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>품목별 월간 수불 현황</span>
         </div>
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
           <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
@@ -65,18 +76,21 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps } = useCommonHelp()
 
 const now = new Date()
 const currentYear = now.getFullYear()
@@ -100,62 +114,53 @@ const assetOptions = ref<any[]>([])
 
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
-const activeItemCount = ref(0)
 
-// 2. 그리드 초기화 (다단 헤더 정의)
+// 2. 그리드 초기화
+
 const initGrid = () => {
   if (!gridElement.value) return
   grid.value = new Tabulator(gridElement.value, {
     layout: "fitColumns",
     height: "100%",
     placeholder: "조회된 데이터가 없습니다.",
-    columnDefaults: { headerSort: false },
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
-      { title: "품목명", field: "itemnm", minWidth: 150, frozen: true, cssClass: "fw-bold border-end" },
-      { title: "규격", field: "itsize", width: 100, frozen: true, borderRight: true },
-      // 이월 그룹
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", frozen: true },
+      { title: "품목명", field: "itemnm", minWidth: 250, frozen: true, cssClass: "fw-bold border-end" },
+      { title: "규격", field: "itsize", width: 150, frozen: true },
       {
         title: "이 월",
         columns: [
-          { title: "수량", field: "bsqty", width: 60, hozAlign: "right", formatter: (c) => formatQty(c) },
-          { title: "단가", field: "bsprice", width: 70, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-          { title: "금액", field: "bsamt", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
+          { title: "수량", field: "bsqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
+          { title: "금액", field: "bsamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         ]
       },
-      // 입고 그룹
       {
         title: "입 고",
         columns: [
-          { title: "수량", field: "inqty", width: 60, hozAlign: "right", formatter: (c) => formatQty(c) },
-          { title: "단가", field: "inprice", width: 70, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-          { title: "금액", field: "inamt", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
+          { title: "수량", field: "inqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
+          { title: "금액", field: "inamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         ]
       },
-      // 출고 그룹
       {
         title: "출 고",
         columns: [
-          { title: "수량", field: "outqty", width: 60, hozAlign: "right", formatter: (c) => formatQty(c) },
-          { title: "단가", field: "outprice", width: 70, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-          { title: "금액", field: "outamt", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
+          { title: "수량", field: "outqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
+          { title: "금액", field: "outamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         ]
       },
-      // 타계정 그룹
       {
         title: "타계정",
         columns: [
-          { title: "수량", field: "outtqty", width: 60, hozAlign: "right", formatter: (c) => formatQty(c) },
-          { title: "단가", field: "outtprice", width: 70, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-          { title: "금액", field: "outtamt", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
+          { title: "수량", field: "outtqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
+          { title: "금액", field: "outtamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
         ]
       },
-      // 재고 그룹
       {
         title: "재 고",
         columns: [
-          { title: "수량", field: "stkqty", width: 60, hozAlign: "right", formatter: (c) => formatQty(c) },
-          { title: "단가", field: "stkprice", width: 70, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-          { title: "금액", field: "stkamt", width: 95, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-yellow fw-bold", bottomCalc: "sum", bottomCalcFormatter: "money" },
+          { title: "수량", field: "stkqty", width: 100, hozAlign: "right", formatter: (c) => formatQty(c) },
+          { title: "금액", field: "stkamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-yellow fw-bold" },
         ]
       }
     ]
@@ -172,29 +177,26 @@ const formatQty = (cell: any) => {
 // 3. 기능 구현
 async function fetchOptions() {
   try {
-    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '140' } })
-    assetOptions.value = res.data.map((i: any) => ({ codecd: Object.values(i)[0], codenm: Object.values(i)[1] }))
+    const resAsset = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '140', code: '' })
+    assetOptions.value = resAsset.data
 
-    const resCl = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } })
+    const resCl = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'CL', cmpycd: authStore.cmpycd })
     if (resCl.data?.length) {
       const data = resCl.data[0]
       closingInfo.clsymd = data.clsymd;
       closingInfo.sclsym = data.sclsym;
       closingInfo.wclsym = data.wclsym;
-      closingInfo.sclsym_fmt = formatDateString(data.sclsym, 'ym');
-      closingInfo.wclsym_fmt = formatDateString(data.wclsym, 'ym');
+      closingInfo.sclsym_fmt = data.sclsym ? `${data.sclsym.substring(0, 4)}-${data.sclsym.substring(4, 6)}` : '';
 
       searchData.yy = data.sclsym.substring(0, 4);
       searchData.mm = data.sclsym.substring(4, 6);
-      searchData.T.mm = data.sclsym.substring(4, 6);
+      searchData.tomm = data.sclsym.substring(4, 6);
     }
   } catch (e) { console.error('기초 정보 로드 실패') }
 }
 
 async function search() {
-  // ASP 유효성 체크 로직 이식
-  if (searchData.mm > searchData.tomm) return vAlertError('조회년월을 확인하십시오. (시작월 > 종료월)')
-  if (`${searchData.yy}${searchData.tomm}` > closingInfo.sclsym) return vAlertError('조회년월을 확인하십시오. (종료월 > 시스템 마감월)')
+  if (searchData.mm > searchData.tomm) return vAlertError('조회기간을 확인하십시오. (시작월 > 종료월)')
 
   try {
     const res = await api.post('/api/hscl/HSCL_200S_STR', {
@@ -203,28 +205,21 @@ async function search() {
       yymm_to: `${searchData.yy}${searchData.tomm}`,
       astkind: searchData.astkind
     })
-    if (grid.value) {
-      const mappedData = res.data.map((i: any) => ({
-        ...i,
-        bsprice: i.bsqty !== 0 ? (Number(i.bsamt) / Number(i.bsqty)) : 0,
-        inprice: i.inqty !== 0 ? (Number(i.inamt) / Number(i.inqty)) : 0,
-        outprice: i.outqty !== 0 ? (Number(i.outamt) / Number(i.outqty)) : 0,
-        outtprice: i.outtqty !== 0 ? (Number(i.outtamt) / Number(i.outtqty)) : 0,
-        stkprice: i.stkqty !== 0 ? (Number(i.stkamt) / Number(i.stkqty)) : 0,
-      }))
-      grid.value.setData(mappedData)
-      activeItemCount.value = mappedData.length
-    }
+
+    const data = (res.data || []).map((i: any) => Object.fromEntries(Object.entries(i).map(([k, v]) => [k.toLowerCase(), v])));
+    grid.value?.setData(data)
+    vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
 }
 
 function initialize() {
-  searchData.astkind = '120'
+  resetForm(searchData)
   if (closingInfo.sclsym) {
     searchData.yy = closingInfo.sclsym.substring(0, 4)
     searchData.mm = closingInfo.sclsym.substring(4, 6)
     searchData.tomm = closingInfo.sclsym.substring(4, 6)
   }
+  searchData.astkind = '120'
   grid.value?.clearData()
 }
 
@@ -232,16 +227,22 @@ function print(type: string) {
   vAlert(`${type} 기능은 현재 준비 중입니다.`)
 }
 
-const formatDateString = (v: any, type: string) => {
-    if (!v || v.length < 6) return v;
-    if (type === 'ym') return `${v.substring(0, 4)}-${v.substring(4, 6)}`;
-    return v;
-}
-const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0)
-
 onMounted(async () => {
   await fetchOptions()
   nextTick(() => initGrid())
 })
 </script>
+
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+
+/* 🚀 2단 헤더에서 단일 컬럼의 타이틀을 수직 중앙 정렬 */
+:deep(.tabulator-header .tabulator-col:not(.tabulator-col-group) .tabulator-col-content) {
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+</style>
 

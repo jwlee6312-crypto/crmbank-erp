@@ -11,7 +11,7 @@ public class Hsio581u {
     private String        cmpycd;
     private String        iogbn;
     private String        ioym;
-    private String        ono;
+    private String        iono;
     private String        iorowno;
     private String        ino;
     private String        odeptcd;

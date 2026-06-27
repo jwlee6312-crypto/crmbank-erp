@@ -131,8 +131,8 @@ const search = async () => {
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
-		totals.tmsum = data.reduce((acc: number, cur: any) => acc + (Number(cur.TMamt) || 0), 0)
-		totals.tysum = data.reduce((acc: number, cur: any) => acc + (Number(cur.TYamt) || 0), 0)
+		totals.tmsum = data.reduce((acc: number, cur: any) => acc + (Number(cur.tmamt) || 0), 0)
+		totals.tysum = data.reduce((acc: number, cur: any) => acc + (Number(cur.tyamt) || 0), 0)
 
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -191,18 +191,18 @@ onMounted(() => {
 					title: "당월 실적 (Current Month)",
 					columns: [
 						{ title: "수량", field: "mqty", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매출액", field: "SMamt", hozAlign: "right", width: 150, formatter: "money" },
-						{ title: "부가세", field: "VMamt", hozAlign: "right", width: 150, formatter: "money" },
-						{ title: "합계", field: "TMamt", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-primary fw-bold" }
+						{ title: "매출액", field: "smamt", hozAlign: "right", width: 150, formatter: "money" },
+						{ title: "부가세", field: "vmamt", hozAlign: "right", width: 150, formatter: "money" },
+						{ title: "합계", field: "tmamt", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-primary fw-bold" }
 					]
 				},
 				{
 					title: "누계 실적 (Cumulative)",
 					columns: [
 						{ title: "수량", field: "yqty", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매출액", field: "SYamt", hozAlign: "right", width: 150, formatter: "money" },
-						{ title: "부가세", field: "VYamt", hozAlign: "right", width: 150, formatter: "money" },
-						{ title: "합계", field: "TYamt", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-warning fw-bold" }
+						{ title: "매출액", field: "syamt", hozAlign: "right", width: 150, formatter: "money" },
+						{ title: "부가세", field: "vyamt", hozAlign: "right", width: 150, formatter: "money" },
+						{ title: "합계", field: "tyamt", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-warning fw-bold" }
 					]
 				}
 			]
@@ -210,4 +210,16 @@ onMounted(() => {
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+
+/* 🚀 2단 헤더에서 단일 컬럼의 타이틀을 수직 중앙 정렬 */
+:deep(.tabulator-header .tabulator-col:not(.tabulator-col-group) .tabulator-col-content) {
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+</style>
 

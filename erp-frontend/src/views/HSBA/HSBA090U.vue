@@ -344,7 +344,9 @@ async function fetchList() {
   try {
     const res = await api.post('/api/hsba/HSBA_090U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd,
-      custnm: searchParams.custnm, custgbn: searchParams.custgbn === '000' ? '' : searchParams.custgbn, status: searchParams.status === '000' ? '' : searchParams.status
+      custnm: searchParams.custnm,
+      custgbn: searchParams.custgbn,
+      status: searchParams.status
     })
     const processed = (res.data || []).map((i: any) => normalizekeys(i));
     grid?.setData(processed);

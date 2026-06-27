@@ -301,7 +301,16 @@ onMounted(() => {
 				{ title: "차입금", field: "loanamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "이율", field: "rate", width: 150, hozAlign: "right", formatter: (c) => c.getValue() ? c.getValue() + "%" : "-" },
 				{ title: "비고", field: "remark", minWidth: 150 },
-				{ title: "사용", field: "useyn", width: 100, hozAlign: "center", formatter: "tickCross" }
+                {
+                  title: "사용",
+                  field: "useyn",
+                  width: 80,
+                  hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			],
 			rowClick: (e, row) => {
 				const d = row.getData()

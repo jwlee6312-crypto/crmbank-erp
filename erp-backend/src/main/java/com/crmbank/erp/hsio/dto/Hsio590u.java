@@ -14,7 +14,7 @@ public class Hsio590u {
     private String todt;     // @iIOYMDTO
     private String deptcd;
     private String custcd;
-    private String userid;
+    private String salsemp;
     private String taxunit;
     private String vattype;
     private String jsanymd;

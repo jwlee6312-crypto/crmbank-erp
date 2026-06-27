@@ -7,7 +7,7 @@
     </select>
 
     <select id="HAAA_800U_STR" resultType="map">
-        exec haaa_800u_str #{actkind}, #{pgmid}, #{pgmnm}, #{upmucd}, #{grpcd}, #{grpnm}, #{dspord}, #{useyn}, #{userid}
+        exec haaa_800u_str #{actkind}, #{pgmid}, #{pgmnm}, #{upmucd}, #{grpcd}, #{dspord}, #{useyn}, #{pgmid_o}, #{userid}
     </select>
 
     <select id="HAAA_810U_STR" resultType="map">

@@ -1,101 +1,148 @@
+<!--
+	=============================================================
+	프로그램명	: 외부매출전표 [디자인 원칙 13가지 + 검색영역/등록영역 분리]
+	작성일자	: 2025.02.24
+	작성자	    : AI Assistant
+	설명        : 외부 매출 확정 내역에 대한 전표 생성 및 조회/등록 영역 분리 UI 적용
+	=============================================================
+-->
+
 <template>
-  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="erp-container">
-    <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-        <i class="bi bi-file-earmark-ruled me-2 text-primary" style="font-size: 18px;"></i>
-        영업정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        매출관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        <span class="text-primary fw-bolder">외부매출전표 (HSIO531U)</span>
-      </div>
-      <div class="btn-group-erp d-flex gap-1">
-        <button class="btn-erp btn-init" @click="initialize">초기화</button>
-        <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-save" @click="issueSlip">전표발행</button>
-      </div>
-    </div>
+	<div class="erp-container">
+		<!-- 🚀 1. 상단 액션 바 -->
+		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
+			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+				<i class="bi bi-file-earmark-ruled me-2 text-primary" style="font-size: 18px;"></i>
+				영업정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				매출관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				<span class="text-primary fw-bolder">외부매출전표 (HSIO531U)</span>
+			</div>
+			<div class="btn-group-erp d-flex gap-1">
+				<button class="btn-erp btn-init" @click="initialize">
+					<i class="bi bi-arrow-clockwise"></i> 초기화
+				</button>
+				<button class="btn-erp btn-search" @click="search">
+					<i class="bi bi-search"></i> 조회
+				</button>
+				<button class="btn-erp btn-save" @click="issueSlip">
+					<i class="bi bi-file-earmark-check"></i> 전표 발행
+				</button>
+			</div>
+		</div>
 
-    <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
-      <!-- 🅰️ 조회 조건 영역 -->
-      <div class="card border shadow-sm overflow-hidden">
-        <div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center">
-          <span class="fw-bold small text-dark"><i class="bi bi-search me-1"></i> 조회 조건</span>
-        </div>
-        <div class="card-body p-0">
-          <table class="erp-table-full">
-            <tbody>
-              <tr>
-                <th class="required">판매부서</th>
-                <td style="width: 250px;">
-                  <div class="input-group input-group-sm" style="width: 220px;">
-                    <input v-model="searchData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('SEARCH_DEPT')" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('SEARCH_DEPT')"><i class="bi bi-search"></i></button>
-                  </div>
-                </td>
-                <th class="required">정산일자</th>
-                <td style="width: 300px;">
-                  <div class="d-flex align-items-center gap-1" style="width: 260px;">
-                    <input v-model="fromdt" type="date" class="form-control form-control-sm" />
-                    <span class="px-1">~</span>
-                    <input v-model="todt" type="date" class="form-control form-control-sm" />
-                  </div>
-                </td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+		<!-- 💡 2. 메인 컨텐츠 영역 -->
+		<div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2">
+			<!-- 🅰️ 조회 조건 영역 -->
+			<div class="card border shadow-sm overflow-hidden">
+				<div class="card-header bg-light py-1 px-3 border-bottom d-flex align-items-center">
+					<span class="fw-bold small text-dark"><i class="bi bi-search me-1"></i> 조회 조건</span>
+				</div>
+				<div class="card-body p-0">
+					<table class="erp-table-full">
+						<colgroup>
+							<col style="width: 10%" />
+							<col style="width: 23%" />
+							<col style="width: 10%" />
+							<col style="width: 23%" />
+							<col style="width: 34%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th class="required">판매부서</th>
+								<td>
+									<div class="input-group input-group-sm flex-nowrap" style="max-width: 220px;">
+										<input v-model="searchData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+										<input v-model="searchData.deptnm" type="text" class="form-control" placeholder="부서 선택" @keyup.enter="openHelp('SEARCH_DEPT')" />
+										<button class="btn btn-outline-secondary px-2" @click="openHelp('SEARCH_DEPT')"><i class="bi bi-search"></i></button>
+									</div>
+								</td>
+								<th class="required">정산일자</th>
+								<td>
+									<div class="d-flex align-items-center gap-1 flex-grow-1" style="max-width: 260px;">
+										<input v-model="fromdt" type="date" class="form-control form-control-sm" />
+										<span class="text-muted">~</span>
+										<input v-model="todt" type="date" class="form-control form-control-sm" />
+									</div>
+								</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
 
-      <!-- 🅱️ 전표 발행 설정 (등록 영역) - 시각적 차별화 -->
-      <div class="card border shadow-sm overflow-hidden">
-        <div class="card-header py-1 px-3 border-bottom d-flex align-items-center" style="background-color: #f0f7ff !important;">
-          <span class="fw-bold small text-primary"><i class="bi bi-pencil-square me-1"></i> 전표 발행 정보 (등록용)</span>
-        </div>
-        <div class="card-body p-0">
-          <table class="erp-table-full">
-            <tbody>
-              <tr>
-                <th class="required bg-light-primary">전표일자</th>
-                <td style="width: 250px;">
-                  <input v-model="uislipymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
-                </td>
-                <th class="required bg-light-primary">발행부서</th>
-                <td>
-                  <div class="input-group input-group-sm" style="width: 220px;">
-                    <input v-model="registerData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="registerData.deptnm" type="text" class="form-control" placeholder="발행부서 선택" @keyup.enter="openHelp('REG_DEPT')" />
-                    <button class="btn btn-outline-secondary" @click="openHelp('REG_DEPT')"><i class="bi bi-search"></i></button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+			<!-- 🅱️ 전표 발행 설정 (등록 영역) -->
+			<div class="card border shadow-sm overflow-hidden">
+				<div class="card-header py-1 px-3 border-bottom d-flex align-items-center" style="background-color: #f0f7ff !important;">
+					<span class="fw-bold small text-primary"><i class="bi bi-pencil-square me-1"></i> 전표 발행 정보 (등록용)</span>
+				</div>
+				<div class="card-body p-0">
+					<table class="erp-table-full">
+						<colgroup>
+							<col style="width: 10%" />
+							<col style="width: 23%" />
+							<col style="width: 10%" />
+							<col style="width: 23%" />
+							<col style="width: 34%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th class="required bg-light-primary">발행부서</th>
+								<td>
+									<div class="input-group input-group-sm flex-nowrap" style="max-width: 220px;">
+										<input v-model="registerData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+										<input v-model="registerData.deptnm" type="text" class="form-control" placeholder="발행부서 선택" @keyup.enter="openHelp('REG_DEPT')" />
+										<button class="btn btn-outline-secondary px-2" @click="openHelp('REG_DEPT')"><i class="bi bi-search"></i></button>
+									</div>
+								</td>
+								<th class="required bg-light-primary">발행일자</th>
+								<td>
+									<input v-model="uislipymd" type="date" class="form-control form-control-sm" style="max-width: 140px;" />
+								</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
 
-      <!-- Ⓒ 데이터 그리드 영역 (여백 없이 꽉 채움) -->
-      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
-        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
-          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1"></i> 정산 내역</span>
-          <div class="d-flex gap-2 align-items-center">
-            <span class="small text-muted">전체선택</span>
-            <input type="checkbox" v-model="allSelected" @change="toggleAllSelection" class="form-check-input" />
-          </div>
-        </div>
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-          <div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
-        </div>
-      </div>
-    </div>
+			<!-- Ⓒ 데이터 그리드 영역 -->
+			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
+					<span class="fw-bold small text-dark d-flex align-items-center">
+						<i class="bi bi-list-check me-2 text-primary"></i> 전표 발행 대기 목록
+					</span>
+				</div>
+				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+					<div ref="gridElement" class="tabulator-instance flex-grow-1"></div>
+				</div>
+				<!-- 🚀 하단 요약 정보 (Footer) -->
+				<div class="card-footer bg-light border-top py-1 px-3 d-flex justify-content-between align-items-center flex-shrink-0">
+					<div class="small text-muted">
+						[ 선택: <span class="fw-bold text-primary">{{ activeItemCount }}</span> 건 ]
+					</div>
+					<div class="d-flex gap-4 small">
+						<div class="d-flex align-items-center">
+							<span class="me-2 text-muted">공급가:</span>
+							<span class="fw-bold text-dark">{{ formatNumber(sumData.spysum) }}</span>
+						</div>
+						<div class="d-flex align-items-center border-start ps-4">
+							<span class="me-2 text-muted text-info">부가세:</span>
+							<span class="fw-bold text-info">{{ formatNumber(sumData.vatsum) }}</span>
+						</div>
+						<div class="d-flex align-items-center border-start ps-4">
+							<span class="me-2 text-muted text-danger">합계금액:</span>
+							<span class="fw-bold text-danger">{{ formatNumber(sumData.totsum) }}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-
-    <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
-  </div>
+	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
@@ -138,45 +185,43 @@ const uislipymd = computed({ get: () => formatDate(registerData.slipymd, '-'), s
 const gridElement = ref<HTMLElement | null>(null)
 const grid = ref<Tabulator | null>(null)
 const activeItemCount = ref(0)
-const allSelected = ref(false)
 
 // 2. 그리드 초기화
 const initGrid = () => {
   if (!gridElement.value) return
   grid.value = new Tabulator(gridElement.value, {
-    layout: "fitColumns", height: "100%", placeholder: "조회된 내역이 없습니다.",
-    columnDefaults: { headerSort: false },
+    layout: "fitColumns", height: "100%", selectable: true,
+    columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
     columns: [
       {
-        title: "선택", field: "procyn", width: 60, hozAlign: "center",
-        formatter: "tickCross", editor: true, cellEdited: () => updateTotals()
+        title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center",
+        headerClick: () => toggleAllRows()
       },
-      { title: "발행일", field: "jsanymd", width: 150, hozAlign: "center", formatter: (c) => formatDate(c.getValue(), '-') },
+      { title: "발행일", field: "jsanymd", width: 150, formatter: (c) => formatDate(c.getValue(), '-') },
       { title: "부서", field: "deptnm", width: 250 },
-      { title: "거래처", field: "custnm", minWidth: 200 },
+      { title: "거래처", field: "custnm", minWidth: 200, hozAlign: "left", cssClass: "fw-bold" },
       { title: "사업장", field: "unitnm", width: 200 },
       { title: "유형", field: "vattypenm", width: 150 },
       { title: "공급가", field: "spyamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       { title: "부가세", field: "vatamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "합계", field: "jsansum", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" }
+      { title: "합계", field: "jsansum", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" }
     ]
+  })
+
+  grid.value.on('rowSelectionChanged', (data) => {
+    activeItemCount.value = data.length
+    sumData.spysum = data.reduce((acc, cur: any) => acc + (Number(cur.spyamt) || 0), 0)
+    sumData.vatsum = data.reduce((acc, cur: any) => acc + (Number(cur.vatamt) || 0), 0)
+    sumData.totsum = data.reduce((acc, cur: any) => acc + (Number(cur.jsansum) || 0), 0)
   })
 }
 
-const updateTotals = () => {
-  if (!grid.value) return
-  const data = grid.value.getData().filter((i: any) => i.procyn)
-  activeItemCount.value = data.length
-  sumData.spysum = data.reduce((acc, cur) => acc + (Number(cur.spyamt) || 0), 0)
-  sumData.vatsum = data.reduce((acc, cur) => acc + (Number(cur.vatamt) || 0), 0)
-  sumData.totsum = sumData.spysum + sumData.vatsum
-}
-
-const toggleAllSelection = () => {
-  if (!grid.value) return
-  const data = grid.value.getData()
-  grid.value.updateData(data.map(i => ({ ...i, procyn: allSelected.value })))
-  updateTotals()
+const toggleAllRows = () => {
+	if (!grid.value) return
+	const rows = grid.value.getRows()
+	const allSelected = grid.value.getSelectedRows().length === rows.length
+	if (allSelected) grid.value.deselectRow()
+	else grid.value.selectRow()
 }
 
 // 3. 기능 구현
@@ -184,19 +229,22 @@ async function search() {
   if (!searchData.deptcd) return vAlertError('판매부서를 선택하세요.')
   try {
     const res = await api.post('/api/hsio/HSIO_531U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '200',
-      fromdt: searchData.fromdt, todt: searchData.todt,
-      deptcd: searchData.deptcd, salsemp: searchData.salsemp === '000' ? '' : searchData.salsemp
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
+      iogbn: '200',
+      fromdt: searchData.fromdt,
+      todt: searchData.todt,
+      deptcd: searchData.deptcd,
+      salsemp: searchData.salsemp === '000' ? '' : searchData.salsemp
     })
     if (grid.value) {
-      grid.value.setData(res.data.map((i: any) => ({
-        ...i,
-        jsanymd: i.jsanymd || i.jsanymd,
-        procyn: false,
-        jsansum: Number(i.spyamt || 0) + Number(i.vatamt || 0)
-      })))
-      allSelected.value = false
-      updateTotals()
+      const normalizedData = (res.data || []).map((row: any) => {
+          const item = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
+          item.jsansum = (Number(item.spyamt) || 0) + (Number(item.vatamt) || 0)
+          return item
+      })
+      grid.value.setData(normalizedData)
+      vAlert('조회되었습니다.')
     }
   } catch (e) { vAlertError('조회 실패') }
 }
@@ -205,15 +253,16 @@ async function search() {
  * 🚀 전표 발행 처리 (ASP 로직 반영 + 소문자 통일)
  */
 async function issueSlip() {
-  const selected = grid.value?.getData().filter((i: any) => i.procyn)
+  const selected = grid.value?.getSelectedData()
   if (!selected || selected.length === 0) return vAlertError('전표발행 대상을 선택하시기 바랍니다.')
 
   // 마감 체크
-  if (registerData.slipymd <= registerData.clsymd) return vAlertError('회계정보가 마감이 되었습니다. 해당 전표일자로 작업할 수 없습니다.')
-  if (registerData.sclsym && registerData.sclsym >= registerData.slipymd.substring(0, 6)) return vAlertError('영업정보가 마감이 되었습니다. 해당 전표일자로 작업할 수 없습니다.')
+  if (registerData.slipymd <= registerData.clsymd) return vAlertError(`회계 마감된 일자입니다. (마감: ${registerData.clsymd})`)
+  if (registerData.sclsym && registerData.sclsym >= registerData.slipymd.substring(0, 6)) return vAlertError(`영업 마감된 월입니다. (마감: ${registerData.sclsym})`)
 
   // 데이터 검증
   for (const item of selected) {
+    if (!item.outcustcd) return vAlertError('외부 거래처 등록에서 등록 후 처리 바랍니다.')
     if (!item.custcd) return vAlertError('거래처코드가 없는 항목이 있습니다.')
     if (Number(item.jsansum) === 0) return vAlertError('합계금액이 0인 항목은 발행할 수 없습니다.')
   }
@@ -230,7 +279,7 @@ async function issueSlip() {
     const mRes = await api.post('/api/hsio/HSIO_531U_STR', {
       actkind: 'A0',
       cmpycd: authStore.cmpycd,
-      gubun: '200',
+      iogbn: '200',
       fromdt: fromdt,
       todt: todt,
       deptcd: '', // 마스터 발행 시에는 빈값
@@ -251,7 +300,7 @@ async function issueSlip() {
     })
 
     const resM = mRes.data?.[0]
-    const slipno = resM?.slipno || resM?.slipno
+    const slipno = resM?.slipno || resM?.col_1
 
     if (slipno) {
       // 2. 전표 상세 매핑 (U0) - 루프 처리
@@ -259,13 +308,13 @@ async function issueSlip() {
         const dRes = await api.post('/api/hsio/HSIO_531U_STR', {
           actkind: 'U0',
           cmpycd: authStore.cmpycd,
-          gubun: '200',
+          iogbn: '200',
           fromdt: fromdt,
           todt: todt,
-          deptcd: item.deptcd || item.deptcd,
+          deptcd: item.deptcd,
           jsanym: item.jsanym,
           jsanno: item.jsanno,
-          jsanymd: (item.jsanymd || item.jsanymd || '').replace(/-/g, ''),
+          jsanymd: (item.jsanymd || '').replace(/-/g, ''),
           spyamt: String(item.spyamt || '0').replace(/,/g, ''),
           vatamt: String(item.vatamt || '0').replace(/,/g, ''),
           custcd: item.custcd,
@@ -304,7 +353,6 @@ function initialize() {
   Object.assign(searchData, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, fromdt: initfromdt, todt: initymd, salsemp: '000' })
   Object.assign(registerData, { slipymd: initymd, deptcd: authStore.deptcd, deptnm: authStore.deptnm })
   if (grid.value) grid.value.clearData()
-  updateTotals()
 }
 
 // 4. 팝업 및 기초정보
@@ -333,10 +381,15 @@ onMounted(async () => {
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) {
       const d = r.data[0]
-      registerData.clsymd = String(d.clsymd || d.CLSYMD || Object.values(d)[0]).trim()
-      registerData.sclsym = String(d.sclsym || d.SCLSYM || Object.values(d)[1]).trim()
+      registerData.clsymd = String(d.clsymd || d.CLSYMD || '').trim()
+      registerData.sclsym = String(d.sclsym || d.SCLSYM || '').trim()
     }
   })
   nextTick(() => initGrid())
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+.bg-light-primary { background-color: #f8fbff !important; }
+</style>

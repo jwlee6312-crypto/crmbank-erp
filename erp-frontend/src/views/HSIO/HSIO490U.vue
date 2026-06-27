@@ -88,7 +88,7 @@
                       </div>
                     </td>
                     <th class="bg-light text-center">반품번호</th>
-                    <td><input v-model="form_02.iono" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
+                    <td><input :value="form_02.iono ? (form_02.ioym || '') + form_02.iono : ''" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
                     <th class="required bg-light text-center">반품일자</th>
                     <td><input v-model="form_02.ioymd" type="date" class="form-control" :readonly="isClosed" /></td>
                     <th class="required bg-light text-center">담당자</th>
@@ -187,7 +187,6 @@ const tableRef1 = ref<HTMLDivElement | null>(null)
 const tableRef2 = ref<HTMLDivElement | null>(null)
 let grid1: Tabulator | null = null
 let grid2: Tabulator | null = null
-const MIN_ROWS = 12;
 
 const isClosed = computed(() => {
   if (!closingInfo.sclsym || !form_02.ioymd) return false
@@ -203,7 +202,12 @@ const initGrids = () => {
     columns: [
       { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
       { title: "거래처명", field: "custnm", hozAlign: "left", headerSort: false },
-      { title: "반품번호", field: "iono", hozAlign: "center", width: 110, cssClass: "fw-bold text-primary", headerSort: false }
+      { title: "반품번호", field: "iono", hozAlign: "center", width: 110, cssClass: "fw-bold text-primary", headerSort: false,
+        formatter: (cell: any) => {
+          const data = cell.getData();
+          return (data.ioym || '') + (data.iono || '');
+        }
+      }
     ],
   });
   grid1.on("rowClick", (e, row) => fetchDetail(row.getData()));
@@ -232,9 +236,9 @@ const initGrids = () => {
       { title: "규격", field: "itsize", width: 120 },
       { title: "단위", field: "unit", width: 60, hozAlign: "center" },
       { title: "재고", field: "stock", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "수량", field: "ioqty", width: 90, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()), bottomCalc: "sum" },
-      { title: "단가", field: "price", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
-      { title: "공급가", field: "ioamt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+      { title: "수량", field: "ioqty", width: 90, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow(), 'ioqty'), bottomCalc: "sum" },
+      { title: "단가", field: "price", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow(), 'price') },
+      { title: "공급가", field: "ioamt", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow(), 'ioamt'), formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "부가세", field: "iovat", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "합계", field: "totamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "삭제", width: 40, hozAlign: "center",
@@ -265,22 +269,23 @@ const fetchWhOptions = async () => {
   }
 }
 
-const setGridDataWithPadding = (data: any[]) => {
-  const displayData = data.map(i => ({ ...i, _STATE: 'EXIST' }));
-  while (displayData.length < MIN_ROWS) {
-    displayData.push({ _STATE: 'EMPTY', ioqty: 0, price: 0, ioamt: 0, iovat: 0, totamt: 0 });
-  }
-  grid2?.setData(displayData);
-}
-
-const calcRow = (row: any) => {
+const calcRow = (row: any, field: string) => {
   const data = row.getData();
   if (data._STATE === 'EMPTY') return;
 
-  const amt = Math.floor(Number(data.ioqty || 0) * Number(data.price || 0));
+  let qty = Number(data.ioqty || 0);
+  let price = Number(data.price || 0);
+  let amt = Number(data.ioamt || 0);
+
+  if (field === 'ioqty' || field === 'price') {
+    amt = Math.floor(qty * price);
+  } else if (field === 'ioamt') {
+    price = qty !== 0 ? Math.floor(amt / qty) : 0;
+  }
+
   const vat = Math.floor(amt * 0.1);
   row.update({
-    ioamt: amt, iovat: vat, totamt: amt + vat,
+    ioamt: amt, price: price, iovat: vat, totamt: amt + vat,
     state: data.iorowno ? 'U' : 'C'
   });
   updateTotalSum();
@@ -299,13 +304,28 @@ const handleOpenHelp = (type: string, target?: any) => {
   } else if (type === 'CUST') {
     openHelp('CUST', (d) => { form_02.custcd = d.custcd; form_02.custnm = d.custnm });
   } else if (type === 'ITEM') {
-    openHelp('ITEM', (d) => {
-      target.update({
-        itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, stock: d.stock || 0,
-        price: d.outprice || 0, ioqty: 1, state: 'C', _STATE: 'NEW'
-      });
-      calcRow(target);
+    Object.assign(modalProps, {
+      title: '품목 선택',
+      path: '/api/hs00/HS00_000S_STR',
+      defaultField: 'itemnm',
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', code: '', remark: '' },
+      columns: [
+        { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+        { title: '품목명', field: 'itemnm', width: 200 },
+        { title: '규격', field: 'itsize', width: 150 },
+        { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+      ],
+      onConfirm: (d: any) => {
+        target.update({
+          itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit,
+          pkunit: d.unit,
+          stock: d.stock || 0,
+          price: d.outprice || 0, ioqty: 1, state: 'C', _STATE: 'NEW'
+        });
+        calcRow(target, 'price');
+      }
     });
+    modalVisible.value = true;
   }
 }
 
@@ -319,7 +339,15 @@ const handleRowAction = (row: any) => {
 
 async function search() {
   try {
-    const params = { fromdt: form_01.fromdt.replace(/-/g, ''), todt: form_01.todt.replace(/-/g, ''), schcustnm: form_01.schcustnm }
+    const params = {
+      actkind: 'L',
+      cmpycd: authStore.cmpycd,
+      iogbn: '200',
+      fromdt: form_01.fromdt.replace(/-/g, ''),
+      todt: form_01.todt.replace(/-/g, ''),
+      custnm: form_01.schcustnm
+    }
+
     const res = await api.post('/api/hsio/HSIO_490U_STR', params);
     grid1?.setData(res.data);
     vAlert('조회되었습니다.');
@@ -329,23 +357,77 @@ async function search() {
 async function fetchDetail(row: any) {
   Object.assign(form_02, row);
   try {
-    const res = await api.post('/api/hsio/HSIO_491U_STR', { iono: row.iono });
-    setGridDataWithPadding(res.data);
+    const res = await api.post('/api/hsio/HSIO_491U_STR', {
+      actkind: 'S',
+      cmpycd: authStore.cmpycd,
+      iogbn: '200',
+      ioym: row.ioym,
+      iono: row.iono,
+      ioqty: 0, ioamt: 0, iovat: 0
+    });
+    grid2?.setData(res.data.map((i: any) => {
+      const ioqty = Math.abs(Number(i.ioqty || 0));
+      const ioamt = Math.abs(Number(i.ioamt || 0));
+      // 단가가 0인 경우 금액/수량으로 계산
+      const price = i.price && Number(i.price) !== 0 ? Math.abs(Number(i.price)) : (ioqty !== 0 ? Math.floor(ioamt / ioqty) : 0);
+      return {
+        ...i,
+        ioqty,
+        ioamt,
+        price,
+        iovat: Math.abs(Number(i.iovat || 0)),
+        totamt: Math.abs(Number(i.ioamt || 0) + Number(i.iovat || 0)),
+        _STATE: 'EXIST'
+      };
+    }));
     updateTotalSum();
   } catch (e) { vAlertError('상세 로드 실패'); }
 }
 
 async function save() {
-  const details = grid2?.getData().filter(r => r._STATE !== 'EMPTY' && r.state) || [];
-  if (!details.length) return vAlertError('저장할 품목이 없습니다.');
+  if (isClosed.value) return vAlertError('마감된 월입니다.');
+  if (!form_02.custcd) return vAlertError('거래처를 선택하세요.');
 
-  const payload = {
-    inout_MstDto: { ...form_02, ioymd: form_02.ioymd.replace(/-/g, '') },
-    inout_DtlDto: details
+  const details = grid2?.getData().filter(r => r._STATE !== 'EMPTY' && r.state) || [];
+  if (!details.length && !form_02.iono) return vAlertError('저장할 품목이 없습니다.');
+
+  const ioymd = form_02.ioymd.replace(/-/g, '');
+  const mst = {
+    ...form_02,
+    cmpycd: authStore.cmpycd,
+    iogbn: '200',
+    ioymd: ioymd,
+    iotype: '100',
+    ioym: ioymd.substring(0, 6),
+    actkind: form_02.iono ? 'U' : 'A',
+    cfmyn: 'Y',
+    userid: form_02.userid,
+    updemp: authStore.userid
   };
 
+  const dtl = details.map(d => ({
+    ...d,
+    cmpycd: authStore.cmpycd,
+    iogbn: '200',
+    ioymd: ioymd,
+    ioym: ioymd.substring(0, 6),
+    iotype: '100',
+    deptcd: form_02.deptcd,
+    custcd: form_02.custcd,
+    whcd: form_02.whcd,
+    userid: form_02.userid,
+    area: '',
+    cfmyn: 'Y',
+    ino: '',
+    ioqty: Number(d.ioqty || 0) * -1,
+    ioamt: Number(d.ioamt || 0) * -1,
+    iovat: Number(d.iovat || 0) * -1,
+    actkind: d.state === 'D' ? 'D' : (d.iorowno ? 'U' : 'A'),
+    updemp: authStore.userid
+  }));
+
   try {
-    await api.post('/api/hsio/HSIO_490U_SAVE', payload);
+    await api.post('/api/hsio/HSIO_490U_SAVE', { mst, dtl });
     vAlert('저장되었습니다.');
     search();
   } catch (e) { vAlertError('저장 실패'); }
@@ -369,14 +451,22 @@ function initialize() {
   if (whOptions.value.length > 0) form_02.whcd = whOptions.value[0].whcd;
   form_02.userid = authStore.userid;
   form_02.totsum = 0;
-  grid1?.clearData(); setGridDataWithPadding([]);
+  grid1?.clearData(); grid2?.setData([]);
 }
 
 async function handleFullDelete() {
   if (!form_02.iono) return;
+  if (isClosed.value) return vAlertError('마감된 월입니다.');
   if (!confirm(`반품번호 ${form_02.iono}를 삭제하시겠습니까?`)) return;
   try {
-    await api.post('/api/hsio/HSIO_490U_DELETE', { iono: form_02.iono });
+    await api.post('/api/hsio/HSIO_490U_STR', {
+      actkind: 'D',
+      cmpycd: authStore.cmpycd,
+      iogbn: '200',
+      ioym: form_02.ioym || form_02.ioymd.replace(/-/g, '').substring(0, 6),
+      iono: form_02.iono,
+      cfmyn: 'Y'
+    });
     vAlert('삭제되었습니다.');
     initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
@@ -384,7 +474,8 @@ async function handleFullDelete() {
 
 onMounted(async () => {
   await fetchWhOptions();
-  api.get('/api/user').then(res => { userData.value = res.data; });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' }).then(r => { userData.value = r.data; });
+
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym;
   });

@@ -1,102 +1,88 @@
 <!--
 	=============================================================
-	프로그램명	: 거래처/품목별 매출 총이익 명세서 [디자인 원칙 13가지 + 검색영역 단일행 균등배분]
-	작성일자	: 25.02.24
-	작성자	    : AI Assistant
-	설명        : 거래처별 품목 매출액, 원가, 이익 및 이익률 현황 조회 (당월/누계)
+	프로그램명	: 거래처/품목별 매출 총이익 명세서 (HSST360S)
+	작성일자	: 2025.02.24
+	설명        : 거래처별 품목 매출액, 원가, 이익 및 이익률 현황 조회 (HSOD100U 디자인 표준 적용)
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-	<div class="erp-container">
-		<!-- 🚀 1, 11, 12. 상단 액션 바: 버튼 그룹 우측 상단 정렬 및 표준 색상 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-person-badge-fill me-2 text-primary" style="font-size: 18px;"></i>
-				매출분석 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">거래처/품목별 매출 총이익 명세서 (HSST360S)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기화
-				</button>
-				<button class="btn-erp btn-search" @click="search">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-excel" @click="excel">
-					<i class="bi bi-file-earmark-excel"></i> 엑셀
-				</button>
-				<button class="btn-erp btn-print" @click="print">
-					<i class="bi bi-printer"></i> 인쇄
-				</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-person-badge-fill me-2 text-primary" style="font-size: 18px;"></i>
+        매출분석 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        통계현황 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">거래처/품목별 매출 총이익 명세서 (HSST360S)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-print" @click="print">인쇄</button>
+        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
+      </div>
+    </div>
 
-		<!-- 🔍 9. 최상단 검색 항목 영역 (단일행 33.3% 균등 배분 적용) -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm overflow-hidden">
-				<table class="erp-table-full" style="table-layout: fixed;">
-					<colgroup>
-						<col style="width: 33.3%;" />
-						<col style="width: 33.3%;" />
-						<col style="width: 33.4%;" />
-					</colgroup>
-					<tbody>
-						<tr>
-							<td>
-								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">조회연월</span>
-									<div class="d-flex align-items-center gap-1 flex-grow-1" style="max-width: 250px;">
-										<select v-model="searchForm.yy" class="form-select form-select-sm">
-											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
-										</select>
-										<select v-model="searchForm.mm" class="form-select form-select-sm">
-											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
-										</select>
-										<span class="text-muted small ms-1">현재</span>
-									</div>
-								</div>
-							</td>
-							<td>
-								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">매출부서</span>
-									<div class="input-group input-group-sm flex-nowrap" style="max-width: 300px;">
-										<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" />
-										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-									</div>
-								</div>
-							</td>
-							<td>
-								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">거 래 처</span>
-									<div class="input-group input-group-sm flex-nowrap" style="max-width: 300px;">
-										<input v-model="searchForm.custcd" type="text" class="form-control text-center bg-white" style="max-width: 70px;" readonly />
-										<input v-model="searchForm.custnm" type="text" class="form-control" placeholder="거래처 선택" />
-										<button class="btn btn-outline-secondary px-2" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
-									</div>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+      <!-- 🅰️ 조회 조건 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 10%" /><col style="width: 20%" />
+                <col style="width: 10%" /><col style="width: 25%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="required text-center bg-light">매출부서</th>
+                <td>
+                  <div class="input-group input-group-sm">
+                    <input v-model="searchForm.deptnm" class="form-control fw-bold text-primary" readonly />
+                    <button class="btn btn-outline-secondary" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="required text-center bg-light">조회연월</th>
+                <td>
+                  <div class="d-flex align-items-center gap-1">
+                    <select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;">
+                      <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
+                    </select>
+                    <select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;">
+                      <option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
+                    </select>
+                  </div>
+                </td>
+                <th class="required text-center bg-light">거 래 처</th>
+                <td>
+                  <div class="input-group input-group-sm">
+                    <input v-model="searchForm.custnm" class="form-control" placeholder="거래처 선택" readonly />
+                    <button class="btn btn-outline-secondary" @click="openHelp('CUST')"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-		<!-- 📊 6, 8. 중앙 그리드 영역 (중앙 정렬 표준 적용) -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                </div>
-			</div>
-		</div>
-
-	</div>
-
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+      <!-- 🅱️ 데이터 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>거래처/품목별 매출 상세 현황</span>
+          <div class="small text-muted">품목명을 클릭하면 품목별 매출 상세 내역(HSST350S)으로 이동합니다.</div>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -110,19 +96,21 @@ import { useFormReset } from '@/composables/useFormReset'
 import { useRouter } from 'vue-router'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps } = useCommonHelp()
 
 const now = new Date();
 const currentyy = String(now.getFullYear());
 const currentmm = String(now.getMonth() + 1).padStart(2, '0');
 
-// 13. 모든 변수명 대문자 고수
-const searchForm = reactive({
+const searchForm = reactive<any>({
 	deptcd: authStore.deptcd,
 	deptnm: authStore.deptnm,
 	custcd: '',
@@ -134,9 +122,8 @@ const searchForm = reactive({
 const yearOptions = ref<string[]>(Array.from({ length: 5 }, (_, i) => String(now.getFullYear() - i)));
 const monthOptions = ref<string[]>(Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')));
 
-const rowCount = ref(0)
-const totals = reactive({ amtsum: 0, costsum: 0, profsum: 0, amtsum_t: 0, costsum_t: 0, profsum_t: 0 })
-const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
+const mainGridRef = ref<HTMLDivElement | null>(null);
+let mainGrid: Tabulator | null = null
 
 const search = async () => {
 	if (!searchForm.deptcd) return vAlertError('부서를 선택하세요.');
@@ -148,18 +135,8 @@ const search = async () => {
 			cmpycd: authStore.cmpycd,
 			ym: searchForm.yy + searchForm.mm
 		})
-		const data = res.data || []
+		const data = (res.data || []).map((i: any) => Object.fromEntries(Object.entries(i).map(([k, v]) => [k.toLowerCase(), v])));
 		mainGrid?.setData(data)
-		rowCount.value = data.length
-
-		totals.amtsum = data.reduce((acc: number, cur: any) => acc + (Number(cur.salsamt) || 0), 0)
-		totals.costsum = data.reduce((acc: number, cur: any) => acc + (Number(cur.salscost) || 0), 0)
-		totals.profsum = totals.amtsum - totals.costsum
-
-		totals.amtsum_t = data.reduce((acc: number, cur: any) => acc + (Number(cur.salsamt_t) || 0), 0)
-		totals.costsum_t = data.reduce((acc: number, cur: any) => acc + (Number(cur.salscost_t) || 0), 0)
-		totals.profsum_t = totals.amtsum_t - totals.costsum_t
-
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
@@ -167,79 +144,87 @@ const search = async () => {
 const initialize = () => {
 	resetForm(searchForm);
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
-	searchForm.custcd = ''; searchForm.custnm = '';
 	searchForm.yy = currentyy; searchForm.mm = currentmm;
-	mainGrid?.clearData(); rowCount.value = 0;
-	Object.assign(totals, { amtsum: 0, costsum: 0, profsum: 0, amtsum_t: 0, costsum_t: 0, profsum_t: 0 });
+	mainGrid?.clearData();
 }
 
 const excel = () => mainGrid?.download("xlsx", "거래처_품목별매출총이익.xlsx")
 const print = () => vAlert('인쇄 기능을 준비 중입니다.')
 
-const modalVisible = ref(false);
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
 function openHelp(type: string) {
-	if (type === 'DEPT') {
-		Object.assign(modalProps, {
-			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd },
-			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
-			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
-		})
-	} else if (type === 'CUST') {
-		Object.assign(modalProps, {
-			title: '거래처 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'custnm',
-			data: { gubun: 'C0', cmpycd: authStore.cmpycd },
-			columns: [{ title: '코드', field: 'custcd', width: 100 }, { title: '거래처명', field: 'custnm', width: 200 }],
-			onConfirm: (d: any) => { searchForm.custcd = d.custcd; searchForm.custnm = d.custnm }
-		})
-	}
+    if (type === 'DEPT') {
+        Object.assign(modalProps, {
+            title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
+            columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+            data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+            onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm; search(); }
+        })
+    } else if (type === 'CUST') {
+        Object.assign(modalProps, {
+            title: '거래처 선택', path: '/api/ha00/HA00_00P_STR',
+            columns: [{ title: '코드', field: 'custcd', width: 100 }, { title: '거래처명', field: 'custnm', width: 200 }],
+            data: { gubun: 'C4', cmpycd: authStore.cmpycd },
+            onConfirm: (d: any) => { searchForm.custcd = d.custcd; searchForm.custnm = d.custnm; search(); }
+        })
+    }
 	modalVisible.value = true
 }
-
-const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 
 onMounted(() => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%',
-			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 80 },
+			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
+                { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
 				{
-					title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold text-primary cursor-pointer", frozen: true,
+					title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 2, hozAlign: "left", cssClass: "fw-bold text-primary cursor-pointer border-end", frozen: true,
 					cellClick: (e, cell) => {
 						const d = cell.getData();
-						router.push({ path: '/HSST/HSST350S', query: { deptcd: searchForm.deptcd, yy: searchForm.yy,.mm: searchForm.mm, itemcd: d.itemcd } });
+						router.push({ path: '/HSST/HSST350S', query: { deptcd: searchForm.deptcd, yy: searchForm.yy, mm: searchForm.mm, itemcd: d.itemcd } });
 					}
 				},
 				{
 					title: "당월 실적 (Current Month)",
 					columns: [
-						{ title: "매출액", field: "salsamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매출원가", field: "salscost", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매총이익", field: "salsprof", hozAlign: "right", width: 150, formatter: "money", mutatorData: (v,d) => (Number(d.salsamt)||0) - (Number(d.SALSCOST)||0), cssClass: "text-info fw-bold" },
-						{ title: "이익률(%)", field: "prof_rate", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
-							const s = Number(d.salsamt)||0;
-							return s !== 0 ? ((s - (Number(d.salscost)||0)) / s * 100) : 0;
-						}}
+						{ title: "매출액", field: "salsamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
+						{ title: "매출원가", field: "salscost", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
+						{
+                            title: "매총이익", field: "salsprof", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 },
+                            mutatorData: (v,d) => (Number(d.salsamt)||0) - (Number(d.salscost)||0),
+                            bottomCalc: "sum", bottomCalcFormatter: "money", cssClass: "bg-light-gray"
+                        },
+						{ title: "이익률(%)", field: "prof_rate", hozAlign: "right", width: 120, formatter: (c) => Number(c.getValue()||0).toFixed(1) + '%' }
 					]
 				},
 				{
 					title: "누계 실적 (Cumulative)",
 					columns: [
-						{ title: "매출액", field: "salsamt_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매출원가", field: "salscost_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "매총이익", field: "salsprof_t", hozAlign: "right", width: 150, formatter: "money", mutatorData: (v,d) => (Number(d.salsamt_T)||0) - (Number(d.SALSCOST_T)||0), cssClass: "text-warning fw-bold" },
-						{ title: "이익률(%)", field: "prof_rate_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
-							const s = Number(d.salsamt_t)||0;
-							return s !== 0 ? ((s - (Number(d.salscost_t)||0)) / s * 100) : 0;
-						}}
+						{ title: "매출액", field: "salsamt_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
+						{ title: "매출원가", field: "salscost_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },
+						{
+                            title: "매총이익", field: "salsprof_t", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 },
+                            mutatorData: (v,d) => (Number(d.salsamt_t)||0) - (Number(d.salscost_t)||0),
+                            bottomCalc: "sum", bottomCalcFormatter: "money", cssClass: "bg-light-gray"
+                        },
+						{ title: "이익률(%)", field: "prof_rate_t", hozAlign: "right", width: 120, formatter: (c) => Number(c.getValue()||0).toFixed(1) + '%' }
 					]
 				}
-			]
+			],
+            columnCalcs: "table"
 		})
 	}
 })
 </script>
 
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+
+/* 🚀 2단 헤더에서 단일 컬럼의 타이틀을 수직 중앙 정렬 */
+:deep(.tabulator-header .tabulator-col:not(.tabulator-col-group) .tabulator-col-content) {
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+</style>

@@ -10,7 +10,7 @@ public class Hsio570u {
     private String        cmpycd;
     private String        fromdt;
     private String        todt;
-    private String        custnm;
+    private String        deptnm;
     private String        iogbn;
     private String        ioym;
     private String        iono;

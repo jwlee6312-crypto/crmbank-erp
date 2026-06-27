@@ -90,7 +90,7 @@ const { resetForm } = useFormReset()
 
 // 🔍 검색 데이터
 const searchForm = reactive({
-	iogbn: '000',
+	iogbn: '010',
 	custnm: '',
     bossnm: ''
 })
@@ -163,7 +163,7 @@ const search = async () => {
 
 const initialize = () => {
 	resetForm(searchForm)
-	searchForm.iogbn = '000'
+	searchForm.iogbn = '010'
 	mainGrid?.clearData()
 }
 
@@ -179,6 +179,10 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
+			pagination: "local",
+			paginationSize: 50,
+			paginationButtonCount: 10,
+			paginationSizeSelector: [50, 100, 200, 500],
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{
@@ -192,7 +196,7 @@ onMounted(() => {
 					cellClick: (e, cell) => goDetail(cell.getData())
 				},
 				{ title: "구분", field: "iogbnnm", width: 80, hozAlign: "center" },
-				{ title: "종류", field: "custgbnnm", width: 80, hozAlign: "center" },
+				{ title: "종류", field: "custgbnm", width: 80, hozAlign: "center" },
 				{ title: "사업자번호", field: "custno_f", width: 115, hozAlign: "center" },
 				{ title: "대표자", field: "bossnm", width: 90, hozAlign: "center" },
 				{ title: "업태", field: "custtype", width: 120 },
@@ -211,4 +215,22 @@ onMounted(() => {
 .tabulator-instance { width: 100% !important; background-color: #fff; }
 :deep(.tabulator-row:hover) { background-color: #f0f7ff !important; cursor: pointer; }
 .cursor-pointer { cursor: pointer; }
+:deep(.tabulator-footer) {
+	background-color: #f8f9fa !important;
+	border-top: 1px solid #dee2e6 !important;
+	font-size: 12px !important;
+	padding: 5px !important;
+}
+:deep(.tabulator-page) {
+	padding: 2px 8px !important;
+	margin: 0 2px !important;
+	border: 1px solid #ddd !important;
+	border-radius: 3px !important;
+	background: #fff !important;
+}
+:deep(.tabulator-page.active) {
+	background: #0d6efd !important;
+	color: #fff !important;
+	border-color: #0d6efd !important;
+}
 </style>

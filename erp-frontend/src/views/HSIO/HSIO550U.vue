@@ -104,6 +104,7 @@
                   <th class="bg-light text-center">배 송 처</th>
                   <td colspan="3">
                     <AddressPopupForm
+                      v-model:trancd="masterData.trancd"
                       v-model:postno="masterData.postno"
                       v-model:address="masterData.address"
                       v-model:d_address="masterData.d_address"
@@ -230,46 +231,52 @@ const fetchWhOptions = async () => {
 const fetchCustList = async () => {
   try {
     const res = await api.post('/api/hsio/HSIO_550U_STR', {
-        actkind: 'S1',
-        cmpycd: authStore.cmpycd,
-        iogbn: '200',
-        fromdt: searchParam.fromdt.replace(/-/g, ''),
-        todt: searchParam.todt.replace(/-/g, ''),
-        whcd: searchParam.whcd || '',
-        userid: authStore.userid,
-        totsum: '0',
-        updemp: authStore.userid
+        actkind: 'S1', cmpycd: authStore.cmpycd || '', iogbn: '200',
+        fromdt: (searchParam.fromdt || '').replace(/-/g, ''),
+        todt: (searchParam.todt || '').replace(/-/g, ''),
+        custcd: '', deptcd: '', ioym: '', iono: '', ioymd: '', iotype: '',
+        whcd: searchParam.whcd || '', area: '',
+        userid: authStore.userid || '', trnemp: '', trancd: '',
+        addres: '', remark: '', cfmyn: '', totsum: 0,
+        updemp: authStore.userid || ''
     });
+    console.log('📦 [Seed-Model] 조회 결과:', res.data);
     custGrid?.setData(res.data || []);
   } catch (e) { vAlertError('조회 실패') }
 }
 
 const fetchDetails = async (row: any) => {
-  // 🚀 좌측 그리드에서 조회된 정보를 우측 마스터 정보 폼에 즉시 전달 (주소 및 배송 정보 포함)
-  masterData.custcd = row.custcd || '';
-  masterData.custnm = row.custnm || '';
-  masterData.postno = row.postno || '';
-  masterData.address = row.address || '';
-  masterData.d_address = row.d_address || '';
-  masterData.trancd = row.trancd || '';
-  masterData.trannm = row.trannm || '';
-  masterData.trnemp = row.trnemp || '';
+  // 🚀 모든 필드에 대해 null 체크 및 빈 문자열 처리 강제
+  masterData.custcd = (row.custcd || '').toString().trim();
+  masterData.custnm = (row.custnm || '').toString().trim();
+  masterData.postno = (row.postno || '').toString().trim();
+  masterData.address = (row.address || '').toString().trim();
+  masterData.d_address = (row.d_address || '').toString().trim();
+  masterData.trancd = (row.trancd || '').toString().trim();
+  masterData.trannm = (row.trannm || '').toString().trim();
+  masterData.trnemp = (row.trnemp || '').toString().trim();
 
   try {
     const res = await api.post('/api/hsio/HSIO_550U_STR', {
-        actkind: 'S0',
-        cmpycd: authStore.cmpycd,
-        custcd: row.custcd,
-        iogbn: '200',
-        fromdt: searchParam.fromdt.replace(/-/g, ''),
-        todt: searchParam.todt.replace(/-/g, ''),
-        whcd: searchParam.whcd || '',
-        userid: authStore.userid,
-        iotype: '0',
-        totsum: '0',
-        updemp: authStore.userid
+        actkind: 'S0', cmpycd: authStore.cmpycd || '', iogbn: '200',
+        fromdt: (searchParam.fromdt || '').replace(/-/g, ''),
+        todt: (searchParam.todt || '').replace(/-/g, ''),
+        custcd: masterData.custcd || '', deptcd: '', ioym: '', iono: '', ioymd: '', iotype: '',
+        whcd: searchParam.whcd || '', area: '',
+        userid: authStore.userid || '', trnemp: '', trancd: '',
+        addres: '', remark: '', cfmyn: '', totsum: 0,
+        updemp: authStore.userid || ''
     });
-    const detailData = (res.data || []).map((i: any) => ({ ...i, ioqty: i.janqty }));
+    const detailData = (res.data || []).map((i: any) => ({
+        ...i,
+        ioqty: i.janqty || 0,
+        itemcd: i.itemcd || '',
+        itsize: i.itsize || '',
+        unit: i.unit || '',
+        deptnm: i.deptnm || '',
+        ordymd: i.ordymd || '',
+        outymd: i.outymd || ''
+    }));
     detailGrid?.setData(detailData).then(() => {
         detailGrid?.selectRow(); // 🚀 조회 시 전체 선택 기본값 (Standard)
     });
@@ -305,31 +312,41 @@ const save = async () => {
     const totalAmtSum = detailItems.reduce((acc, cur) => acc + cur.outamt, 0);
 
     const masterParams = {
-        actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200',
-        fromdt: searchParam.fromdt.replace(/-/g, ''), todt: searchParam.todt.replace(/-/g, ''),
-        custcd: masterData.custcd, deptcd: authStore.deptcd, ioym: '', iono: '', ioymd: ioymd,
-        iotype: '100', whcd: masterData.whcd, area: masterData.area || '', userid: authStore.userid,
-        trnemp: masterData.trnemp || '', trancd: masterData.trancd || '', address: masterData.address || '',
-        d_address: masterData.d_address || '',
-        remark: masterData.remark || '', cfmyn: 'Y', totsum: totalAmtSum, updemp: authStore.userid
+        actkind: 'A0', cmpycd: authStore.cmpycd || '', iogbn: '200',
+        fromdt: (searchParam.fromdt || '').replace(/-/g, ''),
+        todt: (searchParam.todt || '').replace(/-/g, ''),
+        custcd: masterData.custcd || '',
+        deptcd: authStore.deptcd || '',
+        ioym: '', iono: '',
+        ioymd: ioymd || '',
+        iotype: '100',
+        whcd: masterData.whcd || '',
+        area: masterData.area || '',
+        userid: authStore.userid || '',
+        trnemp: masterData.trnemp || '',
+        trancd: masterData.trancd || '',
+        addres: masterData.address || '', // 🚀 addres 매핑
+        remark: masterData.remark || '',
+        cfmyn: 'Y',
+        totsum: totalAmtSum || 0,
+        updemp: authStore.userid || ''
     }
     // 🚀 [Seed-Model 표준 루틴] Step 1. 마스터 저장 실행
     const resMst = await api.post('/api/hsio/HSIO_550U_STR', masterParams);
     const mstData = resMst.data?.[0];
     console.log('📦 [Seed-Model] Master Save Result:', mstData);
 
-    // 🚀 [Seed-Model 표준 루틴] Step 2. 무결성 키 추출 (알리아스 우선 + 순서 보정)
-    const rowValues = mstData?.returnkeyvalue || [];
-    const key1 = (mstData?.ioym || rowValues[0] || '').toString().trim();
-    const key2 = (mstData?.iono || rowValues[1] || '').toString().trim();
+    // 🚀 [Seed-Model 표준 루틴] Step 2. 무결성 키 추출 (오직 알리아스 기반)
+    const key1 = (mstData?.ioym || '').toString().trim();
+    const key2 = (mstData?.iono || '').toString().trim();
 
-    // 🚀 [Seed-Model 표준 루틴] Step 3. 에러 판별 ('000000'은 약속된 업무 에러)
-    if (key1 === '000000') {
-        throw new Error(key2 || '업무 규칙 위반으로 저장할 수 없습니다.');
+    // 🚀 [Seed-Model 표준 루틴] Step 3. 에러 판별 (result='Y' 또는 약속된 에러코드)
+    if (mstData?.result === 'Y' || key1 === '000000') {
+        throw new Error(mstData?.msg || key2 || '업무 규칙 위반으로 저장할 수 없습니다.');
     }
 
     if (!key1 || !key2) {
-        throw new Error(`전표 번호 수신 실패!\n받은 알리아스: ${JSON.stringify(Object.keys(mstData || {}))}`);
+        throw new Error(`전표 번호 수신 실패! (알리아스 ioym, iono 확인 필요)`);
     }
 
     console.log(`🎯 최종 키 결정 -> key1: [${key1}], key2: [${key2}]`);
@@ -337,25 +354,33 @@ const save = async () => {
     // 🚀 [Seed-Model 표준 루틴] Step 4. 상세 내역 연결 저장 (A0 루프)
     for (const item of detailItems) {
         const detailParams = {
-            actkind: 'A0', cmpycd: authStore.cmpycd, iogbn: '200',
-            ioym: key1, iono: key2, // 🚀 따낸 고유키 주입
-            iorowno: '', deptcd: item.deptcd || authStore.deptcd, custcd: masterData.custcd,
-            whcd: masterData.whcd, area: masterData.area || '', userid: item.ordemp || authStore.userid,
-            ioymd: ioymd, iotype: '100', itemcd: item.itemcd, itsize: item.itsize, unit: item.unit,
-            ioqty: item.outqty, ioamt: item.outamt, iovat: item.outvat, balym: item.ordym, balno: item.ordno,
-            browno: item.orowno, cfmyn: 'Y', updemp: authStore.userid
+            actkind: 'A0', cmpycd: authStore.cmpycd || '', iogbn: '200',
+            ioym: key1 || '', iono: key2 || '', // 🚀 마스터에서 받은 키 재사용 확인
+            iorowno: '',
+            deptcd: item.deptcd || authStore.deptcd || '',
+            custcd: masterData.custcd || '',
+            whcd: masterData.whcd || '',
+            area: masterData.area || '',
+            userid: item.ordemp || authStore.userid || '',
+            ioymd: ioymd || '',
+            iotype: '100',
+            itemcd: item.itemcd || '',
+            itsize: item.itsize || '',
+            unit: item.unit || '',
+            ioqty: item.outqty || 0,
+            ioamt: item.outamt || 0,
+            iovat: item.outvat || 0,
+            balym: item.ordym || '',
+            balno: item.ordno || '',
+            browno: item.orowno || '',
+            cfmyn: 'Y',
+            updemp: authStore.userid || ''
         }
         const resDtl = await api.post('/api/hsio/HSIO_551U_STR', detailParams);
-        const dtlData = resDtl.data?.[0];
-
-        // 상세 저장 결과도 동일한 무결성 원칙으로 체크
-        const dtlValues = dtlData?.returnkeyvalue || Object.values(dtlData || {});
-        if (String(dtlValues[0]).trim() === '000000') {
-            throw new Error(String(dtlValues[1] || '상세 내역 저장 중 오류 발생'));
-        }
+        console.log(`📝 상세 저장 완료: ${item.itemnm} (${key1}-${key2})`);
     }
 
-    vAlert('정상적으로 처리되었습니다.');
+    vAlert(`출고 처리가 완료되었습니다.\n[출고번호: ${key1}-${key2}]`);
     fetchCustList(); initialize();
   } catch (e: any) { vAlertError(e.message || '저장 실패'); }
 }
@@ -374,21 +399,25 @@ function initialize() {
 
 function handleOpenHelp(type: string) {
     if (type === 'ADDR') {
-        Object.assign(modalProps, {
-            title: '배송처 선택',
-            path: '/api/ha00/HA00_00P_STR',
-            defaultField: 'trannm',
-            data: { gubun: 'C5', cmpycd: authStore.cmpycd, gbncd: masterData.custcd, code: '', remark: '' },
-            columns: [
-                { title: '순번', field: 'trancd', width: 60, hozAlign: 'center' },
-                { title: '배송처명', field: 'trannm', width: 150 },
-                { title: '주소', field: 'address', width: 300 }
-            ],
-            onConfirm: (d: any) => {
+        if (!masterData.custcd) return vAlertError('거래처를 먼저 선택하세요.')
+            Object.assign(modalProps, {
+              title: '배송처 선택',
+              path: '/api/hs00/HS00_000S_STR',
+              defaultField: 'trannm',
+              data: { gubun: 'T0', cmpycd: authStore.cmpycd, gbncd: '', code: masterData.custcd },
+              columns: [
+                { title: '코드', field: 'trancd', width: 60, hozAlign: 'center' },
+                { title: '배송처명', field: 'custnm', width: 100 },
+                { title: '우편번호', field: 'postno', width: 50 },
+                { title: '주소', field: 'address', width: 200 },
+                { title: '상세주소', field: 'd_address', width: 100 }
+              ],
+              onConfirm: (d: any) => {
+                masterData.trancd = d.trancd;
                 masterData.postno = d.postno;
                 masterData.address = d.address;
-                masterData.trancd = d.trancd; // 🚀 trancd를 주소지코드로 매핑
-            }
+                masterData.d_address = d.d_address || '';
+              }
         })
         modalVisible.value = true
     }

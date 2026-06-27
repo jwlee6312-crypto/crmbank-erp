@@ -290,7 +290,7 @@ function openHelp(type: string) {
       path: '/api/hs00/HS00_000S_STR',
       defaultField: 'itemnm',
       large: true,
-      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2' },
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', LIMITOFFSET: 0, LIMITROWS: 9999 },
       columns: [
         { title: '코드', field: 'itemcd', width: 100 },
         { title: '품목명', field: 'itemnm', minWidth: 200 },

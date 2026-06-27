@@ -10,8 +10,8 @@ public class Hsio510u {
     private String actkind;
     private String cmpycd;
     private String iogbn;
-    private String ioymdfr;
-    private String ioymdto;
+    private String fromdt;   // 💡 ioymdfr -> fromdt로 변경
+    private String todt;     // 💡 ioymdto -> todt로 변경
     private String custcd;
     private String deptcd;
     private String ioym;

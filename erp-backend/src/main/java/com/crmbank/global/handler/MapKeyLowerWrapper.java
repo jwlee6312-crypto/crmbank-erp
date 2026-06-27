@@ -32,8 +32,19 @@ public class MapKeyLowerWrapper extends MapWrapper {
         if (prop.getIndex() != null) {
             super.set(prop, value);
         } else {
-            // 💡 MyBatis가 Map에 데이터를 담을 때 키를 강제로 소문자로 변환하여 저장
-            map.put(prop.getName().toLowerCase(), value);
+            String name = prop.getName();
+            String key = (name == null) ? "" : name.toLowerCase();
+
+            // 💡 이름이 없거나 이미 존재하는 키일 경우 무조건 새로운 숫자 인덱스(0, 1, 2...) 부여
+            // 이를 통해 데이터 유실(Overwrite)을 원천 차단하고 순서를 보존함
+            if (key.isEmpty() || map.containsKey(key)) {
+                int i = 0;
+                while (map.containsKey(String.valueOf(i))) {
+                    i++;
+                }
+                key = String.valueOf(i);
+            }
+            map.put(key, value);
         }
     }
 

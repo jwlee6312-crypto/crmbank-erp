@@ -88,7 +88,7 @@
                       </div>
                     </td>
                     <th class="bg-light text-center">반품번호</th>
-                    <td><input v-model="form_02.iono" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
+                    <td><input :value="form_02.iono ? (form_02.ioym || '') + form_02.iono : ''" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
                     <th class="required bg-light text-center">반품일자</th>
                     <td><input v-model="form_02.ioymd" type="date" class="form-control" :readonly="isClosed" /></td>
                     <th class="required bg-light text-center">담당자</th>
@@ -113,7 +113,9 @@
                       </select>
                     </td>
                     <th class="bg-light text-center">특기사항</th>
-                    <td colspan="3"><input v-model="form_02.remark" class="form-control" :readonly="isClosed" /></td>
+                    <td><input v-model="form_02.remark" class="form-control" :readonly="isClosed" /></td>
+                    <th class="bg-light text-center">합계금액</th>
+                    <td><input v-model="form_02.totsum" class="form-control bg-light text-end fw-bold" readonly /></td>
                   </tr>
                 </tbody>
               </table>
@@ -172,7 +174,7 @@ const form_02 = reactive<any>({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   ioym: today.replace(/-/g, '').substring(0, 6), iono: '',
   ioymd: today, custcd: '', custnm: '', whcd: '100', userid: authStore.userid,
-  remark: '', sts: 'N'
+  remark: '', totsum: 0, sts: 'N'
 })
 
 const closingInfo = reactive({ sclsym: '' })
@@ -199,7 +201,12 @@ const initGrids = () => {
     columns: [
       { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
       { title: "거래처명", field: "custnm", hozAlign: "left", headerSort: false },
-      { title: "반품번호", field: "iono", hozAlign: "center", width: 120, cssClass: "fw-bold text-primary", headerSort: false }
+      { title: "반품번호", field: "iono", hozAlign: "center", width: 120, cssClass: "fw-bold text-primary", headerSort: false,
+        formatter: (cell: any) => {
+          const data = cell.getData();
+          return (data.ioym || '') + (data.iono || '');
+        }
+      }
     ],
   });
   grid1.on("rowClick", (e, row) => fetchDetail(row.getData()));
@@ -222,32 +229,68 @@ const initGrids = () => {
       },
       { title: "규격", field: "itsize", width: 100 },
       { title: "단위", field: "unit", width: 60, hozAlign: "center" },
-      { title: "수량", field: "ioqty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
-      { title: "단가", field: "price", width: 110, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
-      { title: "공급가", field: "ioamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "수량", field: "ioqty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow(), 'ioqty') },
+      { title: "단가", field: "price", width: 110, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow(), 'price') },
+      { title: "공급가", field: "ioamt", width: 120, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow(), 'ioamt'), formatter: "money", formatterParams: { precision: 0 } },
+      { title: "부가세", field: "iovat", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow(), 'iovat'), formatter: "money", formatterParams: { precision: 0 } },
+      { title: "합계금액", field: "totamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold text-dark bg-light" },
       { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
     ]
   });
 }
 
-const calcRow = (row: any) => {
+const calcRow = (row: any, field: string) => {
   const d = row.getData();
-  const amt = Math.floor(Number(d.ioqty || 0) * Number(d.price || 0));
-  row.update({ ioamt: amt, iovat: Math.floor(amt * 0.1) });
+  let qty = Number(d.ioqty || 0);
+  let price = Number(d.price || 0);
+  let amt = Number(d.ioamt || 0);
+  let vat = Number(d.iovat || 0);
+
+  if (field === 'ioqty' || field === 'price') {
+    amt = Math.floor(qty * price);
+    vat = Math.floor(amt * 0.1);
+  } else if (field === 'ioamt') {
+    price = qty !== 0 ? Math.floor(amt / qty) : 0;
+    vat = Math.floor(amt * 0.1);
+  } else if (field === 'iovat') {
+    // 부가세 직접 수정 시 별도 로직 없음 (그대로 반영)
+  }
+
+  row.update({ ioamt: amt, price: price, iovat: vat, totamt: amt + vat });
   if (d._state === 'EXIST' && d._status !== '삭제') row.update({ _status: '수정' });
+  updateTotalSum();
+}
+
+const updateTotalSum = () => {
+  const data = grid2?.getData().filter((r: any) => r._status !== '삭제') || [];
+  form_02.totsum = data.reduce((sum: number, r: any) => sum + Number(r.totamt || 0), 0);
 }
 
 const handleOpenHelp = (type: string, target?: any) => {
   if (type === 'DEPT') openHelp('DEPT', (d) => { form_02.deptcd = d.deptcd; form_02.deptnm = d.deptnm });
   else if (type === 'CUST') openHelp('CUST', (d) => { form_02.custcd = d.custcd; form_02.custnm = d.custnm });
   else if (type === 'ITEM') {
-    openHelp('ITEM', (d) => {
-      target.update({
-        itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit || d.unitnm,
-        price: d.inprice || 0, ioqty: 1, ioamt: d.inprice || 0, _status: '입력', _state: 'NEW'
-      });
-      calcRow(target);
+    Object.assign(modalProps, {
+      title: '품목 선택',
+      path: '/api/hs00/HS00_000S_STR',
+      defaultField: 'itemnm',
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '1', code: '', remark: '' },
+      columns: [
+        { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+        { title: '품목명', field: 'itemnm', width: 200 },
+        { title: '규격', field: 'itsize', width: 150 },
+        { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+      ],
+      onConfirm: (d: any) => {
+        target.update({
+          itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit,
+          pkunit: d.unit,
+          price: d.inprice || 0, ioqty: 1, ioamt: d.inprice || 0, _status: '입력', _state: 'NEW'
+        });
+        calcRow(target, 'price');
+      }
     });
+    modalVisible.value = true;
   }
 }
 
@@ -259,7 +302,14 @@ const handleRowAction = (row: any) => {
 
 async function search() {
   try {
-    const res = await api.post('/api/hsio/HSIO_190U_STR', { actkind: 'S1', fromdt: form_01.fromdt.replace(/-/g, ''), todt: form_01.todt.replace(/-/g, ''), schcustnm: form_01.schcustnm });
+    const res = await api.post('/api/hsio/HSIO_190U_STR', {
+      actkind: 'L',
+      cmpycd: authStore.cmpycd,
+      iogbn: '100',
+      fromdt: form_01.fromdt.replace(/-/g, ''),
+      todt: form_01.todt.replace(/-/g, ''),
+      custnm: form_01.schcustnm
+    });
     grid1?.setData(res.data); vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }
 }
@@ -268,8 +318,32 @@ async function fetchDetail(row: any) {
   const fYmd = (d: string) => d && d.length === 8 ? `${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6, 8)}` : today;
   Object.assign(form_02, { ...row, ioymd: fYmd(row.ioymd) });
   try {
-    const res = await api.post('/api/hsio/HSIO_191U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, ioym: row.ioym, iono: row.iono });
-    grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
+    const res = await api.post('/api/hsio/HSIO_191U_STR', {
+      actkind: 'S',
+      cmpycd: authStore.cmpycd,
+      iogbn: '100',
+      ioym: row.ioym,
+      iono: row.iono,
+      ioqty: 0, ioamt: 0, iovat: 0
+    });
+    grid2?.setData(res.data.map((i: any) => {
+      const ioqty = Math.abs(Number(i.ioqty || 0));
+      const ioamt = Math.abs(Number(i.ioamt || 0));
+      const iovat = Math.abs(Number(i.iovat || 0));
+      // 단가가 0인 경우 금액/수량으로 계산
+      const price = i.price && Number(i.price) !== 0 ? Math.abs(Number(i.price)) : (ioqty !== 0 ? Math.floor(ioamt / ioqty) : 0);
+      return {
+        ...i,
+        ioqty,
+        ioamt,
+        price,
+        iovat,
+        totamt: ioamt + iovat,
+        _state: 'EXIST',
+        _status: ''
+      };
+    }));
+    updateTotalSum();
   } catch (e) { vAlertError('상세 로드 실패'); }
 }
 
@@ -285,11 +359,22 @@ async function save() {
     const payload = {
       mst: {
         ...form_02,
+        iogbn: '100',
+        iotype: '100',
+        cfmyn: 'Y',
+        gubun: '1',
+        totsum: String(form_02.totsum || '0'), // char(15) 대응: 문자열 변환
         actkind: form_02.iono ? 'U' : 'A',
         ioymd: form_02.ioymd.replace(/-/g, '')
       },
       dtl: details.map(item => ({
         ...item,
+        iogbn: '100',
+        iotype: '100',
+        cfmyn: 'Y',
+        ioqty: Number(item.ioqty || 0),
+        ioamt: Number(item.ioamt || 0),
+        iovat: Number(item.iovat || 0),
         actkind: item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U')
       }))
     };
@@ -300,17 +385,17 @@ async function save() {
       vAlert('저장되었습니다.');
       search();
     } else {
-      throw new Error(res.data?.message || '저장 중 오류가 발생했습니다.');
+      // 서버 응답 메시지 알맹이만 전달
+      vAlertError(res.data?.message);
     }
   } catch (e: any) {
-    vAlertError(e.message || '저장 실패');
+    // 500 에러 등의 경우 서버가 보낸 핵심 메시지만 추출
+    vAlertError(e.response?.data?.message || e.message);
   }
-}
-  } catch (e) { vAlertError('저장 실패'); }
 }
 
 function addRow() {
-  grid2?.addRow({ ioqty: 0, price: 0, ioamt: 0, _status: '입력', _state: 'NEW' }, true);
+  grid2?.addRow({ ioqty: 0, price: 0, ioamt: 0, iovat: 0, totamt: 0, _status: '입력', _state: 'NEW' }, true);
 }
 
 function deleteSelectedRows() {
@@ -328,15 +413,38 @@ function initialize() {
 async function handleFullDelete() {
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_190U_STR', { ...form_02, actkind: 'D' });
+    const res = await api.post('/api/hsio/HSIO_190U_STR', {
+          actkind: 'D',
+          cmpycd: authStore.cmpycd,
+          iogbn: '100',
+          ioym: form_02.ioym || form_02.ioymd.replace(/-/g, '').substring(0, 6),
+          iono: form_02.iono,
+          cfmyn: 'Y'
+    });
+
+    if (res.data?.length > 0) {
+      const firstRow = res.data[0];
+      const resCode = Object.values(firstRow)[0]; // 첫 번째 컬럼값 (ioym 등)
+      const resMsg = Object.values(firstRow)[1];  // 두 번째 컬럼값 (iono 등)
+
+      if (resCode === '000000') {
+        vAlertError(String(resMsg));
+        return;
+      }
+    }
+
     vAlert('삭제되었습니다.'); initialize(); search();
-  } catch (e) { vAlertError('삭제 실패'); }
+  } catch (e: any) {
+    vAlertError(e.response?.data?.message || e.message);
+  }
 }
 
 onMounted(async () => {
     nextTick(initGrids);
     api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0' } }).then(r => { whcdData.value = r.data; });
-    api.post('/api/ha00/HA00_00P_STR', { gubun: 'SD' }).then(r => { userData.value = r.data; });
+    api.post('/api/ha00/HA00_00P_STR', { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' }).then(r => {
+        userData.value = r.data;
+    });
     api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL' } }).then(r => { if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym; });
     initialize();
 })

@@ -97,14 +97,12 @@ const activeItemCount = ref(0)
 const initGrid = () => {
   if (!gridElement.value) return
   grid.value = new Tabulator(gridElement.value, {
-    layout: "fitColumns",
-    height: "100%",
-    placeholder: "조회된 데이터가 없습니다.",
-    columnDefaults: { headerSort: false },
+    layout: "fitColumns", height: "100%", placeholder: "데이타 없음", selectable: true,
+    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       { title: "거 래 처 명", field: "custnm", minWidth: 200, cssClass: "fw-bold border-end" },
       {
-        title: "전월이월액", field: "DFamt", width: 200, hozAlign: "right",
+        title: "전월이월액", field: "bfamt", width: 200, hozAlign: "right",
         formatter: "money", formatterParams: { precision: 0 },
         bottomCalc: "sum", bottomCalcFormatter: "money"
       },
@@ -113,7 +111,7 @@ const initGrid = () => {
         title: "판매현황(vat포함)",
         columns: [
           {
-            title: "당일판매금액", field: "SDamt", width: 200, hozAlign: "right",
+            title: "당일판매금액", field: "sdamt", width: 200, hozAlign: "right",
             formatter: (cell) => {
                 const val = cell.getValue();
                 return val !== 0 ? `<span class="text-primary text-decoration-underline cursor-pointer">${formatNumber(val)}</span>` : "0";
@@ -122,7 +120,7 @@ const initGrid = () => {
             cellClick: (e, cell) => { if(cell.getValue() !== 0) navigateToDetail('SD', cell.getData()) }
           },
           {
-            title: "당월판매금액", field: "SMamt", width: 200, hozAlign: "right",
+            title: "당월판매금액", field: "smamt", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
@@ -133,19 +131,19 @@ const initGrid = () => {
         title: "입 금 현 황",
         columns: [
           {
-            title: "당일입금액", field: "IDamt", width: 200, hozAlign: "right",
+            title: "당일입금액", field: "idamt", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
           {
-            title: "당월입금액", field: "IMamt", width: 200, hozAlign: "right",
+            title: "당월입금액", field: "imamt", width: 200, hozAlign: "right",
             formatter: "money", formatterParams: { precision: 0 },
             bottomCalc: "sum", bottomCalcFormatter: "money"
           },
         ]
       },
       {
-        title: "잔액", field: "Jnamt", width: 200, hozAlign: "right",
+        title: "잔액", field: "jnamt", width: 200, hozAlign: "right",
         formatter: "money", formatterParams: { precision: 0 },
         cssClass: "bg-light fw-bold text-danger",
         bottomCalc: "sum", bottomCalcFormatter: "money"
@@ -165,12 +163,12 @@ async function search() {
     })
     if (grid.value) {
       const mappedData = res.data.map((i: any) => {
-          const df = Number(i.DFamt) || 0;
-          const sm = Number(i.SMamt) || 0;
-          const im = Number(i.IMamt) || 0;
+          const bf = Number(i.bfamt) || 0;
+          const sm = Number(i.smamt) || 0;
+          const im = Number(i.imamt) || 0;
           return {
               ...i,
-              Jnamt: df + sm - im // ASP 계산 로직: 전월이월 + 당월판매 - 당월입금
+              jnamt: bf + sm - im // ASP 계산 로직: 전월이월 + 당월판매 - 당월입금
           }
       })
       grid.value.setData(mappedData)
@@ -232,3 +230,15 @@ onMounted(() => {
   })
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+
+/* 🚀 2단 헤더에서 단일 컬럼의 타이틀을 수직 중앙 정렬 */
+:deep(.tabulator-header .tabulator-col:not(.tabulator-col-group) .tabulator-col-content) {
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+</style>

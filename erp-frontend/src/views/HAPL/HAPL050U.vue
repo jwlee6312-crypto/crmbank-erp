@@ -188,7 +188,7 @@ const loadInitData = async () => {
 const searchDepts = async () => {
   try {
     const ym = searchForm.yy + searchForm.mm;
-    const res = await api.post('/api/hapl/HAPL_050U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, gubun: '200', yymm: ym });
+    const res = await api.post('/api/hapl/HAPL_050U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '200', yymm: ym });
     deptGrid?.setData(res.data || []);
     mainGrid?.clearData(); selectedDept.code = ''; selectedDept.nm = '';
 

@@ -119,7 +119,7 @@ const searchForm = reactive({
 })
 
 const rowCount = ref(0)
-const totals = reactive({ SMTOT: 0, SYTOT: 0 })
+const totals = reactive({ smtot: 0, sytot: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const search = async () => {
@@ -134,8 +134,8 @@ const search = async () => {
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
-		totals.SMTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.SMamt || 0) + Number(cur.VMamt || 0)), 0)
-		totals.SYTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.SYamt || 0) + Number(cur.VYamt || 0)), 0)
+		totals.smtot = data.reduce((acc: number, cur: any) => acc + (Number(cur.smamt || 0) + Number(cur.vmamt || 0)), 0)
+		totals.sytot = data.reduce((acc: number, cur: any) => acc + (Number(cur.syamt || 0) + Number(cur.vyamt || 0)), 0)
 
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -146,7 +146,7 @@ const initialize = () => {
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
 	searchForm.fymd = firstDay; searchForm.tymd = today;
 	mainGrid?.clearData(); rowCount.value = 0;
-	totals.SMTOT = 0; totals.SYTOT = 0;
+	totals.smtot = 0; totals.sytot = 0;
 }
 
 const excel = () => mainGrid?.download("xlsx", "거래처분류별판매현황.xlsx")
@@ -186,24 +186,24 @@ onMounted(() => {
 				{
 					title: "당월 실적 (Current Month)",
 					columns: [
-						{ title: "매출액", field: "CSMamt", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "CVMamt", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "CTMamt", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-primary fw-bold" },
+						{ title: "매출액", field: "smamt", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "vmamt", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "tmamt", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-primary fw-bold" },
 						{ title: "%", field: "PROF_rate_M", hozAlign: "right", width: 70, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
 							const total = Number(d.smsum) || 0;
-							return total !== 0 ? (Number(d.CSMamt) / total * 100) : 0;
+							return total !== 0 ? (Number(d.smamt) / total * 100) : 0;
 						}}
 					]
 				},
 				{
 					title: "누계 실적 (Cumulative)",
 					columns: [
-						{ title: "매출액", field: "CSYamt", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "부가세", field: "CVYamt", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
-						{ title: "합계", field: "CTYamt", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-warning fw-bold" },
-						{ title: "%", field: "PROF_rate_Y", hozAlign: "right", width: 70, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
+						{ title: "매출액", field: "syamt", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "부가세", field: "vyamt", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "합계", field: "tyamt", hozAlign: "right", width: 130, formatter: "money", cssClass: "bg-light text-warning fw-bold" },
+						{ title: "%", field: "prof_rate_y", hozAlign: "right", width: 70, formatter: "money", formatterParams: { precision: 1 }, mutatorData: (v,d) => {
 							const total = Number(d.sysum) || 0;
-							return total !== 0 ? (Number(d.CSYamt) / total * 100) : 0;
+							return total !== 0 ? (Number(d.syamt) / total * 100) : 0;
 						}}
 					]
 				}
@@ -212,4 +212,16 @@ onMounted(() => {
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+
+/* 🚀 2단 헤더에서 단일 컬럼의 타이틀을 수직 중앙 정렬 */
+:deep(.tabulator-header .tabulator-col:not(.tabulator-col-group) .tabulator-col-content) {
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+</style>
 

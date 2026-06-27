@@ -79,7 +79,7 @@
 									</select>
 								</td>
 								<th class="required">순서</th>
-								<td><input v-model="formdata.dspord" type="number" class="form-control text-end" /></td>
+								<td><input v-model="formdata.dspord" type="text" class="form-control text-end" /></td>
 								<th>사용</th>
 								<td>
 									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
@@ -188,20 +188,31 @@ async function save() {
 	if (!confirm('저장하시겠습니까?')) return
 	try {
 		const act = formdata.actkind === 'S0' ? 'A0' : 'U0';
-		const res = await api.post('/api/haaa/haaa_800u_str', { ...formdata, actkind: act })
-		const resdata = normalizekeys(res.data?.[0]);
-		if (resdata.result === 'N') valerterror(resdata.msg || '저장 실패')
-		else { valert('저장이 완료되었습니다.'); search() }
-	} catch (e) { valerterror('저장 실패') }
+		const res = await api.post('/api/haaa/HAAA_800U_STR', { ...formdata, actkind: act })
+		const resdata = normalizekeys(res.data?.[0] || {});
+
+		if (resdata.result === 'OK' || resdata.res === 'OK') {
+			valert('저장이 완료되었습니다.');
+			search();
+		} else {
+			valerterror(resdata.msg || '저장 중 오류가 발생했습니다.');
+		}
+	} catch (e) { valerterror('저장 중 통신 오류가 발생했습니다.') }
 }
 
 async function deletedata() {
 	if (!confirm('정말로 삭제하시겠습니까?')) return
 	try {
-		await api.post('/api/haaa/haaa_800u_str', { ...formdata, actkind: 'D0' })
-		valert('삭제되었습니다.')
-		search(); initialize()
-	} catch (e) { valerterror('삭제 실패') }
+		const res = await api.post('/api/haaa/HAAA_800U_STR', { ...formdata, actkind: 'D0' })
+		const resdata = normalizekeys(res.data?.[0] || {});
+
+		if (resdata.result === 'OK' || resdata.res === 'OK') {
+			valert('삭제되었습니다.');
+			search(); initialize();
+		} else {
+			valerterror(resdata.msg || '삭제 중 오류가 발생했습니다.');
+		}
+	} catch (e) { valerterror('삭제 중 통신 오류가 발생했습니다.') }
 }
 
 function initialize() {

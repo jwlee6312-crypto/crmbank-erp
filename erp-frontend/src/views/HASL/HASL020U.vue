@@ -107,8 +107,8 @@
 							<th>전표번호</th>
 							<td>
 								<div class="d-flex align-items-center gap-1">
-									<input :value="masterForm.slipymd" type="text" class="form-control bg-light" readonly />
-									<input :value="masterForm.slipno" type="text" class="form-control text-center bg-light" style="width: 60px;" readonly />
+									<input v-model="masterForm.slipymd" type="text" class="form-control bg-light" readonly />
+									<input v-model="masterForm.slipno" type="text" class="form-control text-center bg-light" style="width: 60px;" readonly />
 								</div>
 							</td>
 							<th>발 행 인</th>
@@ -164,6 +164,7 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useRouter } from 'vue-router'
+import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import type { ModalProps } from '@/types/modal'
 
@@ -211,7 +212,9 @@ const formatMoney = (val: any) => Number(val || 0).toLocaleString()
 const loadInitData = async () => {
 	try {
 		const resCls = await api.post('/api/ha00/HA00_010S_STR', { gubun: 'P1', cmpycd: authStore.cmpycd })
-		if (resCls.data) masterForm.clsymd = resCls.data.clsymd || '00000000'
+		if (resCls.data && resCls.data.length > 0) {
+			masterForm.clsymd = resCls.data[0].clsymd || '00000000'
+		}
 
 		const resKind = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '180' })
 		slipKindOptions.value = resKind.data || []
@@ -229,7 +232,11 @@ const fetchSlips = async () => {
 			slipkind: searchForm.slipkind,
 			slipyn: searchForm.slipyn
 		})
-		mainGrid?.setData(res.data || [])
+		// 🚀 데이터 키를 소문자로 정규화
+		const normalizedData = (res.data || []).map((row: any) => {
+			return Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
+		})
+		mainGrid?.setData(normalizedData)
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 중 오류 발생') }
 }
@@ -246,7 +253,7 @@ const save = async () => {
 		}
 	}
 	try {
-		await api.post('/api/hasl/HASL_020U_SAVE', {
+		await api.post('/api/hasl/HASL_020U_STR', {
 			actkind: 'U0',
 			cmpycd: authStore.cmpycd,
 			slipymd: masterForm.slipymd.replace(/-/g, ''),
@@ -254,6 +261,8 @@ const save = async () => {
 			acctymd: acctYmdRaw,
 			deptcd: masterForm.deptcd,
 			cofmyn: masterForm.cofmyn ? 'Y' : 'N',
+			slipkind: searchForm.slipkind,
+			slipyn: searchForm.slipyn,
 			usernm: authStore.usernm,
 			userid: authStore.userid
 		})
@@ -266,16 +275,29 @@ const initialize = () => {
 	resetForm(searchForm)
 	searchForm.fromdt = firstDay
 	searchForm.todt = today
+	searchForm.slipkind = '000'
 	searchForm.slipyn = 'N'
-	resetForm(masterForm)
+
+	// 마스터 정보 명시적 초기화 (undefined 방지)
+	masterForm.slipymd = ''
+	masterForm.slipno = ''
+	masterForm.empnm = ''
 	masterForm.acctymd = today
+	masterForm.dbamt = 0
+	masterForm.cramt = 0
+	masterForm.remark = ''
+	masterForm.cofmyn = false
+	masterForm.deptcd = ''
+	masterForm.deptnm = ''
+
 	mainGrid?.clearData()
 }
 
 const goSlipDetail = () => {
+	if (!masterForm.slipymd || !masterForm.slipno) return
 	router.push({
 		path: '/HASL/HASL010U',
-		query: { deptcd: masterForm.deptcd, slipymd: masterForm.slipymd.replace(/-/g, ''), slipno: masterForm.slipno }
+		query: { deptcd: masterForm.deptcd, slipymd: (masterForm.slipymd || '').replace(/-/g, ''), slipno: masterForm.slipno }
 	})
 }
 
@@ -300,41 +322,63 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',
+			selectable: true, // 🚀 프로젝트 표준: 선택 가능 설정
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
 				{
-					title: "전표번호", field: "slip_key", width: 130,
+					title: "전표번호", field: "slip_key", width: 150,
 					formatter: (cell) => {
 						const d = cell.getData()
+						if (!d.slipymd || !d.slipno) return ''
 						return `${d.slipymd}-${d.slipno}`
 					}
 				},
 				{ title: "적요", field: "remark", hozAlign: "left", minWidth: 250 },
-				{ title: "발행부서", field: "deptnm", width: 120 },
-				{ title: "발행인", field: "empnm", width: 100 },
-				{ title: "차변금액", field: "dbamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "대변금액", field: "cramt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "발행부서", field: "deptnm", width: 200 },
+				{ title: "발행인", field: "empnm", width: 150 },
+				{ title: "차변금액", field: "dbamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "대변금액", field: "cramt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{
-					title: "확정", field: "acctymd", width: 60,
+					title: "확정", field: "acctymd", width: 100,
 					formatter: (cell) => {
 						const val = cell.getValue()
 						return val && val !== '00000000' ? '✔' : ''
 					}
 				}
-			],
-			rowClick: (e, row) => {
-				const d = row.getData()
-				Object.assign(masterForm, d)
-				if (d.slipymd) masterForm.slipymd = `${d.slipymd.substring(0, 4)}-${d.slipymd.substring(4, 6)}-${d.slipymd.substring(6, 8)}`
-				if (d.acctymd && d.acctymd !== '00000000') {
-					masterForm.acctymd = `${d.acctymd.substring(0, 4)}-${d.acctymd.substring(4, 6)}-${d.acctymd.substring(6, 8)}`
-					masterForm.cofmyn = true
-				} else {
-					masterForm.acctymd = today
-					masterForm.cofmyn = false
-				}
+			]
+		})
+
+		// 🚀 프로젝트 표준: .on('rowClick', ...) 방식으로 이벤트 처리
+		mainGrid.on("rowClick", (e, row) => {
+			const d = row.getData()
+
+			// 상세 정보 할당
+			masterForm.slipno = d.slipno || ''
+			masterForm.empnm = d.empnm || ''
+			masterForm.dbamt = Number(d.dbamt || 0)
+			masterForm.cramt = Number(d.cramt || 0)
+			masterForm.remark = d.remark || ''
+			masterForm.deptcd = d.deptcd || ''
+			masterForm.deptnm = d.deptnm || ''
+
+			// 전표일자 포맷팅 (YYYYMMDD -> YYYY-MM-DD)
+			if (d.slipymd && d.slipymd.length === 8) {
+				masterForm.slipymd = `${d.slipymd.substring(0, 4)}-${d.slipymd.substring(4, 6)}-${d.slipymd.substring(6, 8)}`
+			} else {
+				masterForm.slipymd = d.slipymd || ''
+			}
+
+			// 회계일자 및 확정여부 처리
+			if (d.acctymd && d.acctymd !== '00000000' && d.acctymd.length === 8) {
+				masterForm.acctymd = `${d.acctymd.substring(0, 4)}-${d.acctymd.substring(4, 6)}-${d.acctymd.substring(6, 8)}`
+				masterForm.cofmyn = true
+			} else {
+				masterForm.acctymd = today
+				masterForm.cofmyn = false
 			}
 		})
 	}
 })
+
+
 </script>

@@ -168,7 +168,7 @@ const initGrid = () => {
         {
           title: "당 월 출 고",
           columns: [
-            { title: "수량", field: "OUtqty", width: 80, hozAlign: "right", formatter: "money", bottomCalc: "sum", cssClass: "text-danger" },
+            { title: "수량", field: "outqty", width: 80, hozAlign: "right", formatter: "money", bottomCalc: "sum", cssClass: "text-danger" },
             { title: "단가", field: "outprice", width: 80, hozAlign: "right", formatter: "money" },
             { title: "금액", field: "outamt", width: 90, hozAlign: "right", formatter: "money", bottomCalc: "sum" }
           ]
@@ -232,7 +232,7 @@ async function fetchList() {
         ...i,
         BSprice: Number(i.Bsqty) !== 0 ? Math.round(Number(i.bsamt) / Number(i.Bsqty)) : 0,
         INprice: Number(i.inqty) !== 0 ? Math.round(Number(i.Inamt) / Number(i.inqty)) : 0,
-        outprice: Number(i.OUtqty) !== 0 ? Math.round(Number(i.outamt) / Number(i.OUtqty)) : 0,
+        outprice: Number(i.outqty) !== 0 ? Math.round(Number(i.outamt) / Number(i.outqty)) : 0,
         OUTTprice: Number(i.OUTtqty) !== 0 ? Math.round(Number(i.OUTtamt) / Number(i.OUTtqty)) : 0,
         STKprice: Number(i.stkqty) !== 0 ? Math.round(Number(i.stkamt) / Number(i.stkqty)) : 0
     }))

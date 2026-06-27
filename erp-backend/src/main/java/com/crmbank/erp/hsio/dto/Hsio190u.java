@@ -1,9 +1,8 @@
 package com.crmbank.erp.hsio.dto;
 import lombok.Data;
-import java.math.BigDecimal;
 
 /**
- * 매입등록 마스터 DTO (HSIO_500U_STR)
+ * 매입반품 마스터 DTO (HSIO_190U_STR)
  */
 @Data
 public class Hsio190u {
@@ -20,7 +19,7 @@ public class Hsio190u {
     private String custcd;
     private String deptcd;
     private String whcd;
-    private String addres;
+    private String address; // XML 매핑에 맞춤
     private String remark;
     private String cfmyn;
     private String gubun;

@@ -462,10 +462,17 @@ const totalDebit = ref(0); const totalCredit = ref(0)
 const balance = computed(() => totalDebit.value - totalCredit.value)
 const formatMoney = (val: any) => Number(val || 0).toLocaleString()
 
+// 💡 행 상태 변경 감지
+const updateRowStatus = (row: any) => {
+    const d = row.getData();
+    if (d._state === 'EXIST' && !d._status) row.update({ _status: '수정' });
+}
+
 // 💡 [실시간 연동] 상세 패널 수정 시 그리드 행 데이터와 즉시 동기화
 watch(selectedRow, (newVal) => {
     if (newVal && activeRowComponent.value) {
         activeRowComponent.value.update(newVal);
+        updateRowStatus(activeRowComponent.value);
         updateAutoRemark();
     }
 }, { deep: true });
@@ -531,6 +538,13 @@ const initGrids = () => {
     },
     columns: [
       { title: "No", field: "srowno", width: 40, hozAlign: "center" },
+      { title: "상태", field: "_status", width: 50, hozAlign: "center", formatter: (c) => {
+          const v = c.getValue();
+          if (v === '입력') return '<span class="badge bg-primary">신규</span>';
+          if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+          if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+          return '';
+      }},
       { title: "차/대", field: "dbcr", width: 70, hozAlign: "center", editor: "list", editorParams: { values: { "D": "차변", "C": "대변" } },
         formatter: (c) => {
             const v = String(c.getValue() || '').trim().toUpperCase();
@@ -546,19 +560,15 @@ const initGrids = () => {
           if (d.mgtnm) s.push(d.mgtnm);
           return `<span class="small text-muted text-truncate d-block">${s.join(', ')}</span>`;
       }},
-      { title: "삭제", width: 40, hozAlign: "center", formatter: () => '<i class="bi bi-trash text-danger"></i>', cellClick: (e, cell) => cell.getRow().delete() }
+      { title: "삭제", width: 40, hozAlign: "center", formatter: () => '<i class="bi bi-trash text-danger"></i>', cellClick: (e, cell) => handleRowAction(cell.getRow()) }
     ]
   });
 
   grid2.on("cellEdited", (cell) => {
     selectedRow.value = normalizeKeys(cell.getRow().getData());
     activeRowComponent.value = cell.getRow();
+    updateRowStatus(activeRowComponent.value);
     updateTotals();
-  });
-
-  grid2.on("rowSelected", (row) => {
-    selectedRow.value = normalizeKeys(row.getData());
-    activeRowComponent.value = row;
   });
 }
 
@@ -625,7 +635,8 @@ async function fetchDetail(row: any) {
             ...d,
             dbcr: (d.dbcr || (Number(d.dbamt || 0) > 0 ? 'D' : 'C')).toUpperCase(),
             amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt,
-            typedc: (d.typedc || d.drcr || '').toUpperCase()
+            typedc: (d.typedc || d.drcr || '').toUpperCase(),
+            _state: 'EXIST', _status: ''
         };
     });
 
@@ -703,11 +714,17 @@ const calcVat = () => { if (String(selectedRow.value?.typeacct || '').trim() ===
 async function save() {
   if (balance.value !== 0) return vAlertError('차/대변 금액이 일치하지 않습니다.');
   if (!masterForm.business) return vAlertError('거래내역을 입력하십시오.');
+
+  const allData = grid2?.getData() || [];
+  const detailsToSave = allData.filter((r: any) => r._status);
+
+  if (detailsToSave.length === 0 && !masterForm.slipno) return vAlertError('저장할 내역이 없습니다.');
+
   try {
     const payload = {
       actkind: masterForm.slipno ? 'U' : 'A',
       MASTER: { ...masterForm, slipymd: masterForm.slipymd.replace(/-/g, ''), acctymd: masterForm.acctymd.replace(/-/g, '') },
-      DETAILS: grid2?.getData().map(d => {
+      DETAILS: allData.map(d => {
         const item = { ...d };
         // 💡 사용자 지시: 저장 시 UI의 subcd를 백엔드의 custcd로 역매핑
         item.custcd = item.subcd;
@@ -717,11 +734,17 @@ async function save() {
             if (item[key]) item[key] = item[key].replace(/-/g, '');
         });
 
+        let dtlUpkind = item.upkind;
+        if (item._status === '입력') dtlUpkind = 'A';
+        else if (item._status === '삭제') dtlUpkind = 'D';
+        else if (item._status === '수정') dtlUpkind = 'U';
+        else dtlUpkind = masterForm.slipno ? 'U' : 'A';
+
         return {
             ...item,
             dbamt: String(item.dbcr || '').trim().toUpperCase() === 'D' ? (item.amount || 0) : 0,
             cramt: String(item.dbcr || '').trim().toUpperCase() === 'C' ? (item.amount || 0) : 0,
-            upkind: item.upkind || (masterForm.slipno ? 'U' : 'A')
+            upkind: dtlUpkind
         };
       })
     };
@@ -741,10 +764,19 @@ const addRow = () => {
     const newDbcr = lastRow ? (String(lastRow.dbcr || '').trim().toUpperCase() === 'D' ? 'C' : 'D') : 'D';
 
     grid2?.addRow(normalizeKeys({
-        dbcr: newDbcr, remark: masterForm.business, amount: 0, upkind: 'A', srowno: data.length + 1
+        dbcr: newDbcr, remark: masterForm.business, amount: 0, srowno: data.length + 1, _status: '입력', _state: 'NEW'
     }), false).then(row => {
         nextTick(() => { row.select(); grid2?.scrollToRow(row, "bottom", false); });
     });
+}
+
+const handleRowAction = (row: any) => {
+    const d = row.getData();
+    if (d._state === 'NEW') row.delete();
+    else {
+        const newStatus = d._status === '삭제' ? '' : '삭제';
+        row.update({ _status: newStatus });
+    }
 }
 
 const print = () => window.open(`/api/hasl/HASL_SLIP_PRINT?slipymd=${masterForm.slipymd.replace(/-/g, '')}&slipno=${masterForm.slipno}&deptcd=${masterForm.deptcd}`)

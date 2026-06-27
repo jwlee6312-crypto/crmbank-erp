@@ -120,23 +120,22 @@ const fetchIssuedList = async () => {
 		const res = await api.post('/api/hsio/HSIO_540U_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-            gubun: '200',
+            iogbn: '200',
 			fromdt: searchForm.fromdt.replace(/-/g, ''),
 			todt: searchForm.todt.replace(/-/g, ''),
             deptcd: searchForm.deptcd
 		})
-		mainGrid?.setData(res.data.map((i: any) => ({
-            ...i,
-            slipymd: i.slipymd,
-            slipno: i.slipno,
-            deptcd: i.deptcd,
-            spyamt: i.spyamt,
-            vatamt: i.vatamt,
-            custcd: i.custcd,
-            custnm: i.custnm,
-            vattypenm: i.vattypenm
-        })))
-		vAlert('조회되었습니다.')
+
+		// 🚀 백엔드 공통 처리에서 데이터가 없을 때 반환하는 [{res: 'OK'}] 필터링
+		const rawData = (res.data || []).filter((row: any) => !(row.res === 'OK' || row.RES === 'OK'))
+
+		mainGrid?.setData(rawData.map((row: any) => {
+			const item = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
+			item.jsansum = (Number(item.spyamt) || 0) + (Number(item.vatamt) || 0)
+			item.slip_full = item.slipymd > '00000000' ? `${item.slipymd}-${item.slipno}` : ''
+			return item
+		}))
+		vAlert(rawData.length > 0 ? '조회되었습니다.' : '조회된 내역이 없습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
 
@@ -157,8 +156,14 @@ const handleCancelSlip = async () => {
             const slipymd = (item.slipymd || '').replace(/-/g, '')
             const slipno = item.slipno
             const deptcd = item.deptcd
+            const cfmyn = item.cfmyn || item.CFMYN || 'N'
 
             if (!slipymd || slipymd === '00000000') continue;
+
+            // 🚀 확정된 전표(CFMYN='Y')는 취소 불가 처리
+            if (cfmyn === 'Y') {
+                throw new Error(`이미 확정된 전표(${slipymd}-${slipno})는 취소할 수 없습니다.`)
+            }
 
             // 2. 자동전표인 경우 확정 취소 (ASP: HASL_020U_STR 'A0')
             if (autoslip === 'Y') {
@@ -181,7 +186,7 @@ const handleCancelSlip = async () => {
 			const res = await api.post('/api/hsio/HSIO_540U_STR', {
 				actkind: 'D0',
 				cmpycd: authStore.cmpycd,
-                gubun: '200',
+                iogbn: '200',
 				fromdt: searchForm.fromdt.replace(/-/g, ''),
 				todt: searchForm.todt.replace(/-/g, ''),
                 deptcd: deptcd,
@@ -206,7 +211,11 @@ const handleCancelSlip = async () => {
 const toggleAllRows = () => {
 	if (!mainGrid) return
 	const rows = mainGrid.getRows()
-	const allSelected = mainGrid.getSelectedRows().length === rows.length
+	const selectableRows = rows.filter(row => {
+		const d = row.getData();
+		return (d.cfmyn || d.CFMYN || 'N') !== 'Y';
+	})
+	const allSelected = mainGrid.getSelectedRows().length === selectableRows.length
 	if (allSelected) mainGrid.deselectRow()
 	else mainGrid.selectRow()
 }
@@ -246,6 +255,10 @@ onMounted(async () => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%', selectable: true,
+			selectableCheck: (row) => {
+				const d = row.getData();
+				return (d.cfmyn || d.CFMYN || 'N') !== 'Y';
+			},
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
 			columns: [
 				{
@@ -259,6 +272,14 @@ onMounted(async () => {
                       const slipno = d.slipno || d.slipno;
 					  return slipymd && slipno ? `${slipymd}-${slipno}` : '';
 				  }
+				},
+				{
+					title: "회계확정", field: "cfmyn", width: 100,
+					formatter: (cell) => {
+						const d = cell.getData();
+						const val = d.cfmyn || d.CFMYN || 'N';
+						return val === 'Y' ? '<span class="badge bg-danger">확정</span>' : '<span class="badge bg-secondary">미확정</span>';
+					}
 				},
 				{ title: "발행부서", field: "deptnm", width: 250 },
 				{ title: "거래처", field: "custnm", minWidth: 200, hozAlign: "left", cssClass: "fw-bold" },

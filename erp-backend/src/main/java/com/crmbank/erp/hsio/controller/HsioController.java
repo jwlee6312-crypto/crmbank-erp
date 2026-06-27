@@ -291,6 +291,25 @@ public class HsioController {
         }
     }
 
+    @PostMapping("/HSIO_490U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveSalesReturn(@RequestBody Hsio490uRequest request, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user == null) return ResponseEntity.status(401).build();
+        String userId = user.getUserid();
+        String cmpycd = user.getCmpycd();
+        try {
+            if (request.getMst() != null) {
+                request.getMst().setCmpycd(cmpycd);
+                request.getMst().setUpdemp(userId);
+            }
+            Map<String, Object> result = hsioService.saveSalesReturn(request, userId);
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ [hsio] saveSalesReturn Error: {}, Payload: {}", e.getMessage(), request);
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @PostMapping("/{procedure}")
     public ResponseEntity<?> executeProcedure(
@@ -332,6 +351,65 @@ public class HsioController {
                     for (int i = 1; i <= colCount; i++) {
                         Object val = rs.getObject(i);
                         String colName = rs.getMetaData().getColumnLabel(i); 
+                        
+                        // 🚀 [지시사항] 프로시저별 리턴 필드명(Alias) 강제 지정
+                        if (colName == null || colName.isEmpty() || colName.toLowerCase().startsWith("col")) {
+                            if (proc.equals("HSIO_010U_STR")) {
+                                if (i == 1) colName = "reqym";
+                                else if (i == 2) colName = "reqno";
+                            }
+                            if (proc.equals("HSIO_050U_STR")  || proc.equals("HSIO_052U_STR") ) {
+                                if (i == 1) colName = "balym";
+                                else if (i == 2) colName = "balno";
+                            }
+                            if (proc.equals("HSIO_300U_STR")  || proc.equals("HSIO_320U_STR") ) {
+                                if (i == 1) colName = "imym";
+                                else if (i == 2) colName = "imno";
+                            }
+                            if (proc.equals("HSIO_325U_STR") || proc.equals("HSIO_140U_STR")) {
+                                if (i == 1) colName = "slipymd";
+                                else if (i == 2) colName = "slipno";
+                            }
+                            if (proc.equals("HSIO_510U_STR") || proc.equals("HSIO_110U_STR") || proc.equals("HSIO_120U_STR")) {
+                                if (i == 1) colName = "jsanym";
+                                else if (i == 2) colName = "jsanno";
+                            }
+                            if (proc.equals("HSIO_530U_STR") || proc.equals("HSIO_531U_STR")) {
+                                if (i == 1) colName = "slipymd";
+                                else if (i == 2) colName = "slipno";
+                            }
+                            if (proc.equals("HSIO_570U_STR") || proc.equals("HSIO_490U_STR") ) {
+                                if (i == 1) colName = "ioym";
+                                else if (i == 2) colName = "iono";
+                                else if (i == 3) colName = "ino";
+                            }
+                            if (proc.equals("HSIO_730U_STR")  ) {
+                                if (i == 1) colName = "ioym";
+                                else if (i == 2) colName = "iono";
+                                else if (i == 3) colName = "ono";
+                            }
+                            if (proc.equals("HSIO_720U_STR")  ) {
+                                if (i == 1) colName = "ioym";
+                                else if (i == 2) colName = "ino";
+                                else if (i == 3) colName = "ono";
+                            }
+                            if (proc.equals("HSIO_580U_STR")) {
+                                if (i == 1) colName = "ioym";
+                                else if (i == 2) colName = "iono";
+                                else if (i == 3) colName = "ino";
+                            }
+                            if (proc.equals("HSIO_540U_STR") || proc.equals("HSIO_541U_STR") || proc.equals("HSIO_590U_STR")) {
+                                if (i == 1) colName = "result";
+                                else if (i == 2) colName = "msg";
+                            }
+
+                            if (proc.equals("HSIO_500U_STR") || proc.equals("HSIO_550U_STR") ||
+                                proc.equals("HSIO_190U_STR") || proc.equals("HSIO_250U_STR") ||
+                                proc.equals("HSIO_100U_STR")) {
+                                if (i == 1) colName = "ioym";
+                                else if (i == 2) colName = "iono";
+                            }
+                        }
                         if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
                         row.put(colName.toLowerCase(), val == null ? "" : val);
                         values.add(val == null ? "" : val);
@@ -339,7 +417,7 @@ public class HsioController {
                     row.put("returnKeyValue", values); 
                     return row;
                 });
-                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+                log.info("🎯 [succ] data: {}", result);
             } else {
                 switch (proc) {
                     case "HSIO_010U_STR": result = hsioMapper.HSIO_010U_STR(params); break;
@@ -420,7 +498,12 @@ public class HsioController {
             }
 
             if (result == null || result.isEmpty()) {
-                result = List.of(Map.of("res", "OK"));
+                // 🚀 조회성(Select, List, Print 등) 요청인 경우 빈 배열 반환, 그 외(저장/삭제 등)는 성공 메시지 반환
+                if (actkind.startsWith("S") || actkind.startsWith("L") || actkind.startsWith("P") || actkind.isEmpty()) {
+                    result = new ArrayList<>();
+                } else {
+                    result = List.of(Map.of("res", "OK"));
+                }
             }
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -459,7 +542,7 @@ public class HsioController {
                     if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
                 }
             }
-        } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
+        } catch (Exception e) { log.warn("🛠 missing parameter alarm ({}): {}", proc, e.getMessage()); }
     }
 
     private String validateParameters(Class<?> mapperClass, String proc, Map<String, Object> vueParams) {

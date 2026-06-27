@@ -234,9 +234,9 @@ const normalizekeys = (obj: any) => {
 const loadinitdata = async () => {
   try {
     const [resgbn, resstatus, resio] = await Promise.all([
-      api.post('/api/ha00/ha00_00p_str', { gubun: 'e0', gbncd: '270', cmpycd: authstore.cmpycd }),
-      api.post('/api/ha00/ha00_00p_str', { gubun: 'e0', gbncd: '280', cmpycd: authstore.cmpycd }),
-      api.post('/api/ha00/ha00_00p_str', { gubun: 'e0', gbncd: '340', cmpycd: authstore.cmpycd })
+      api.post('/api/ha00/ha00_00p_str', { gubun: 'E0', gbncd: '270', cmpycd: authstore.cmpycd }),
+      api.post('/api/ha00/ha00_00p_str', { gubun: 'E0', gbncd: '280', cmpycd: authstore.cmpycd }),
+      api.post('/api/ha00/ha00_00p_str', { gubun: 'E0', gbncd: '340', cmpycd: authstore.cmpycd })
     ])
     const map = (r: any) => r.data.map((i: any) => normalizekeys(i)).map((n: any) => ({ codecd: n.code || n.codecd, codenm: n.cdnm || n.codenm }))
     options.custgbn = map(resgbn)
@@ -248,7 +248,7 @@ const loadinitdata = async () => {
 // 3. 기능 구현
 const search = async () => {
   try {
-    const res = await api.post('/api/common/HABA_180U_STR', {
+    const res = await api.post('/api/haba/HABA_180U_STR', {
       actkind: 'S0', cmpycd: authstore.cmpycd,
       custcd: searchform.qcustcd || '',
       custnm: searchform.qcustnm,
@@ -288,7 +288,7 @@ const save = async () => {
       legalno: (masterdata.legalno || '').replace(/-/g, ''),
       address_det: masterdata.d_address
     }
-    const res = await api.post('/api/common/HABA_180U_STR', payload)
+    const res = await api.post('/api/haba/HABA_180U_STR', payload)
     const resdata = normalizekeys(res.data?.[0]);
     if (resdata.result === 'N' || resdata.erryn === 'Y') valerterror(resdata.msg || '저장 실패')
     else { valert('정상 처리되었습니다.'); search(); initialize(); }

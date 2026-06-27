@@ -10,11 +10,11 @@
         exec hsio_011u_str #{actkind}, #{cmpycd}, #{reqym}, #{reqno}, #{rrowno}, #{deptcd}, #{whcd}, #{itemcd}, #{itsize}, #{unit}, #{reqymd}, #{reqqty}, #{imprice}, #{reqamt}, #{custcd}, #{ordym}, #{ordno}, #{updemp}
     </select>
 
-    <select id="HSIO_020U_STR" resultType="map">
+    <select id="HSIO_020U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_020u_str #{actkind}, #{cmpycd}, #{reqym}, #{reqno}, #{asgbn}, #{reqymd}, #{inymd}, #{whcd}, #{deptcd}, #{remark}, #{ordym}, #{ordno}, #{updemp}
     </select>
 
-    <select id="HSIO_021U_STR" resultType="map">
+    <select id="HSIO_021U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_021u_str #{actkind}, #{cmpycd}, #{reqym}, #{reqno}, #{rrowno}, #{deptcd}, #{whcd}, #{itemcd}, #{itsize}, #{unit}, #{reqymd}, #{reqqty}, #{imprice}, #{reqamt}, #{custcd}, #{ordym}, #{ordno}, #{updemp}
     </select>
 
@@ -26,8 +26,8 @@
         exec hsio_051u_str #{actkind}, #{cmpycd}, #{balym}, #{balno}, #{browno}, #{deptcd}, #{custcd}, #{itemcd}, #{itsize}, #{unit}, #{pkunit}, #{balymd}, #{balqty}, #{balamt}, #{balvat}, #{scustcd}, #{scustnm}, #{reqym}, #{reqno}, #{rrowno}, #{updemp}, #{ordym}, #{ordno}
     </select>
 
-    <select id="HSIO_052U_STR" resultType="map">
-        exec hsio_052u_str #{actkind}, #{cmpycd}, #{balym}, #{balno}, #{balymd}, #{reqymd}, #{custcd}, #{deptcd}, #{remark}, #{updemp}
+    <select id="HSIO_052U_STR" resultType="java.util.LinkedHashMap">
+        exec hsio_052u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm}, #{balym}, #{balno}, #{balymd}, #{reqymd}, #{custcd}, #{deptcd}, #{remark}, #{updemp}
     </select>
 
     <select id="HSIO_060U_STR" resultType="java.util.LinkedHashMap">
@@ -42,15 +42,15 @@
         exec hsio_070u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{custcd}, #{ioym}, #{iono}, #{updemp}
     </select>
 
-    <select id="HSIO_080S_STR" resultType="map">
+    <select id="HSIO_080S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_085s_str #{cmpycd}, #{deptcd}, #{custcd}, #{custnm}, #{fromdt}, #{todt}
     </select>
 
-    <select id="HSIO_082S_STR" resultType="map">
+    <select id="HSIO_082S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_082s_str #{cmpycd}, #{fromdt}, #{todt}, #{ordym}, #{ordno}, #{custcd}, #{userid}, #{ipgoyn}, #{remark}
     </select>
 
-    <select id="HSIO_085S_STR" resultType="map">
+    <select id="HSIO_085S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_085s_str #{cmpycd}, #{deptcd}, #{custcd}, #{custnm}, #{fromdt}, #{todt}
     </select>
 
@@ -62,11 +62,11 @@
         exec hsio_101u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{pkunit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{scustcd}, #{scustnm}, #{updemp}
     </select>
 
-    <select id="HSIO_110U_STR" resultType="map">
+    <select id="HSIO_110U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_110u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{custcd}, #{deptcd}, #{ioym}, #{iono}, #{iorowno}, #{taxunit}, #{vattype}, #{jsanym}, #{jsanno}, #{jsanymd}, #{jsanamt}, #{jsanvat}, #{updemp}
     </select>
 
-    <select id="HSIO_120U_STR" resultType="map">
+    <select id="HSIO_120U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_120u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{custcd}, #{deptcd}, #{jsanym}, #{jsanno}, #{updemp}
     </select>
 
@@ -78,55 +78,58 @@
         exec hsio_131u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{jsanym}, #{jsanno}, #{jsanymd}, #{spyamt}, #{vatamt}, #{custcd}, #{taxunit}, #{vattype}, #{slipymd}, #{slipno}, #{cardyn}, #{cardno}, #{slipkind}, #{hdeptcd}, #{business}, #{updemp}
     </select>
 
-    <select id="HSIO_140U_STR" resultType="map">
+    <select id="HSIO_140U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_140u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
-    <select id="HSIO_141U_STR" resultType="map">
+    <select id="HSIO_141U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_141u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
-    <select id="HSIO_160U_STR" resultType="map">
+    <select id="HSIO_160U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_160u_str #{procgbn}, #{cmpycd}, #{jsanym}, #{jsanno}, #{ioym}, #{iono}, #{iorowno}, #{custcd}, #{deptcd}, #{itemcd}, #{halymd}, #{inqty}, #{inamt}, #{halamt}, #{halrate}, #{divgbn}, #{updemp}
     </select>
 
-    <select id="HSIO_170U_STR" resultType="map">
+    <select id="HSIO_170U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_170u_str #{actkind}, #{cmpycd}, #{jsanym}, #{custcd}, #{halamt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
-    <select id="HSIO_171U_STR" resultType="map">
+    <select id="HSIO_171U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_171u_str #{actkind}, #{cmpycd}, #{jsanym}, #{custcd}, #{halamt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
-    <select id="HSIO_180U_STR" resultType="map">
+    <select id="HSIO_180U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_180u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
-    <select id="HSIO_181U_STR" resultType="map">
+    <select id="HSIO_181U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_181u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
     <select id="HSIO_190U_STR" resultType="java.util.LinkedHashMap">
-        exec hsio_190u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{address}, #{remark}, #{cfmyn}, #{gubun}, #{totsum}, #{updemp}
+        exec hsio_190u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm}, #{iogbn}, #{ioym}, #{iono},
+        #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{address}, #{remark}, #{cfmyn}, #{gubun}, #{totsum}, #{updemp}
     </select>
 
     <select id="HSIO_191U_STR" resultType="java.util.LinkedHashMap">
-        exec hsio_191u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{pkunit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{scustcd}, #{scustnm}, #{outno}, #{updemp}
+        exec hsio_191u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno},
+        #{deptcd}, #{custcd}, #{whcd}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit},
+        #{pkunit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{scustcd}, #{scustnm}, #{outno}, #{updemp}
     </select>
 
-    <select id="HSIO_200S_STR" resultType="map">
+    <select id="HSIO_200S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_200s_str #{cmpycd}, #{whcd}, #{fromdt}, #{todt}, #{iotype}, #{custcd}, #{ordym}, #{ordno}, #{userid}
     </select>
 
-    <select id="HSIO_210S_STR" resultType="map">
+    <select id="HSIO_210S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_210s_str #{cmpycd}, #{whcd}, #{iotype}, #{fromdt}, #{todt}, #{custcd}, #{itemcd}
     </select>
 
-    <select id="HSIO_215S_STR" resultType="map">
+    <select id="HSIO_215S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_215s_str #{actkind}, #{cmpycd}, #{iogbn}, #{whcd}, #{fromdt}, #{todt}, #{custcd}, #{ioym}, #{iono}, #{slipyn}
     </select>
 
-    <select id="HSIO_220S_STR" resultType="map">
+    <select id="HSIO_220S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_220s_str #{cmpycd}, #{fromdt}, #{todt}
     </select>
 
@@ -151,88 +154,96 @@
         #{userid}, #{imym}, #{imno}, #{imymd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
-    <select id="HSIO_325U_STR" resultType="map">
+    <select id="HSIO_325U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_325u_str #{actkind}, #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}, #{userid}, #{iogbn}, #{imym}, #{imno}, #{slipkind}, #{slipymd}, #{slipno}, #{dacctcd}, #{dacctnm}, #{cacctcd}, #{cacctnm}, #{imamt}, #{remark}, #{custcd}, #{custnm}, #{updemp}
     </select>
 
-    <select id="HSIO_410S_STR" resultType="map">
+    <select id="HSIO_410S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_410s_str #{cmpycd}, #{deptcd}, #{custcd}, #{fromdt}, #{todt}
     </select>
 
-    <select id="HSIO_470S_STR" resultType="map">
+    <select id="HSIO_470S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_470s_str #{cmpycd}, #{deptcd}, #{custcd}, #{fromdt}, #{todt}, #{itemcd}
     </select>
 
-    <select id="HSIO_490U_STR" resultType="map">
-        exec hsio_490u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{area}, #{userid}, #{trnemp}, #{trancd}, #{addres}, #{remark}, #{cfmyn}, #{totsum}, #{updemp}
+    <select id="HSIO_490U_STR" resultType="java.util.LinkedHashMap">
+        exec hsio_490u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{area}, #{userid}, #{trnemp}, #{trancd}, #{address}, #{remark}, #{cfmyn}, #{totsum}, #{updemp}
     </select>
 
-    <select id="HSIO_491U_STR" resultType="map">
+    <select id="HSIO_491U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_491u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{area}, #{userid}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{ino}, #{updemp}
     </select>
 
     <select id="HSIO_500U_STR" resultType="java.util.LinkedHashMap">
-        exec hsio_500u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{area}, #{userid}, #{trnemp}, #{trancd}, #{postno}, #{address}, #{d_address}, #{remark}, #{cfmyn}, #{totsum}, #{ordym}, #{ordno}, #{updemp}
+        exec hsio_500u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm}, #{iogbn},
+        #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{area},
+        #{saleuserid}, #{trnemp}, #{trancd}, #{postno}, #{address}, #{d_address}, #{remark},
+        #{cfmyn}, #{totsum}, #{ordym}, #{ordno}, #{updemp}
     </select>
 
     <select id="HSIO_501U_STR" resultType="java.util.LinkedHashMap">
-        exec hsio_501u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{area}, #{userid}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{updemp}
+        exec hsio_501u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{area}, #{saleuserid}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ioqty}, #{ioamt}, #{iovat}, #{cfmyn}, #{updemp}
     </select>
 
-    <select id="HSIO_510U_STR" resultType="map">
+    <select id="HSIO_510U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_510u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{custcd}, #{deptcd}, #{ioym}, #{iono}, #{iorowno}, #{taxunit}, #{vattype}, #{jsanym}, #{jsanno}, #{jsanymd}, #{jsanqty}, #{jsanamt}, #{jsanvat}, #{updemp}
     </select>
 
-    <select id="HSIO_511U_STR" resultType="map">
+    <select id="HSIO_511U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_511u_str #{actkind}, #{cmpycd}, #{iogbn}, #{yymm}, #{sungb}, #{custcd}, #{deptcd}, #{ioym}, #{iono}, #{iorowno}, #{taxunit}, #{vattype}, #{jsanym}, #{jsanno}, #{jsanymd}, #{jsanqty}, #{jsanamt}, #{jsanvat}, #{updemp}
     </select>
 
-    <select id="HSIO_520U_STR" resultType="map">
+    <select id="HSIO_520U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_520u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{custcd}, #{jsanym}, #{jsanno}, #{updemp}
     </select>
 
-    <select id="HSIO_521U_STR" resultType="map">
+    <select id="HSIO_521U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_521u_str #{actkind}, #{cmpycd}, #{iogbn}, #{yymm}, #{sungb}, #{deptcd}, #{custcd}, #{jsanym}, #{jsanno}, #{updemp}
     </select>
 
-    <select id="HSIO_530U_STR" resultType="map">
+    <select id="HSIO_530U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_530u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{jsanym}, #{jsanno}, #{jsanymd}, #{spyamt}, #{vatamt}, #{custcd}, #{taxunit}, #{vattype}, #{slipymd}, #{slipno},  #{updemp}
     </select>
 
-    <select id="HSIO_531U_STR" resultType="map">
+    <select id="HSIO_531U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_531u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{jsanym}, #{jsanno}, #{jsanymd}, #{spyamt}, #{vatamt}, #{custcd}, #{taxunit}, #{vattype}, #{slipymd}, #{slipno}, #{slipkind}, #{hdeptcd}, #{business}, #{updemp}
     </select>
 
-    <select id="HSIO_540U_STR" resultType="map">
+    <select id="HSIO_540U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_540u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
-    <select id="HSIO_541U_STR" resultType="map">
+    <select id="HSIO_541U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_541u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{deptcd}, #{slipymd}, #{slipno}, #{updemp}
     </select>
 
-    <select id="HSIO_550U_STR" resultType="map">
-        exec hsio_550u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{custcd}, #{deptcd}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{whcd}, #{area}, #{userid}, #{trnemp}, #{trancd}, #{addres}, #{remark}, #{cfmyn}, #{totsum}, #{updemp}
+    <select id="HSIO_550U_STR" resultType="java.util.LinkedHashMap">
+        exec hsio_550u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{custcd},
+        #{deptcd}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{whcd}, #{area}, #{userid},
+        #{trnemp}, #{trancd}, #{addres}, #{d_address}, #{remark}, #{cfmyn}, #{totsum}, #{updemp}
     </select>
 
-    <select id="HSIO_551U_STR" resultType="map">
+    <select id="HSIO_551U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_551u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{area}, #{userid}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ioqty}, #{ioamt}, #{iovat}, #{balym}, #{balno}, #{browno}, #{cfmyn}, #{updemp}
     </select>
 
-    <select id="HSIO_560U_STR" resultType="map">
+    <select id="HSIO_560U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_560u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{whcd}, #{custcd}, #{ioym}, #{iono}, #{iorowno}, #{updemp}
     </select>
 
     <select id="HSIO_570U_STR" resultType="java.util.LinkedHashMap">
-        exec hsio_570u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{area}, #{userid}, #{inyn}, #{ino}, #{remark}, #{cfmyn}, #{updemp}
+        exec hsio_570u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{deptnm}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{iotype},
+        #{custcd}, #{deptcd}, #{whcd}, #{userid}, #{inyn}, #{ino}, #{remark}, #{cfmyn}, #{updemp}
     </select>
 
     <select id="HSIO_571U_STR" resultType="java.util.LinkedHashMap">
-        exec hsio_571u_str #{actkind}, #{cmpycd}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{userid}, #{ioymd}, #{iotype}, #{itemcd}, #{itsize}, #{unit}, #{ino}, #{itemcd_t}, #{itsize_t}, #{unit_t}, #{ioqty}, #{ioamt}, #{iovat}, #{usedept}, #{cfmyn}, #{updemp}
+        exec hsio_571u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{deptcd}, #{custcd}, #{whcd}, #{userid}, #{ioymd}, #{iotype},
+        #{itemcd}, #{itsize}, #{unit}, #{ino}, #{itemcd_t}, #{itsize_t}, #{unit_t}, #{ioqty}, #{ioamt}, #{iovat}, #{usedept}, #{cfmyn}, #{updemp}
     </select>
 
     <select id="HSIO_580U_STR" resultType="java.util.LinkedHashMap">
-        exec hsio_580u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{deptnm}, #{iogbn}, #{ioym}, #{iono}, #{ioymd}, #{odeptcd}, #{owhcd}, #{ideptcd}, #{iwhcd}, #{remark}, #{updemp}
+        exec hsio_580u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt},  #{iogbn}, #{ioym},
+        #{iono}, #{ioymd}, #{odeptcd}, #{owhcd}, #{ideptcd}, #{iwhcd}, #{remark}, #{updemp}
     </select>
 
     <select id="HSIO_581U_STR" resultType="java.util.LinkedHashMap">
@@ -256,11 +267,11 @@
         exec hsio_620s_str #{actkind}, #{cmpycd}, #{iogbn}, #{whcd}, #{fromdt}, #{todt}, #{custcd}, #{ioym}, #{iono}, #{slipyn}
     </select>
 
-    <select id="HSIO_640S_STR" resultType="map">
+    <select id="HSIO_640S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_640s_str #{cmpycd}, #{whcd}, #{fromdt}, #{todt}, #{astkind}
     </select>
 
-    <select id="HSIO_650S_STR" resultType="map">
+    <select id="HSIO_650S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_650s_str #{cmpycd}, #{whcd}, #{fromdt}, #{todt}, #{astkind}, #{itemcd}
     </select>
 
@@ -268,27 +279,27 @@
         exec hsio_660s_str #{cmpycd}, #{trnemp}, #{outymd}
     </select>
 
-    <select id="HSIO_680S_STR" resultType="map">
+    <select id="HSIO_680S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_680s_str #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}
     </select>
 
-    <select id="HSIO_690S_STR" resultType="map">
+    <select id="HSIO_690S_STR" resultType="java.util.LinkedHashMap">
         exec hsio_690s_str #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}
     </select>
 
-    <select id="HSIO_720U_STR" resultType="map">
+    <select id="HSIO_720U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_720u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{deptcd}, #{whcd}, #{ioymd}, #{remark}, #{lotno}, #{updemp}
     </select>
 
-    <select id="HSIO_721U_STR" resultType="map">
+    <select id="HSIO_721U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_721u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{ino}, #{iorowno}, #{ono}, #{deptcd}, #{whcd}, #{ioymd}, #{itemcd}, #{unit}, #{ioqty}, #{ioamt}, #{updemp}
     </select>
 
-    <select id="HSIO_730U_STR" resultType="map">
+    <select id="HSIO_730U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_730u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{deptcd}, #{whcd}, #{ioymd}, #{remark}, #{updemp}
     </select>
 
-    <select id="HSIO_731U_STR" resultType="map">
+    <select id="HSIO_731U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_731u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{ino}, #{iorowno}, #{ono}, #{deptcd}, #{whcd}, #{ioymd}, #{itemcd}, #{unit}, #{ioqty}, #{ioamt}, #{updemp}
     </select>
 

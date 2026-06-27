@@ -3,7 +3,7 @@ package com.crmbank.erp.hafn.controller;
 import com.crmbank.erp.comm.dto.ApiResponse;
 import com.crmbank.erp.comm.dto.UserSession;
 import com.crmbank.erp.hafn.mapper.HafnMapper;
-import com.crmbank.erp.hasl.mapper.HaslMapper;
+import com.crmbank.erp.hafn.service.HafnService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import java.util.*;
 public class HafnController {
 
     private final HafnMapper hafnMapper;
-    private final HaslMapper haslMapper;
+    private final HafnService hafnService;
     private final SqlSession sqlSession;
     private final JdbcTemplate jdbcTemplate;
 
@@ -44,11 +44,6 @@ public class HafnController {
         String proc = procedure.toUpperCase();
         String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
         
-        // 🚀 복합 저장 로직 (ApiResponse 반환)
-        if (proc.equals("HAFN_610U_SAVE") || proc.equals("HAFN_620U_SAVE") || proc.equals("HAFN_630U_SAVE")) {
-            return saveSlip110(params, session);
-        }
-
         try {
             fillMissingParameters(proc, params);
 
@@ -107,6 +102,42 @@ public class HafnController {
         }
     }
 
+    @PostMapping("/HAFN_610U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveHafn610(@RequestBody Map<String, Object> payload, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user == null) return ResponseEntity.status(401).build();
+        try {
+            Map<String, Object> result = hafnService.saveHafn610(payload, user.getCmpycd(), user.getUserid());
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/HAFN_620U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveHafn620(@RequestBody Map<String, Object> payload, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user == null) return ResponseEntity.status(401).build();
+        try {
+            Map<String, Object> result = hafnService.saveHafn620(payload, user.getCmpycd(), user.getUserid());
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/HAFN_630U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveHafn630(@RequestBody Map<String, Object> payload, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user == null) return ResponseEntity.status(401).build();
+        try {
+            Map<String, Object> result = hafnService.saveHafn630(payload, user.getCmpycd(), user.getUserid());
+            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
@@ -154,60 +185,5 @@ public class HafnController {
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }
-    }
-
-    @Transactional
-    public ResponseEntity<ApiResponse<?>> saveSlip110(Map<String, Object> payload, HttpSession session) {
-        try {
-            Map<String, Object> master = (Map<String, Object>) payload.get("master");
-            List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
-            String actkind = (String) payload.get("actkind");
-
-            injectSession(master, session);
-            master.put("actkind", actkind);
-
-            String sql = buildPositionalSql("HASL_110U_STR", master);
-            List<Map<String, Object>> masterresult = jdbcTemplate.query(sql, (rs, rowNum) -> {
-                Map<String, Object> row = new LinkedHashMap<>();
-                for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-                    row.put(rs.getMetaData().getColumnLabel(i).toLowerCase(), rs.getObject(i));
-                }
-                return row;
-            });
-
-            if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
-            
-            List<Object> mstValues = new ArrayList<>(masterresult.get(0).values());
-            String status = String.valueOf(mstValues.get(0)).trim();
-            if ("000000".equals(status)) throw new RuntimeException(String.valueOf(mstValues.get(1)));
-
-            String slipno = String.valueOf(mstValues.get(0));
-            String slipymd = String.valueOf(master.get("slipymd"));
-
-            if (details != null) {
-                for (Map<String, Object> detail : details) {
-                    injectSession(detail, session);
-                    detail.put("slipymd", slipymd);
-                    detail.put("slipno", slipno);
-                    detail.put("acctymd", master.get("acctymd"));
-                    detail.put("actkind", actkind);
-
-                    List<Map<String, Object>> detres = haslMapper.HASL_111U_STR(detail);
-                    if (!detres.isEmpty()) {
-                        List<Object> dtlValues = new ArrayList<>(detres.get(0).values());
-                        if ("Y".equalsIgnoreCase(String.valueOf(dtlValues.get(0)))) {
-                            throw new RuntimeException(String.valueOf(dtlValues.get(1)));
-                        }
-                    }
-                }
-            }
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("slipno", slipno);
-            return ResponseEntity.ok(ApiResponse.success(response, "성공적으로 저장되었습니다."));
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
     }
 }

@@ -85,7 +85,10 @@
     <select id="HASL_011U_STR" resultType="map">exec hasl_011u_str #{actkind}, #{cmpycd}, #{slipymd}, #{slipno}, #{srowno}, #{acctymd}, #{acctcd}, #{deptcd}, #{custcd}, #{bugtcd}, #{prjcd}, #{mgtno}, #{sslipno}, #{dbamt}, #{cramt}, #{remark}, #{paycndt}, #{payymd}, #{docno1}, #{docno2}, #{docno3}, #{docno4}, #{docno5}, #{docno6}, #{docno7}, #{docno8}, #{docno9}, #{updemp}, #{frgnkind}, #{frgnrate}, #{frgnamt}, #{ret_yn}</select>
     <select id="HASL_111U_STR" resultType="map">exec hasl_111u_str #{actkind}, #{cmpycd}, #{slipymd}, #{slipno}, #{srowno}, #{acctymd}, #{acctcd}, #{deptcd}, #{custcd}, #{bugtcd}, #{prjcd}, #{mgtno}, #{sslipno}, #{dbamt}, #{cramt}, #{remark}, #{paycndt}, #{payymd}, #{docno1}, #{docno2}, #{docno3}, #{docno4}, #{docno5}, #{docno6}, #{docno7}, #{docno8}, #{docno9}, #{updemp}, #{frgnkind}, #{frgnrate}, #{frgnamt}, #{ret_yn}</select>
 
-    <select id="HASL_020U_STR" resultType="map">exec hasl_020u_str #{actkind}, #{cmpycd}, #{slipymd}, #{acctymd}, #{slipno},#{deptcd}, #{slipkind}, #{slipyn}, #{cofmyn}, #{cofmemp}, #{updemp}</select>
+    <select id="HASL_020U_STR" resultType="map">
+        exec hasl_020u_str #{actkind}, #{cmpycd}, #{slipymd}, #{acctymd},
+        #{slipno},#{deptcd}, #{slipkind}, #{slipyn}, #{cofmyn}, #{cofmemp}, #{updemp}
+    </select>
 
     <select id="HASL_030S_STR" resultType="map">exec hasl_030s_str #{cmpycd}, #{deptcd}, #{fromdt}, #{todt}, #{acctcd1}, #{acctcd2}</select>
     <select id="HASL_120S_STR" resultType="map">exec hasl_120s_str #{cmpycd}, #{fromdt}, #{todt}, #{acctcd}, #{deptcd}, #{slipamt_f}, #{slipamt_t}</select>

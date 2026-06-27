@@ -113,7 +113,7 @@
     <select id="HABA_180U_STR" resultType="map">
         EXEC HABA_180U_STR #{actkind}, #{cmpycd}, #{custcd}, #{custno}, #{custnm}, #{custgbn}, #{bossnm},
         #{juminno}, #{legalno}, #{custkind}, #{custtype}, #{telno}, #{faxno}, #{postno}, #{address},
-        #{iogbn}, #{fondymd}, #{stdymd}, #{clsymd}, #{singrd}, #{status}, #{gujoa}, #{banknm},
+        #{d_address}, #{iogbn}, #{fondymd}, #{stdymd}, #{clsymd}, #{singrd}, #{status}, #{gujoa}, #{banknm},
         #{elcyn}, #{useyn}, #{updemp}
     </select>
 

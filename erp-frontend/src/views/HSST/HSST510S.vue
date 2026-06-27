@@ -128,7 +128,7 @@ const searchForm = reactive({
 })
 
 const rowCount = ref(0)
-const totals = reactive({ SMTOT: 0, SYTOT: 0 })
+const totals = reactive({ smtot: 0, sytot: 0 })
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
 const search = async () => {
@@ -144,8 +144,8 @@ const search = async () => {
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
-		totals.SMTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.Mamt || 0) + Number(cur.mvat || 0)), 0)
-		totals.SYTOT = data.reduce((acc: number, cur: any) => acc + (Number(cur.tamt || 0) + Number(cur.tvat || 0)), 0)
+		totals.smtot = data.reduce((acc: number, cur: any) => acc + (Number(cur.mamt || 0) + Number(cur.mvat || 0)), 0)
+		totals.sytot = data.reduce((acc: number, cur: any) => acc + (Number(cur.tamt || 0) + Number(cur.tvat || 0)), 0)
 
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
@@ -156,7 +156,7 @@ const initialize = () => {
 	searchForm.deptcd = authStore.deptcd; searchForm.deptnm = authStore.deptnm;
 	searchForm.fymd = firstDay; searchForm.tymd = today;
 	mainGrid?.clearData(); rowCount.value = 0;
-	totals.SMTOT = 0; totals.SYTOT = 0;
+	totals.smtot = 0; totals.sytot = 0;
 }
 
 const excel = () => mainGrid?.download("xlsx", "품목별거래처판매현황.xlsx")
@@ -175,9 +175,16 @@ function openHelp(type: string) {
 		})
 	} else if (type === 'ITEM') {
 		Object.assign(modalProps, {
-			title: '품목 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'itemnm',
-			data: { gubun: 'I1', cmpycd: authStore.cmpycd },
-			columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '품목명', field: 'itemnm', width: 200 }],
+			title: '품목 선택',
+			path: '/api/hs00/HS00_000S_STR',
+			defaultField: 'itemnm',
+			data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', code: '', remark: '' },
+			columns: [
+				{ title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+				{ title: '품목명', field: 'itemnm', width: 200 },
+				{ title: '규격', field: 'itsize', width: 150 },
+				{ title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+			],
 			onConfirm: (d: any) => { searchForm.itemcd = d.itemcd; searchForm.itemnm = d.itemnm }
 		})
 	}
@@ -204,17 +211,17 @@ onMounted(() => {
 					},
 					cellClick: (e, cell) => {
 						const d = cell.getData();
-						router.push({ path: '/HSST/HSST140S', query: { fymd: searchForm.fymd, tymd: searchForm.tymd, deptcd: searchForm.deptcd, custcd: d.custcd, itemcd: searchForm.itemcd } });
+						router.push({ path: '/hsst/HSST140S', query: { fymd: searchForm.fymd, tymd: searchForm.tymd, deptcd: searchForm.deptcd, custcd: d.custcd, itemcd: searchForm.itemcd } });
 					}
 				},
 				{
 					title: "당월 실적 (Current Month)",
 					columns: [
 						{ title: "수량", field: "mqty", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: (c:any) => c.getData().qtypnt || 0 } },
-						{ title: "매출액", field: "Mamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
+						{ title: "매출액", field: "mamt", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
 						{ title: "부가세", field: "mvat", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0 } },
 						{ title: "합계", field: "msum", hozAlign: "right", width: 150, formatter: "money", cssClass: "bg-light text-primary fw-bold",
-						  mutatorData: (v,d) => Number(d.Mamt||0) + Number(d.mvat||0) }
+						  mutatorData: (v,d) => Number(d.mamt||0) + Number(d.mvat||0) }
 					]
 				},
 				{
@@ -232,4 +239,16 @@ onMounted(() => {
 	}
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+
+/* 🚀 2단 헤더에서 단일 컬럼의 타이틀을 수직 중앙 정렬 */
+:deep(.tabulator-header .tabulator-col:not(.tabulator-col-group) .tabulator-col-content) {
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+</style>
 

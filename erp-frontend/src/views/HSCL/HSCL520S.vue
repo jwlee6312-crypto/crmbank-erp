@@ -1,97 +1,78 @@
-<!--
-	=============================================================
-	프로그램명	: 거래처 매출원가 list
-	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 마감 후 거래처별 매출원가 및 이익율 현황 조회
-	=============================================================
--->
-
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
-	<div class="erp-container">
-		<!-- 🚀 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-list-columns-reverse me-2 text-primary" style="font-size: 18px;"></i>
-				영업계획 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">거래처 매출원가 list (HSCL520S)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기화
-				</button>
-				<button class="btn-erp btn-search" @click="search">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-excel" @click="excel">
-					<i class="bi bi-file-earmark-excel"></i> 엑셀
-				</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-list-columns-reverse me-2 text-primary" style="font-size: 18px;"></i>
+        마감관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        통계현황 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">거래처 매출원가 list (HSCL520S)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
+      </div>
+    </div>
 
-		<!-- 🔍 검색 항목 영역 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm overflow-hidden">
-				<table class="erp-table-full" style="table-layout: fixed;">
-					<colgroup>
-						<col style="width: 35%;" />
-						<col style="width: 35%;" />
-						<col style="width: 30%;" />
-					</colgroup>
-					<tbody>
-						<tr>
-							<td>
-								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">연&nbsp;&nbsp;&nbsp;&nbsp;월</span>
-									<div class="d-flex align-items-center gap-1">
-										<select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;">
-											<option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
-										</select>
-										<select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;">
-											<option v-for="month in monthOptions" :key="month" :value="month">{{ month }}월</option>
-										</select>
-										<span class="ms-1 small text-muted">현재</span>
-									</div>
-								</div>
-							</td>
-							<td>
-								<div class="d-flex align-items-center px-2">
-									<span class="erp-label me-2">판매부서</span>
-									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-white" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" @keydown.enter="openHelp" />
-										<button class="btn btn-outline-secondary px-2" @click="openHelp"><i class="bi bi-search"></i></button>
-									</div>
-								</div>
-							</td>
-							<td class="text-end px-3">
-								<span v-if="closingMonth" class="badge bg-info-subtle text-info border border-info-subtle">
-									마감월: {{ closingMonth.substring(0,4) }}-{{ closingMonth.substring(4,6) }}
-								</span>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+      <!-- 🅰️ 조회 조건 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 25%" />
+                <col style="width: 10%" /><col style="width: 20%" />
+                <col style="width: 10%" /><col style="width: 25%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="required text-center bg-light">판매부서</th>
+                <td>
+                  <div class="input-group input-group-sm">
+                    <input v-model="searchForm.deptnm" class="form-control fw-bold text-primary" readonly />
+                    <button class="btn btn-outline-secondary" @click="openHelp"><i class="bi bi-search"></i></button>
+                  </div>
+                </td>
+                <th class="required text-center bg-light">조회연월</th>
+                <td>
+                  <div class="d-flex align-items-center gap-1">
+                    <select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;">
+                      <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
+                    </select>
+                    <select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;">
+                      <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}월</option>
+                    </select>
+                  </div>
+                </td>
+                <td class="text-end pe-3 bg-white">
+                  <span v-if="closingMonth" class="badge bg-primary px-2">마감: {{ formatYM(closingMonth) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-		<!-- 📊 중앙 그리드 영역 -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                </div>
-			</div>
-		</div>
-	</div>
-
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+      <!-- 🅱️ 데이터 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>거래처별 매출원가 및 이익 현황</span>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -99,30 +80,25 @@ import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import Modal from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
+import { useCommonHelp } from '@/composables/useCommonHelp'
+import { getDate } from '@/composables/useDate'
 
 const authStore = useAuthStore()
+const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
+const { modalVisible, modalProps } = useCommonHelp()
 
-const now = new Date()
-const currentYear = now.getFullYear()
-const currentMonth = String(now.getMonth() + 1).padStart(2, '0')
-
-// 선택 옵션 생성
-const yearOptions = computed(() => {
-	const years = []
-	for (let i = 0; i < 5; i++) years.push(currentYear - i)
-	return years
-})
+const currentYear = new Date().getFullYear()
+const yearOptions = Array.from({ length: 6 }, (_, i) => currentYear - i)
 const monthOptions = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
 // 🔍 검색 데이터
-const searchForm = reactive({
+const searchForm = reactive<any>({
 	deptcd: authStore.deptcd,
 	deptnm: authStore.deptnm,
 	yy: currentYear,
-    mm: currentMonth
+    mm: today.substring(5, 7)
 })
 
 const closingMonth = ref('') // 시스템 마감월 (sclsym)
@@ -133,32 +109,34 @@ let mainGrid: Tabulator | null = null
 const getClosingInfo = async () => {
 	try {
 		const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'CL', cmpycd: authStore.cmpycd })
-		if (res.data) {
-			closingMonth.value = res.data.sclsym
-			if (closingMonth.value) {
-				searchForm.yy = Number(closingMonth.value.substring(0, 4))
-				searchForm.mm = closingMonth.value.substring(4, 6)
-			}
+		if (res.data?.length) {
+			closingMonth.value = res.data[0].sclsym
+			searchForm.yy = Number(closingMonth.value.substring(0, 4))
+			searchForm.mm = closingMonth.value.substring(4, 6)
 		}
 	} catch (e) { console.error('마감정보 조회 실패') }
 }
 
 const search = async () => {
+    if (!searchForm.deptcd) return vAlertError('판매부서를 선택해 주십시오.')
 	const searchym = `${searchForm.yy}${searchForm.mm}`
+    if (closingMonth.value && searchym > closingMonth.value) return vAlertError('영업마감작업 후 조회하시기 바랍니다.')
 
 	try {
 		const res = await api.post('/api/hscl/HSCL_520S_STR', {
 			cmpycd: authStore.cmpycd,
 			deptcd: searchForm.deptcd,
-			yymm: searchym
+			ym: searchym
 		})
-		mainGrid?.setData(res.data || [])
+        const data = (res.data || []).map((i: any) => Object.fromEntries(Object.entries(i).map(([k, v]) => [k.toLowerCase(), v])));
+		mainGrid?.setData(data)
 		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
 
 const initialize = () => {
 	resetForm(searchForm)
+    Object.assign(searchForm, { deptcd: authStore.deptcd, deptnm: authStore.deptnm })
 	getClosingInfo()
 	mainGrid?.clearData()
 }
@@ -166,19 +144,17 @@ const initialize = () => {
 const excel = () => mainGrid?.download("xlsx", "거래처매출원가list.xlsx")
 
 // 부서 도움창 설정
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({
-	title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-	columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
-	data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: '' },
-	onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm },
-	type: 'table'
-})
-
 function openHelp() {
-	modalProps.data.search = searchForm.deptnm
+    Object.assign(modalProps, {
+        title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
+        columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+        data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+        onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm; search(); }
+    })
 	modalVisible.value = true
 }
+
+const formatYM = (v: string) => v ? `${v.substring(0, 4)}-${v.substring(4, 6)}` : '';
 
 onMounted(() => {
 	getClosingInfo()
@@ -190,35 +166,36 @@ onMounted(() => {
 			groupBy: ["deptnm", "custnm"],
 			groupHeader: (value, count, data, group) => {
 				const label = group.getField() === "deptnm" ? "부서: " : "거래처: "
-				return `<span class='fw-bold'>${label}${value}</span> <span class='ms-2 text-muted small'>(${count}건)</span>`
+				return `<span class='fw-bold'>${label}${value || ''}</span> <span class='ms-2 text-muted small'>(${count}건)</span>`
 			},
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
-				{ title: "부서명", field: "deptnm", visible: false },
-				{ title: "거래처", field: "custnm", visible: false },
+                { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
+				{ title: "부서명", field: "deptnm", width: 130, visible: false },
+				{ title: "거래처", field: "custnm", minWidth: 180, visible: false },
 				{
-					title: "매출일자", field: "salsymd", width: 100,
+					title: "매출일자", field: "salsymd", width: 110,
 					formatter: (cell) => {
 						const val = cell.getValue()
-						return val && val.length === 8 ? `${val.substring(0, 4)}.${val.substring(4, 6)}.${val.substring(6, 8)}` : val
+						return val && val.length === 8 ? `${val.substring(0, 4)}.${val.substring(4, 6)}.${val.substring(6, 8)}` : (val || '')
 					}
 				},
 				{
-					title: "출고번호", field: "io_no", width: 120,
+					title: "출고번호", field: "io_no", width: 130,
 					formatter: (cell) => {
 						const d = cell.getData()
-						return `${d.ioym}-${d.iono}`
+						return (d.ioym && d.iono) ? `${d.ioym}-${d.iono}` : ''
 					}
 				},
-				{ title: "품목명", field: "itemnm", hozAlign: "left", minWidth: 200 },
-				{ title: "수량", field: "jsanqty", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "품목명", field: "itemnm", hozAlign: "left", minWidth: 200, cssClass: "fw-bold" },
+				{ title: "수량", field: "jsanqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{
-					title: "매출금액", field: "jsanamt", width: 120, hozAlign: "right",
+					title: "매출금액", field: "jsanamt", width: 110, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money"
 				},
 				{
-					title: "매출원가", field: "wonamt", width: 120, hozAlign: "right",
+					title: "매출원가", field: "wonamt", width: 110, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money"
 				},
@@ -242,18 +219,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.erp-label {
-	min-width: 70px;
-	font-weight: 500;
-	color: #495057;
-}
-
-:deep(.tabulator-group) {
-	background-color: #f8f9fa !important;
-}
-
-:deep(.tabulator-group-level-1) {
-	padding-left: 20px !important;
-	background-color: #ffffff !important;
-}
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+:deep(.tabulator-group) { background-color: #f8f9fa !important; }
+:deep(.tabulator-group-level-1) { padding-left: 20px !important; background-color: #ffffff !important; }
 </style>

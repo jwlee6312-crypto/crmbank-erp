@@ -70,29 +70,27 @@ const initGrid = () => {
     columns: [
       { title: "재고자산 유형", field: "cdnm", width: 150, hozAlign: "center", cssClass: "fw-bold bg-light", frozen: true },
       { title: "코드", field: "code", visible: false },
-
-      // 매입(Purchase) 그룹
       {
         title: "매입 (Purchase)",
         headerHozAlign: "center",
         columns: [
-          { title: "차변계정", field: "Imacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().Imacctcd ? `[${cell.getData().Imacctcd}] ${cell.getValue()}` : ""
+          { title: "차변계정", field: "imacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().imacctcd ? `[${cell.getData().imacctcd}] ${cell.getValue()}` : ""
           },
-          { title: " ", field: "searchIM", width: 35, hozAlign: "center", formatter: accountSearchIcon,
-            cellClick: (e, cell) => openAccountHelp('IM', cell)
+          { title: " ", field: "searchim", width: 35, hozAlign: "center", formatter: accountSearchIcon,
+            cellClick: (e, cell) => openAccountHelp('im', cell)
           },
-          { title: "대변계정", field: "IPacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().IPacctcd ? `[${cell.getData().IPacctcd}] ${cell.getValue()}` : ""
+          { title: "대변계정", field: "ipacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().ipacctcd ? `[${cell.getData().ipacctcd}] ${cell.getValue()}` : ""
           },
-          { title: " ", field: "searchIP", width: 35, hozAlign: "center", formatter: accountSearchIcon,
-            cellClick: (e, cell) => openAccountHelp('IP', cell)
+          { title: " ", field: "searchip", width: 35, hozAlign: "center", formatter: accountSearchIcon,
+            cellClick: (e, cell) => openAccountHelp('ip', cell)
           },
-          { title: "선급부가세", field: "Ivacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().Ivacctcd ? `[${cell.getData().Ivacctcd}] ${cell.getValue()}` : ""
+          { title: "선급부가세", field: "ivacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().ivacctcd ? `[${cell.getData().ivacctcd}] ${cell.getValue()}` : ""
           },
-          { title: " ", field: "searchIV", width: 35, hozAlign: "center", formatter: accountSearchIcon,
-            cellClick: (e, cell) => openAccountHelp('IV', cell)
+          { title: " ", field: "searchiv", width: 35, hozAlign: "center", formatter: accountSearchIcon,
+            cellClick: (e, cell) => openAccountHelp('iv', cell)
           },
         ]
       },
@@ -102,23 +100,23 @@ const initGrid = () => {
         title: "매출 (Sales)",
         headerHozAlign: "center",
         columns: [
-          { title: "차변계정", field: "Omacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().Omacctcd ? `[${cell.getData().Omacctcd}] ${cell.getValue()}` : ""
+          { title: "차변계정", field: "omacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().omacctcd ? `[${cell.getData().omacctcd}] ${cell.getValue()}` : ""
           },
-          { title: " ", field: "searchOM", width: 35, hozAlign: "center", formatter: accountSearchIcon,
-            cellClick: (e, cell) => openAccountHelp('OM', cell)
+          { title: " ", field: "searchom", width: 35, hozAlign: "center", formatter: accountSearchIcon,
+            cellClick: (e, cell) => openAccountHelp('om', cell)
           },
-          { title: "대변계정", field: "OPacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().OPacctcd ? `[${cell.getData().OPacctcd}] ${cell.getValue()}` : ""
+          { title: "대변계정", field: "opacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().opacctcd ? `[${cell.getData().opacctcd}] ${cell.getValue()}` : ""
           },
-          { title: " ", field: "searchOP", width: 35, hozAlign: "center", formatter: accountSearchIcon,
-            cellClick: (e, cell) => openAccountHelp('OP', cell)
+          { title: " ", field: "searchop", width: 35, hozAlign: "center", formatter: accountSearchIcon,
+            cellClick: (e, cell) => openAccountHelp('op', cell)
           },
-          { title: "예수부가세", field: "Ovacctnm", widthGrow: 1,
-            formatter: (cell) => cell.getData().Ovacctcd ? `[${cell.getData().Ovacctcd}] ${cell.getValue()}` : ""
+          { title: "예수부가세", field: "ovacctnm", widthGrow: 1,
+            formatter: (cell) => cell.getData().ovacctcd ? `[${cell.getData().ovacctcd}] ${cell.getValue()}` : ""
           },
-          { title: " ", field: "searchOV", width: 35, hozAlign: "center", formatter: accountSearchIcon,
-            cellClick: (e, cell) => openAccountHelp('OV', cell)
+          { title: " ", field: "searchov", width: 35, hozAlign: "center", formatter: accountSearchIcon,
+            cellClick: (e, cell) => openAccountHelp('ov', cell)
           },
         ]
       }
@@ -147,7 +145,7 @@ async function handleBulkSave() {
   try {
     for (const row of data) {
       // ASP 로직: 하나라도 계정이 있으면 저장(A0), 모두 없으면 삭제(D0)
-      const hasAccount = row.Imacctcd || row.IPacctcd || row.Ivacctcd || row.Omacctcd || row.OPacctcd || row.Ovacctcd
+      const hasAccount = row.imacctcd || row.ipacctcd || row.ivacctcd || row.omacctcd || row.opacctcd || row.ovacctcd
       const act = hasAccount ? 'A0' : 'D0'
 
       await api.post('/api/hsba/HSBA_700U_STR', {
@@ -155,12 +153,12 @@ async function handleBulkSave() {
         cmpycd: authStore.cmpycd,
         astkind: row.code,
         astkindnm: row.cdnm,
-        Imacctcd: row.Imacctcd || '',
-        IPacctcd: row.IPacctcd || '',
-        Ivacctcd: row.Ivacctcd || '',
-        Omacctcd: row.Omacctcd || '',
-        OPacctcd: row.OPacctcd || '',
-        Ovacctcd: row.Ovacctcd || '',
+        imacctcd: row.imacctcd || '',
+        ipacctcd: row.ipacctcd || '',
+        ivacctcd: row.ivacctcd || '',
+        omacctcd: row.omacctcd || '',
+        opacctcd: row.opacctcd || '',
+        ovacctcd: row.ovacctcd || '',
         userid: authStore.user_id
       })
       successCount++
@@ -179,12 +177,12 @@ function openAccountHelp(type: string, cell: any) {
 
   // ASP의 HELP_acctcd_LTD.asp gbn 파라미터 규격 적용
   let gbn = '112'
-  if (type === 'IM') gbn = '112';
-  else if (type === 'IP') gbn = '210';
-  else if (type === 'IV') gbn = '1118';
-  else if (type === 'OM') gbn = '1114';
-  else if (type === 'OP') gbn = '51';
-  else if (type === 'OV') gbn = '2104';
+  if (type === 'im') gbn = '112';
+  else if (type === 'ip') gbn = '210';
+  else if (type === 'iv') gbn = '1118';
+  else if (type === 'om') gbn = '1114';
+  else if (type === 'op') gbn = '51';
+  else if (type === 'ov') gbn = '2104';
 
   // HA00_00P_STR 'A0','haionnet','','112'
   Object.assign(modalProps, {

@@ -268,19 +268,14 @@ onMounted(() => {
 			layout: 'fitColumns', height: '100%', selectable: 1,
 			columnDefaults: { headerSort: false, vertAlign: "middle", headerHozAlign: "center", hozAlign: "center" },
 			columns: [
-				{ title: "계좌번호", field: "gujano", width: 150, hozAlign: "left" },
+				{ title: "계좌번호", field: "gujano", width: 200, hozAlign: "center" },
 				{ title: "개설은행", field: "banknm", minWidth: 180, hozAlign: "left" },
-				{
-					title: "개설/만기일", field: "stdymd_fmt", width: 200,
-					formatter: (cell) => {
-						const d = cell.getData();
-						return `<div>${d.stdymd_fmt || ''}</div><div class='text-muted small'>${d.endymd_fmt || ''}</div>`
-					}
-				},
+				{ title: "개설일", field: "stdymd", width: 150, hozAlign: "center" },
+				{ title: "만기일", field: "endymd", width: 150, hozAlign: "center" },
 				{ title: "계약금", field: "wonamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "월불입액", field: "payamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "이율", field: "rate", width: 100, hozAlign: "right", formatter: (c) => c.getValue() + "%" },
-				{ title: "사용", field: "useyn", width: 100, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+				{ title: "이율", field: "rate", width: 150, hozAlign: "right", formatter: (c) => c.getValue() + "%" },
+				{ title: "사용", field: "useyn", width: 150, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
 			]
 		})
 		maingrid.on("rowClick", (e, row) => {
@@ -288,7 +283,7 @@ onMounted(() => {
 			Object.assign(masterdata, d);
 			masterdata.actkind = 'U1';
 			masterdata.acctcd_t = d.acctnm; masterdata.bankcd_t = d.banknm;
-			masterdata.stdymd = d.stdymd_fmt; masterdata.endymd = d.endymd_fmt;
+			masterdata.stdymd = d.stdymd; masterdata.endymd = d.endymd;
 		})
 	}
 })

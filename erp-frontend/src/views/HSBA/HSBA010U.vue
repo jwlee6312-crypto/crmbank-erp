@@ -262,10 +262,10 @@ async function fetchoptions() {
 async function search() {
   try {
     const res = await api.post('/api/hsba/hsba_010u_str', {
-      actkind: 'S0', cmpycd: authstore.cmpycd, astkind: searchdata.sch_astkind, itemnm: searchdata.sch_itemnm || '',
-      itemcd: '', itsize: '', unit: '', itemenm: '', inunit: '', inqty: 0, outunit: '', outqty: 0, setyn: '',
-      agrpcd: '', bgrpcd: '', imprice: 0, omprice: 0, stock: 0, qtypnt: 0, vatyn: '', sotaxyn: '', udogyn: '',
-      barcode: '', hscode: '', remark: '', useyn: '', in_custcd: '', maker: '', updemp: authstore.userid
+      actkind: 'S0', cmpycd: authstore.cmpycd,
+      astkind: searchdata.sch_astkind,
+      itemnm: searchdata.sch_itemnm,
+      icqty: 0,  ocqty: 0,  imprice: 0, omprice: 0, stock: 0, qtypnt: 0
     })
     const processed = (res.data || []).map((i: any) => normalizekeys(i));
     if (grid) { grid.setData(processed); activeitemcount.value = processed.length }

@@ -21,10 +21,12 @@ public class Hsio500u {
     private String deptcd;
     private String whcd;
     private String area;
-    private String userid;
+    private String saleuserid;
     private String trnemp;
     private String trancd;
-    private String addres;
+    private String postno;    // 🚀 추가: 우편번호
+    private String address;   // 🚀 addres -> address로 수정 (매퍼와 일치)
+    private String d_address; // 🚀 추가: 상세주소
     private String remark;
     private String cfmyn;
     private String totsum;

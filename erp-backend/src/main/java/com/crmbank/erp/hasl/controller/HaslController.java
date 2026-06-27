@@ -57,19 +57,24 @@ public class HaslController {
                 String positionalSql = buildPositionalSql(proc, params);
                 log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
 
-                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    List<Object> values = new ArrayList<>();
-                    int colCount = rs.getMetaData().getColumnCount();
-                    for (int i = 1; i <= colCount; i++) {
-                        Object val = rs.getObject(i);
-                        String colName = rs.getMetaData().getColumnLabel(i); 
-                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
-                        row.put(colName.toLowerCase(), val == null ? "" : val);
-                        values.add(val == null ? "" : val);
+                result = jdbcTemplate.execute(positionalSql, (java.sql.PreparedStatement ps) -> {
+                    boolean hasResults = ps.execute();
+                    List<Map<String, Object>> rows = new ArrayList<>();
+                    if (hasResults) {
+                        try (java.sql.ResultSet rs = ps.getResultSet()) {
+                            while (rs.next()) {
+                                Map<String, Object> row = new LinkedHashMap<>();
+                                int colCount = rs.getMetaData().getColumnCount();
+                                for (int i = 1; i <= colCount; i++) {
+                                    String colName = rs.getMetaData().getColumnLabel(i);
+                                    if (colName == null || colName.isEmpty()) colName = "col_" + (i - 1);
+                                    row.put(colName.toLowerCase(), rs.getObject(i) == null ? "" : rs.getObject(i));
+                                }
+                                rows.add(row);
+                            }
+                        }
                     }
-                    row.put("returnKeyValue", values); 
-                    return row;
+                    return rows;
                 });
                 log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
             } else {
@@ -189,7 +194,8 @@ public class HaslController {
         try {
             Map<String, Object> master = (Map<String, Object>) payload.get("master");
             List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
-            String actkind = (String) payload.get("actkind");
+            String actkind = String.valueOf(payload.getOrDefault("actkind", "A")).toUpperCase();
+
             injectSession(master, session);
             master.put("actkind", actkind);
             
@@ -204,19 +210,29 @@ public class HaslController {
 
             if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
             
-            List<Object> mstValues = new ArrayList<>(masterresult.get(0).values());
-            String status = String.valueOf(mstValues.get(0)).trim();
-            if ("000000".equals(status)) throw new RuntimeException(String.valueOf(mstValues.get(1)));
+            // 💡 결과셋에서 slipno 추출 (첫번째 행의 첫번째 컬럼)
+            Map<String, Object> firstRow = masterresult.get(0);
+            List<Object> mstValues = new ArrayList<>(firstRow.values());
+            String slipno = String.valueOf(mstValues.get(0)).trim();
             
-            String slipno = String.valueOf(mstValues.get(0));
-            String slipymd = String.valueOf(master.get("slipymd"));
+            // 💡 에러 체크 (마스터 SP가 실패 시 000000 등을 반환하는 경우 대비)
+            if ("000000".equals(slipno)) {
+                String msg = firstRow.containsKey("msg") ? String.valueOf(firstRow.get("msg")) : "저장 중 오류가 발생했습니다.";
+                throw new RuntimeException(msg);
+            }
 
             if (details != null) {
                 for (Map<String, Object> detail : details) {
                     injectSession(detail, session);
-                    detail.put("slipymd", slipymd); detail.put("slipno", slipno);
+                    detail.put("slipymd", master.get("slipymd"));
+                    detail.put("slipno", slipno);
                     detail.put("acctymd", master.get("acctymd"));
-                    detail.put("actkind", "d".equals(actkind) ? "d" : detail.getOrDefault("upkind", "a"));
+                    
+                    // 💡 상세 actkind 결정: 삭제('D')면 'D', 그 외엔 개별 upkind(없으면 마스터 actkind)
+                    String dtlAct = actkind.equals("D") ? "D" : 
+                                   String.valueOf(detail.getOrDefault("upkind", actkind)).toUpperCase();
+                    detail.put("actkind", dtlAct);
+                    
                     haslMapper.HASL_011U_STR(detail);
                 }
             }
@@ -224,6 +240,7 @@ public class HaslController {
             response.put("slipno", slipno);
             return ResponseEntity.ok(ApiResponse.success(response, "성공적으로 저장되었습니다."));
         } catch (Exception e) {
+            log.error("❌ [hasl] saveSlip010 Error: {}", e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
         }
     }

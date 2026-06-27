@@ -115,6 +115,7 @@
                     <th class="required bg-light">배송처</th>
                     <td colspan="3">
                       <AddressPopupForm
+                        v-model:trancd="form_02.trancd"
                         v-model:postno="form_02.postno"
                         v-model:address="form_02.address"
                         v-model:d_address="form_02.d_address"
@@ -200,7 +201,8 @@ const displayOrdNo = computed(() => (!form_02.ordno || form_02.ordno === '0000')
 watch(() => form_02.ordymd, (nv) => { if (nv) form_02.ordym = nv.replace(/-/g, '').substring(0, 6) })
 
 const closingInfo = reactive({ sclsym: '' })
-const ordkindData = ref<any[]>([]); const paycndtData = ref<any[]>([]); const userData = ref<any[]>([])
+const ordkindData = ref<any[]>([]); const paycndtData = ref<any[]>([]);
+const userData = ref<any[]>([])
 
 const tableRef1 = ref<HTMLDivElement | null>(null); const tableRef2 = ref<HTMLDivElement | null>(null)
 let grid1: Tabulator | null = null; let grid2: Tabulator | null = null
@@ -352,18 +354,27 @@ const handleOpenHelp = (type: string, target?: any) => {
       onConfirm: (d: any) => { form_02.custcd = d.custcd; form_02.custnm = d.custnm }
     })
     modalVisible.value = true
-  } else if (type === 'ADDR') {
+
+    } else if (type === 'ADDR') {
+    if (!form_02.custcd) return vAlertError('거래처를 먼저 선택하세요.')
     Object.assign(modalProps, {
       title: '배송처 선택',
-      path: '/api/ha00/HA00_00P_STR',
+      path: '/api/hs00/HS00_000S_STR',
       defaultField: 'trannm',
-      data: { gubun: 'C5', cmpycd: authStore.cmpycd, gbncd: form_02.custcd, code: '', remark: '' },
+      data: { gubun: 'T0', cmpycd: authStore.cmpycd, gbncd: '', code: form_02.custcd },
       columns: [
-        { title: '순번', field: 'trancd', width: 60, hozAlign: 'center' },
-        { title: '배송처명', field: 'trannm', width: 150 },
-        { title: '주소', field: 'address', width: 300 }
+        { title: '코드', field: 'trancd', width: 60, hozAlign: 'center' },
+        { title: '배송처명', field: 'custnm', width: 100 },
+        { title: '우편번호', field: 'postno', width: 50 },
+        { title: '주소', field: 'address', width: 200 },
+        { title: '상세주소', field: 'd_address', width: 100 }
       ],
-      onConfirm: (d: any) => { form_02.postno = d.postno; form_02.address = d.address; form_02.trancd = d.trancd; }
+      onConfirm: (d: any) => {
+        form_02.trancd = d.trancd;
+        form_02.postno = d.postno;
+        form_02.address = d.address;
+        form_02.d_address = d.d_address || '';
+      }
     })
     modalVisible.value = true
   } else if (type === 'ITEM') {
@@ -375,8 +386,8 @@ const handleOpenHelp = (type: string, target?: any) => {
       columns: [
         { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
         { title: '품목명', field: 'itemnm', width: 200 },
-        { title: '규격', field: 'spec', width: 150 },
-        { title: '단위', field: 'unitnm', width: 80, hozAlign: 'center' }
+        { title: '규격', field: 'itsize', width: 150 },
+        { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
       ],
       onConfirm: (d: any) => {
         const price = d.outcost || 0;
@@ -384,7 +395,7 @@ const handleOpenHelp = (type: string, target?: any) => {
         target.update({
           itemcd: d.itemcd,
           itemnm: d.itemnm,
-          unit: d.unitnm || d.unit || 'EA',
+          unit: d.unit || 'EA',
           price: price,
           ordqty: 1,
           ordamt: price,

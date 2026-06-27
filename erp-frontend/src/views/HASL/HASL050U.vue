@@ -398,7 +398,12 @@ const dynamicvatoptions = _computed(() => {
   return (selectedrow.value.dbcr||'').toLowerCase() === 'D' ? purchasevatoptions.value : salesvatoptions.value
 })
 
-_watch(selectedrow, (newval) => { if (newval) update_auto_remark(); }, { deep: true });
+_watch(selectedrow, (newval) => {
+    if (newval && activeRowComponent.value) {
+        activeRowComponent.value.update(newval);
+        update_auto_remark();
+    }
+}, { deep: true });
 
 const update_auto_remark = (force = false) => {
     const row = selectedrow.value; if (!row) return;
@@ -437,6 +442,13 @@ const init_grid = () => {
     },
     columns: [
       { title: "No", field: "srowno", width: 40, hozAlign: "center" },
+      { title: "상태", field: "_status", width: 50, hozAlign: "center", formatter: (c) => {
+          const v = c.getValue();
+          if (v === '입력') return '<span class="badge bg-primary">신규</span>';
+          if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+          if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+          return '';
+      }},
       { title: "차/대", field: "dbcr", width: 70, hozAlign: "center",
         formatter: (c: any) => {
             const v = (c.getValue()||'').toLowerCase();
@@ -452,11 +464,12 @@ const init_grid = () => {
           if (d.mgtnm) s.push(d.mgtnm);
           return `<span class="small text-muted text-truncate d-block">${s.join(', ')}</span>`;
       }},
-      { title: "삭제", width: 40, hozAlign: "center", formatter: () => '<i class="bi bi-trash text-danger"></i>', cellClick: (e: any, cell: any) => cell.getRow().delete() }
+      { title: "삭제", width: 40, hozAlign: "center", formatter: () => '<i class="bi bi-trash text-danger"></i>', cellClick: (e: any, cell: any) => handle_row_action(cell.getRow()) }
     ]
   });
   main_grid.on("rowSelected", (row: any) => {
       selectedrow.value = normalizeKeys(row.getData());
+      activeRowComponent.value = row;
   });
   main_grid.on("cellEdited", () => update_totals());
 }
@@ -469,8 +482,11 @@ const update_totals = () => {
 
 const fetch_template = async (jurncd: string, gbn: string) => {
   try {
+    masterform.slipno = ''; // 🚀 HASL050U는 항상 신규 전표 생성이므로 번호 초기화
+    masterform.slipymd = today;
+
     if (gbn === '100') {
-      masterform.business = ''; masterform.slipgu = '010'; masterform.slipno = '';
+      masterform.business = ''; masterform.slipgu = '010';
       masterform.deptcd = authstore.deptcd; masterform.deptnm = authstore.deptnm; masterform.empnm = authstore.usernm;
     } else {
       const res_m = await api.post('/api/hasl/hasl_050u_master', {
@@ -479,8 +495,7 @@ const fetch_template = async (jurncd: string, gbn: string) => {
       });
       if (res_m.data && res_m.data.length > 0) {
         const m = normalizeKeys(res_m.data[0]);
-        masterform.business = m.business || ''; masterform.slipgu = m.slipgu || '010';
-        masterform.slipno = m.slipno || ''; masterform.slipymd = m.slipymd || today;
+        masterform.business = m.business || ''; masterform.slipgu = '010';
       }
     }
 
@@ -495,7 +510,8 @@ const fetch_template = async (jurncd: string, gbn: string) => {
         ...d,
         amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt,
         dbcr: (d.dbcr || (Number(d.dbamt || 0) > 0 ? 'D' : 'C')).toLowerCase(),
-        typedc: (d.typedc || d.drcr || '').trim()
+        typedc: (d.typedc || d.drcr || '').trim(),
+        _state: 'NEW', _status: '입력' // 🚀 과거 이력이든 템플릿이든 항상 '신규 입력' 상태
       };
     });
 
@@ -518,31 +534,34 @@ const fetch_template = async (jurncd: string, gbn: string) => {
 const save = async () => {
   if (balance.value !== 0) return valerterror('차/대변 금액이 일치하지 않습니다.');
   if (!masterform.business) return valerterror('거래내역을 입력하십시오.');
+
+  const allData = main_grid?.getData() || [];
+  if (allData.length === 0) return valerterror('저장할 내역이 없습니다.');
+
   try {
     const payload = {
-      actkind: masterform.slipno ? 'U' : 'A',
-      master: { ...masterform, slipymd: masterform.slipymd.replace(/-/g, ''), acctymd: masterform.acctymd.replace(/-/g, '') },
-      details: main_grid?.getData().map(d => {
+      actkind: 'A', // 🚀 HASL050U는 항상 신규 입력('A')
+      master: { ...masterform, slipno: '', slipymd: masterform.slipymd.replace(/-/g, ''), acctymd: masterform.acctymd.replace(/-/g, '') },
+      details: allData.map(d => {
         const item = { ...d };
-        // 💡 사용자 지시: 저장 시 UI의 subcd를 백엔드의 custcd로 역매핑
         item.custcd = item.subcd;
 
-        // 💡 날짜 필드 원복 (YYYY-MM-DD -> YYYYMMDD)
         ['docno6', 'docno7', 'payymd'].forEach(key => {
             if (item[key]) item[key] = item[key].replace(/-/g, '');
         });
 
         return {
             ...item,
-            dbamt: item.dbcr.toLowerCase() === 'D' ? (item.amount || 0) : 0,
-            cramt: item.dbcr.toLowerCase() === 'C' ? (item.amount || 0) : 0,
-            upkind: item.upkind || (masterform.slipno ? 'U' : 'A')
+            dbamt: item.dbcr.toLowerCase() === 'd' ? (item.amount || 0) : 0,
+            cramt: item.dbcr.toLowerCase() === 'c' ? (item.amount || 0) : 0,
+            upkind: 'A' // 🚀 상세도 항상 입력('A')
         };
       })
     };
-    await api.post('/api/hasl/hasl_010u_save', payload);
-    valert('저장되었습니다.');
-  } catch (e) { valerterror('저장 실패'); }
+    const res = await api.post('/api/hasl/hasl_010u_save', payload);
+    valert('성공적으로 전표가 생성되었습니다.');
+    if (res.data?.slipno) masterform.slipno = res.data.slipno;
+  } catch (e) { valerterror('전표 생성 실패'); }
 }
 
 const initialize = () => {
@@ -556,10 +575,15 @@ const add_row = () => {
   const lastRow = data.length > 0 ? data[data.length - 1] : null;
   const dbcrVal = lastRow ? (String(lastRow.dbcr || '').toLowerCase() === 'D' ? 'C' : 'D') : 'D';
 
-  main_grid?.addRow(normalizeKeys({ dbcr: dbcrVal, remark: masterform.business, amount: 0, srowno: (data.length + 1) }), false)
+  main_grid?.addRow(normalizeKeys({ dbcr: dbcrVal, remark: masterform.business, amount: 0, srowno: (data.length + 1), _status: '입력', _state: 'NEW' }), false)
     .then(row => {
         nextTick(() => { row.select(); main_grid?.scrollToRow(row, "bottom", false); });
     });
+}
+
+const handle_row_action = (row: any) => {
+    // 🚀 HASL050U는 항상 신규 전표 생성이므로 화면에서 바로 삭제
+    row.delete();
 }
 
 function handle_open_help(type: string, target?: any) {

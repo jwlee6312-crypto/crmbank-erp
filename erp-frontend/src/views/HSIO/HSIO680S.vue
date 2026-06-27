@@ -75,9 +75,29 @@
 		<!-- 📊 6. 중앙 그리드 영역 (상하좌우 중앙 정렬 표준) -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
-                  <div ref="mainGridRef" class="tabulator-full-height" />
-                </div>
+				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
+					<div ref="mainGridRef" class="tabulator-full-height" />
+				</div>
+				<!-- 🚀 하단 요약 정보 (표준 추가) -->
+				<div class="card-footer bg-light border-top py-1 px-3 d-flex justify-content-between align-items-center flex-shrink-0">
+					<div class="small text-muted">
+						[ 총 <span class="fw-bold text-primary">{{ rowCount }}</span> 건 ]
+					</div>
+					<div class="d-flex gap-4 small">
+						<div class="d-flex align-items-center">
+							<span class="me-2 text-muted">출고합계:</span>
+							<span class="fw-bold text-dark">{{ formatNumber(totals.osum) }}</span>
+						</div>
+						<div class="d-flex align-items-center border-start ps-4">
+							<span class="me-2 text-muted text-info">정산합계:</span>
+							<span class="fw-bold text-info">{{ formatNumber(totals.jsum) }}</span>
+						</div>
+						<div class="d-flex align-items-center border-start ps-4">
+							<span class="me-2 text-muted text-danger">미정산합계:</span>
+							<span class="fw-bold text-danger">{{ formatNumber(totals.nsum) }}</span>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -117,12 +137,14 @@ const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | 
 const search = async () => {
 	try {
 		const res = await api.post('/api/hsio/HSIO_680S_STR', {
-			...searchForm,
 			cmpycd: authStore.cmpycd,
-			fymd: searchForm.fymd.replace(/-/g, ''),
-			tymd: searchForm.tymd.replace(/-/g, '')
+			deptcd: searchForm.deptcd,
+			fromdt: searchForm.fymd.replace(/-/g, ''),
+			todt: searchForm.tymd.replace(/-/g, '')
 		})
-		const data = res.data || []
+		const data = (res.data || []).map((row: any) => {
+			return Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
+		})
 		mainGrid?.setData(data)
 		rowCount.value = data.length
 
@@ -174,7 +196,15 @@ onMounted(() => {
 				minWidth: 80
 			},
 			columns: [
-				{ title: "거래처명", field: "custnm", minWidth: 180, hozAlign: "left", cssClass: "fw-bold", frozen: true },
+				{
+					title: "거래처명",
+					field: "custnm",
+					minWidth: 180,
+					hozAlign: "center",
+					vertAlign: "middle",
+					cssClass: "fw-bold",
+					frozen: true
+				},
 				{
 					title: "출고 정보",
 					columns: [
@@ -206,8 +236,18 @@ onMounted(() => {
 		})
 	}
 })
+
+
 </script>
 
 <style scoped>
 .tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
+
+/* 🚀 2단 헤더에서 단일 컬럼(거래처명 등)의 타이틀을 수직 중앙 정렬 */
+:deep(.tabulator-header .tabulator-col:not(.tabulator-col-group) .tabulator-col-content) {
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
 </style>

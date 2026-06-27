@@ -22,7 +22,7 @@
             <button class="btn-erp btn-init" @click="initialize">초기화</button>
             <button class="btn-erp btn-search" @click="search">조회</button>
             <button class="btn-erp btn-save" @click="save">저장</button>
-            <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!form_02.out_no">전체삭제</button>
+            <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!form_02.iono">전체삭제</button>
         </div>
     </div>
 
@@ -39,16 +39,13 @@
             </colgroup>
             <tbody>
               <tr>
-                <th class="text-center bg-light">판매부서</th>
-                <td>
-                  <div class="input-group input-group-sm w-50">
-                    <input v-model="form_01.deptnm" class="form-control" readonly />
-                    <button class="btn btn-outline-secondary" @click="handleOpenHelp('DEPT_SCH')"><i class="bi bi-search"></i></button>
-                  </div>
+                <th class="text-center bg-light">출고일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="form_01.fromdt" v-model:todt="form_01.todt" />
                 </td>
-                <th class="text-center bg-light">출고번호</th>
+                <th class="text-center bg-light">거래처명</th>
                 <td>
-                  <input v-model="form_01.out_no" class="form-control form-control-sm" placeholder="출고번호 입력" @keyup.enter="search" />
+                  <input v-model="form_01.custnm" class="form-control form-control-sm" placeholder="거래처명 검색" @keyup.enter="search" />
                 </td>
               </tr>
             </tbody>
@@ -89,9 +86,9 @@
                       </div>
                     </td>
                     <th class="bg-light text-center">출고번호</th>
-                    <td><input v-model="form_02.out_no" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
+                    <td><input :value="form_02.ioym && form_02.iono ? `${form_02.ioym}-${form_02.iono}` : ''" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
                     <th class="required bg-light text-center">출고일자</th>
-                    <td><input v-model="form_02.outymd" type="date" class="form-control" /></td>
+                    <td><input v-model="form_02.ioymd" type="date" class="form-control" /></td>
                     <th class="required bg-light text-center">출고창고</th>
                     <td>
                       <select v-model="form_02.whcd" class="form-select">
@@ -101,21 +98,19 @@
                   </tr>
                   <tr>
                     <th class="required bg-light">거래처</th>
-                    <td colspan="3">
+                    <td>
                       <div class="input-group input-group-sm">
                         <input v-model="form_02.custnm" class="form-control" readonly />
                         <button class="btn btn-outline-secondary" @click="handleOpenHelp('CUST')"><i class="bi bi-search"></i></button>
                       </div>
                     </td>
+                    <th class="bg-light text-center">여신잔액</th>
+                    <td><input :value="formatNumber(form_02.janamt)" class="form-control bg-light text-end" readonly /></td>
+                    <th class="bg-light text-center">여신기한</th>
+                    <td><input v-model="form_02.rcvdd" class="form-control bg-light text-center" readonly style="width: 80px;" /></td>
                     <th class="required bg-light text-center">영업담당</th>
                     <td>
                       <select v-model="form_02.sale_userid" class="form-select">
-                        <option v-for="item in userData" :key="item.userid" :value="item.userid">{{ item.usernm }}</option>
-                      </select>
-                    </td>
-                    <th class="bg-light text-center">배송담당</th>
-                    <td>
-                      <select v-model="form_02.dlv_userid" class="form-select">
                         <option v-for="item in userData" :key="item.userid" :value="item.userid">{{ item.usernm }}</option>
                       </select>
                     </td>
@@ -124,11 +119,18 @@
                     <th class="required bg-light">배송처</th>
                     <td colspan="3">
                       <AddressPopupForm
+                        v-model:trancd="form_02.addrcd"
                         v-model:postno="form_02.postno"
                         v-model:address="form_02.address"
                         v-model:d_address="form_02.d_address"
                         @open-address="handleOpenHelp('ADDR')"
                       />
+                    </td>
+                    <th class="bg-light text-center">배송담당</th>
+                    <td>
+                      <select v-model="form_02.trnemp" class="form-select">
+                        <option v-for="item in userData" :key="item.userid" :value="item.userid">{{ item.usernm }}</option>
+                      </select>
                     </td>
                     <th class="required bg-light text-center">현금조건</th>
                     <td>
@@ -136,12 +138,12 @@
                         <option v-for="item in paycndtData" :key="item.code" :value="item.code">{{ item.cdnm }}</option>
                       </select>
                     </td>
-                    <th class="bg-light text-center">만기일자</th>
-                    <td><input v-model="form_02.endymd" type="date" class="form-control" /></td>
                   </tr>
                   <tr>
                     <th class="bg-light text-center">특기사항</th>
-                    <td colspan="5"><input v-model="form_02.remark" class="form-control" /></td>
+                    <td colspan="3"><input v-model="form_02.remark" class="form-control" /></td>
+                    <th class="bg-light text-center">만기일자</th>
+                    <td><input v-model="form_02.endymd" type="date" class="form-control" /></td>
                     <th class="bg-light text-center">합계금액</th>
                     <td><input v-model="form_02.totsum" class="form-control bg-light text-end fw-bold" readonly /></td>
                   </tr>
@@ -192,19 +194,20 @@ import { useRoute } from 'vue-router'
 const authStore = useAuthStore()
 const searchStore = useSearchStore()
 const route = useRoute()
-const { today } = getDate()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
-const form_01 = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, out_no: '' })
+const form_01 = reactive({ fromdt: firstDay, todt: today, custnm: '' })
 const form_02 = reactive<any>({
-  cmpycd: authStore.cmpycd, deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  out_no: '', outymd: today, whcd: '', custcd: '', custnm: '',
-  sale_userid: authStore.userid, dlv_userid: '', dlv_usernm: '',
-  paycndt: '1', postno: '', address: '', d_address: '', addrcd: '',
-  endymd: today, remark: '', totsum: 0
+  cmpycd: authStore.cmpycd, deptcd: authStore.deptcd, deptnm: authStore.deptnm, iogbn: '200',
+  ioym: '', iono: '', ioymd: today, whcd: '', custcd: '', custnm: '', iotype: '100',
+  sale_userid: authStore.userid, trnemp: '', trnempnm: '',
+  paycndt: '1', postno: '', address: '', d_address: '', addrcd: '', area: '',
+  endymd: today, remark: '', totsum: 0, cfmyn: '',
+  janamt: 0, rcvdd: ''
 })
 
 const closingInfo = reactive({ sclsym: '' })
@@ -217,11 +220,10 @@ const tableRef1 = ref<HTMLDivElement | null>(null)
 const tableRef2 = ref<HTMLDivElement | null>(null)
 let grid1: Tabulator | null = null
 let grid2: Tabulator | null = null
-const MIN_ROWS = 12;
 
 const isClosed = computed(() => {
-  if (!closingInfo.sclsym || !form_02.outymd) return false
-  return form_02.outymd.replace(/-/g, '').substring(0, 6) <= closingInfo.sclsym
+  if (!closingInfo.sclsym || !form_02.ioymd) return false
+  return form_02.ioymd.replace(/-/g, '').substring(0, 6) <= closingInfo.sclsym
 })
 
 const initGrids = () => {
@@ -231,7 +233,13 @@ const initGrids = () => {
     layout: "fitColumns", height: "100%", placeholder: "데이터 없음",
     columns: [
       { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
-      { title: "출고번호", field: "iono", hozAlign: "center", width: 120, cssClass: "fw-bold text-primary", headerSort: false },
+      { title: "일자", field: "ioymd", hozAlign: "center", width: 90, headerSort: false },
+      { title: "출고번호", field: "iono", hozAlign: "center", width: 100, cssClass: "fw-bold text-primary", headerSort: false,
+        formatter: (cell) => {
+          const d = cell.getRow().getData();
+          return d.ioym && d.iono ? `${d.ioym}-${d.iono}` : (d.iono || "");
+        }
+      },
       { title: "거래처", field: "custnm", hozAlign: "left", headerSort: false }
     ],
   });
@@ -258,11 +266,11 @@ const initGrids = () => {
         cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow())
       },
       { title: "규격", field: "itsize", width: 150 },
-      { title: "단위", field: "unitnm", width: 80, hozAlign: "center" },
-      { title: "수량", field: "qty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()), bottomCalc: "sum" },
+      { title: "단위", field: "unit", width: 80, hozAlign: "center" },
+      { title: "수량", field: "ioqty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()), bottomCalc: "sum" },
       { title: "단가", field: "price", width: 120, hozAlign: "right", editor: "number", cellEdited: (cell) => calcRow(cell.getRow()) },
-      { title: "금액", field: "amt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
-      { title: "부가세", field: "vat", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+      { title: "금액", field: "ioamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+      { title: "부가세", field: "iovat", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "합계", field: "sumamt", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "삭제", width: 40, hozAlign: "center",
         formatter: (cell) => cell.getData()._state === 'EMPTY' ? "" : "<i class='bi bi-trash text-danger cursor-pointer'></i>",
@@ -293,10 +301,20 @@ const fetchWhOptions = async () => {
 }
 
 const setGridDataWithPadding = (data: any[]) => {
-  const displayData = data.map(i => ({ ...i, _state: 'EXIST', _status: '' }));
-  while (displayData.length < MIN_ROWS) {
-    displayData.push({ _state: 'EMPTY', qty: 0, price: 0, amt: 0, vat: 0, sumamt: 0 });
-  }
+  const displayData = data.map(i => {
+    const ioqty = Number(i.ioqty || 0);
+    const ioamt = Number(i.ioamt || 0);
+    return {
+      ...i,
+      ioqty,
+      ioamt,
+      price: ioqty !== 0 ? Math.round(ioamt / ioqty) : Number(i.price || 0),
+      iovat: Number(i.iovat || 0),
+      sumamt: ioamt + Number(i.iovat || 0),
+      _state: 'EXIST',
+      _status: ''
+    };
+  });
   grid2?.setData(displayData);
 }
 
@@ -304,10 +322,12 @@ const calcRow = (row: any) => {
   const data = row.getData();
   if (data._state === 'EMPTY') return;
 
-  const amt = Math.round(Number(data.qty || 0) * Number(data.price || 0));
+  const qty = Number(data.ioqty || 0);
+  const price = Number(data.price || 0);
+  const amt = Math.round(qty * price);
   const vat = Math.round(amt * 0.1);
   row.update({
-    amt: amt, vat: vat, sumamt: amt + vat
+    ioamt: amt, iovat: vat, sumamt: amt + vat
   });
   if (data._state === 'EXIST' && data._status !== '삭제') row.update({ _status: '수정' });
   updateTotalSum();
@@ -347,7 +367,18 @@ const handleOpenHelp = (type: string, target?: any) => {
         { title: '코드', field: 'custcd', width: 80, hozAlign: 'center' },
         { title: '거래처명', field: 'custnm', width: 200 }
       ],
-      onConfirm: (d: any) => { form_02.custcd = d.custcd; form_02.custnm = d.custnm }
+      onConfirm: (d: any) => {
+        form_02.custcd = d.custcd;
+        form_02.custnm = d.custnm;
+        // 여신 정보 조회 (HSIO300U 로직 이식)
+        api.post('/api/hs00/HS00_150S_STR', { cmpycd: authStore.cmpycd, custnm: d.custnm }).then(r => {
+          if (r.data?.length) {
+            const n = r.data[0];
+            form_02.rcvdd = n.rcvdd || n.RCVDD || '';
+            form_02.janamt = n.janamt || n.JANAMT || 0;
+          }
+        });
+      }
     })
     modalVisible.value = true
   }
@@ -356,19 +387,21 @@ const handleOpenHelp = (type: string, target?: any) => {
     if (!form_02.custcd) return vAlertError('거래처를 먼저 선택하세요.')
     Object.assign(modalProps, {
       title: '배송처 선택',
-      path: '/api/ha00/HA00_00P_STR',
+      path: '/api/hs00/HS00_000S_STR',
       defaultField: 'trannm',
-      data: { gubun: 'C5', cmpycd: authStore.cmpycd, gbncd: form_02.custcd, code: '', remark: '' },
+      data: { gubun: 'T0', cmpycd: authStore.cmpycd, gbncd: '', code: form_02.custcd },
       columns: [
-        { title: '순번', field: 'trancd', width: 60, hozAlign: 'center' },
-        { title: '배송처명', field: 'trannm', width: 150 },
-        { title: '주소', field: 'address', width: 300 }
+        { title: '코드', field: 'trancd', width: 60, hozAlign: 'center' },
+        { title: '배송처명', field: 'custnm', width: 100 },
+        { title: '우편번호', field: 'postno', width: 50 },
+        { title: '주소', field: 'address', width: 200 },
+        { title: '상세주소', field: 'd_address', width: 100 }
       ],
       onConfirm: (d: any) => {
+        form_02.addrcd = d.trancd;
         form_02.postno = d.postno;
         form_02.address = d.address;
-        form_02.d_address = d.address_det || d.d_address || '';
-        form_02.addrcd = d.trancd;
+        form_02.d_address = d.d_address || '';
       }
     })
     modalVisible.value = true
@@ -384,12 +417,12 @@ const handleOpenHelp = (type: string, target?: any) => {
         { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
         { title: '품목명', field: 'itemnm', width: 200 },
         { title: '규격', field: 'itsize', width: 150 },
-        { title: '단위', field: 'unitnm', width: 80, hozAlign: 'center' }
+        { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
       ],
       onConfirm: (d: any) => {
         target.update({
-          itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unitnm: d.unitnm,
-          price: d.outcost || 0, qty: 1, _status: '신규', _state: 'NEW'
+          itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit,
+          price: d.outcost || 0, ioqty: 1, _status: '신규', _state: 'NEW'
         });
         calcRow(target);
       }
@@ -408,7 +441,14 @@ const handleRowAction = (row: any) => {
 
 async function search() {
   try {
-    const res = await api.post('/api/hsio/HSIO_500U_STR', { ...form_01, actkind: 'S1', cmpycd: authStore.cmpycd });
+    const res = await api.post('/api/hsio/HSIO_500U_STR', {
+        ...form_01,
+        actkind: 'L',
+        cmpycd: authStore.cmpycd,
+        fromdt: form_01.fromdt.replace(/-/g, ''),
+        todt: form_01.todt.replace(/-/g, ''),
+        iogbn: '200'
+    });
     grid1?.setData(res.data || []);
     vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }
@@ -417,7 +457,14 @@ async function search() {
 async function fetchDetail(row: any) {
   Object.assign(form_02, row);
   try {
-    const res = await api.post(`/api/hsio/HSIO_501U_STR`, { actkind: 'S', cmpycd: authStore.cmpycd, outym: row.ioym, outno: row.iono });
+    const res = await api.post(`/api/hsio/HSIO_501U_STR`, {
+        actkind: 'S',
+        cmpycd: authStore.cmpycd,
+        iogbn: '200',
+        ioym: row.ioym,
+        iono: row.iono,
+        ioqty: 0, ioamt: 0, iovat: 0
+    });
     setGridDataWithPadding(res.data || []);
     updateTotalSum();
   } catch (e) { vAlertError('상세 로드 실패'); }
@@ -428,17 +475,21 @@ async function save() {
   if (!form_02.custcd) return vAlertError('거래처를 선택하세요.');
 
   const details = grid2?.getData().filter(r => r._state !== 'EMPTY' && r._status) || [];
-  if (!details.length && !form_02.out_no) return vAlertError('저장할 품목이 없습니다.');
+  if (!details.length && !form_02.iono) return vAlertError('저장할 품목이 없습니다.');
 
   try {
+    const ioymd = form_02.ioymd.replace(/-/g, '');
     const mst = {
         ...form_02,
+        iogbn: '200',
+        iotype: '100',
         actkind: form_02.iono ? 'U' : 'A',
-        ioymd: form_02.outymd.replace(/-/g, ''),
+        ioym: ioymd.substring(0, 6),
+        ioymd: ioymd,
         endymd: form_02.endymd.replace(/-/g, ''),
+        saleuserid: form_02.sale_userid,
         updemp: authStore.userid
     };
-
 
     const dtl = details.map(d => ({
         ...d,
@@ -446,13 +497,14 @@ async function save() {
         deptcd: form_02.deptcd,
         custcd: form_02.custcd,
         whcd: form_02.whcd,
-        ioymd: form_02.outymd.replace(/-/g, ''),
-        iotype: form_02.iotype,
-        userid: form_02.sale_userid,
+        ioymd: ioymd,
+        iotype: '100',
+        saleuserid: form_02.sale_userid,
         cfmyn: form_02.cfmyn,
-        ioqty: Number(d.qty || 0),
-        ioamt: Number(d.amt || 0),
-        iovat: Number(d.vat || 0),
+        ioqty: Number(d.ioqty || 0),
+        ioamt: Number(d.ioamt || 0),
+        iovat: Number(d.iovat || 0),
+        cfmyn: 'Y',
         actkind: d._status === '신규' ? 'A' : (d._status === '삭제' ? 'D' : 'U'),
         updemp: authStore.userid
     }));
@@ -463,7 +515,7 @@ async function save() {
 }
 
 function addRow() {
-  grid2?.addRow({ _status: '신규', qty: 0, price: 0, amt: 0, vat: 0, sumamt: 0, _state: 'NEW' }, true);
+  grid2?.addRow({ _status: '신규', ioqty: 0, price: 0, ioamt: 0, iovat: 0, sumamt: 0, _state: 'NEW' }, true);
 }
 
 function deleteSelectedRows() {
@@ -475,7 +527,7 @@ function deleteSelectedRows() {
 function initialize() {
   resetForm(form_02);
   form_02.cmpycd = authStore.cmpycd;
-  form_02.outymd = today;
+  form_02.ioymd = today;
   form_02.endymd = today;
   if (whOptions.value.length > 0) form_02.whcd = whOptions.value[0].whcd;
   form_02.deptcd = authStore.deptcd;
@@ -483,9 +535,12 @@ function initialize() {
 
   // 영업담당 및 배송담당 본인 기본 설정
   form_02.sale_userid = authStore.userid;
-  form_02.dlv_userid = authStore.userid;
+  form_02.trnemp = authStore.userid;
   form_02.paycndt = '100';
   form_02.totsum = 0;
+  form_02.janamt = 0;
+  form_02.rcvdd = '';
+  form_02.ioym = '';
   grid1?.clearData();
   setGridDataWithPadding([]);
 }
@@ -495,10 +550,19 @@ async function handleFullDelete() {
   if (isClosed.value) return vAlertError('마감된 월입니다.');
   if (!confirm('정말 전체 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsio/HSIO_500U_SAVE', { mst: { ...form_02, actkind: 'D', ioymd: form_02.outymd.replace(/-/g, '') }, dtl: [] });
+    await api.post('/api/hsio/HSIO_500U_STR', {
+        ...form_02,
+        actkind: 'D',
+        iogbn: '200',
+        ioymd: form_02.ioymd.replace(/-/g, ''),
+        cfmyn: 'Y',
+        saleuserid: form_02.sale_userid
+    });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }
+
+const formatNumber = (n: any) => Number(n || 0).toLocaleString();
 
 onMounted(async () => {
   await fetchWhOptions();

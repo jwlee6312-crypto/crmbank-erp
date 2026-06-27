@@ -90,7 +90,7 @@
                 <!-- 3. 출고 -->
                 <tr class="row-out">
                   <td class="frozen-col last-frozen text-center bg-light-red small">출고</td>
-                  <td v-for="(val, idx) in item.dailyData.OUtqty" :key="idx" class="text-end px-2 text-danger">
+                  <td v-for="(val, idx) in item.dailyData.outqty" :key="idx" class="text-end px-2 text-danger">
                     {{ val !== 0 ? formatNumber(val, item.qtypnt) : '' }}
                   </td>
                 </tr>
@@ -171,7 +171,7 @@ const fetchList = async () => {
           dailyData: {
             Bsqty: Array(lastDayCount).fill(0),
             inqty: Array(lastDayCount).fill(0),
-            OUtqty: Array(lastDayCount).fill(0),
+            outqty: Array(lastDayCount).fill(0),
             stkqty: Array(lastDayCount).fill(0)
           }
         }
@@ -186,7 +186,7 @@ const fetchList = async () => {
         const val = Number(row[i + 5] || row[String(i + 1)] || 0)
         if (gbn === '1') item.dailyData.Bsqty[i] = val
         else if (gbn === '2') item.dailyData.inqty[i] = val
-        else if (gbn === '3') item.dailyData.OUtqty[i] = val
+        else if (gbn === '3') item.dailyData.outqty[i] = val
       }
     })
 
@@ -195,7 +195,7 @@ const fetchList = async () => {
       let runningStock = item.dailyData.Bsqty[0]
       for (let i = 0; i < lastDayCount; i++) {
         item.dailyData.Bsqty[i] = runningStock
-        item.dailyData.stkqty[i] = runningStock + item.dailyData.inqty[i] - item.dailyData.OUtqty[i]
+        item.dailyData.stkqty[i] = runningStock + item.dailyData.inqty[i] - item.dailyData.outqty[i]
         runningStock = item.dailyData.stkqty[i]
       }
     })
@@ -227,7 +227,7 @@ const exportExcel = () => {
     const rowTypes = [
       { label: '기초', data: item.dailyData.Bsqty },
       { label: '입고', data: item.dailyData.inqty },
-      { label: '출고', data: item.dailyData.OUtqty },
+      { label: '출고', data: item.dailyData.outqty },
       { label: '재고', data: item.dailyData.stkqty }
     ]
     rowTypes.forEach((t, idx) => {
