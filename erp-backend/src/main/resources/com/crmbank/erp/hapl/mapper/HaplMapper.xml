@@ -3,7 +3,7 @@
 <mapper namespace="com.crmbank.erp.hapl.mapper.HaplMapper">
 
     <!-- 배부기준관리 조회 및 처리 -->
-    <select id="HAPL_010U_STR" resultType="map">
+    <select id="HAPL_010U_STR" resultType="java.util.LinkedHashMap">
         exec hapl_010u_str
             #{actkind}, #{cmpycd}, '020', #{divgbn}, #{divcd}, #{divnm},
             #{rate1}, #{rate2}, #{rate3}, #{remark}, #{dspord}, #{useyn},
@@ -11,7 +11,7 @@
     </select>
 
     <!-- 계정별 배부기준관리 조회 및 처리 -->
-    <select id="HAPL_020U_STR" resultType="map">
+    <select id="HAPL_020U_STR" resultType="java.util.LinkedHashMap">
         exec hapl_020u_str
             #{actkind}, #{cmpycd}, '020', #{stdym}, #{acctcd}, #{acctnm},
             #{deptdivcd}, #{deptdivnm}, #{itemdivcd}, #{itemdivnm},
@@ -19,7 +19,7 @@
     </select>
 
     <!-- 배부적수관리 조회 및 처리 -->
-    <select id="HAPL_030U_STR" resultType="map">
+    <select id="HAPL_030U_STR" resultType="java.util.LinkedHashMap">
         exec hapl_030u_str
             #{actkind}, #{cmpycd}, '020', #{stdym}, #{divcd}, #{deptcd},
             #{bdeptcd}, #{divrate1}, #{divrate2}, #{divrate3},
@@ -27,14 +27,14 @@
     </select>
 
     <!-- 부서집계수식 조회 및 처리 -->
-    <select id="HAPL_040U_STR" resultType="map">
+    <select id="HAPL_040U_STR" resultType="java.util.LinkedHashMap">
         exec hapl_040u_str
             #{actkind}, #{cmpycd}, #{stdym}, #{deptcd}, #{cdeptcd},
             #{rate}, #{remark}, #{userid}
     </select>
 
     <!-- 품목배부율관리 조회 및 처리 -->
-    <select id="HAPL_050U_STR" resultType="map">
+    <select id="HAPL_050U_STR" resultType="java.util.LinkedHashMap">
         exec hapl_050u_str
             #{actkind}, #{cmpycd}, '020', #{stdym}, #{divcd},
             #{deptcd}, #{custcd}, #{user_id}, #{itemcd}, #{itsize},
@@ -43,13 +43,13 @@
     </select>
 
     <!-- 배부작업 처리 -->
-    <select id="HAPL_100U_STR" resultType="map">
+    <select id="HAPL_100U_STR" resultType="java.util.LinkedHashMap">
         exec hapl_100u_str
             #{actkind}, #{cmpycd}, #{stdym}, '', #{userid}
     </select>
 
     <!-- 손익계산서 조회 -->
-    <select id="HAPL_110S_STR" resultType="map">
+    <select id="HAPL_110S_STR" resultType="java.util.LinkedHashMap">
         exec hapl_110s_str #{cmpycd}, #{deptcd}, #{stdym}
     </select>
 
@@ -63,12 +63,12 @@
     </select>
 
     <!-- 배부현황 조회 -->
-    <select id="HAPL_120S_STR" resultType="map">
+    <select id="HAPL_120S_STR" resultType="java.util.LinkedHashMap">
         exec hapl_120s_str #{cmpycd}, #{stdym}, #{acctcdfr}, #{acctcdto}
     </select>
 
     <!-- 부서별 손익계산서 조회 -->
-    <select id="HAPL_140S_STR" resultType="map">
+    <select id="HAPL_140S_STR" resultType="java.util.LinkedHashMap">
         exec hapl_140s_str #{actkind}, #{cmpycd}, #{deptcd}, #{stdym}
     </select>
 

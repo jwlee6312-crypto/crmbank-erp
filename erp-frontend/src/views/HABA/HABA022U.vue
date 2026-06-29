@@ -268,7 +268,12 @@ onMounted(async () => {
                 { title: "계정과목명", field: "acctnm", minWidth: 180, widthGrow: 1, hozAlign: "left" },
                 { title: "연산대상", field: "caltypenm", width: 100 },
                 { title: "연산수식", field: "calgagamnm", width: 100 },
-                { title: "사용", field: "useyn", width: 70, formatter: (c) => String(c.getValue() || '').toUpperCase() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger fw-bold">X</span>' }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
             ]
         });
         rightgrid.on("rowClick", (e, row) => {

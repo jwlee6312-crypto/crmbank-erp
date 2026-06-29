@@ -268,7 +268,12 @@ onMounted(async () => {
 				{ title: "예 산 명", field: "bugtnm", minWidth: 200 },
 				{ title: "비용구분", field: "costtypenm", width: 150, hozAlign: "center" },
 				{ title: "비고", field: "bigo", minWidth: 250 },
-				{ title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? 'Y' : 'N' }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			]
 		})
 

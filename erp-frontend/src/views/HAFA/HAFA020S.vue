@@ -232,8 +232,12 @@ onMounted(() => {
 				{ title: "금액", field: "procamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "보유부서", field: "deptnm", width: 200 },
 				{ title: "비고", field: "remark", minWidth: 250 },
-				{ title: "사용", field: "useyn", width: 100, hozAlign: "center", formatter: "tickCross" }
-			]
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }			]
 		})
 	}
 })

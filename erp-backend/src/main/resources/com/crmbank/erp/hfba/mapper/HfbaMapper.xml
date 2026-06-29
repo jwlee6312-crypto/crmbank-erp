@@ -2,32 +2,32 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.crmbank.erp.hfba.mapper.HfbaMapper">
 
-    <select id="FBA1010U_STR" resultType="map">
+    <select id="FBA1010U_STR" resultType="java.util.LinkedHashMap">
         exec fba1010u_str #{cmpycd}, #{actkind}, #{cdkd}, #{code},
             #{cdnm}, #{remark}, #{dispord},  #{useyn}, #{userid}
     </select>
 
-    <select id="FBA1040U_STR" resultType="map">
+    <select id="FBA1040U_STR" resultType="java.util.LinkedHashMap">
         exec fba1040u_str #{cmpycd}, #{actkind}, #{ym}, #{acct}, #{acctnm},
         #{divide1}, #{divide2}, #{divide3}, #{divide4}, #{divide5}, #{divide6}, #{divide7},
         #{bigo}, #{userid}
     </select>
 
-    <select id="FBA1060U_STR" resultType="map">
+    <select id="FBA1060U_STR" resultType="java.util.LinkedHashMap">
         exec fba1060u_str #{cmpycd}, #{actkind}, #{ym}, #{costcd}, #{divstd}, #{jsangbn},
         #{itemcd}, #{unit}, #{itemnm}, #{unitamt}, #{bigo}, #{userid}
     </select>
 
-    <select id="FBA2010U_STR" resultType="map">
+    <select id="FBA2010U_STR" resultType="java.util.LinkedHashMap">
         exec fba2010u_str #{cmpycd}, #{actkind}, #{acct}, #{acct_o}, #{acctnm}, #{bigo}, #{useyn}, #{acntgbn}, #{userid}
     </select>
 
-    <select id="FBA3010U_STR" resultType="map">
+    <select id="FBA3010U_STR" resultType="java.util.LinkedHashMap">
         exec fba3010u_str #{cmpycd}, #{actkind}, #{yymm}, #{yn}, #{remark}, #{userid}
     </select>
 
     <!-- 💡 계정과목 직접 조회 -->
-    <select id="selectAcctList" resultType="map">
+    <select id="selectAcctList" resultType="java.util.LinkedHashMap">
         select acct, acctnm
         from fba2020t_tbl
         where cmpycd = #{cmpycd} and useyn = 'y'
@@ -35,7 +35,7 @@
     </select>
 
     <!-- 💡 공정배부/품목배부 기준 직접 조회 -->
-    <select id="selectDivideList" resultType="map">
+    <select id="selectDivideList" resultType="java.util.LinkedHashMap">
         select code, cdnm
         from fba1010t_tbl
         where cmpycd = #{cmpycd}
@@ -45,7 +45,7 @@
     </select>
 
     <!-- 💡 배부적수 목록 직접 조회 -->
-    <select id="selectDivideJuksuList" resultType="map">
+    <select id="selectDivideJuksuList" resultType="java.util.LinkedHashMap">
         select a.itemcd,
                b.itemnm,
                b.unit,

@@ -245,7 +245,12 @@ onMounted(async () => {
                     return v === 'L' ? '왼쪽' : (v === 'R' ? '오른쪽' : '');
                 }},
                 { title: "결과", field: "rstyn", width: 60 },
-                { title: "사용", field: "useyn", width: 70, formatter: (c) => String(c.getValue() || '').toUpperCase() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger fw-bold">X</span>' }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
             ]
         });
         maingrid.on("rowClick", (e, row) => {

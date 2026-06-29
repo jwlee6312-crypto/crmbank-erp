@@ -338,7 +338,12 @@ onMounted(async () => {
         { title: "연락처", field: "telno", width: 120 },
         { title: "구분", field: "iogbnnm", width: 90 },
         { title: "상태", field: "statusnm", width: 90 },
-        { title: "사용", field: "useyn", width: 60, formatter: (c) => String(c.getValue() || '').toLowerCase() === 'y' ? 'O' : 'X' }
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        }
       ]
     })
     maingrid.on('rowClick', (e, row) => {

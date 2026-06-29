@@ -273,7 +273,12 @@ onMounted(async () => {
 				{ title: "핸드폰", field: "hpno", width: 150 },
 				{ title: "메일", field: "email", width: 200, hozAlign: "left" },
 				{ title: "내선번호", field: "inner_no", hozAlign: "center", width: 100 },
-        		{ title: "사용", field: "useyn", hozAlign: "center", width: 80, formatter: (c) => c.getValue()?.toUpperCase() === 'Y' ? 'O' : 'X' }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			]
 		})
 		mainGrid.on('rowClick', (e, row) => {

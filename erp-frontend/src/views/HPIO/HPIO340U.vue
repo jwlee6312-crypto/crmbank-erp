@@ -147,9 +147,9 @@ const initGrids = () => {
           return '';
       }},
       { title: "자재명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold" },
-      { title: "규격", field: "itsize", width: 150 },
+      { title: "규격", field: "itsize", width: 200 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-      { title: "투입량", field: "inqty", width: 120, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
+      { title: "투입량", field: "inqty", width: 150, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
         cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
       },
       { title: "비고", field: "bigo", minWidth: 200, editor: "input",

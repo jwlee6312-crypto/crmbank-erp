@@ -345,7 +345,12 @@ onMounted(() => {
 				{ title: "소유자", field: "soname", width: 150 },
 				{ title: "결제계좌", field: "gujano", width: 200 },
 				{ title: "비고", field: "remark", minWidth: 150, hozAlign: "left" },
-				{ title: "사용", field: "useyn", width: 100, formatter: (c) => c.getValue() === 'Y' ? 'Y' : 'N' }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			]
 		})
 		maingrid.on('rowClick', (e, row) => {

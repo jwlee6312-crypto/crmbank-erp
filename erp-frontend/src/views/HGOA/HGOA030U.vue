@@ -165,12 +165,16 @@ function init_table() {
 		placeholder: '등록된 질문이 없습니다.', layout: "fitColumns", height: "100%", pagination: "local", paginationSize: 20,
 		columns: [
             { title: "No", formatter: "rownum", hozAlign: "center", width: 50 },
-            { title: "질문번호", field: "SURV_NO", hozAlign: "center", width: 100 },
-            { title: "질문 내용", field: "QUESTION", hozAlign: "left", formatter: (cell) => `<div class="fw-bold text-dark py-1">${cell.getValue() || ''}</div>` },
-            { title: "유형", field: "ANS_TP", hozAlign: "center", width: 80, formatter: (cell) => cell.getValue() === '010' ? '객관' : cell.getValue() === '020' ? '주관' : '혼합' },
+            { title: "질문번호", field: "surv_no", hozAlign: "center", width: 100 },
+            { title: "질문 내용", field: "question", hozAlign: "left", formatter: (cell) => `<div class="fw-bold text-dark py-1">${cell.getValue() || ''}</div>` },
+            { title: "유형", field: "ans_tp", hozAlign: "center", width: 80, formatter: (cell) => cell.getValue() === '010' ? '객관' : cell.getValue() === '020' ? '주관' : '혼합' },
             { title: "정렬", field: "dspord", hozAlign: "center", width: 60 },
-            { title: "사용", field: "useyn", hozAlign: "center", width: 60, formatter: (cell) => (cell.getValue()||'').toString().toUpperCase()==='Y' ? "O" : "X" }
-        ]
+            { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+              formatter: (cell) => {
+                const val = String(cell.getValue() || '').trim().toUpperCase();
+                return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+              }
+            }        ]
 	})
     table_instance.on("rowClick", (e, row) => load_detail(row.getData()));
 }

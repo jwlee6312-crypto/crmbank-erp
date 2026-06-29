@@ -275,7 +275,12 @@ onMounted(() => {
 				{ title: "계약금", field: "wonamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "월불입액", field: "payamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "이율", field: "rate", width: 150, hozAlign: "right", formatter: (c) => c.getValue() + "%" },
-				{ title: "사용", field: "useyn", width: 150, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			]
 		})
 		maingrid.on("rowClick", (e, row) => {

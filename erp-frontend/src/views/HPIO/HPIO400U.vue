@@ -169,14 +169,14 @@ const initGrids = () => {
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerSort: false },
-      { title: "생산일자", field: "proymd", width: 110, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
+      { title: "생산일자", field: "proymd", width: 120, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
       { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold" },
       { title: "규격", field: "itsize", width: 150 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-      { title: "생산량", field: "prdqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "미입고", field: "ninqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger" },
-      { title: "입고량", field: "inqty", width: 100, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold" },
-      { title: "작업처", field: "work_info", width: 150, hozAlign: "left" }
+      { title: "생산량", field: "prdqty", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "미입고", field: "ninqty", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger" },
+      { title: "입고량", field: "inqty", width: 120, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold" },
+      { title: "작업처", field: "work_info", width: 200, hozAlign: "left" }
     ]
   });
 }

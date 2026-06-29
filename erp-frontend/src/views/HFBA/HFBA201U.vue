@@ -126,7 +126,12 @@ const initGrids = () => {
       { title: "계정코드", field: "acct", width: 120, hozAlign: "center", cssClass: "fw-bold text-primary" },
       { title: "계정과목명", field: "acctnm", minWidth: 250, widthGrow: 1, cssClass: "fw-bold" },
       { title: "외주가공", field: "acntgbn", width: 100, hozAlign: "center", formatter: (c) => c.getValue() === '1010' ? '대상' : '일반' },
-      { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" },
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        },
       { title: "비고", field: "bigo", minWidth: 200 }
     ],
   });

@@ -201,7 +201,7 @@ const initGrids = () => {
       { title: "투입자재명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-success', cellClick: (e, cell) => handleOpenHelp('MATERIAL', cell.getRow()) },
       { title: "재고", field: "jaego", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       { title: "투입량", field: "inqty", width: 100, hozAlign: "right", editor: "number", cssClass: "bg-light-green fw-bold" },
-      { title: "전공정", field: "prognm", width: 130, cellClick: (e, cell) => handleOpenHelp('BEFPROG', cell.getRow()) },
+      { title: "전공정", field: "prognm", width: 130, cellClick: (e, cell) => handleOpenHelp('befprog', cell.getRow()) },
       { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
     ]
   });
@@ -289,8 +289,8 @@ const handleOpenHelp = (type: string, row: any) => {
     openHelp('REASON', (d) => row.update({ wonincd: d.code, woninnm: d.cdnm }), { gbncd: '210' })
   } else if (type === 'MATERIAL') {
     openHelp('ITEM', (d) => row.update({ mitemcd: d.itemcd, itemnm: d.itemnm, mitsize: d.itsize, munit: d.unit, _status: '입력', _state: 'NEW' }))
-  } else if (type === 'BEFPROG') {
-    openHelp('BEFPROG', (d) => row.update({ befprog: d.progcd, prognm: d.prognm }), { gbncd: searchForm.linecd })
+  } else if (type === 'befprog') {
+    openHelp('befprog', (d) => row.update({ befprog: d.progcd, prognm: d.prognm }), { gbncd: searchForm.linecd })
   }
 }
 

@@ -368,7 +368,12 @@ onMounted(() => {
 					]
 				},
 				{ title: "적요", field: "bigo", minWidth: 200, hozAlign: "left" },
-				{ title: "삭제", field: "useyn", width: 50, formatter: (cell) => cell.getValue() === 'N' ? 'V' : '' }
+                { title: "삭제", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '<span class="text-danger">삭제</span>';
+                  }
+                }
 			]
 		})
 

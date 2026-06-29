@@ -39,6 +39,7 @@ public class HpplController {
             case "HPPL_100U_STR": return ResponseEntity.ok(hpplMapper.HPPL_100U_STR(params));
             case "HPPL_110S_STR": return ResponseEntity.ok(hpplMapper.HPPL_110S_STR(params));
             case "HPPL_120U_STR": return ResponseEntity.ok(hpplMapper.HPPL_120U_STR(params));
+            case "HPPL_150U_STR": return ResponseEntity.ok(hpplMapper.HPPL_150U_STR(params));
             default:
                 return ResponseEntity.notFound().build();
         }

@@ -203,7 +203,12 @@ onMounted(() => {
 				{ title: "종목", field: "custkind", width: 120 },
 				{ title: "연락처", field: "telno", width: 110, hozAlign: "center" },
 				{ title: "상태", field: "statusnm", width: 80, hozAlign: "center" },
-                { title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: (c) => c.getValue()?.toUpperCase() === 'Y' ? 'O' : 'X' }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			]
 		})
 	}

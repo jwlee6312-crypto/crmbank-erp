@@ -158,13 +158,13 @@ const initGrids = () => {
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerSort: false },
-      { title: "입고일자", field: "inymd", width: 110, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
+      { title: "입고일자", field: "inymd", width: 120, hozAlign: "center", formatter: (c) => formatDate(c.getValue()) },
       { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold" },
-      { title: "규격", field: "itsize", width: 150 },
+      { title: "규격", field: "itsize", width: 180 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-      { title: "생산량", field: "prdqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "입고량", field: "inqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
-      { title: "작업처", field: "work_info", width: 150, hozAlign: "left", formatter: (cell) => {
+      { title: "생산량", field: "prdqty", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "입고량", field: "inqty", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
+      { title: "작업처", field: "work_info", width: 200, hozAlign: "left", formatter: (cell) => {
           const d = cell.getData(); return d.prodcd === '100' ? d.worknm : d.custnm;
       }}
     ]

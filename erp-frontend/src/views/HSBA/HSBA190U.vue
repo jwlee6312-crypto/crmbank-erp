@@ -174,7 +174,12 @@ const initgrids = () => {
         { title: "담당자명", field: "damdang", width: 150 },
         { title: "전화번호", field: "telno", width: 150 },
         { title: "메일주소", field: "email", minWidth: 200, hozAlign: "left" },
-        { title: "사용", field: "useyn", width: 80, formatter: (c) => c.getValue() === 'Y' ? 'Y' : 'N' }
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: true,
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        }
       ]
     })
     damgrid.on("rowClick", (e, row) => {

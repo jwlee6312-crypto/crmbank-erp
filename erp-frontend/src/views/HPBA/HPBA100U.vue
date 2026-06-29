@@ -1,8 +1,8 @@
 <!--
 	=============================================================
 	프로그램명	: 공정관리 (HPBA100U)
-	작성일자	: 2025.02.24
-	설명        : 생산 라인별 공정 정보 등록 및 순서/사용 여부 관리 (HPIO210U 표준 패턴 적용)
+	작성일자	: 2025.02.27
+	설명        : 생산 라인별 공정 정보 등록 및 순서/사용 여부 관리 (HSOD100U 표준 패턴 적용)
 	=============================================================
 -->
 
@@ -29,7 +29,7 @@
     <!-- 💡 2. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-      <!-- [상단] 조회 필터 영역 (슬림형) -->
+      <!-- [상단] 조회 필터 영역 -->
       <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
         <div class="card-body p-0 bg-white">
           <table class="erp-table-dense" width="100%">
@@ -74,8 +74,8 @@
                 <span v-if="selectedLine.linenm" class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ selectedLine.linenm }}</span>
               </span>
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" :disabled="!selectedLine.linecd" style="font-size: 11px;">+ 공정추가</button>
-                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" :disabled="!selectedLine.linecd" style="font-size: 11px;">- 삭제</button>
+                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" :disabled="!selectedLine.linecd" style="font-size: 11px;">+ 행추가</button>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" :disabled="!selectedLine.linecd" style="font-size: 11px;">- 행삭제</button>
               </div>
             </div>
             <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -115,15 +115,24 @@ const tableRef2 = ref<HTMLDivElement | null>(null)
 let grid1: Tabulator | null = null
 let grid2: Tabulator | null = null
 
-// [2] 그리드 초기화
+// [2] 상태 관리 헬퍼 (HSOD100U 표준 - 사용자 지시 정답 로직)
+const updateRowStatus = (row: any) => {
+  const d = row.getData();
+  // 🚀 기존 데이터(EXIST)이고 삭제 상태가 아닐 때만 '수정'으로 변경
+  if (d._state === 'EXIST' && d._status !== '삭제') {
+    row.update({ _status: '수정' });
+  }
+}
+
+// [3] 그리드 초기화
 const initGrids = () => {
-  // Left: 라인 목록
+  // Left: 라인 목록 (사용자 수정 필드명 linecd, linenm 보존)
   grid1 = new Tabulator(tableRef1.value!, {
     layout: "fitColumns", height: "100%", placeholder: "데이터 없음", selectable: 1,
     columns: [
       { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
-      { title: "라인명", field: "cdnm", hozAlign: "left", headerSort: false, cssClass: "fw-bold text-primary" },
-      { title: "코드", field: "code", hozAlign: "center", width: 80, headerSort: false }
+      { title: "라인명", field: "linenm", hozAlign: "left", headerSort: false, cssClass: "fw-bold text-primary" },
+      { title: "코드", field: "linecd", hozAlign: "center", width: 80, headerSort: false }
     ],
   });
   grid1.on("rowClick", (e, row) => onLineSelect(row.getData()));
@@ -131,62 +140,77 @@ const initGrids = () => {
   // Right: 공정 목록
   grid2 = new Tabulator(tableRef2.value!, {
     layout: "fitColumns", height: "100%", placeholder: "라인을 선택하세요.", selectable: true,
-    columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+    columnDefaults: {
+      headerHozAlign: 'center',
+      headerSort: false,
+      vertAlign: "middle",
+      cellEdited: (cell) => updateRowStatus(cell.getRow())
+    },
     columns: [
       { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection" },
       { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
           const v = c.getValue();
-          if (v === '입력') return '<span class="badge bg-primary">신규</span>';
+          if (v === '입력') return '<span class="badge bg-primary">입력</span>';
           if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
           if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
           return '';
       }},
-      { title: "코드", field: "progcd", width: 80, hozAlign: "center", editor: "input",
-        cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
-      },
-      { title: "공정명", field: "prognm", minWidth: 200, widthGrow: 1, editor: "input", cssClass: "fw-bold text-primary",
-        cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
-      },
+      { title: "코드", field: "progcd", width: 80, hozAlign: "center", editor: "input"  },
+      { title: "공정명", field: "prognm", minWidth: 200, widthGrow: 1, editor: "input", cssClass: "fw-bold text-primary"   },
       { title: "관리부서", field: "deptnm", width: 150, cellClick: (e, cell) => handleOpenHelp('DEPT', cell.getRow()) },
-      { title: "정산순서", field: "dspord", width: 80, hozAlign: "center", editor: "number" },
-      { title: "사용", field: "useyn", width: 70, hozAlign: "center", formatter: "tickCross", editor: true },
+      { title: "정산순서", field: "dspord", width: 80, hozAlign: "center", editor: "number"  },
+      { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: "list", editorParams: { values: { "Y": "사용", "N": "미사용" } },
+        formatter: (cell) => {
+          const val = String(cell.getValue() || '').trim().toUpperCase();
+          return val === 'Y' ? '<b class="text-primary">사용</b>' : '<span class="text-muted">미사용</span>';
+        }
+      },
       { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
     ]
   });
 }
 
-// [3] 비즈니스 로직
+// [4] 비즈니스 로직
 const fetchLines = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
+    // 🚀 [해결] 사용자 수정 사항 반영: code 파라미터에 검색어 매핑하여 조회 기능 정상화
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: searchForm.sch_text } })
     grid1?.setData(res.data)
     grid2?.clearData(); selectedLine.linecd = ''; selectedLine.linenm = '';
-  } catch (e) {}
+  } catch (e) { vAlertError('라인 목록 조회 실패') }
 }
 
 const onLineSelect = (row: any) => {
-  selectedLine.linecd = row.code; selectedLine.linenm = row.cdnm
+  selectedLine.linecd = row.linecd; selectedLine.linenm = row.linenm
   fetchProcesses()
 }
 
 const fetchProcesses = async () => {
   try {
     const res = await api.post('/api/hpba/HPBA_100U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, linecd: selectedLine.linecd })
-    grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })))
+    // 🚀 [해결] 유령 레코드(빈 칸) 노출 방지: progcd가 없는 데이터는 필터링하여 로드
+    const cleanData = (res.data || []).filter((i: any) => i.progcd && String(i.progcd).trim() !== '');
+    grid2?.setData(cleanData.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })))
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 실패') }
 }
 
 const saveData = async () => {
-  const details = grid2?.getData().filter((r: any) => r._status) || []
-  if (details.length === 0) return vAlertError('저장할 변경 항목이 없습니다.')
+  const allData = grid2?.getData() || []
+  const changes = allData.filter((r: any) => r._status)
+
+  if (changes.length === 0) return vAlertError('저장할 변경 항목이 없습니다.')
   if (!confirm('공정 정보를 저장하시겠습니까?')) return
 
   try {
-    for (const item of details) {
+    for (const item of changes) {
       const actkind = item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0')
       await api.post('/api/hpba/HPBA_100U_STR', {
-        ...item, actkind, cmpycd: authStore.cmpycd, linecd: selectedLine.linecd, userid: authStore.userid
+        ...item,
+        actkind,
+        cmpycd: authStore.cmpycd,
+        linecd: selectedLine.linecd,
+        updemp: authStore.userid
       })
     }
     vAlert('성공적으로 저장되었습니다.'); fetchProcesses()
@@ -195,7 +219,10 @@ const saveData = async () => {
 
 const handleOpenHelp = (type: string, row: any) => {
   if (type === 'DEPT') {
-    openHelp('DEPT', (d) => row.update({ deptcd: d.deptcd, deptnm: d.deptnm, _status: row.getData()._state === 'EXIST' ? '수정' : '입력' }));
+    openHelp('DEPT', (d) => {
+      row.update({ deptcd: d.deptcd, deptnm: d.deptnm });
+      updateRowStatus(row);
+    });
   }
 }
 
@@ -206,7 +233,12 @@ const handleRowAction = (row: any) => {
 }
 
 const addRow = () => {
-  grid2?.addRow({ useyn: 'Y', dspord: (grid2.getData().length + 1) * 10, _status: '입력', _state: 'NEW' }, true);
+  grid2?.addRow({
+    useyn: 'Y',
+    dspord: '',
+    _status: '입력',
+    _state: 'NEW'
+  }, true);
 }
 
 const deleteSelectedRows = () => {

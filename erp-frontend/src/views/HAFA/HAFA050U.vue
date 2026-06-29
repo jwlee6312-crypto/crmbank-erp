@@ -320,7 +320,12 @@ onMounted(() => {
 				{ title: "내용연수", field: "legalyy", width: 150, hozAlign: "center" },
 				{ title: "상각율", field: "asetrate", width: 150, hozAlign: "center" },
 				{ title: "보유부서", field: "deptnm", width: 200 },
-				{ title: "삭제", field: "useyn", width: 60, hozAlign: "center", formatter: (c: any) => c.getValue() === 'Y' ? '정상' : '<span class="text-danger">삭제</span>' }
+                { title: "상태", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '<span class="text-danger">삭제</span>';
+                  }
+                }
 			]
 		})
 		mainGrid.on("rowClick", (e, row) => {

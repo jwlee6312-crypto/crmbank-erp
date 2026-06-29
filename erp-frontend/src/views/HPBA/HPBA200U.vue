@@ -138,26 +138,96 @@ const initGrids = () => {
 
   if (procGridElement.value) {
     procGrid = new Tabulator(procGridElement.value, {
-      layout: "fitColumns", height: "100%", placeholder: "품목을 선택하세요.",
-      columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+      layout: "fitColumns", height: "100%", placeholder: "공정 데이터가 없습니다.", selectable: true,
+      columnDefaults: {
+        headerHozAlign: 'center',
+        headerSort: false,
+        vertAlign: "middle",
+        cellEdited: (cell) => {
+          const d = cell.getData();
+          const field = cell.getField();
+
+          // 1. 상태 업데이트
+          if (d._state === 'EXIST' && !d._status) cell.getRow().update({ _status: '수정' });
+
+          // 2. 생산량 관련 필드 수정 시 자동 계산 실행
+          if (['capahh', 'gadtmdd', 'gadrate', 'jungrate'].includes(field)) {
+            calculateOutput(cell.getRow());
+          }
+          // 🚀 [추가] 일생산량을 직접 수정할 경우 소요시간을 역산
+          if (field === 'pqtydd') {
+            reverseCalculateTime(cell.getRow());
+          }
+        }
+      },
       columns: [
-        { title: "선택", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross", editor: true, formatterParams: { crossElement: false } },
-        { title: "공정", field: "progcd", width: 80, hozAlign: "center" },
-        { title: "공 정 명", field: "prognm", minWidth: 180, widthGrow: 1, cssClass: "fw-bold text-primary" },
+        { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection", headerHozAlign: "center" },
+        { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+            const v = c.getValue();
+            if (v === '입력') return '<span class="badge bg-primary">입력</span>';
+            if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+            if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+            return '';
+        }},
+        { title: "공정", field: "progcd", width: 100, hozAlign: "center" },
+        { title: "공 정 명", field: "prognm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-primary" },
         { title: "순서", field: "dspord", width: 70, hozAlign: "center", editor: "number" },
-        { title: "가동율(%)", field: "GADrate", width: 100, hozAlign: "right", editor: "number" },
-        { title: "양품율(%)", field: "JUNGrate", width: 100, hozAlign: "right", editor: "number" },
-        { title: "표준시간", field: "STDWORKHH", width: 100, hozAlign: "right", editor: "number" },
-        { title: "일가동시간", field: "GADTMDD", width: 100, hozAlign: "right", editor: "number" },
-        { title: "일생산량", field: "pqtydd", width: 100, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } }
+        { title: "가동율(%)", field: "gadrate", width: 100, hozAlign: "right", editor: "number" },
+        { title: "양품율(%)", field: "jungrate", width: 100, hozAlign: "right", editor: "number" },
+        { title: "개당 소요시간(분)", field: "capahh", width: 130, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 1 } },
+        { title: "일가동시간(h)", field: "gadtmdd", width: 120, hozAlign: "right", editor: "number" },
+        { title: "일생산량", field: "pqtydd", width: 150, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-yellow fw-bold" },
+        { title: "삭제", width: 50, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger cursor-pointer'></i>",
+          cellClick: (e, cell) => {
+            const row = cell.getRow();
+            const d = row.getData();
+            row.update({ _status: d._status === '삭제' ? '' : '삭제' });
+          }
+        }
       ],
     })
   }
 }
 
+// 🚀 [역산] 일생산량(목표) 기반 소요시간 계산 (소요시간 = 가동시간(분) / 생산량 * 가동율 * 양품율)
+const reverseCalculateTime = (row: any) => {
+  const d = row.getData();
+  const targetQty = Number(d.pqtydd) || 0;
+  const workTimeMin = (Number(d.gadtmdd) || 0) * 60;
+  const availRate = (Number(d.gadrate) || 0) / 100;
+  const qualityRate = (Number(d.jungrate) || 0) / 100;
+
+  if (targetQty > 0 && workTimeMin > 0) {
+    const resultMin = (workTimeMin * availRate * qualityRate) / targetQty;
+    row.update({ capahh: Math.round(resultMin * 10) / 10 });
+  }
+}
+
+// 🚀 [순산] 개당 소요시간 기반 생산량 계산
+const calculateOutput = (row: any) => {
+  const d = row.getData();
+  const stdTimeMin = Number(d.capahh) || 0;
+  const workTimeMin = (Number(d.gadtmdd) || 0) * 60;
+  const availRate = (Number(d.gadrate) || 0) / 100;
+  const qualityRate = (Number(d.jungrate) || 0) / 100;
+
+  if (stdTimeMin > 0 && workTimeMin > 0) {
+    const result = Math.floor((workTimeMin / stdTimeMin) * availRate * qualityRate);
+    row.update({ pqtydd: result });
+  }
+}
+
 async function search() {
   try {
-    const res = await api.post('/api/hpba/HPBA_200U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, linecd: searchData.linecd, astkind: searchData.astkind })
+    const res = await api.post('/api/hpba/HPBA_200U_STR', {
+        actkind: 'S1',
+        cmpycd: authStore.cmpycd,
+        itemcd: '',
+        linecd: searchData.linecd,
+        astkind: searchData.astkind,
+        progord: 0, capahh: 0,   gadrate: 0,  pqtytt: 0,
+        pqtydd: 0,  gadtmdd: 0, jungrate: 0,  stdworkhh: 0
+    })
     itemGrid?.setData(res.data); itemCount.value = res.data.length
     Object.assign(selectedItem, { itemcd: '', itemnm: '', itsize: '', unit: '' }); procGrid?.clearData()
     vAlert('조회되었습니다.')
@@ -166,23 +236,70 @@ async function search() {
 
 async function fetchProcesses(itemcd: string) {
   try {
-    const res = await api.post('/api/hpba/HPBA_200U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, itemcd: itemcd, linecd: searchData.linecd, astkind: searchData.astkind })
-    procGrid?.setData(res.data)
+    const res = await api.post('/api/hpba/HPBA_200U_STR', {
+        actkind: 'S0', cmpycd: authStore.cmpycd, itemcd: itemcd, linecd: searchData.linecd,
+        astkind: searchData.astkind, progcd: '', itsize: '', unit: '', progord: 0,
+        capahh: 0, gadrate: 0, pqtytt: 0, pqtydd: 0, gadtmdd: 0, jungrate: 0, stdworkhh: 0, updemp: authStore.userid
+     })
+    const cleanData = (res.data || []).filter((i: any) => i.progcd || i.PROGCD);
+    // 🚀 [보강] 대소문자 및 필드명(capahh/stdworkhh) 혼용 대응
+    const processed = cleanData.map((i: any) => {
+        const rawTime = i.capahh ?? i.CAPAHH ?? i.stdworkhh ?? i.STDWORKHH ?? 0;
+        return {
+            ...i,
+            progcd: i.progcd || i.PROGCD,
+            prognm: i.prognm || i.PROGNM,
+            dspord: i.dspord ?? i.DSPORD ?? i.progord ?? i.PROGORD ?? 0,
+            capahh: rawTime ? Math.round(rawTime * 60 * 10) / 10 : 0,
+            gadtmdd: i.gadtmdd ?? i.GADTMDD ?? 0,
+            gadrate: i.gadrate ?? i.GADRATE ?? 0,
+            jungrate: i.jungrate ?? i.JUNGRATE ?? 0,
+            pqtydd: i.pqtydd ?? i.PQTYDD ?? 0,
+            _state: 'EXIST',
+            _status: ''
+        }
+    })
+    procGrid?.setData(processed).then(() => {
+      procGrid?.getRows().forEach(row => { if (row.getData().useyn === 'Y') row.select(); });
+    });
   } catch (e) { vAlertError('공정 정보 조회 실패') }
 }
 
 async function save() {
   if (!selectedItem.itemcd) return vAlertError('저장할 품목을 선택하세요.')
-  const data = procGrid?.getData() || []
+  const changes = (procGrid?.getData() || []).filter((r: any) => r._status)
+
+  if (changes.length === 0) return vAlertError('저장할 변경 항목이 없습니다.')
+
+  // 🚀 [해결] 중요값(소요시간, 가동시간, 가동율, 양품율) 0 등록 방지 벨리데이션
+  for (const row of changes) {
+    if (row._status === '삭제') continue; // 삭제는 제외
+
+    if (!row.capahh || Number(row.capahh) <= 0) return vAlertError(`[${row.prognm}] 공정의 개당 소요시간은 0보다 커야 합니다.`);
+    if (!row.gadtmdd || Number(row.gadtmdd) <= 0) return vAlertError(`[${row.prognm}] 공정의 일가동시간은 0보다 커야 합니다.`);
+    if (!row.gadrate || Number(row.gadrate) <= 0) return vAlertError(`[${row.prognm}] 공정의 가동율은 0보다 커야 합니다.`);
+    if (!row.jungrate || Number(row.jungrate) <= 0) return vAlertError(`[${row.prognm}] 공정의 양품율은 0보다 커야 합니다.`);
+  }
+
   if (!confirm('현재 공정 설정을 저장하시겠습니까?')) return
   try {
-    for (const row of data) {
-      const actkind = (row.useyn === 'Y' || row.useyn === true) ? 'A0' : 'D0'
-      await api.post('/api/hpba/HPBA_200U_STR', {
-        actkind: actkind, cmpycd: authStore.cmpycd, userid: authStore.userid, itemcd: selectedItem.itemcd, linecd: searchData.linecd, astkind: searchData.astkind,
-        progcd: row.progcd, itsize: selectedItem.itsize, unit: selectedItem.unit, dspord: row.dspord || 0, GADrate: row.GADrate || 0, JUNGrate: row.JUNGrate || 0,
-        STDWORKHH: row.STDWORKHH || 0, GADTMDD: row.GADTMDD || 0, pqtydd: row.pqtydd || 0, CAPAHH: 0, pqtytt: 0
-      })
+    for (const row of changes) {
+        const timeH = (row.capahh || 0) / 60;
+        await api.post('/api/hpba/HPBA_200U_STR', {
+            actkind: row._status === '삭제' ? 'D0' : 'A0',
+            cmpycd: authStore.cmpycd, userid: authStore.userid, itemcd: selectedItem.itemcd,
+            linecd: searchData.linecd, astkind: searchData.astkind,
+            progcd: row.progcd, itsize: selectedItem.itsize, unit: selectedItem.unit,
+            progord: row.dspord || 0,
+            capahh: timeH,       // 두 필드 모두 동일한 값으로 저장
+            stdworkhh: timeH,    // 두 필드 모두 동일한 값으로 저장
+            gadrate: row.gadrate || 0,
+            pqtytt: 0,
+            pqtydd: row.pqtydd || 0,
+            gadtmdd: row.gadtmdd || 0,
+            jungrate: row.jungrate || 0,
+            updemp: authStore.userid
+        })
     }
     vAlert('정상적으로 저장되었습니다.'); fetchProcesses(selectedItem.itemcd)
   } catch (e) { vAlertError('저장 중 오류 발생') }
@@ -198,3 +315,8 @@ function excel() { procGrid?.download("xlsx", `표준공정도_${selectedItem.it
 
 onMounted(() => { fetchLineOptions(); nextTick(() => { initGrids(); search(); }) })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+.bg-light-yellow { background-color: #fffdf0 !important; }
+</style>

@@ -42,7 +42,9 @@
                 <th class="required">생산라인</th>
                 <td>
                   <select v-model="searchData.linecd" class="form-select" style="width: 150px;" @change="onLineChange">
-                    <option v-for="opt in lineOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+                    <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">
+                      [{{ opt.linecd }}] {{ opt.linenm }}
+                    </option>
                   </select>
                 </td>
                 <th class="required">재고자산</th>
@@ -143,62 +145,135 @@ const itemCount = ref(0)
 
 const fetchLineOptions = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y' } })
-    lineOptions.value = res.data
-  } catch (e) {}
+    const res = await api.get('/api/hp00/HP00_000S_STR', {
+        params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '', codenm: '', etcval: '' }
+    })
+    // 🚀 직관적인 매핑: 서버에서 넘어온 필드명(linecd, linenm)을 명시적으로 처리
+    lineOptions.value = res.data.map((i: any) => ({
+        linecd: i.linecd || '',
+        linenm: i.linenm || ''
+    }))
+    if (lineOptions.value.length > 0 && !searchData.linecd) {
+        searchData.linecd = lineOptions.value[0].linecd
+    }
+  } catch (e) { console.error('라인 목록 로드 실패') }
 }
 
 const onLineChange = () => { processList.value = []; selectedProg.progcd = ''; grid?.clearData() }
+
+// [2] 상태 관리 헬퍼 (HSOD100U 표준)
+const updateRowStatus = (row: any) => {
+  const d = row.getData();
+  if (d._state === 'EXIST' && d._status !== '삭제') {
+    row.update({ _status: '수정' });
+  }
+}
 
 const initGrid = () => {
   if (gridElement.value) {
     grid = new Tabulator(gridElement.value, {
       layout: "fitColumns", height: "100%", placeholder: "공정을 선택하세요.", selectable: true,
-      columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
+      columnDefaults: {
+        headerHozAlign: 'center', headerSort: false, vertAlign: "middle",
+        cellEdited: (cell) => updateRowStatus(cell.getRow())
+      },
       columns: [
-        { title: "상태", field: "upkind", width: 60, hozAlign: "center", cssClass: "text-danger fw-bold" },
+        { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection", headerHozAlign: "center" },
+        { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+            const v = c.getValue();
+            if (v === '입력') return '<span class="badge bg-primary">입력</span>';
+            if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+            if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+            return '';
+        }},
         { title: "코드", field: "mitemcd", width: 100, hozAlign: "center", cssClass: "text-primary fw-bold" },
         { title: "투입자재명", field: "mitemnm", minWidth: 200, cellClick: (e, cell) => openHelp('GRID_MAT', cell) },
         { title: "규격", field: "mitsize", width: 150 },
         { title: "단위", field: "munit", width: 70, hozAlign: "center" },
         { title: "소요량", field: "inqty", width: 100, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 4 }, cssClass: "fw-bold" },
-        { title: "LOSS율(%)", field: "LOSrate", width: 90, hozAlign: "right", editor: "number" },
-        { title: "이전공정", field: "bprognm", width: 140, cellClick: (e, cell) => openHelp('GRID_PROG', cell) },
-        { title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross", editor: true },
-        { title: "", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger cursor-pointer'></i>", cellClick: (e, cell) => { if(confirm('자재를 삭제하시겠습니까?')) cell.getRow().delete() } }
+        { title: "LOSS율(%)", field: "losrate", width: 90, hozAlign: "right", editor: "number" },
+        { title: "이전공정", field: "bprognm", width: 160,
+          formatter: (cell) => {
+            const d = cell.getData();
+            return d.befprog ? `[${d.befprog}] ${d.bprognm || ''}` : (d.bprognm || '');
+          },
+          cellClick: (e, cell) => openHelp('GRID_PROG', cell)
+        },
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: "list", editorParams: { values: { "Y": "사용", "N": "미사용" } },
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        },
+        { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger cursor-pointer'></i>", cellClick: (e, cell) => {
+            const row = cell.getRow();
+            const d = row.getData();
+            if (d._state === 'NEW') row.delete();
+            else row.update({ _status: d._status === '삭제' ? '' : '삭제' });
+        }}
       ],
     })
-    grid.on("cellEdited", (cell) => { const r = cell.getRow(); if (r.getData().upkind !== 'A') r.update({ upkind: 'U' }) })
   }
 }
 
 async function search() {
   if (!searchData.itemcd) return vAlertError('제품을 먼저 선택하세요.')
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G1', cmpycd: authStore.cmpycd, linecd: searchData.linecd, itemcd: searchData.itemcd } })
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G1', cmpycd: authStore.cmpycd, gbncd: searchData.linecd, code: searchData.itemcd } })
     processList.value = res.data; selectedProg.progcd = ''; grid?.clearData(); vAlert('조회되었습니다.')
   } catch (e) { vAlertError('공정 조회 실패') }
 }
 
 const onProcessSelect = (prog: any) => { selectedProg.progcd = prog.progcd; selectedProg.prognm = prog.prognm; fetchBomDetails() }
 
+const normalizeKeys = (obj: any) => {
+  const n: any = {}; if (!obj) return n;
+  Object.keys(obj).forEach(k => n[k.toLowerCase()] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k]);
+  return n;
+}
+
 async function fetchBomDetails() {
   try {
-    const res = await api.post('/api/hpba/HPBA_210U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, itemcd: searchData.itemcd, linecd: searchData.linecd, progcd: selectedProg.progcd })
-    grid?.setData(res.data); itemCount.value = res.data.length
+    const res = await api.post('/api/hpba/HPBA_210U_STR', {
+        actkind: 'S0', cmpycd: authStore.cmpycd, itemcd: searchData.itemcd, linecd: searchData.linecd, progcd: selectedProg.progcd,
+        inqty: 0, losrate: 0
+    })
+
+    // 🚀 [해결] 필드명 통합: befprognm 등 다양한 명칭을 bprognm으로 단일화
+    const cleanData = (res.data || []).map((i: any) => {
+        const n = normalizeKeys(i);
+        return {
+            ...n,
+            // 이전공정명이 befprognm으로 내려올 경우를 대비한 매핑
+            bprognm: n.bprognm || n.befprognm || n.prognm || ''
+        };
+    }).filter((i: any) => i.mitemcd);
+
+    grid?.setData(cleanData.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
+    itemCount.value = cleanData.length
   } catch (e) { vAlertError('BOM 상세 조회 실패') }
 }
 
 async function save() {
-  const data = grid?.getData() || []
-  if (data.length === 0) return vAlertError('저장할 자재 항목이 없습니다.')
+  const allData = grid?.getData() || []
+  const changes = allData.filter((r: any) => r._status)
+
+  if (changes.length === 0) return vAlertError('저장할 자재 항목이 없습니다.')
   if (!confirm('현재 공정의 BOM 설정을 저장하시겠습니까?')) return
   try {
-    for (const row of data) {
-      const actkind = row.upkind === 'A' ? 'A0' : 'U0'
+    for (const row of changes) {
+      const actkind = row._status === '입력' ? 'A0' : (row._status === '삭제' ? 'D0' : 'U0')
       await api.post('/api/hpba/HPBA_210U_STR', {
-        ...row, actkind: actkind, cmpycd: authStore.cmpycd, userid: authStore.userid, itemcd: searchData.itemcd, linecd: searchData.linecd, progcd: selectedProg.progcd,
-        munit: row.munit, useyn: (row.useyn === 'Y' || row.useyn === true) ? 'Y' : 'N'
+        ...row,
+        actkind: actkind,
+        cmpycd: authStore.cmpycd,
+        userid: authStore.userid,
+        itemcd: searchData.itemcd,
+        linecd: searchData.linecd,
+        progcd: selectedProg.progcd,
+        inqty: Number(row.inqty || 0),
+        losrate: Number(row.losrate || 0),
+        useyn: (row.useyn === 'Y' || row.useyn === true) ? 'Y' : 'N'
       })
     }
     vAlert('정상적으로 저장되었습니다.'); fetchBomDetails()
@@ -214,23 +289,70 @@ function excel() { grid?.download("xlsx", `BOM명세_${searchData.itemnm}_${sele
 
 function addRow() {
     if (!selectedProg.progcd) return vAlertError('공정을 먼저 선택하세요.')
-    grid?.addRow({ upkind: 'A', mitemcd: '', mitemnm: '', inqty: 0, LOSrate: 0, useyn: 'Y' }, true)
+    // 🚀 투입수량 기본 1, LOSS율 0 세팅
+    grid?.addRow({ _status: '입력', _state: 'NEW', mitemcd: '', mitemnm: '', inqty: 1, losrate: 0, useyn: 'Y' }, true)
 }
 
 const modalVisible = ref(false); const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 function openHelp(type: string, cell?: any) {
   let config: any = {}
   if (type === 'ITEM') {
-    config = { title: '제품 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'I1', cmpycd: authStore.cmpycd, selgbn: searchData.astkind, linecd: searchData.linecd }, columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '제품명', field: 'itemnm', width: 250 }],
-        onConfirm: (d: any) => { Object.assign(searchData, { itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit }); search() }
+    config = {
+        title: '제품 선택',
+        path: '/api/hp00/HP00_000S_STR',
+        data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2' },
+        columns: [
+            { title: '코드', field: 'itemcd', width: 100 },
+            { title: '제품명', field: 'itemnm', width: 250 },
+            { title: '규격', field: 'itsize', width: 150 }
+        ],
+        onConfirm: (d: any) => {
+            // 🚀 대소문자 무관하게 매핑 (소문자 원칙 준수)
+            const itemcd = d.itemcd || d.ITEMCD || '';
+            const itemnm = d.itemnm || d.ITEMNM || '';
+            const itsize = d.itsize || d.ITSIZE || '';
+            const unit = d.unit || d.UNIT || '';
+
+            Object.assign(searchData, { itemcd, itemnm, itsize, unit });
+            search();
+        }
     }
   } else if (type === 'GRID_MAT') {
-    config = { title: '자재 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'I0', cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '자재명', field: 'itemnm', width: 250 }],
-        onConfirm: (d: any) => { cell.getRow().update({ mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit }) }
+    config = { title: '자재 선택', path: '/api/hp00/HP00_000S_STR', data: {
+        gubun: 'I0',
+        cmpycd: authStore.cmpycd,
+        gbncd: 'A'
+    }, columns: [{ title: '코드', field: 'itemcd', width: 100 }, { title: '자재명', field: 'itemnm', width: 250 }, { title: '자산구분', field: 'astkind', width: 80 }],
+        onConfirm: (d: any) => {
+            // 🚀 대소문자 무관하게 자산구분(astkind) 매핑
+            const astkind = d.astkind || d.ASTKIND || '';
+            cell.getRow().update({
+                mitemcd: d.itemcd || d.ITEMCD,
+                mitemnm: d.itemnm || d.ITEMNM,
+                mitsize: d.itsize || d.ITSIZE,
+                munit: d.unit || d.UNIT,
+                mastkind: astkind
+            });
+        }
     }
   } else if (type === 'GRID_PROG') {
-    config = { title: '이전공정 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'G0', linecd: searchData.linecd, cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'code', width: 80 }, { title: '공정명', field: 'cdnm', width: 150 }],
-        onConfirm: (d: any) => { cell.getRow().update({ BEFPROG: d.code, bprognm: d.cdnm }) }
+    const rowData = cell.getRow().getData();
+    // 🚀 mastkind 뿐만 아니라 서버에서 넘어올 수 있는 astkind, mastkind 필드 모두 체크
+    const checkKind = String(rowData.mastkind || rowData.astkind || rowData.MASTKIND || '').trim();
+
+    if (checkKind !== '200' && checkKind !== '210') {
+        return vAlertError(`현재 선택된 자재(구분:${checkKind})는 원재료이므로 이전공정을 선택할 수 없습니다. 반제품/제품만 가능합니다.`);
+    }
+
+    config = { title: '이전공정 선택', path: '/api/hp00/HP00_000S_STR', data: {
+    gubun: 'G0',
+    gbncd: searchData.linecd,
+    cmpycd: authStore.cmpycd }, columns: [{ title: '코드', field: 'progcd', width: 80 }, { title: '공정명', field: 'prognm', width: 150 }],
+        onConfirm: (d: any) => {
+            const row = cell.getRow();
+            row.update({ befprog: d.progcd, bprognm: d.prognm });
+            updateRowStatus(row);
+        }
     }
   }
   Object.assign(modalProps, config); modalVisible.value = true

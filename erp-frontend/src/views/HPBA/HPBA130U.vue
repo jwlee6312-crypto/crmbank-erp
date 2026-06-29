@@ -124,8 +124,13 @@ const initGrid = () => {
         { title: "부 서 명", field: "deptnm", width: 200 },
         { title: "비 고", field: "bigo", minWidth: 200 },
         { title: "순서", field: "dspord", width: 80, hozAlign: "center" },
-        { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
-      ],
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        }
+       ],
     })
     grid.on("rowClick", (e, row) => { Object.assign(formData, row.getData()); formData.actkind = 'U' })
   }
@@ -155,10 +160,10 @@ const modalVisible = ref(false); const modalProps = reactive<ModalProps>({ title
 function openHelp(type: string) {
   if (type === 'DEPT') {
     Object.assign(modalProps, {
-      title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'cdnm',
+      title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
       data: { gubun: 'D0', cmpycd: authStore.cmpycd },
-      columns: [{ title: '코드', field: 'code', width: 80 }, { title: '부서명', field: 'cdnm', width: 200 }],
-      onConfirm: (data: any) => { formData.deptcd = data.code; formData.deptnm = data.cdnm }
+      columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 200 }],
+      onConfirm: (data: any) => { formData.deptcd = data.deptcd; formData.deptnm = data.deptnm }
     }); modalVisible.value = true
   }
 }

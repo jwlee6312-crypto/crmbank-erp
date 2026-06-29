@@ -148,8 +148,13 @@ const initGrids = () => {
       columns: [
         { title: "중분류코드", field: "bgrpcd", width: 100, hozAlign: "center", cssClass: "fw-bold text-primary border-end" },
         { title: "중분류 명칭", field: "bgrpnm", minWidth: 250 },
-        { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
-      ]
+          { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: true,
+            formatter: (cell) => {
+              const val = String(cell.getValue() || '').trim().toUpperCase();
+              return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+            }
+          }
+       ]
     })
     middleGrid.on("rowClick", (e, row) => {
       const data = row.getData()

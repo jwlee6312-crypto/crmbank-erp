@@ -53,3 +53,15 @@ export async function fetchSelectDataList<T>(url: string, params?: any): Promise
 export async function fetchUserData(): Promise<any[]> {
 	return fetchSelectDataList<any>('/user', {})
 }
+
+/**
+ * 🚀 생산라인 정보 조회 (HP00_000S_STR 연동)
+ */
+export interface SelectPdLineData {
+	linecd: string;
+	linenm: string;
+}
+
+export async function fetchLineData(): Promise<SelectPdLineData[]> {
+	return fetchSelectDataList<SelectPdLineData>('/api/hp00/HP00_000S_STR', { GUBUN: 'L0' })
+}

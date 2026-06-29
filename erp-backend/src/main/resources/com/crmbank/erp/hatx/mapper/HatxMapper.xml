@@ -3,7 +3,7 @@
 <mapper namespace="com.crmbank.erp.hatx.mapper.HatxMapper">
 
     <!-- 매입/매출 부가세관리 조회 및 처리 -->
-    <select id="HATX_010U_STR" resultType="map">
+    <select id="HATX_010U_STR" resultType="java.util.LinkedHashMap">
         exec hatx_010u_str
             #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{taxkind},
             #{taxym}, #{taxno}, #{taxunit}, #{custcd}, #{custno},
@@ -15,7 +15,7 @@
     </select>
 
     <!-- 매입/매출 부가세 품목 상세 처리 -->
-    <select id="HATX_011U_STR" resultType="map">
+    <select id="HATX_011U_STR" resultType="java.util.LinkedHashMap">
         exec hatx_011u_str
             #{actkind}, #{cmpycd}, #{taxkind}, #{taxym}, #{taxno},
             #{rowno}, #{ymd}, #{itemnm}, #{qty}, #{price},
@@ -23,7 +23,7 @@
     </select>
 
     <!-- 전자세금계산서발송 처리 -->
-    <select id="HATX_080U_STR" resultType="map">
+    <select id="HATX_080U_STR" resultType="java.util.LinkedHashMap">
         exec hatx_080u_str
             #{actkind}, #{cmpycd}, #{taxunit}, #{deptcd}, #{fromdt},
             #{todt}, #{cfmyn}, #{taxkind}, #{taxym}, #{taxno},
@@ -31,48 +31,48 @@
     </select>
 
     <!-- 매입장 조회 -->
-    <select id="HATX_030S_STR" resultType="map">
+    <select id="HATX_030S_STR" resultType="java.util.LinkedHashMap">
         exec hatx_030s_str
             #{cmpycd}, #{saupcd}, #{gubun1}, #{gubun2}, #{stdymd}, #{endymd},
             #{fcustcd}, #{tcustcd}, #{elcyn}
     </select>
 
     <!-- 매출장 조회 -->
-    <select id="HATX_040S_STR" resultType="map">
+    <select id="HATX_040S_STR" resultType="java.util.LinkedHashMap">
         exec hatx_040s_str
             #{cmpycd}, #{saupcd}, #{gubun1}, #{gubun2}, #{stdymd}, #{endymd},
             #{fcustcd}, #{tcustcd}
     </select>
 
     <!-- 세금계산서합계표 조회 -->
-    <select id="HATX_110S_STR" resultType="map">
+    <select id="HATX_110S_STR" resultType="java.util.LinkedHashMap">
         exec hatx_110s_str #{cmpycd}, #{iogbn}, #{taxunit}, #{ymfr}, #{ymto}
     </select>
 
     <!-- 신용카드매출전표수취명세서 조회 -->
-    <select id="HATX_130S_STR" resultType="map">
+    <select id="HATX_130S_STR" resultType="java.util.LinkedHashMap">
         exec hatx_130s_str #{actkind}, #{cmpycd}, #{taxunit}, #{ymfr}, #{ymto}, #{taxtype}
     </select>
 
     <!-- 신용카드매출전표등발행금액집계표 조회 -->
-    <select id="HATX_140S_STR" resultType="map">
+    <select id="HATX_140S_STR" resultType="java.util.LinkedHashMap">
         exec hatx_140s_str #{actkind}, #{cmpycd}, #{taxunit}, #{ymfr}, #{ymto}
     </select>
 
     <!-- 수출실적명세서 조회 -->
-    <select id="HATX_600S_STR" resultType="map">
+    <select id="HATX_600S_STR" resultType="java.util.LinkedHashMap">
         exec hatx_600s_str #{actkind}, #{cmpycd}, #{taxunit}, #{ymfr}, #{ymto}
     </select>
 
     <!-- 전표 마스터 처리 -->
-    <select id="HATX_01AU_STR" resultType="map">
+    <select id="HATX_01AU_STR" resultType="java.util.LinkedHashMap">
         exec hatx_01au_str
             #{actkind}, #{cmpycd}, #{slipymd}, #{slipno}, #{ref_no},
             #{deptcd}, #{usernm}, #{slipgu}, #{remark}, #{userid}
     </select>
 
     <!-- 전표 상세 처리 -->
-    <select id="HATX_01BU_STR" resultType="map">
+    <select id="HATX_01BU_STR" resultType="java.util.LinkedHashMap">
         exec hatx_01bu_str
             #{actkind}, #{cmpycd}, #{slipymd}, #{slipno}, #{srowno},
             #{col1}, #{acctcd}, #{deptcd}, #{custcd}, #{col2},
@@ -84,7 +84,7 @@
     </select>
 
     <!-- 매입/매출 부가세접수 처리 -->
-    <select id="HATX_060U_STR" resultType="map">
+    <select id="HATX_060U_STR" resultType="java.util.LinkedHashMap">
         exec hatx_060u_str
             #{actkind}, #{cmpycd}, #{taxunit}, #{fromdt}, #{todt},
             #{cfmyn}, #{taxkind}, #{taxym}, #{taxno}, #{elcyn},

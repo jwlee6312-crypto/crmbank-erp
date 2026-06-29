@@ -67,12 +67,12 @@ public class HabaController {
                     int colCount = rs.getMetaData().getColumnCount();
                     for (int i = 1; i <= colCount; i++) {
                         Object val = rs.getObject(i);
-                        String colName = rs.getMetaData().getColumnLabel(i); 
+                        String colName = rs.getMetaData().getColumnLabel(i);
                         if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
                         row.put(colName.toLowerCase(), val == null ? "" : val);
                         values.add(val == null ? "" : val);
                     }
-                    row.put("returnKeyValue", values); 
+                    row.put("returnKeyValue", values);
                     return row;
                 });
                 log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);

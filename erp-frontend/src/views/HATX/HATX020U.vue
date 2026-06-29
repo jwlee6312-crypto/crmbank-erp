@@ -623,7 +623,12 @@ onMounted(() => {
 				{ title: "부가세", field: "vatamt", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "합계", field: "amtsum", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" },
 				{ title: "적요", field: "descnm", widthGrow: 1 },
-				{ title: "접수", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross", formatterParams: { trues: "Y", falses: "N" } }
+                { title: "접수", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">접수</b>' : '<span class="text-danger">미접수</span>';
+                  }
+                }
 			]
 		})
 	}

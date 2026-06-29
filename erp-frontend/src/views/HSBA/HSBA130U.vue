@@ -194,7 +194,12 @@
           { title: "담당자", field: "damdang", width: 200 },
           { title: "전화번호", field: "telno", width: 200 },
           { title: "주소", field: "address", minWidth: 300, hozAlign: "left" },
-          { title: "사용", field: "useyn", width: 120, formatter: (c) => String(c.getValue() || 'Y').toUpperCase() === 'Y' ? 'Y' : 'N' }
+          { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: true,
+            formatter: (cell) => {
+              const val = String(cell.getValue() || '').trim().toUpperCase();
+              return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+            }
+          }
         ]
       })
       trangrid.on("rowClick", (e, row) => {

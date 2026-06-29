@@ -114,7 +114,12 @@ const initGrids = () => {
       { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
       { title: "대분류 코드", field: "agrpcd", width: 120, hozAlign: "center", cssClass: "fw-bold text-primary" },
       { title: "대분류명", field: "agrpnm", minWidth: 250, widthGrow: 1, cssClass: "fw-bold" },
-      { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        }
     ],
   });
   grid.on("rowClick", (e, row) => fetchDetail(row.getData()));

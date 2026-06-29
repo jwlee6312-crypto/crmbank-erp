@@ -172,18 +172,18 @@ const initGrids = () => {
           if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
           return '';
       }},
-      { title: "제품명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary',
+      { title: "제품명", field: "itemnm", minWidth: 250, widthGrow: 1, cssClass: 'fw-bold text-primary',
         cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow())
       },
-      { title: "규격", field: "itsize", width: 150 },
+      { title: "규격", field: "itsize", width: 200 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-      { title: "지시량", field: "ordqty", width: 100, hozAlign: "right", editor: "number", cellEdited: (cell) => {
+      { title: "지시량", field: "ordqty", width: 150, hozAlign: "right", editor: "number", cellEdited: (cell) => {
           const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' });
       }},
       { title: "비고", field: "bigo", minWidth: 150, editor: "input", cellEdited: (cell) => {
           const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' });
       }},
-      { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>",
+      { title: "삭제", width: 60, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>",
         cellClick: (e, cell) => handleRowAction(cell.getRow())
       }
     ]

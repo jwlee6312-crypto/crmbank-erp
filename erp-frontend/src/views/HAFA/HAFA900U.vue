@@ -192,7 +192,12 @@ onMounted(() => {
 				{ title: "충당금/본계정", field: "cacctnm", widthGrow: 1, cssClass: "text-primary fw-bold" },
 				{ title: "판관비계정", field: "sacctnm", widthGrow: 1 },
 				{ title: "제조비용계정", field: "macctnm", widthGrow: 1 },
-				{ title: "삭제", field: "useyn", widthGrow: 1, hozAlign: "center", formatter: (c: any) => c.getValue() === 'N' ? 'V' : '' }
+				{ title: "삭제", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '<span class="text-danger">삭제</span>';
+                  }
+                }
 			]
 		})
 		mainGrid.on("rowClick", (e, row) => {

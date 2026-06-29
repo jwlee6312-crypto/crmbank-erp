@@ -121,7 +121,12 @@ onMounted(() => {
       columns: [
         { title: "ID", field: "userid", width: 120 },
         { title: "사용자명", field: "usernm", minWidth: 200, hozAlign: "left" },
-        { title: "사용", field: "useyn", width: 100, formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        }
       ]
     });
     grid.on("rowClick", (e, row) => {

@@ -151,14 +151,14 @@ const initGrids = () => {
           if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
           return '';
       }},
-      { title: "자재코드", field: "itemcd", width: 110, hozAlign: "center" },
+      { title: "자재코드", field: "itemcd", width: 120, hozAlign: "center" },
       { title: "자재명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary', cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow()) },
-      { title: "규격", field: "itsize", width: 150 },
+      { title: "규격", field: "itsize", width: 180 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-      { title: "출고수량", field: "ioqty", width: 110, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
+      { title: "출고수량", field: "ioqty", width: 150, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
         cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
       },
-      { title: "비고", field: "remark", minWidth: 150, editor: "input",
+      { title: "비고", field: "remark", minWidth: 200, editor: "input",
         cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
       },
       { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }

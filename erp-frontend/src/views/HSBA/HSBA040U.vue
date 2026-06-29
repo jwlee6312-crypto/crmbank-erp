@@ -120,7 +120,12 @@ const initGrid = () => {
       { title: "단위명", field: "unitnm", width: 250 },
       { title: "비고", field: "remark", minWidth: 300 },
       { title: "순서", field: "dspord", width: 80, hozAlign: "center" },
-      { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
+      { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: true,
+        formatter: (cell) => {
+          const val = String(cell.getValue() || '').trim().toUpperCase();
+          return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+        }
+      }
     ]
   })
   grid.value.on("rowClick", (e, row) => {

@@ -355,7 +355,12 @@ onMounted(() => {
 				{ title: "이율", field: "rate", width: 70, hozAlign: "right", formatter: (c) => c.getValue() + "%" },
 				{ title: "종류", field: "bondkind_nm", width: 100, hozAlign: "center" },
 				{ title: "비고", field: "remark", minWidth: 150 },
-				{ title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: "tickCross" }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			],
 			rowClick: (e, row) => {
 				const d = row.getData()

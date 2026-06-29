@@ -141,7 +141,12 @@ const initGrid = () => {
       { title: "차변계정명", field: "dacctnm", widthGrow: 1 },
       { title: "대변코드", field: "cacctcd", width: 90, hozAlign: "center" },
       { title: "대변계정명", field: "cacctnm", widthGrow: 1 },
-      { title: "사용", field: "useyn", width: 70, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger">X</span>' }
+      { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: true,
+        formatter: (cell) => {
+          const val = String(cell.getValue() || '').trim().toUpperCase();
+          return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+        }
+      }
     ]
   })
   grid.value.on("rowClick", (e, row) => {

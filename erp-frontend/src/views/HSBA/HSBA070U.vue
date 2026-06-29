@@ -260,12 +260,17 @@ const initGrid = () => {
     columns: [
       { title: "코드", field: "custcd", width: 90, hozAlign: "center", cssClass: "fw-bold text-primary" },
       { title: "거래처상호", field: "custnm", minWidth: 250, hozAlign: "left" },
-      { title: "사업자번호", field: "custno", width: 130, hozAlign: "center" },
-      { title: "대표자", field: "bossnm", width: 100 },
-      { title: "연락처", field: "telno", width: 130, hozAlign: "left" },
-      { title: "상태", field: "statusnm", width: 80 },
-      { title: "외부CD", field: "outcustcd", width: 90 },
-      { title: "사용", field: "useyn", width: 60, hozAlign: "center", formatter: (c) => c.getValue() === 'Y' ? 'O' : 'X' }
+      { title: "사업자번호", field: "custno", width: 150, hozAlign: "center" },
+      { title: "대표자", field: "bossnm", width: 150 },
+      { title: "연락처", field: "telno", width: 150, hozAlign: "left" },
+      { title: "상태", field: "statusnm", width: 100 },
+      { title: "외부CD", field: "outcustcd", width: 120 },
+      { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+        formatter: (cell) => {
+          const val = String(cell.getValue() || '').trim().toUpperCase();
+          return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+        }
+      }
     ]
   })
   grid.value.on("rowClick", (e, row) => {

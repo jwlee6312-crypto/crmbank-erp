@@ -194,7 +194,12 @@ onMounted(() => {
         { title: "보조과목 명", field: "subnm", minWidth: 200, hozAlign: "left" },
         { title: "비    고", field: "bigo", minWidth: 250, hozAlign: "left" },
         { title: "순서", field: "dspord", width: 70 },
-        { title: "사용", field: "useyn", width: 70, formatter: (c) => c.getValue() === 'Y' ? '<span class="text-success fw-bold">O</span>' : '<span class="text-danger fw-bold">X</span>' }
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        }
       ]
     })
 

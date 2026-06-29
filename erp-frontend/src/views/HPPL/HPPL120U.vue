@@ -150,10 +150,10 @@ const initGrid = () => {
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", vertAlign: "middle", headerSort: false },
         { title: "품목명", field: "itemnm", minWidth: 250 },
-        { title: "규격", field: "itsize", width: 120, hozAlign: "center" },
+        { title: "규격", field: "itsize", width: 200, hozAlign: "center" },
         { title: "단위", field: "unit", width: 80, hozAlign: "center" },
         {
-          title: "계획수량", field: "PLnqty", width: 150, hozAlign: "right",
+          title: "계획수량", field: "plnqty", width: 200, hozAlign: "right",
           editor: "number",
           formatter: (cell) => {
             const val = Number(cell.getValue() || 0)
@@ -203,7 +203,7 @@ const saveData = async () => {
         itemcd: item.itemcd,
         itsize: item.itsize,
         unit: item.unit,
-        PLnqty: item.PLnqty
+        plnqty: item.plnqty
       })
     }
     vAlert('정상적으로 저장되었습니다.')

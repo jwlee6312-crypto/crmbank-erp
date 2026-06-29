@@ -173,7 +173,12 @@ const initGrids = () => {
         { title: "코 드 명", field: "cdnm", minWidth: 200, cssClass: "fw-bold" },
         { title: "비 고", field: "remark", minWidth: 200 },
         { title: "순서", field: "dspord", width: 80, hozAlign: "center" },
-        { title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
+        { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: true,
+          formatter: (cell) => {
+            const val = String(cell.getValue() || '').trim().toUpperCase();
+            return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+          }
+        }
       ],
     })
 

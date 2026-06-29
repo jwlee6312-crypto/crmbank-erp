@@ -208,7 +208,12 @@ onMounted(() => {
 				{ title: "관리번호 명", field: "mgtnm", width: 250 },
 				{ title: "비고", field: "remark", minWidth: 200 },
 				{ title: "출현순서", field: "dspord", width: 100, hozAlign: "center" },
-				{ title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",  editor: true,
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			],
 			rowClick: (e, row) => {
 				const d = row.getData()

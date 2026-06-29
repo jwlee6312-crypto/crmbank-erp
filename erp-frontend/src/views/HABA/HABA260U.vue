@@ -277,7 +277,12 @@ onMounted(async () => {
 					const data = cell.getRow().getData()
 					return `${formatDate(data.stdymd)} ~ ${formatDate(data.endymd)}`
 				}},
-				{ title: "사용", field: "useyn", width: 80, hozAlign: "center", formatter: "tickCross" }
+                { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+                  formatter: (cell) => {
+                    const val = String(cell.getValue() || '').trim().toUpperCase();
+                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                  }
+                }
 			],
 			rowClick: (e, row) => {
 				const d = row.getData()

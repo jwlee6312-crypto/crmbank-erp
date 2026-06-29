@@ -117,6 +117,9 @@
             <button class="btn btn-sm btn-outline-primary px-3" style="height: 28px; font-size: 12px; font-weight: 600;" @click="addRow">
               <i class="bi bi-plus-circle me-1"></i> 행추가
             </button>
+            <button class="btn btn-sm btn-outline-danger px-3" style="height: 28px; font-size: 12px; font-weight: 600;" @click="deleteSelectedRows">
+              <i class="bi bi-dash-circle me-1"></i> 행삭제
+            </button>
           </div>
         </div>
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -189,24 +192,33 @@ const initGrid = () => {
   if (gridElement.value) {
     grid = new Tabulator(gridElement.value, {
       layout: "fitColumns", height: "100%", selectable: true,
+      columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
       columns: [
-        { title: "상태", field: "upkind", width: 60, hozAlign: "center", vertAlign: "middle", cssClass: "text-danger fw-bold" },
+        { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection", headerHozAlign: "center" },
+        { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+            const v = c.getValue();
+            if (v === '입력') return '<span class="badge bg-primary">입력</span>';
+            if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
+            if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
+            return '';
+        }},
         { title: "자재코드", field: "itemcd", width: 120, hozAlign: "center" },
         {
           title: "원(부)자재명", field: "itemnm", minWidth: 250,
           cellClick: (e, cell) => openHelp('GRID_ITEM', cell)
         },
-        { title: "규격", field: "itsize", width: 150 },
+        { title: "규격", field: "itsize", width: 180 },
         { title: "단위", field: "unit", width: 80, hozAlign: "center" },
-        { title: "재고수량", field: "jqty", width: 100, hozAlign: "right", formatter: "money" },
+        { title: "재고수량", field: "jqty", width: 120, hozAlign: "right", formatter: "money" },
         { title: "출고수량", field: "ioqty", width: 120, hozAlign: "right", editor: "number", formatter: "money", cssClass: "bg-light-yellow fw-bold" },
-        { title: "비고", field: "remark", minWidth: 150, editor: "input" },
+        { title: "비고", field: "remark", width: 200, editor: "input" },
         { title: "삭제", width: 60, hozAlign: "center", formatter: "buttonCross", cellClick: (e, cell) => cell.getRow().delete() }
       ]
     })
     grid.on("cellEdited", (cell) => {
         const row = cell.getRow()
-        if (row.getData().upkind !== 'A') row.update({ upkind: 'U' })
+        const d = row.getData()
+        if (d._state === 'EXIST' && !d._status) row.update({ _status: '수정' })
     })
   }
 }
@@ -242,8 +254,9 @@ const fetchDetails = async () => {
       actkind: 'S', cmpycd: authStore.cmpycd, iogbn: '200',
       ioym: masterData.ioym, iono: masterData.iono
     })
-    grid?.setData(res.data)
-    itemCount.value = res.data.length
+    const mapped = (res.data || []).map((i: any) => ({ ...i, _state: 'EXIST', _status: '' }))
+    grid?.setData(mapped)
+    itemCount.value = mapped.length
   } catch (e) {}
 }
 
@@ -268,7 +281,7 @@ const importData = async () => {
             ordym: masterData.ordym, ordno: masterData.ordno,
             MODELCD: masterData.MODELCD, whcd: masterData.whcd
         })
-        const mapped = res.data.map((i: any) => ({ ...i, upkind: 'A', ioqty: i.reqqty }))
+        const mapped = res.data.map((i: any) => ({ ...i, _state: 'NEW', _status: '입력', ioqty: i.reqqty }))
         grid?.setData(mapped)
         itemCount.value = mapped.length
         vAlert('데이터를 불러왔습니다.')
@@ -297,8 +310,15 @@ const saveData = async () => {
 
     for (const item of details) {
         if (!item.itemcd) continue
+
+        let act = item.upkind;
+        if (item._status === '입력') act = 'A';
+        else if (item._status === '삭제') act = 'D';
+        else if (item._status === '수정') act = 'U';
+        else act = !masterData.iono ? 'A' : 'U';
+
         await api.post('/api/hpio/HPIO_501U_STR', {
-            ...item, actkind: item.upkind || 'U', cmpycd: authStore.cmpycd, userid: authStore.userid,
+            ...item, actkind: act, cmpycd: authStore.cmpycd, userid: authStore.userid,
             iogbn: '200', ioym: masterData.ioym, iono: newIono, INNO: newInno,
             deptcd: masterData.deptcd, whcd: masterData.whcd, iwhcd: masterData.iwhcd, ioymd: ioYmd,
             linecd: '010', progcd: '888'
@@ -319,7 +339,17 @@ const deleteData = async () => {
     } catch (e) { vAlertError('삭제 실패') }
 }
 
-const addRow = () => { grid?.addRow({ upkind: 'A', itemcd: '', itemnm: '', ioqty: 0 }, true) }
+const addRow = () => { grid?.addRow({ _status: '입력', _state: 'NEW', itemcd: '', itemnm: '', ioqty: 0 }, true) }
+
+const deleteSelectedRows = () => {
+  const selectedRows = grid?.getSelectedRows() || [];
+  if (selectedRows.length === 0) return vAlertError('삭제할 행을 선택하세요.');
+  selectedRows.forEach(row => {
+    const d = row.getData();
+    if (d._state === 'NEW') row.delete();
+    else row.update({ _status: d._status === '삭제' ? '' : '삭제' });
+  });
+}
 
 const initialize = () => {
   resetForm(masterData)

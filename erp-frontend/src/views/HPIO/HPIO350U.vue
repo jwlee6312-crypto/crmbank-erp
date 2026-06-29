@@ -172,16 +172,16 @@ const initGrids = () => {
           return '';
       }, frozen: true },
       { title: "제품명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary', cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow()) },
-      { title: "규격", field: "itsize", width: 120 },
+      { title: "규격", field: "itsize", width: 150 },
       { title: "단위", field: "unit", width: 60, hozAlign: "center" },
-      { title: "지시량", field: "ordqty", width: 90, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "생산량", field: "prdqty", width: 100, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
+      { title: "지시량", field: "ordqty", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "생산량", field: "prdqty", width: 150, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
         cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); calcTotal(cell.getRow()); }
       },
-      { title: "가공단가", field: "outprice", width: 100, hozAlign: "right", editor: "number",
+      { title: "가공단가", field: "outprice", width: 150, hozAlign: "right", editor: "number",
         cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); calcTotal(cell.getRow()); }
       },
-      { title: "합계금액", field: "outtot", width: 120, hozAlign: "right", formatter: "money", cssClass: "fw-bold text-primary" },
+      { title: "합계금액", field: "outtot", width: 150, hozAlign: "right", formatter: "money", cssClass: "fw-bold text-primary" },
       { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
     ],
   });
@@ -203,7 +203,7 @@ const initGrids = () => {
       { title: "단위", field: "munit", width: 70, hozAlign: "center" },
       { title: "소요량", field: "soqty", width: 90, hozAlign: "right", formatter: "money" },
       { title: "투입량", field: "inqty", width: 100, hozAlign: "right", editor: "number", cssClass: "bg-light-green fw-bold" },
-      { title: "출고공정", field: "bprognm", width: 150, cellClick: (e, cell) => handleOpenHelp('BEFPROG', cell.getRow()) },
+      { title: "출고공정", field: "bprognm", width: 150, cellClick: (e, cell) => handleOpenHelp('befprog', cell.getRow()) },
       { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
     ]
   });
@@ -284,7 +284,7 @@ const handleOpenHelp = (type: string, row: any) => {
   if (type === 'CUST') openHelp('CUST', (d) => { searchForm.custcd = d.custcd; searchForm.custnm = d.custnm });
   else if (type === 'ITEM') openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' }), { codegbn: 'B' });
   else if (type === 'MAT') openHelp('ITEM', (d) => row.update({ mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit, mastkind: d.astkind, _status: '입력', _state: 'NEW' }));
-  else if (type === 'BEFPROG') openHelp('BEFPROG', (d) => row.update({ befprog: d.progcd, bprognm: d.prognm }), { gbncd: searchForm.linecd });
+  else if (type === 'befprog') openHelp('befprog', (d) => row.update({ befprog: d.progcd, bprognm: d.prognm }), { gbncd: searchForm.linecd });
 }
 
 const handleRowAction = (row: any) => {

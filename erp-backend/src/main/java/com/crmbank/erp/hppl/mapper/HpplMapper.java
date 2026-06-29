@@ -9,4 +9,5 @@ public interface HpplMapper {
     List<Map<String, Object>> HPPL_100U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPPL_110S_STR(Map<String, Object> params);
     List<Map<String, Object>> HPPL_120U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HPPL_150U_STR(Map<String, Object> params);
 }
