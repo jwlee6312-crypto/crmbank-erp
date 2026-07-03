@@ -154,14 +154,20 @@ const initGrids = () => {
 const fetchGbnOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '100' } })
-    gbnOptions.value = res.data.filter((i: any) => i.code <= '119')
+    gbnOptions.value = (res.data || []).map((i: any) => ({
+        code: i.code,
+        cdnm: i.cdnm
+    })).filter((i: any) => i.code <= '119')
   } catch (e) {}
 }
 
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
+    lineOptions.value = (res.data || []).map((i: any) => ({
+        linecd: i.linecd,
+        linenm: i.linenm
+    }));
     if (lineOptions.value.length > 0) onLineChange();
   } catch (e) {}
 }
@@ -169,7 +175,10 @@ const fetchLineOptions = async () => {
 const onLineChange = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: searchData.linecd, code: '' } })
-    progOptions.value = res.data.map((i: any) => ({ progcd: i.code || i.code, prognm: i.cdnm }));
+    progOptions.value = (res.data || []).map((i: any) => ({
+        progcd: i.progcd,
+        prognm: i.prognm
+    }));
   } catch (e) {}
 }
 
@@ -177,8 +186,12 @@ async function fetchList() {
   if (!searchData.linecd) return vAlertError('생산라인을 선택하세요.')
   try {
     const res = await api.post('/api/hpio/HPIO_370S_STR', {
-      cmpycd: authStore.cmpycd, selgbn: searchData.selgbn, linecd: searchData.linecd,
-      progcd: searchData.progcd || '', proymdF: searchData.fromdt, proymdT: searchData.todt
+      cmpycd: authStore.cmpycd,
+      selgbn: searchData.selgbn,
+      linecd: searchData.linecd,
+      progcd: searchData.progcd,
+      fromdt: searchData.fromdt,
+      todt: searchData.todt
     })
     grid?.setData(res.data)
     rowCount.value = res.data.length

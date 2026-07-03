@@ -9,8 +9,8 @@
     <select id="HPPL_150U_STR" resultType="java.util.LinkedHashMap">
         exec hppl_150u_str
             #{actkind}, #{cmpycd}, #{gubun}, #{fromdt}, #{todt}, #{custnm},
-            #{reqymd}, #{reqno}, #{custcd}, #{napgiymd}, #{itemcd}, #{planqty},
-            #{bigo}, #{pumymd}, #{pumno}, #{ordym}, #{ordno}, #{orowno}, #{updemp}
+            #{reqymd}, #{reqym}, #{reqno}, #{custcd}, #{napgiymd}, #{itemcd}, #{planqty},
+            #{bigo}, #{pumymd}, #{pumno}, #{updemp}
     </select>
 
     <select id="HPPL_110S_STR" resultType="java.util.LinkedHashMap">

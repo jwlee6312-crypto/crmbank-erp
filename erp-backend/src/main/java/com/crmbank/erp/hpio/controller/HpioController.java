@@ -50,21 +50,30 @@ public class HpioController {
                 String positionalSql = buildPositionalSql(proc, params);
                 log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
 
-                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    List<Object> values = new ArrayList<>();
-                    int colCount = rs.getMetaData().getColumnCount();
-                    for (int i = 1; i <= colCount; i++) {
-                        Object val = rs.getObject(i);
-                        String colName = rs.getMetaData().getColumnLabel(i); 
-                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
-                        row.put(colName.toLowerCase(), val == null ? "" : val);
-                        values.add(val == null ? "" : val);
+                try {
+                    result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+                        Map<String, Object> row = new LinkedHashMap<>();
+                        List<Object> values = new ArrayList<>();
+                        int colCount = rs.getMetaData().getColumnCount();
+                        for (int i = 1; i <= colCount; i++) {
+                            Object val = rs.getObject(i);
+                            String colName = rs.getMetaData().getColumnLabel(i); 
+                            if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                            row.put(colName.toLowerCase(), val == null ? "" : val);
+                            values.add(val == null ? "" : val);
+                        }
+                        row.put("returnKeyValue", values); 
+                        return row;
+                    });
+                } catch (org.springframework.jdbc.UncategorizedSQLException ex) {
+                    if (ex.getMessage() != null && ex.getMessage().contains("결과 집합을 반환하지 않았습니다")) {
+                        log.info("ℹ️ [hpio] 결과 집합이 없는 프로시저 실행 성공: {}", proc);
+                        result = List.of(Map.of("res", "OK"));
+                    } else {
+                        throw ex;
                     }
-                    row.put("returnKeyValue", values); 
-                    return row;
-                });
-                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+                }
+                log.info("🎯 [무결성 직접 수신 결과] 데이터: {}", result);
             } else {
                 switch (proc) {
                     case "HPIO_200U_STR": result = hpioMapper.HPIO_200U_STR(params); break;
@@ -105,7 +114,12 @@ public class HpioController {
             }
 
             if (result == null || result.isEmpty()) {
-                result = List.of(Map.of("res", "OK"));
+                // 🚀 조회성(Select, List 등) 요청인 경우 빈 배열 반환, 그 외(저장/삭제 등)는 성공 메시지 반환
+                if (actkind.startsWith("S") || actkind.startsWith("L") || actkind.isEmpty()) {
+                    result = new ArrayList<>();
+                } else {
+                    result = List.of(Map.of("res", "OK"));
+                }
             }
             return ResponseEntity.ok(result);
         } catch (Exception e) {

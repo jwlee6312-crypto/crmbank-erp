@@ -52,7 +52,7 @@ public class PdPlanController {
      * 양산/외주 요청 자료 조회 (전체 내역)
      */
     @GetMapping("/request-list")
-    public ResponseEntity<List<PdPlanDto>> getPdRequestList(@RequestParam Map<String, Object> params, HttpSession session) {
+    public ResponseEntity<List<Map<String, Object>>> getPdRequestList(@RequestParam Map<String, Object> params, HttpSession session) {
         String cmpycd = session.getAttribute("cmpycd").toString();
         params.put("cmpycd", cmpycd);
         return ResponseEntity.ok(pdPlanService.getPdRequestList(params));

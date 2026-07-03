@@ -20,6 +20,8 @@ public class PdOrderDto {
     private String linecd;      // 라인코드
     private String progcd;      // 공정코드
     private String lotno;       // LOT번호
+    private String ordym;       // 지시년월 (추가)
+    private String ordno;       // 지시번호 (추가)
     private String ordymd;      // 지시일자
     private String lotymd;      // LOT일자
     private String itemcd;     // 품목코드
@@ -31,7 +33,8 @@ public class PdOrderDto {
     private BigDecimal prodqty; // 생산수량
     private String bigo;        // 비고
     private String useyn;       // 사용여부
-    private String ordergb;     // 지시구분
+    private String ordyn;     // 지시구분
+    private String gubun;       // 계획구분
     private String yymmdd;      // 계획일자
     private String ser;         // 계획순번
     private LocalDateTime addtime; 
@@ -42,7 +45,7 @@ public class PdOrderDto {
     private String _status;
     private String _state;
 
-    // 조회용 확장 필드
+    // 조회용 확장 필드2222
     private String itemnm;     // 품목명
     private String linenm;      // 라인명
     private String prognm;      // 공정명

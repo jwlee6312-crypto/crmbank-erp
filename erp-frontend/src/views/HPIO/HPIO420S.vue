@@ -40,11 +40,9 @@
               <tr>
                 <th class="text-center bg-light required">입고창고</th>
                 <td>
-                  <div class="input-group input-group-sm">
-                    <input v-model="searchData.whcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
-                    <input v-model="searchData.whnm" type="text" class="form-control" placeholder="창고 선택" />
-                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('WH')"><i class="bi bi-search"></i></button>
-                  </div>
+                    <select v-model="searchForm.whcd" class="form-select form-select-sm">
+                        <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
+                    </select>
                 </td>
                 <th class="text-center bg-light required">입고일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
@@ -153,6 +151,13 @@ const handleOpenHelp = (type: string) => {
   if (type === 'WH') {
     openHelp('WH', (d) => { searchData.whcd = d.whcd; searchData.whnm = d.whnm }, { gubun: 'W1' });
   }
+}
+
+const fetchWhOptions = async () => {
+  try {
+    const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'W0', cmpycd: authStore.cmpycd, gbncd: '', code: '', codenm: '', etcval: '' })
+    whOptions.value = res.data.map((i: any) => ({ whcd: i.whcd, whnm: i.whnm }));
+  } catch (e) {}
 }
 
 const initialize = () => {

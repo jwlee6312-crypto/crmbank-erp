@@ -65,3 +65,15 @@ export interface SelectPdLineData {
 export async function fetchLineData(): Promise<SelectPdLineData[]> {
 	return fetchSelectDataList<SelectPdLineData>('/api/hp00/HP00_000S_STR', { GUBUN: 'L0' })
 }
+
+/**
+ * 🚀 생산공정 정보 조회 (HP00_000S_STR 연동)
+ */
+export interface SelectPdProgData {
+	progcd: string;
+	prognm: string;
+}
+
+export async function fetchProgData(linecd: string): Promise<SelectPdProgData[]> {
+	return fetchSelectDataList<SelectPdProgData>('/api/hp00/HP00_000S_STR', { GUBUN: 'G0', GBNCD: linecd })
+}

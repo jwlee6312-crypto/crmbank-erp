@@ -50,7 +50,7 @@
                 </td>
                 <th class="text-center bg-light">생산일자</th>
                 <td>
-                  <input v-model="prodymd_f" type="date" class="form-control form-control-sm" @change="onDateChange" />
+                  <input v-model="proymd_f" type="date" class="form-control form-control-sm" @change="onDateChange" />
                 </td>
                 <th class="text-center bg-light">주문번호</th>
                 <td>
@@ -123,7 +123,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 // [1] 데이터 모델링
 const searchForm = reactive({
   linecd: '',
-  prodymd: today.replace(/-/g, ''),
+  proymd: today.replace(/-/g, ''),
   ordym: today.replace(/-/g, '').substring(0, 6),
   ordno: ''
 })
@@ -132,9 +132,9 @@ const lineOptions = ref<any[]>([])
 const selectedProg = reactive({ progcd: '', prognm: '' })
 
 // 날짜/년월 포맷팅 헬퍼 (ui 접두어 제거)
-const prodymd_f = computed({
-  get: () => searchForm.prodymd && searchForm.prodymd.length === 8 ? `${searchForm.prodymd.substring(0, 4)}-${searchForm.prodymd.substring(4, 6)}-${searchForm.prodymd.substring(6, 8)}` : '',
-  set: (v) => { if (v) searchForm.prodymd = v.replace(/-/g, '') }
+const proymd_f = computed({
+  get: () => searchForm.proymd && searchForm.proymd.length === 8 ? `${searchForm.proymd.substring(0, 4)}-${searchForm.proymd.substring(4, 6)}-${searchForm.proymd.substring(6, 8)}` : '',
+  set: (v) => { if (v) searchForm.proymd = v.replace(/-/g, '') }
 })
 const ordym_f = computed({
   get: () => searchForm.ordym && searchForm.ordym.length === 6 ? `${searchForm.ordym.substring(0, 4)}-${searchForm.ordym.substring(4, 6)}` : '',
@@ -153,8 +153,8 @@ const initGrids = () => {
     layout: "fitColumns", height: "100%", placeholder: "라인을 선택하세요", selectable: 1,
     columns: [
       { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
-      { title: "공정명", field: "cdnm", hozAlign: "left", headerSort: false },
-      { title: "코드", field: "code", hozAlign: "center", width: 80, cssClass: "fw-bold text-primary", headerSort: false }
+      { title: "공정명", field: "prognm", hozAlign: "left", headerSort: false },
+      { title: "코드", field: "progcd", hozAlign: "center", width: 80, cssClass: "fw-bold text-primary", headerSort: false }
     ],
   });
   grid1.on("rowClick", (e, row) => onProcessSelect(row.getData()));
@@ -209,12 +209,20 @@ const fetchProcesses = async () => {
 }
 
 const onProcessSelect = async (prog: any) => {
-  selectedProg.progcd = prog.code
-  selectedProg.prognm = prog.cdnm
+  selectedProg.progcd = prog.progcd
+  selectedProg.prognm = prog.prognm
 
   try {
     // 주문 정보 동기화 로직 (필요 시)
-    const resS1 = await api.post('/api/hpio/HPIO_210U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: prog.code })
+    const resS1 = await api.post('/api/hpio/HPIO_210U_STR', {
+        actkind: 'S1',
+        cmpycd: authStore.cmpycd,
+        proymd: searchForm.proymd,
+        linecd: searchForm.linecd,
+        progcd: prog.progcd,
+        ordqty: 0
+     })
+     console.log(resS1)
     if (resS1.data && resS1.data.length > 0) {
       const d = resS1.data[0]
       searchForm.ordym = d.ordym || searchForm.ordym
@@ -228,7 +236,12 @@ const fetchGridData = async () => {
   if (!selectedProg.progcd) return
   try {
     const res = await api.post('/api/hpio/HPIO_210U_STR', {
-      actkind: 'S0', cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
+      proymd: searchForm.proymd,
+      linecd: searchForm.linecd,
+      progcd: selectedProg.progcd,
+      ordqty: 0
     })
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })))
     vAlert('조회되었습니다.')
@@ -244,8 +257,8 @@ const saveData = async () => {
     for (const item of details) {
       const actkind = item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0')
       await api.post('/api/hpio/HPIO_210U_STR', {
-        actkind, cmpycd: authStore.cmpycd, prodymd: searchForm.prodymd, linecd: searchForm.linecd, progcd: selectedProg.progcd,
-        lotymd: (item.lotymd || searchForm.prodymd), lotno: item.lotno || '', itemcd: item.itemcd, itsize: item.itsize || '', unit: item.unit || '',
+        actkind, cmpycd: authStore.cmpycd, proymd: searchForm.proymd, linecd: searchForm.linecd, progcd: selectedProg.progcd,
+        lotymd: (item.lotymd || searchForm.proymd), lotno: item.lotno || '', itemcd: item.itemcd, itsize: item.itsize || '', unit: item.unit || '',
         ordqty: String(item.ordqty || '0').replace(/,/g, ''), bigo: item.bigo || '', useyn: item._status === '삭제' ? 'N' : 'Y',
         ordym: searchForm.ordym, ordno: searchForm.ordno, userid: authStore.userid
       })
@@ -285,7 +298,7 @@ const deleteSelectedRows = () => {
 
 const initialize = () => {
   resetForm(searchForm);
-  Object.assign(searchForm, { linecd: '', prodymd: today.replace(/-/g, ''), ordym: today.replace(/-/g, '').substring(0, 6), ordno: '' });
+  Object.assign(searchForm, { linecd: '', proymd: today.replace(/-/g, ''), ordym: today.replace(/-/g, '').substring(0, 6), ordno: '' });
   grid1?.clearData(); grid2?.clearData();
   selectedProg.progcd = ''; selectedProg.prognm = '';
 }

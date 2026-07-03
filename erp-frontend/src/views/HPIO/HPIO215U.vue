@@ -150,7 +150,7 @@ const initGrids = () => {
       { title: '단위', field: 'unit', width: 100, hozAlign: 'center' },
       { title: '공정명', field: 'prognm', width: 200 },
       { title: '지시수량', field: 'ordqty', width: 150, hozAlign: 'right', editor: 'number', cssClass: 'bg-light-yellow fw-bold' },
-      { title: '생산실적', field: 'updyn', width: 150, hozAlign: 'center', formatter: (c) => c.getValue() === 'N' ? '완료' : '-' }
+      { title: '생산여부', field: 'updyn', width: 150, hozAlign: 'center', formatter: (c) => c.getValue() === 'N' ? '완료' : '-' }
     ]
   })
 }
@@ -158,7 +158,7 @@ const initGrids = () => {
 const fetchLineOptions = async () => {
     try {
         const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y' } })
-        lineOptions.value = res.data.map((i: any) => ({ linecd: i.linecd || i.LINECD || i.code, linenm: i.linenm || i.LINENM || i.cdnm }))
+        lineOptions.value = res.data.map((i: any) => ({ linecd: i.linecd, linenm: i.linenm }))
         if (lineOptions.value.length > 0 && !searchForm.linecd) {
             searchForm.linecd = lineOptions.value[0].linecd;
         }
@@ -168,10 +168,16 @@ const fetchLineOptions = async () => {
 const search = async () => {
   const ymd = searchForm.yymmdd.replace(/-/g, '');
   try {
-    const resT = await api.get('/api/product/pdorder/targetlist', { params: { ...searchForm, yymmdd: ymd, cmpycd: authStore.cmpycd } })
+    const params = {
+        cmpycd: authStore.cmpycd,
+        linecd: searchForm.linecd,
+        yymmdd: ymd
+    };
+
+    const resT = await api.get('/api/product/pdorder/targetlist', { params })
     targetGrid?.setData(resT.data || []);
 
-    const resM = await api.get('/api/product/pdorder/list', { params: { ...searchForm, yymmdd: ymd, cmpycd: authStore.cmpycd } })
+    const resM = await api.get('/api/product/pdorder/list', { params })
     mainGrid?.setData((resM.data || []).map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
     vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패') }
@@ -215,6 +221,8 @@ const saveData = async () => {
 }
 
 const initialize = () => { resetForm(searchForm); searchForm.yymmdd = today; targetGrid?.clearData(); mainGrid?.clearData(); }
+
+const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
 
 onMounted(async () => {
     await fetchLineOptions();

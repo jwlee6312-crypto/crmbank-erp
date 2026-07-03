@@ -73,6 +73,7 @@
                   <div class="input-group input-group-sm w-75">
                     <input v-model="searchData.mitemcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 80px;" readonly />
                     <input v-model="searchData.mitemnm" type="text" class="form-control" placeholder="자재 선택" @keyup.enter="handleOpenHelp('MAT')" />
+                    <button v-if="searchData.mitemcd" class="btn btn-outline-secondary px-2" @click="clearMaterial"><i class="bi bi-x"></i></button>
                     <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('MAT')"><i class="bi bi-search"></i></button>
                     <input v-model="searchData.mitsize" type="text" class="form-control bg-light" style="max-width: 150px;" readonly placeholder="규격" />
                   </div>
@@ -171,8 +172,16 @@ const fetchInitOptions = async () => {
       api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '100' } }),
       api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
     ]);
-    gbnOptions.value = gbn.data.filter((i: any) => i.code <= '119');
-    lineOptions.value = line.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
+    gbnOptions.value = (gbn.data || []).map((i: any) => ({
+        code: i.code || i.CODE || '',
+        cdnm: i.cdnm || i.CDNM || ''
+    })).filter((i: any) => i.code <= '119');
+
+    lineOptions.value = (line.data || []).map((i: any) => ({
+        linecd: i.linecd || i.code || i.CODE || '',
+        linenm: i.linenm || i.cdnm || i.CDNM || ''
+    }));
+
     if (lineOptions.value.length > 0) onLineChange();
   } catch (e) {}
 }
@@ -180,7 +189,10 @@ const fetchInitOptions = async () => {
 const onLineChange = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: searchData.linecd, code: '' } })
-    progOptions.value = res.data.map((i: any) => ({ progcd: i.code || i.code, prognm: i.cdnm }));
+    progOptions.value = (res.data || []).map((i: any) => ({
+        progcd: i.progcd || i.code || i.CODE || '',
+        prognm: i.prognm || i.cdnm || i.CDNM || ''
+    }));
   } catch (e) {}
 }
 
@@ -188,10 +200,16 @@ async function fetchList() {
   if (!searchData.linecd) return vAlertError('생산라인을 선택하세요.')
   try {
     const res = await api.post('/api/hpio/HPIO_380S_STR', {
-      cmpycd: authStore.cmpycd, selgbn: searchData.selgbn, linecd: searchData.linecd,
-      progcd: searchData.progcd || '', prodcd: searchData.prodcd || '',
-      mitemcd: searchData.mitemcd || '', proymdF: searchData.fromdt, proymdT: searchData.todt
+      cmpycd: authStore.cmpycd,
+      selgbn: searchData.selgbn,
+      linecd: searchData.linecd,
+      progcd: searchData.progcd || '',
+      prodcd: searchData.prodcd || '',
+      mitemcd: searchData.mitemcd || '',
+      fromdt: searchData.fromdt,
+      todt: searchData.todt
     })
+
     grid?.setData(res.data)
     rowCount.value = res.data.length
     vAlert('조회되었습니다.')
@@ -201,9 +219,18 @@ async function fetchList() {
 const handleOpenHelp = (type: string) => {
   if (type === 'MAT') {
     openHelp('ITEM', (d) => {
-      Object.assign(searchData, { mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit });
-    });
+      // 💡 데이터 필드명이 대소문자 섞여서 올 수 있으므로 유연하게 처리
+      const itemcd = d.itemcd || d.ITEMCD;
+      const itemnm = d.itemnm || d.ITEMNM;
+      const itsize = d.itsize || d.ITSIZE;
+      const unit = d.unit || d.UNIT;
+      Object.assign(searchData, { mitemcd: itemcd, mitemnm: itemnm, mitsize: itsize, munit: unit });
+    }, { gubun: 'I1', title: '자재 선택' });
   }
+}
+
+const clearMaterial = () => {
+    Object.assign(searchData, { mitemcd: '', mitemnm: '', mitsize: '', munit: '' });
 }
 
 const initialize = () => {

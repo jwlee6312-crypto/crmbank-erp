@@ -139,6 +139,17 @@ const initGrids = () => {
   if (procGridElement.value) {
     procGrid = new Tabulator(procGridElement.value, {
       layout: "fitColumns", height: "100%", placeholder: "공정 데이터가 없습니다.", selectable: true,
+      rowFormatter: (row) => {
+          const d = row.getData();
+          // 🚀 미등록 공정은 연한 회색 배경으로 처리하여 시각적 구분
+          if (d._state === 'NEW') {
+              row.getElement().style.backgroundColor = "#f8f9fa";
+              row.getElement().style.color = "#6c757d";
+          } else {
+              row.getElement().style.backgroundColor = "#ffffff";
+              row.getElement().style.color = "#212529";
+          }
+      },
       columnDefaults: {
         headerHozAlign: 'center',
         headerSort: false,
@@ -162,12 +173,18 @@ const initGrids = () => {
       },
       columns: [
         { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection", headerHozAlign: "center" },
-        { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
+        { title: "상태", field: "_status", width: 70, hozAlign: "center", formatter: (c) => {
             const v = c.getValue();
+            const state = c.getRow().getData()._state;
+
             if (v === '입력') return '<span class="badge bg-primary">입력</span>';
             if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
             if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
-            return '';
+
+            // 🚀 초기 상태 표시
+            return state === 'EXIST'
+                ? '<span class="badge bg-success bg-opacity-75">등록</span>'
+                : '<span class="badge bg-secondary bg-opacity-50">미등록</span>';
         }},
         { title: "공정", field: "progcd", width: 100, hozAlign: "center" },
         { title: "공 정 명", field: "prognm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-primary" },
@@ -244,18 +261,24 @@ async function fetchProcesses(itemcd: string) {
     const cleanData = (res.data || []).filter((i: any) => i.progcd || i.PROGCD);
     // 🚀 [보강] 대소문자 및 필드명(capahh/stdworkhh) 혼용 대응
     const processed = cleanData.map((i: any) => {
+        // 🚀 [핵심] USEYN 필드를 기준으로 실제 등록 여부 판별
+        const useYn = i.useyn || i.USEYN || '';
+        const isRegistered = useYn === 'Y';
+
         const rawTime = i.capahh ?? i.CAPAHH ?? i.stdworkhh ?? i.STDWORKHH ?? 0;
+
         return {
             ...i,
             progcd: i.progcd || i.PROGCD,
             prognm: i.prognm || i.PROGNM,
             dspord: i.dspord ?? i.DSPORD ?? i.progord ?? i.PROGORD ?? 0,
-            capahh: rawTime ? Math.round(rawTime * 60 * 10) / 10 : 0,
-            gadtmdd: i.gadtmdd ?? i.GADTMDD ?? 0,
-            gadrate: i.gadrate ?? i.GADRATE ?? 0,
-            jungrate: i.jungrate ?? i.JUNGRATE ?? 0,
-            pqtydd: i.pqtydd ?? i.PQTYDD ?? 0,
-            _state: 'EXIST',
+            // 🚀 미등록인 경우 설정값은 보이지 않아야 함 (0으로 강제 초기화)
+            capahh: isRegistered ? (rawTime ? Math.round(Number(rawTime) * 60 * 10) / 10 : 0) : 0,
+            gadtmdd: isRegistered ? (i.gadtmdd ?? i.GADTMDD ?? 0) : 0,
+            gadrate: isRegistered ? (i.gadrate ?? i.GADRATE ?? 0) : 0,
+            jungrate: isRegistered ? (i.jungrate ?? i.JUNGRATE ?? 0) : 0,
+            pqtydd: isRegistered ? (i.pqtydd ?? i.PQTYDD ?? 0) : 0,
+            _state: isRegistered ? 'EXIST' : 'NEW',
             _status: ''
         }
     })

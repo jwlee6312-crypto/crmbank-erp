@@ -26,52 +26,82 @@ public class PdOrderService {
     }
 
     /**
-     * 작업지시 일괄 저장 (일반 자바 프로그램 방식)
-     * _status 값에 따라 분기 처리
+     * 작업지시 일괄 저장
      */
     @Transactional
     public void savePdOrderList(List<PdOrderDto> list, String cmpycd, String userId) {
-        for (PdOrderDto dto : list) {
-            dto.setCmpycd(cmpycd);
-            dto.setUpdemp(userId);
+        String safeUserId = (userId != null && userId.length() > 10) ? userId.substring(0, 10) : userId;
 
+        for (PdOrderDto dto : list) {
             String status = dto.get_status();
             if (status == null || status.isEmpty()) continue;
 
+            dto.setCmpycd(cmpycd);
+            dto.setUpdemp(safeUserId);
+            
+            // 날짜 가공 (하이픈 제거)
+            if (dto.getOrdymd() != null) dto.setOrdymd(dto.getOrdymd().replace("-", ""));
+            if (dto.getLotymd() != null) dto.setLotymd(dto.getLotymd().replace("-", ""));
+            if (dto.getYymmdd() != null) dto.setYymmdd(dto.getYymmdd().replace("-", ""));
+
+            // 지시년월(ORDYM) 6자리 제한
+            if (dto.getOrdym() != null) {
+                String ym = dto.getOrdym().replace("-", "");
+                dto.setOrdym(ym.length() > 6 ? ym.substring(0, 6) : ym);
+            } else {
+                dto.setOrdym(dto.getOrdymd() != null && dto.getOrdymd().length() >= 6 ? dto.getOrdymd().substring(0, 6) : "000000");
+            }
+
+            // 주문번호(ORDNO) 4자리 엄격 체크
+            if (dto.getOrdno() == null || dto.getOrdno().trim().isEmpty()) {
+                dto.setOrdno("0000");
+            } else if (dto.getOrdno().length() > 4) {
+                throw new RuntimeException("주문번호(ORDNO)는 4자리를 초과할 수 없습니다: " + dto.getOrdno());
+            }
+
+            // 숫자형 필드 NULL 방지
+            if (dto.getOrdqty() == null) dto.setOrdqty(java.math.BigDecimal.ZERO);
+            if (dto.getLotsize() == null) dto.setLotsize(java.math.BigDecimal.ZERO);
+            if (dto.getProdqty() == null) dto.setProdqty(java.math.BigDecimal.ZERO);
+            if (dto.getPlanqty() == null) dto.setPlanqty(java.math.BigDecimal.ZERO);
+            
+            // 비고(BIGO) 컬럼 크기 제한
+            if (dto.getCustnm() != null && dto.getCustnm().length() > 50) {
+                dto.setCustnm(dto.getCustnm().substring(0, 50));
+            } else if (dto.getCustnm() == null) {
+                dto.setCustnm("");
+            }
+
             try {
                 if ("입력".equals(status)) {
-                    // 1. 신규 LOT 번호 채번
+                    // 1. 신규 일련번호(SEQ) 3자리 채번
                     Map<String, Object> lotParams = new HashMap<>();
                     lotParams.put("cmpycd", cmpycd);
                     lotParams.put("linecd", dto.getLinecd());
                     lotParams.put("itemcd", dto.getItemcd());
                     lotParams.put("ordymd", dto.getOrdymd());
                     
-                    String newLotNo = pdOrderMapper.selectNewLotNo(lotParams);
-                    dto.setLotno(newLotLotMapping(newLotNo, dto.getOrdymd()));
+                    String newSeq = pdOrderMapper.selectNewLotNo(lotParams);
+                    dto.setLotno(newSeq); // 🚀 [핵심수정] 3자리 일련번호 그대로 사용 (L+날짜 접두사 제거)
+
+                    // 🚀 [DEBUG] 저장 전 로그
+                    log.info("🚀 [HPIO200T INSERT] lotno:({}), ordym:{}, ordno:{}", dto.getLotno(), dto.getOrdym(), dto.getOrdno());
 
                     // 2. 마스터 및 상세 저장
                     pdOrderMapper.insertPdLotNo(dto);
                     pdOrderMapper.insertPdOrder(dto);
                     
-                    // 3. 생산계획 테이블의 지시수량 업데이트 (기존 로직 유지)
+                    // 3. 생산계획 테이블의 지시수량 업데이트
                     updatePlanOrdQty(dto, dto.getOrdqty());
-                    
-                    log.info("✅ 작업지시 신규 등록: {} - LOT: {}", dto.getItemcd(), dto.getLotno());
                 } 
                 else if ("수정".equals(status)) {
-                    // 기존 수량 차이만큼 계획 테이블 보정 후 업데이트
-                    // (상세한 수량 보정 로직은 필요 시 추가 구현 가능)
                     pdOrderMapper.updatePdLotNo(dto);
                     pdOrderMapper.updatePdOrder(dto);
-                    log.info("✅ 작업지시 수정 완료: {}", dto.getLotno());
                 } 
                 else if ("삭제".equals(status)) {
-                    // 계획 테이블 지시수량 원복 후 삭제
                     updatePlanOrdQty(dto, dto.getOrdqty().negate());
                     pdOrderMapper.deletePdLotNo(dto);
                     pdOrderMapper.deletePdOrder(dto);
-                    log.info("✅ 작업지시 삭제: {}", dto.getLotno());
                 }
             } catch (Exception e) {
                 log.error("❌ 작업지시 처리 오류: {}", e.getMessage());
@@ -88,13 +118,5 @@ public class PdOrderService {
         params.put("itemcd", dto.getItemcd());
         params.put("qty", qty);
         pdOrderMapper.updatePlanOrdQty(params);
-    }
-
-    // LOT 번호가 NULL로 올 경우를 대비한 가공 로직
-    private String newLotLotMapping(String lotNo, String ymd) {
-        if (lotNo == null || lotNo.trim().isEmpty()) {
-            return "L" + ymd + "0001";
-        }
-        return lotNo;
     }
 }

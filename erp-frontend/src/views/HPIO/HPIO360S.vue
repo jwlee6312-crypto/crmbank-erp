@@ -134,29 +134,30 @@ const initGrids = () => {
     columns: [
       { title: "제품코드", field: "itemcd", width: 100, hozAlign: "center" },
       { title: "제품명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold" },
-      { title: "규격", field: "itsize", width: 150 },
+      { title: "규격", field: "itsize", width: 200 },
       { title: "단위", field: "unit", width: 60, hozAlign: "center" },
-      { title: "생산구분", field: "prodnm", width: 100, hozAlign: "center" },
-      { title: "금회생산", field: "prdqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
-      { title: "양품수량", field: "godqty", width: 100, hozAlign: "right", formatter: "money" },
-      { title: "불량수량", field: "errqty", width: 100, hozAlign: "right", formatter: "money", cssClass: "text-danger" },
-      { title: "월 누계", field: "prdqty_m", width: 110, hozAlign: "right", formatter: "money", cssClass: "bg-light" }
+      { title: "생산구분", field: "prodnm", width: 150, hozAlign: "center" },
+      { title: "금회생산", field: "prdqty", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" },
+      { title: "양품수량", field: "godqty", width: 150, hozAlign: "right", formatter: "money" },
+      { title: "불량수량", field: "errqty", width: 150, hozAlign: "right", formatter: "money", cssClass: "text-danger" },
+      { title: "월 누계", field: "prdqty_m", width: 150, hozAlign: "right", formatter: "money", cssClass: "bg-light" }
     ],
   });
-
-  // Material Grid
+   // Material Grid
   matGrid = new Tabulator(matTableRef.value!, {
     layout: "fitColumns", height: "100%", placeholder: "데이터 없음",
     groupBy: "itemcd",
     groupHeader: (value, count, data) => `<span class='text-primary fw-bold'>[${value}] ${data[0].itemnm}</span> <span class='ms-2 opacity-50'>(${data[0].itsize})</span>`,
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
+      { title: "제품명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-success" },
+      { title: "생산구분", field: "prodnm", minWidth: 150, widthGrow: 1, cssClass: "fw-bold text-success" },
       { title: "자재코드", field: "mitemcd", width: 110, hozAlign: "center" },
       { title: "투입자재명", field: "mitemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-success" },
-      { title: "규격", field: "mitsize", width: 150 },
+      { title: "규격", field: "mitsize", width: 200 },
       { title: "단위", field: "munit", width: 70, hozAlign: "center" },
-      { title: "금회투입", field: "inqty", width: 110, hozAlign: "right", formatter: "money", cssClass: "text-success fw-bold" },
-      { title: "월 누계", field: "inqty_m", width: 110, hozAlign: "right", formatter: "money", cssClass: "bg-light" }
+      { title: "금회투입", field: "inqty", width: 150, hozAlign: "right", formatter: "money", cssClass: "text-success fw-bold" },
+      { title: "월 누계", field: "inqty_m", width: 150, hozAlign: "right", formatter: "money", cssClass: "bg-light" }
     ]
   });
 }
@@ -165,15 +166,21 @@ const initGrids = () => {
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
+    lineOptions.value = (res.data || []).map((i: any) => ({
+        linecd: i.linecd || i.code || i.CODE || '',
+        linenm: i.linenm || i.cdnm || i.CDNM || ''
+    }));
     if (lineOptions.value.length > 0) onLineChange();
   } catch (e) {}
 }
 
 const onLineChange = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G6', cmpycd: authStore.cmpycd, linecd: searchData.linecd, code: '' } })
-    progOptions.value = res.data.map((i: any) => ({ progcd: i.code || i.code, prognm: i.cdnm }));
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: searchData.linecd, code: '' } })
+    progOptions.value = (res.data || []).map((i: any) => ({
+        progcd: i.progcd || i.code || i.CODE || '',
+        prognm: i.prognm || i.cdnm || i.CDNM || ''
+    }));
     if (progOptions.value.length > 0) searchData.progcd = progOptions.value[0].progcd;
   } catch (e) {}
 }
@@ -182,9 +189,16 @@ async function fetchList() {
   if (!searchData.linecd || !searchData.progcd) return vAlertError('라인과 공정을 선택하세요.')
   try {
     const [resProd, resMat] = await Promise.all([
-      api.post('/api/hpio/HPIO_360S_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchData.linecd, progcd: searchData.progcd, proymd: searchData.proymd }),
+      api.post('/api/hpio/HPIO_360S_STR', {
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
+      linecd: searchData.linecd,
+      progcd: searchData.progcd,
+      proymd: searchData.proymd
+      }),
       api.post('/api/hpio/HPIO_360S_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, linecd: searchData.linecd, progcd: searchData.progcd, proymd: searchData.proymd })
     ]);
+
     prodGrid?.setData(resProd.data);
     matGrid?.setData(resMat.data);
     vAlert('조회되었습니다.');

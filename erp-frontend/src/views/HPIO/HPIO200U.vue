@@ -176,7 +176,13 @@ const onLineChange = () => fetchList()
 async function fetchList() {
   if (!searchForm.linecd) return
   try {
-    const res = await api.post('/api/hpio/HPIO_200U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, lotymd: searchForm.lotymd });
+    const res = await api.post('/api/hpio/HPIO_200U_STR', {
+        actkind: 'S0',
+        cmpycd: authStore.cmpycd,
+        linecd: searchForm.linecd,
+        lotymd: searchForm.lotymd,
+        lotsize: 0
+     });
     grid?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
     vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패'); }

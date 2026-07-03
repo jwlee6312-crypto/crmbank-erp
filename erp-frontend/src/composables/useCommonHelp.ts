@@ -72,6 +72,30 @@ export function useCommonHelp() {
         ],
         onConfirm: callback
       })
+    } else if (type === 'ITEM') {
+      const gubun = extraData.gubun || 'I1'
+      const path = gubun.startsWith('I') ? '/api/hp00/HP00_000S_STR' : commonPath
+      Object.assign(modalProps, {
+        title: extraData.title || '품목 선택', path: path, defaultField: 'itemnm', large: true,
+        data: { gubun: gubun, cmpycd: authStore.cmpycd, gbncd: extraData.gbncd || extraData.codegbn || '', code: extraData.search || '', remark: extraData.iogbn || '' },
+        columns: [
+          { title: '품목코드', field: 'itemcd', width: 120, hozAlign: 'center' },
+          { title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 1, hozAlign: 'left' },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: callback
+      })
+    } else if (type === 'WH') {
+      Object.assign(modalProps, {
+        title: '창고 선택', path: '/api/hs00/HS00_000S_STR', defaultField: 'whnm', large: false,
+        data: { gubun: extraData.gubun || 'W0', cmpycd: authStore.cmpycd },
+        columns: [
+          { title: '창고코드', field: 'whcd', width: 100, hozAlign: 'center' },
+          { title: '창고명', field: 'whnm', minWidth: 150, widthGrow: 1, hozAlign: 'left' }
+        ],
+        onConfirm: callback
+      })
     }
     modalVisible.value = true
   }

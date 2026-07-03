@@ -132,12 +132,12 @@ const initGrids = () => {
     },
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
-      { title: "생산구분", field: "prodnm", width: 100, hozAlign: "center" },
-      { title: "자재코드", field: "mitemcd", width: 120, hozAlign: "center" },
+      { title: "생산구분", field: "prodnm", width: 150, hozAlign: "center" },
+      { title: "자재코드", field: "mitemcd", width: 150, hozAlign: "center" },
       { title: "투입자재명", field: "mitemnm", minWidth: 250, widthGrow: 1, cssClass: "fw-bold text-success" },
-      { title: "규격", field: "mitsize", width: 150 },
+      { title: "규격", field: "mitsize", width: 200 },
       { title: "단위", field: "munit", width: 80, hozAlign: "center" },
-      { title: "투입량", field: "inqty", width: 120, hozAlign: "right", formatter: "money", cssClass: "text-primary fw-bold" }
+      { title: "투입량", field: "inqty", width: 200, hozAlign: "right", formatter: "money", cssClass: "text-primary fw-bold" }
     ],
   });
 }
@@ -146,7 +146,10 @@ const initGrids = () => {
 const fetchLineOptions = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = res.data.map((i: any) => ({ linecd: i.code || i.code, linenm: i.cdnm }));
+    lineOptions.value = (res.data || []).map((i: any) => ({
+        linecd: i.linecd,
+        linenm: i.linenm
+    }));
     if (lineOptions.value.length > 0) onLineChange();
   } catch (e) {}
 }
@@ -154,7 +157,10 @@ const fetchLineOptions = async () => {
 const onLineChange = async () => {
   try {
     const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: searchData.linecd, code: '' } })
-    progOptions.value = res.data.map((i: any) => ({ progcd: i.code || i.code, prognm: i.cdnm }));
+    progOptions.value = (res.data || []).map((i: any) => ({
+        progcd: i.progcd,
+        prognm: i.prognm
+    }));
   } catch (e) {}
 }
 
@@ -162,8 +168,13 @@ async function fetchList() {
   if (!searchData.linecd) return vAlertError('생산라인을 선택하세요.')
   try {
     const res = await api.post('/api/hpio/HPIO_390S_STR', {
-      cmpycd: authStore.cmpycd, linecd: searchData.linecd, progcd: searchData.progcd || '', proymdF: searchData.fromdt, proymdT: searchData.todt
+      cmpycd: authStore.cmpycd,
+      linecd: searchData.linecd,
+      progcd: searchData.progcd,
+      fromdt: searchData.fromdt,
+      todt: searchData.todt
     })
+
     grid?.setData(res.data)
     rowCount.value = res.data.length
     vAlert('조회되었습니다.')

@@ -6,7 +6,7 @@
 
     <!-- 작업지시 대상(계획) 조회 -->
     <select id="getPdOrderTargetList" parameterType="map" resultType="com.crmbank.erp.hppl.dto.PdOrderDto">
-        select a.ordymd, a.ordno, a.custcd, c.custnm, a.yymmdd,
+        select a.ordym, a.ordno, f.ordymd, a.custcd, c.custnm, a.yymmdd, a.gubun,
                case datepart(dw, convert(date, a.yymmdd)) when 1 then '일' when 2 then '월'
                                                           when 3 then '화' when 4 then '수' when 5 then '목'
                                                           when 6 then '금' when 7 then '토' end as day_nm,
@@ -27,6 +27,7 @@
            and a.progcd = e.progcd
                left join hsio031t_tbl f
             on a.cmpycd = f.cmpycd
+           and a.ordym = f.ordym
            and a.ordno = f.ordno
            and a.orowno = f.orowno
          where a.cmpycd = #{cmpycd}
@@ -57,8 +58,9 @@
 
     <!-- 작업지시 상세 목록 조회 (linecd 추가) -->
     <select id="getPdOrderList" parameterType="map" resultType="com.crmbank.erp.hppl.dto.PdOrderDto">
-        select a.progcd, b.prognm, a.itemcd, c.itemnm, c.itsize, c.unit, a.planqty,
+        select a.progcd, b.prognm, a.itemcd, c.itemnm, c.itsize, c.unit, a.planqty, a.gubun,
                isnull(d.ordqty, 0) as ordqty, d.lotno, isnull(d.ordymd, '') as ordymd,
+               d.ordym, d.ordno,
                case when isnull(d.prodqty, 0) > 0 then 'n' else 'y' end as updyn,
                a.yymmdd, a.ser, a.linecd
           from hppl160t_tbl a
@@ -96,41 +98,31 @@
     </select>
 
     <select id="selectNewLotNo" resultType="string">
-        SELECT 'L' + #{ordymd} + RIGHT('0000' + CAST(ISNULL(MAX(CAST(SUBSTRING(lotno, 10, 4) AS INT)), 0) + 1 AS VARCHAR), 4)
-        from hpio200t_tbl
+        SELECT dbo.lpad(isnull(max(cast(right(lotno, 3) as int)) + 1, 1), 3, '0')
+          from hpio200t_tbl
         where cmpycd = #{cmpycd}
         and linecd = #{linecd}
         and itemcd = #{itemcd}
         and lotymd = #{ordymd}
-        and SUBSTRING(lotno, 1, 1) = 'L'
     </select>
 
     <insert id="insertPdOrder" parameterType="com.crmbank.erp.hppl.dto.PdOrderDto">
         insert into HPIO210T_TBL(cmpycd, linecd, progcd, lotno, ordymd, lotymd, itemcd, itsize, unit,
-                             lotsize, ordqty, prodqty, bigo, useyn, ordergb, yymmdd, ser, addtime, updtime, updemp)
-                     values (#{cmpycd},#{linecd},#{progcd},#{lotno},#{ordymd},#{ordymd},#{itemcd},#{itsize},#{unit},
-                             #{ordqty},#{ordqty},0,#{custnm},'Y','Y',#{yymmdd},#{ser},getdate(),getdate(),#{updemp})
-<!--        insert into HPIO210T_TBL (-->
-<!--        cmpycd, linecd, progcd, lotno, ordymd, lotymd, itemcd, itsize, unit,-->
-<!--        lotsize, ordqty, prodqty, bigo, useyn, ordergb, yymmdd, ser, addtime, updtime, updemp-->
-<!--        ) values (-->
-<!--        #{cmpycd}, #{linecd}, #{progcd}, #{lotno}, #{ordymd}, #{ordymd}, #{itemcd}, #{itsize}, #{unit},-->
-<!--        #{ordqty}, #{ordqty}, 0, #{custnm}, 'Y', 'Y', #{yymmdd}, #{ser}, now(), now(), #{updemp}-->
-<!--        )-->
+                             lotsize, ordqty, prodqty, bigo, useyn, ordyn, gubun, yymmdd, ser,
+                             ordym, ordno, addtime, updtime, updemp)
+                     values (#{cmpycd},#{linecd},#{progcd},#{lotno},
+                             #{ordymd},#{ordymd},#{itemcd},#{itsize},#{unit},
+                             #{ordqty},#{ordqty},0,#{custnm},'Y','Y', #{gubun}, #{yymmdd},#{ser},
+                             isnull(#{ordym}, left(#{ordymd}, 6)), #{ordno}, getdate(),getdate(),#{updemp})
     </insert>
 
     <insert id="insertPdLotNo" parameterType="com.crmbank.erp.hppl.dto.PdOrderDto">
         insert into HPIO200T_TBL(cmpycd, linecd, lotno, lotymd, itemcd, itsize, unit,
-                                 lotsize, ordqty, stymd, toymd, bigo, useyn, addtime, updtime, updemp)
+                                 lotsize, ordqty, stymd, toymd, bigo, useyn,
+                                 ordym, ordno, addtime, updtime, updemp)
                          values(#{cmpycd}, #{linecd}, #{lotno}, #{ordymd}, #{itemcd}, #{itsize}, #{unit},
-                                #{ordqty}, #{ordqty}, #{ordymd}, #{ordymd}, #{custnm}, 'Y', getdate(),getdate(), #{updemp})
-<!--        insert into HPIO200T_TBL (-->
-<!--        cmpycd, linecd, lotno, lotymd, itemcd, itsize, unit,-->
-<!--        lotsize, ordqty, stymd, toymd, bigo, useyn, addtime, updtime, updemp-->
-<!--        ) values (-->
-<!--        #{cmpycd}, #{linecd}, #{lotno}, #{ordymd}, #{itemcd}, #{itsize}, #{unit},-->
-<!--        #{ordqty}, #{ordqty}, #{ordymd}, #{ordymd}, #{custnm}, 'Y', now(), now(), #{updemp}-->
-<!--        )-->
+                                #{ordqty}, #{ordqty}, #{ordymd}, #{ordymd}, #{custnm}, 'Y',
+                                isnull(#{ordym}, left(#{ordymd}, 6)), #{ordno}, getdate(),getdate(), #{updemp})
     </insert>
 
     <update id="updatePdOrder" parameterType="com.crmbank.erp.hppl.dto.PdOrderDto">
@@ -145,6 +137,7 @@
            and ordymd = #{ordymd}
            and lotno = #{lotno}
            and itemcd = #{itemcd}
+           and isnull(ordno, '') = isnull(#{ordno}, '')
     </update>
 
     <update id="updatePdLotNo" parameterType="com.crmbank.erp.hppl.dto.PdOrderDto">
@@ -158,6 +151,7 @@
            and lotymd = #{ordymd}
            and lotno = #{lotno}
            and itemcd = #{itemcd}
+           and isnull(ordno, '') = isnull(#{ordno}, '')
     </update>
 
     <update id="updatePlanOrdQty">
@@ -188,6 +182,7 @@
            and ordymd = #{ordymd}
            and lotno = #{lotno}
            and itemcd = #{itemcd}
+           and isnull(ordno, '') = isnull(#{ordno}, '')
     </select>
 
     <delete id="deletePdOrder">
@@ -198,6 +193,7 @@
            and ordymd = #{ordymd}
            and lotno  = #{lotno}
            and itemcd = #{itemcd}
+           and isnull(ordno, '') = isnull(#{ordno}, '')
     </delete>
 
     <delete id="deletePdLotNo">
@@ -207,5 +203,6 @@
            and lotymd = #{ordymd}
            and lotno  = #{lotno}
            and itemcd = #{itemcd}
+           and isnull(ordno, '') = isnull(#{ordno}, '')
     </delete>
 </mapper>

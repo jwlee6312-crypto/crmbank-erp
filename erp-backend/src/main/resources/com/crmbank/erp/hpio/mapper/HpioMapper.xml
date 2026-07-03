@@ -36,21 +36,19 @@
 
     <!-- 생산실적 -->
     <select id="HPIO_300U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_300u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{proymd},
-        #{ordymd}, #{equpcd}, #{prodcd}, #{workjo}, #{wkgbn}, #{whcd},
-        #{itemcd}, #{custcd}, #{itsize}, #{unit}, #{prdqty}, #{godqty},
-        #{errqty}, #{errcd}, #{wonincd}, #{lotymd}, #{lotno}, #{workmm},
-        #{bigo}, #{useyn}, #{ordym}, #{ordno}, #{bomver}, #{outamt},
-        #{outvat}, #{updemp}
+        exec hpio_300u_str #{actkind}, #{prodid}, #{cmpycd}, #{linecd}, #{progcd},
+        #{ordymd}, #{lotymd}, #{lotno}, #{ordym}, #{ordno}, #{proymd}, #{itemcd},
+        #{itsize}, #{unit}, #{prdqty}, #{godqty}, #{errqty}, #{workmm}, #{mancnt}, #{manmm},
+        #{whcd}, #{custcd}, #{equpcd}, #{prodcd}, #{wkgbn}, #{bigo}, #{useyn}, #{updemp}
     </select>
+
 
     <!-- 생산투입실적 -->
     <select id="HPIO_301U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_301u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{proymd},
-        #{ordymd}, #{equpcd}, #{prodcd}, #{workjo}, #{wkgbn}, #{itemcd},
-        #{mitemcd}, #{mitsize}, #{munit}, #{whcd}, #{befprog}, #{astkind},
-        #{custcd}, #{soqty}, #{inqty}, #{bigo}, #{useyn}, #{lotymd},
-        #{lotno}, #{ordym}, #{ordno}, #{updemp}
+        exec hpio_301u_str #{actkind}, #{prodid}, #{matlid}, #{cmpycd}, #{linecd}, #{progcd},
+        #{ordymd}, #{lotymd}, #{lotno}, #{ordym}, #{ordno}, #{proymd}, #{itemcd},
+        #{mitemcd}, #{mitsize}, #{munit}, #{soqty}, #{inqty}, #{useyn}, #{whcd},
+        #{befprog}, #{astkind}, #{updemp}
     </select>
 
     <!-- 외주가공출고 MASTER -->
@@ -107,10 +105,9 @@
 
     <!-- 제품입고 -->
     <select id="HPIO_400U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_400u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{profromdt},
-        #{protodt}, #{ordymd}, #{deptcd}, #{whcd}, #{equpcd}, #{prodcd},
-        #{workjo}, #{wkgbn}, #{itemcd}, #{custcd}, #{itsize}, #{unit},
-        #{inqty}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{ordym}, #{ordno}
+        exec hpio_400u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{fromdt},
+        #{todt}, #{ioymd}, #{whcd}, #{deptcd}, #{prodid},
+        #{inqty}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{updemp}
     </select>
 
     <!-- 제품입고취소 -->

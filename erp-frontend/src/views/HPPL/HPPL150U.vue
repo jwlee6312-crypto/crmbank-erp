@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 양산생산계획 (HPPL150U)
 	작성일자	: 2025.03.14
-	설명        : 양산 생산 요청 자료 등록 및 관리 (원천 자료 관리)
+	설명        : 양산 생산 요청 자료 등록 및 관리 (reqym, reqno 관리번호 체계 적용)
 	=============================================================
 -->
 
@@ -43,14 +43,14 @@
                 <th class="required bg-light text-center">요청일자</th>
                 <td>
                   <div class="d-flex align-items-center gap-1 px-2">
-                    <input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                    <input v-model="searchForm.frymd" type="date" class="form-control form-control-sm" style="width: 140px; font-size: 12px;" />
                     <span class="text-muted">~</span>
-                    <input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px;" />
+                    <input v-model="searchForm.toymd" type="date" class="form-control form-control-sm" style="width: 140px; font-size: 12px;" />
                   </div>
                 </td>
                 <th class="bg-light text-center border-start">계획구분</th>
                 <td>
-                  <select v-model="searchForm.gubun" class="form-select form-select-sm" style="width: 120px;" disabled>
+                  <select v-model="searchForm.gubun" class="form-select form-select-sm" style="width: 120px; font-size: 12px;" disabled>
                     <option value="200">양산계획</option>
                   </select>
                 </td>
@@ -118,6 +118,12 @@ const initGrid = () => {
         cellEdited: (cell) => {
             const row = cell.getRow(); const d = row.getData();
             if (d._status !== '입력' && d._status !== '삭제') row.update({ _status: '수정' });
+
+            // 요청일자 수정 시 요청년월 자동 갱신
+            if (cell.getField() === 'reqymd') {
+                const ymd = String(cell.getValue()).replace(/-/g, '');
+                if (ymd.length >= 6) row.update({ reqym: ymd.substring(0, 6) });
+            }
         }
     },
     columns: [
@@ -129,13 +135,16 @@ const initGrid = () => {
           if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
           return '';
       }},
-      { title: '요청일자', field: 'ordymd', width: 130, hozAlign: 'center', editor: 'date' },
+      { title: '요청일자', field: 'reqymd', width: 120, hozAlign: 'center', editor: 'date', formatter: (c) => formatDate(c.getValue()) },
+      { title: '관리번호(년월-순번)', field: 'reqno_full', width: 150, hozAlign: 'center', cssClass: 'fw-bold text-primary',
+        mutator: (v, d) => (d.reqym && d.reqno) ? `${d.reqym}-${d.reqno}` : (d.reqno || '')
+      },
       { title: '제품코드', field: 'itemcd', width: 100, hozAlign: 'center' },
       { title: '제품명 <i class="bi bi-search"></i>', field: 'itemnm', widthGrow: 2, cellClick: (e, cell) => openModal('ITEM', cell.getRow()) },
       { title: '규격', field: 'itsize', width: 150 },
       { title: '단위', field: 'unit', width: 70, hozAlign: 'center' },
-      { title: '요청수량', field: 'ordqty', width: 100, hozAlign: 'right', editor: 'number', formatter: 'money', cssClass: 'bg-light-yellow fw-bold' },
-      { title: '완료요청일', field: 'napgiymd', width: 130, hozAlign: 'center', editor: 'date' },
+      { title: '요청수량', field: 'planqty', width: 100, hozAlign: 'right', editor: 'number', formatter: 'money', cssClass: 'bg-light-yellow fw-bold' },
+      { title: '완료요청일', field: 'napgiymd', width: 120, hozAlign: 'center', editor: 'date', formatter: (c) => formatDate(c.getValue()) },
       { title: '거래처 <i class="bi bi-search"></i>', field: 'custnm', widthGrow: 1, cellClick: (e, cell) => openModal('CUST', cell.getRow()) },
       { title: '비고', field: 'bigo', widthGrow: 1, editor: 'input' }
     ]
@@ -143,6 +152,12 @@ const initGrid = () => {
 }
 
 // 3. 비즈니스 로직
+const normalizeKeys = (obj: any) => {
+  const n: any = {}; if (!obj) return n;
+  Object.keys(obj).forEach(k => n[k.toLowerCase()] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k]);
+  return n;
+}
+
 const fetchData = async () => {
   try {
     const res = await api.get('/api/product/pdplan/request-list', {
@@ -152,7 +167,15 @@ const fetchData = async () => {
             gubun: searchForm.gubun
         }
     })
-    mainGrid?.setData((res.data || []).map((i: any) => ({ ...i, _status: '' })))
+    const processedData = (res.data || []).map((i: any) => {
+        const n = normalizeKeys(i);
+        return {
+            ...n,
+            _status: '',
+            reqym: n.reqym || (n.reqymd ? String(n.reqymd).substring(0, 6) : '')
+        };
+    });
+    mainGrid?.setData(processedData)
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 중 오류가 발생했습니다.') }
 }
@@ -165,19 +188,31 @@ const saveData = async () => {
   if (!confirm('양산 요청 자료를 저장하시겠습니까?')) return
 
   try {
-    const res = await api.post('/api/product/pdplan/request-save', changes.map(i => ({
-        ...i,
-        cmpycd: authStore.cmpycd,
-        updemp: authStore.userid,
-        gubun: searchForm.gubun
-    })))
+    // 요청년월(reqym)이 누락된 경우 일자에서 추출하여 보정
+    const payload = changes.map(i => {
+        const ymd = String(i.reqymd).replace(/-/g, '');
+        return {
+            ...i,
+            reqymd: ymd,
+            napgiymd: String(i.napgiymd).replace(/-/g, ''),
+            reqym: i.reqym || ymd.substring(0, 6),
+            cmpycd: authStore.cmpycd,
+            updemp: authStore.userid,
+            gubun: searchForm.gubun
+        }
+    });
 
-    const out = res.data[0];
-    if (out.result === 'OK' || out.RESULT === 'OK') {
-        vAlert(out.msg || out.MSG || '저장되었습니다.');
+    const res = await api.post('/api/product/pdplan/request-save', payload)
+
+    // 프로시저 결과 판단 (Map 리스트 형태로 넘어올 경우 대응)
+    const out = Array.isArray(res.data) ? res.data[0] : res.data;
+    const isSuccess = out?.result === 'OK' || out?.RESULT === 'OK' || out?.RET_YN === 'N' || out?.ret_yn === 'N';
+
+    if (isSuccess) {
+        vAlert(out.msg || out.MSG || out.ret_msg || '저장되었습니다.');
         fetchData();
     } else {
-        vAlertError(out.msg || out.MSG || '저장 실패');
+        vAlertError(out.msg || out.MSG || out.ret_msg || '저장 처리 중 오류가 발생했습니다.');
     }
   } catch (e) { vAlertError('저장 중 오류 발생') }
 }
@@ -185,11 +220,14 @@ const saveData = async () => {
 const initialize = () => { resetForm(searchForm); mainGrid?.clearData(); }
 
 const addRow = () => {
+  const today = new Date().toISOString().substring(0, 10);
   mainGrid?.addRow({
     _status: '입력',
-    ordymd: new Date().toISOString().substring(0, 10),
-    napgiymd: new Date().toISOString().substring(0, 10),
-    ordqty: 0,
+    reqymd: today,
+    reqym: today.replace(/-/g, '').substring(0, 6),
+    reqno: '0000', // 저장 시 자동채번
+    napgiymd: today,
+    planqty: 0,
     gubun: searchForm.gubun
   }, true)
 }
@@ -202,7 +240,6 @@ const delRow = () => {
   })
 }
 
-// 4. 도움창 로직
 const openModal = (type: string, row: RowComponent) => {
   if (type === 'ITEM') {
     Object.assign(modalProps, {
@@ -237,10 +274,12 @@ const openModal = (type: string, row: RowComponent) => {
   showModal.value = true
 }
 
+const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
+
 onMounted(() => { nextTick(initGrid); fetchData(); })
 </script>
 
 <style scoped>
-.tabulator-instance { width: 100% !important; background-color: #fff; }
+.tabulator-instance { width: 100% !important; background-color: #fff; font-size: 12px; }
 .bg-light-yellow { background-color: #fffdf0 !important; }
 </style>

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PdPlanService {
 
     private final PdPlanMapper pdPlanMapper;
+    private final com.crmbank.erp.hppl.mapper.HpplMapper hpplMapper;
 
     public List<PdPlanDto> getPdPlanTargetList(Map<String, Object> params) {
         return pdPlanMapper.getPdPlanTargetList(params);
@@ -36,8 +37,24 @@ public class PdPlanService {
     /**
      * 양산/외주 요청 자료 조회 (전체 내역)
      */
-    public List<PdPlanDto> getPdRequestList(Map<String, Object> params) {
-        return pdPlanMapper.getPdRequestList(params);
+    public List<Map<String, Object>> getPdRequestList(Map<String, Object> params) {
+        params.put("actkind", "S0");
+        params.put("fromdt", params.get("frymd"));
+        params.put("todt", params.get("toymd"));
+        params.put("custnm", params.get("custnm") != null ? params.get("custnm") : "");
+        params.put("reqymd", "");
+        params.put("reqym", "");
+        params.put("reqno", "");
+        params.put("custcd", "");
+        params.put("napgiymd", "");
+        params.put("itemcd", "");
+        params.put("planqty", 0);
+        params.put("bigo", "");
+        params.put("pumymd", "");
+        params.put("pumno", "");
+        params.put("updemp", "");
+
+        return hpplMapper.HPPL_150U_STR(params);
     }
 
     /**
@@ -46,30 +63,32 @@ public class PdPlanService {
     @Transactional
     public void savePdRequestList(List<PdPlanDto> list, String cmpycd, String userId) {
         for (PdPlanDto dto : list) {
-            dto.setCmpycd(cmpycd);
-            
-            // 🛡️ 문자열 잘림 방지 (Defensive check)
-            if (userId != null && userId.length() > 20) userId = userId.substring(0, 20);
-            dto.setUpdemp(userId);
-            
-            if (dto.getBigo() != null && dto.getBigo().length() > 1000) {
-                dto.setBigo(dto.getBigo().substring(0, 1000));
-            }
-            
+            Map<String, Object> params = new HashMap<>();
+            params.put("cmpycd", cmpycd);
+            params.put("gubun", dto.getGubun());
+            params.put("fromdt", "");
+            params.put("todt", "");
+            params.put("custnm", "");
+            params.put("updemp", userId);
+
             String status = dto.get_status();
-            if (status == null || status.isEmpty()) continue;
+            if ("입력".equals(status)) params.put("actkind", "A0");
+            else if ("수정".equals(status)) params.put("actkind", "U0");
+            else if ("삭제".equals(status)) params.put("actkind", "D0");
+            else continue;
 
-            // 날짜 가공
-            if (dto.getOrdymd() != null) dto.setOrdymd(dto.getOrdymd().replace("-", ""));
-            if (dto.getNapgiymd() != null) dto.setNapgiymd(dto.getNapgiymd().replace("-", ""));
+            params.put("reqymd", dto.getReqymd() != null ? dto.getReqymd().replace("-", "") : "");
+            params.put("reqym", dto.getReqym() != null ? dto.getReqym().replace("-", "") : "");
+            params.put("reqno", dto.getReqno() != null ? dto.getReqno() : "");
+            params.put("custcd", dto.getCustcd() != null ? dto.getCustcd() : "");
+            params.put("napgiymd", dto.getNapgiymd() != null ? dto.getNapgiymd().replace("-", "") : "");
+            params.put("itemcd", dto.getItemcd() != null ? dto.getItemcd() : "");
+            params.put("planqty", dto.getPlanqty() != null ? dto.getPlanqty() : 0);
+            params.put("bigo", dto.getBigo() != null ? dto.getBigo() : "");
+            params.put("pumymd", dto.getPumymd() != null ? dto.getPumymd().replace("-", "") : "");
+            params.put("pumno", dto.getPumno() != null ? dto.getPumno() : "");
 
-            if ("입력".equals(status)) {
-                pdPlanMapper.insertPdRequest(dto);
-            } else if ("수정".equals(status)) {
-                pdPlanMapper.updatePdRequest(dto);
-            } else if ("삭제".equals(status)) {
-                pdPlanMapper.deletePdRequest(dto);
-            }
+            hpplMapper.HPPL_150U_STR(params);
         }
     }
 
@@ -79,14 +98,9 @@ public class PdPlanService {
      */
     @Transactional
     public void savePdPlanList(List<PdPlanDto> list, String cmpycd, String userId) {
-        // 🛡️ User ID 길이 제한
         String safeUserId = (userId != null && userId.length() > 20) ? userId.substring(0, 20) : userId;
 
         for (PdPlanDto dto : list) {
-            dto.setCmpycd(cmpycd);
-            dto.setUpdemp(safeUserId);
-
-            // _status 또는 state 필드 확인 (하이브리드 지원)
             String status = dto.get_status();
             if (status == null || status.isEmpty()) {
                 String state = dto.getState();
@@ -94,32 +108,65 @@ public class PdPlanService {
                 else if ("U".equals(state)) status = "수정";
                 else if ("D".equals(state)) status = "삭제";
             }
-
             if (status == null || status.isEmpty()) continue;
 
-            try {
-                // 날짜 가공 (하이픈 제거)
-                if (dto.getYymmdd() != null) dto.setYymmdd(dto.getYymmdd().replace("-", ""));
-                if (dto.getNapgiymd() != null) dto.setNapgiymd(dto.getNapgiymd().replace("-", ""));
+            dto.setCmpycd(cmpycd);
+            dto.setUpdemp(safeUserId);
 
+            // 날짜 및 년월 가공 (하이픈 제거)
+            if (dto.getYymmdd() != null) dto.setYymmdd(dto.getYymmdd().replace("-", ""));
+            if (dto.getNapgiymd() != null) dto.setNapgiymd(dto.getNapgiymd().replace("-", ""));
+            if (dto.getOrdymd() != null) dto.setOrdymd(dto.getOrdymd().replace("-", ""));
+            if (dto.getOrdym() != null) dto.setOrdym(dto.getOrdym().replace("-", ""));
+
+            // 주문번호(ORDNO) 자릿수 체크 및 기본값 설정
+            if (dto.getOrdno() == null || dto.getOrdno().trim().isEmpty()) {
+                dto.setOrdno("0000");
+            } else if (dto.getOrdno().length() > 4) {
+                throw new RuntimeException("주문번호(ORDNO)는 4자리를 초과할 수 없습니다: " + dto.getOrdno());
+            }
+
+            // 지시년월(ORDYM) 기본값 설정
+            if (dto.getOrdym() == null || dto.getOrdym().trim().isEmpty()) {
+                dto.setOrdym(dto.getOrdymd() != null && dto.getOrdymd().length() >= 6 ? dto.getOrdymd().substring(0, 6) : "000000");
+            }
+
+            if (dto.getOrowno() == null || dto.getOrowno().trim().isEmpty()) dto.setOrowno("000");
+            if (dto.getCustcd() == null) dto.setCustcd("");
+
+            // 숫자형 필드 기본값 (NULL 방지)
+            if (dto.getOrdqty() == null) dto.setOrdqty(java.math.BigDecimal.ZERO);
+            if (dto.getPlanqty() == null) dto.setPlanqty(java.math.BigDecimal.ZERO);
+            if (dto.getSuppamt() == null) dto.setSuppamt(java.math.BigDecimal.ZERO);
+
+            try {
                 if ("입력".equals(status)) {
+                    // 중복 생성 방지 체크
+                    Map<String, Object> chkParams = new HashMap<>();
+                    chkParams.put("cmpycd", dto.getCmpycd());
+                    chkParams.put("ordym", dto.getOrdym());
+                    chkParams.put("ordno", dto.getOrdno());
+                    chkParams.put("orowno", dto.getOrowno());
+                    
+                    if (pdPlanMapper.selectPdPlanCount(chkParams) > 0) {
+                        log.warn("⚠️ 이미 계획이 수립된 항목입니다: {} - {}", dto.getOrdno(), dto.getOrowno());
+                        continue;
+                    }
+
                     pdPlanMapper.insertPdPlan(dto);
-                    log.info("✅ 생산계획 등록 완료 (공정 자동 전계): {} - {}", dto.getYymmdd(), dto.getItemcd());
-                } 
+                }
                 else if ("수정".equals(status)) {
                     pdPlanMapper.updatePdPlan(dto);
-                    log.info("✅ 생산계획 수정 완료: {} - {}", dto.getYymmdd(), dto.getSer());
-                } 
+                }
                 else if ("삭제".equals(status)) {
                     Map<String, Object> delParams = new HashMap<>();
                     delParams.put("cmpycd", cmpycd);
                     delParams.put("yymmdd", dto.getYymmdd());
                     delParams.put("ser", dto.getSer());
                     pdPlanMapper.deletePdPlan(delParams);
-                    log.info("✅ 생산계획 삭제: {} - {}", dto.getYymmdd(), dto.getSer());
                 }
             } catch (Exception e) {
-                log.error("❌ 생산계획 처리 중 오류 발생: {}", e.getMessage());
+                log.error("❌ 생산계획 처리 오류: {}", e.getMessage());
                 throw new RuntimeException("생산계획 저장 중 오류가 발생했습니다: " + e.getMessage());
             }
         }
