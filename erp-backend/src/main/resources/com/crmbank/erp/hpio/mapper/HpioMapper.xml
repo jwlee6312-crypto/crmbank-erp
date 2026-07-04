@@ -21,6 +21,19 @@
         exec hpio_230s_str #{cmpycd}, #{linecd}, #{fromdt}, #{todt}
     </select>
 
+    <!-- 자재불출요청 -->
+    <select id="HPIO_250U_STR" resultType="java.util.LinkedHashMap">
+        exec hpio_250u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{outym}, #{outno}, #{outymd}, #{hope_inymd},
+        #{deptcd}, #{whcd}, #{custcd}, #{linecd}, #{iwhcd}, #{gubun}, #{ordym}, #{ordno}, #{userid},
+        #{bigo}, #{lotymd}, #{lotno}, #{itemcd}, #{ordqty}, #{outqty}, #{updemp}
+    </select>
+
+    <select id="HPIO_251U_STR" resultType="java.util.LinkedHashMap">
+        exec hpio_251u_str #{actkind}, #{cmpycd}, #{outym}, #{outno}, #{orowno}, #{outymd}, #{linecd},
+                           #{lotymd}, #{lotno}, #{gubun}, #{ordym}, #{ordno},#{deptcd}, #{whcd}, #{itemcd},
+                           #{mitemcd}, #{mitsize}, #{munit}, #{outqty}, #{ritemcd}, #{updemp}
+    </select>
+  
     <!-- 임가공/외주가공 계약 품의 -->
     <select id="HPIO_290U_STR" resultType="java.util.LinkedHashMap">
         exec hpio_290u_str #{actkind}, #{cmpycd}, #{pumym}, #{pumno}, #{deptcd},
@@ -204,6 +217,20 @@
     <select id="HPIO_870U_STR" resultType="java.util.LinkedHashMap">
         exec hpio_870u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{linecd},
         #{progcd}, #{slipyn}, #{iogbn}, #{ioym}, #{iono}, #{custcd}, #{prodcd}, #{updemp}
+    </select>
+
+    <!-- 작업지시 팝업 조회 (HPIO250U용) -->
+    <select id="HPIO_250U_POP" resultType="java.util.LinkedHashMap">
+        select a.linecd, a.lotymd, a.lotno, a.itemcd as itemcd, b.itemnm as itemnm, a.itsize, a.unit,
+               isnull(a.ordqty, 0) as ordqty, isnull(a.outqty, 0) as outqty,
+               isnull(a.prodqty, 0) as prodqty, c.linenm, a.gubun, a.ordym, a.ordno
+        from HPIO210T_TBL a
+        left join HSBA010T_TBL b on a.cmpycd = b.cmpycd and a.itemcd = b.itemcd
+        left join HPBA130T_TBL c on a.cmpycd = c.cmpycd and a.linecd = c.linecd
+        where a.cmpycd = #{cmpycd}
+          and a.linecd = #{linecd}
+          and a.ordymd between #{frymd} and #{toymd}
+          and isnull(a.ordqty, 0) > isnull(a.outqty, 0)
     </select>
 
 

@@ -9,6 +9,8 @@ public interface HpioMapper {
     List<Map<String, Object>> HPIO_200U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_210U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_230S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HPIO_250U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HPIO_251U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_290U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_291U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_300U_STR(Map<String, Object> params);
@@ -38,4 +40,7 @@ public interface HpioMapper {
     List<Map<String, Object>> HPIO_720S_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_850S_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_870U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HPIO_250U_POP(Map<String, Object> params);
+    List<Map<String, Object>> HPIO_251S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HPIO_252S_STR(Map<String, Object> params);
 }
