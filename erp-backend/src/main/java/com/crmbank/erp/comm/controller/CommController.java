@@ -67,4 +67,9 @@ public class CommController {
     public ResponseEntity<List<Map<String, Object>>> getLeftMenus(@RequestParam("upmucd") String upmucd) { 
         return ResponseEntity.ok(commService.getLeftMenus(upmucd)); 
     }
+
+    @PostMapping("/getProgramList")
+    public ResponseEntity<List<Map<String, Object>>> getProgramList(@RequestBody Map<String, Object> data) {
+        return ResponseEntity.ok(commService.getProgramList(data));
+    }
 }

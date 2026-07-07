@@ -172,7 +172,20 @@ public class HsipService {
 
     @Transactional(value = "erpTransactionManager", rollbackFor = Exception.class)
     public Map<String, Object> saveImportOrder(com.crmbank.erp.hsip.dto.Hsip100uRequest request, String userId) throws Exception {
-        List<Map<String, Object>> res = hsipMapper.HSIP_100U_STR(request.getMst());
+        com.crmbank.erp.hsip.dto.Hsip100u mst = request.getMst();
+        if (mst != null) {
+            // 🚀 [Rule] 빈 문자열을 null로 정제하여 numeric 변환 오류 방지
+            if (mst.getBigo() != null && mst.getBigo().trim().isEmpty()) mst.setBigo(null);
+            if (mst.getOfferno() != null && mst.getOfferno().trim().isEmpty()) mst.setOfferno(null);
+            if (mst.getSupergbn() != null && mst.getSupergbn().trim().isEmpty()) mst.setSupergbn(null);
+            if (mst.getPayterm() != null && mst.getPayterm().trim().isEmpty()) mst.setPayterm(null);
+            if (mst.getInymd() != null && mst.getInymd().trim().isEmpty()) mst.setInymd(null);
+            if (mst.getApvyn() != null && mst.getApvyn().trim().isEmpty()) mst.setApvyn(null);
+            if (mst.getApvymd() != null && mst.getApvymd().trim().isEmpty()) mst.setApvymd(null);
+            if (mst.getApvemp() != null && mst.getApvemp().trim().isEmpty()) mst.setApvemp(null);
+        }
+
+        List<Map<String, Object>> res = hsipMapper.HSIP_100U_STR(mst);
         if (res == null || res.isEmpty()) throw new Exception("No response from Master procedure.");
 
         Map<String, Object> mstRow = res.get(0);
@@ -189,6 +202,8 @@ public class HsipService {
                 dtl.setCmpycd(request.getMst().getCmpycd());
                 dtl.setUpdemp(userId);
                 if (dtl.getProwno() == null || "0".equals(dtl.getProwno())) dtl.setProwno("");
+                // 🚀 상세 내역도 빈 값 정제
+                if (dtl.getItsize() != null && dtl.getItsize().trim().isEmpty()) dtl.setItsize(null);
                 
                 List<Map<String, Object>> dtlRes = hsipMapper.HSIP_101U_STR(dtl);
                 if (dtlRes != null && !dtlRes.isEmpty()) {

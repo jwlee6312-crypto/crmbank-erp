@@ -132,7 +132,7 @@ const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
 const yearOptions = Array.from({ length: 11 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
-const searchForm = reactive({ yy: String(currentYear),.mm: currentMonth })
+const searchForm = reactive({ yy: String(currentYear), mm: currentMonth })
 const formData = reactive({ actkind: 'A0', acctcd: '', acctnm: '', DEPTdivcd: '', ITEMdivcd: '', remark: '', useyn: 'Y' })
 
 const deptDivOptions = ref<any[]>([])

@@ -107,6 +107,7 @@
             <span class="fw-bold small text-dark">
               <i class="bi bi-tools me-2 text-success"></i>투입 자재 상세
               <span v-if="selectedProduct.itemnm" class="badge bg-success-subtle text-success border border-success-subtle ms-2">{{ selectedProduct.itemnm }}</span>
+              <span v-else class="ms-2 text-danger opacity-75" style="font-size: 11px;">(상단 리스트에서 제품을 선택해야 자재를 추가할 수 있습니다.)</span>
             </span>
             <div class="d-flex gap-1">
               <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow('MAT')" :disabled="!selectedProduct.itemcd" style="font-size: 11px;">+ 자재추가</button>
@@ -248,7 +249,14 @@ const fetchMaster = async () => {
 
 const fetchDetails = async (row: any) => {
   selectedProduct.itemcd = row.itemcd; selectedProduct.itemnm = row.itemnm;
-  if (!row.itemcd || row._status === '입력') { grid2?.clearData(); return; }
+  if (!row.itemcd) { grid2?.clearData(); return; }
+
+  // 💡 신규 제품 행인 경우 서버 조회를 하지 않고 그리드만 초기화 (자재 추가는 가능하도록 유지)
+  if (row._status === '입력') {
+    grid2?.clearData();
+    return;
+  }
+
   try {
     const res = await api.post('/api/hpio/HPIO_351U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, itemcd: row.itemcd, custcd: searchForm.custcd, ordymd: searchForm.ordymd, proymd: searchForm.proymd });
     grid2?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
@@ -280,11 +288,72 @@ const saveData = async () => {
   } catch (e) { vAlertError('저장 실패'); }
 }
 
-const handleOpenHelp = (type: string, row: any) => {
-  if (type === 'CUST') openHelp('CUST', (d) => { searchForm.custcd = d.custcd; searchForm.custnm = d.custnm });
-  else if (type === 'ITEM') openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' }), { codegbn: 'B' });
-  else if (type === 'MAT') openHelp('ITEM', (d) => row.update({ mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit, mastkind: d.astkind, _status: '입력', _state: 'NEW' }));
-  else if (type === 'befprog') openHelp('befprog', (d) => row.update({ befprog: d.progcd, bprognm: d.prognm }), { gbncd: searchForm.linecd });
+const handleOpenHelp = (type: string, target?: any) => {
+  const props: any = {
+    title: '',
+    path: '',
+    data: { cmpycd: authStore.cmpycd },
+    columns: [],
+    onConfirm: () => {}
+  }
+
+  if (type === 'CUST') {
+    props.title = '외주처 선택'
+    props.path = '/api/ha00/HA00_00P_STR'
+    props.data.gubun = 'C7'
+    props.columns = [
+      { title: '코드', field: 'custcd', width: 80, hozAlign: 'center' },
+      { title: '거래처명', field: 'custnm', width: 200 }
+    ]
+    props.onConfirm = (d: any) => { searchForm.custcd = d.custcd; searchForm.custnm = d.custnm }
+  }
+  else if (type === 'ITEM') {
+    props.title = '제품 선택'
+    props.path = '/api/hp00/HP00_000S_STR'
+    props.data.gubun = 'I0'
+    props.data.gbncd = 'A'
+    props.columns = [
+      { title: '자산구분', field: 'astkindnm', width: 100 },
+      { title: '코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+      { title: '제품명', field: 'itemnm', width: 200 },
+      { title: '규격', field: 'itsize', width: 150 },
+      { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+    ]
+    props.onConfirm = (d: any) => {
+      target.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' });
+      // 💡 품목 선택 시 현재 선택된 제품 정보(selectedProduct)를 즉시 업데이트하여 버튼 활성화
+      selectedProduct.itemcd = d.itemcd;
+      selectedProduct.itemnm = d.itemnm;
+    }
+  }
+  else if (type === 'MAT') {
+    props.title = '자재 선택'
+    props.path = '/api/hp00/HP00_000S_STR'
+    props.data.gubun = 'I0'
+    props.data.gbncd = 'A'
+    props.columns = [
+      { title: '자산구분', field: 'astkindnm', width: 100 },
+      { title: '코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+      { title: '자재명', field: 'itemnm', width: 200 },
+      { title: '규격', field: 'itsize', width: 150 },
+      { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+    ]
+    props.onConfirm = (d: any) => target.update({ mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit, mastkind: d.astkind, _status: '입력', _state: 'NEW' })
+  }
+  else if (type === 'befprog') {
+    props.title = '출고공정 선택'
+    props.path = '/api/hp00/HP00_000S_STR'
+    props.data.gubun = 'G0'
+    props.data.gbncd = searchForm.linecd
+    props.columns = [
+      { title: '코드', field: 'progcd', width: 100, hozAlign: 'center' },
+      { title: '공정명', field: 'cdnm', width: 200 }
+    ]
+    props.onConfirm = (d: any) => target.update({ befprog: d.progcd, bprognm: d.cdnm })
+  }
+
+  Object.assign(modalProps, props)
+  modalVisible.value = true
 }
 
 const handleRowAction = (row: any) => {

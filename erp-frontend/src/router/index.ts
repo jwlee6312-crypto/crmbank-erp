@@ -26,6 +26,11 @@ const routes = [
                 component: () => import('@/views/HGOA/HGOA100U.vue'),
                 meta: { topMenuCode: 'CRM', sideMenuCode: 'HGOA100U', title: '옴니채널상담원' }
             },
+            {
+                path: '/HSIO600U',
+                name: 'HSIO600U',
+                component: () => import('@/views/HSIO/HSIO600U.vue')
+            },
 		],
 	},
     // 💡 고객용 상담실 (로그인 세션 없이 접근 가능)

@@ -43,8 +43,8 @@
                 <td>
                   <select v-model="searchForm.linecd" class="form-select form-select-sm" @change="onLineChange">
                     <option value="">라인 선택</option>
-                    <option v-for="opt in lineOptions" :key="opt.code" :value="opt.code">
-                      [{{ opt.code }}] {{ opt.cdnm }}
+                    <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">
+                      [{{ opt.linecd }}] {{ opt.linenm }}
                     </option>
                   </select>
                 </td>
@@ -52,8 +52,8 @@
                 <td>
                   <select v-model="searchForm.progcd" class="form-select form-select-sm" @change="fetchList">
                     <option value="">전체공정</option>
-                    <option v-for="opt in progOptions" :key="opt.code" :value="opt.code">
-                      [{{ opt.code }}] {{ opt.cdnm }}
+                    <option v-for="opt in progOptions" :key="opt.progcd" :value="opt.progcd">
+                      [{{ opt.progcd }}] {{ opt.prognm }}
                     </option>
                   </select>
                 </td>
@@ -120,7 +120,7 @@ const lineOptions = ref<any[]>([]); const progOptions = ref<any[]>([])
 const rowCount = ref(0)
 
 const fymd_f = computed({ get: () => formatDate(searchForm.fymd), set: (v) => { if (v) searchForm.fymd = v.replace(/-/g, '') } })
-const tymd_f = computed({ get: () => formatDate(searchForm.tymd), set: (v) => { if (v) searchData.tymd = v.replace(/-/g, '') } })
+const tymd_f = computed({ get: () => formatDate(searchForm.tymd), set: (v) => { if (v) searchForm.tymd = v.replace(/-/g, '') } })
 
 const tableRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
@@ -143,13 +143,13 @@ const initGrids = () => {
       },
       { title: "규격", field: "itsize", width: 150 },
       { title: "단위", field: "unit", width: 60, hozAlign: "center" },
-      { title: "전월이월", field: "bqty", width: 90, hozAlign: "right", formatter: "money" },
-      { title: "입고", field: "iqty", width: 90, hozAlign: "right", formatter: "money", cssClass: "text-success" },
-      { title: "기기입고", field: "ieqty", width: 90, hozAlign: "right", formatter: "money" },
-      { title: "출고", field: "oqty", width: 90, hozAlign: "right", formatter: "money", cssClass: "text-danger" },
-      { title: "이관출고", field: "tqty", width: 90, hozAlign: "right", formatter: "money" },
-      { title: "타계정", field: "oeqty", width: 90, hozAlign: "right", formatter: "money" },
-      { title: "현재고", field: "sqty", width: 100, hozAlign: "right", formatter: "money", cssClass: "fw-bold bg-light" }
+      { title: "전월이월", field: "bqty", width: 120, hozAlign: "right", formatter: "money" },
+      { title: "입고", field: "iqty", width: 120, hozAlign: "right", formatter: "money", cssClass: "text-success" },
+      { title: "기타입고", field: "ieqty", width: 120, hozAlign: "right", formatter: "money" },
+      { title: "출고", field: "oqty", width: 120, hozAlign: "right", formatter: "money", cssClass: "text-danger" },
+      { title: "이관출고", field: "tqty", width: 120, hozAlign: "right", formatter: "money" },
+      { title: "타계정", field: "oeqty", width: 120, hozAlign: "right", formatter: "money" },
+      { title: "현재고", field: "sqty", width: 120, hozAlign: "right", formatter: "money", cssClass: "fw-bold bg-light" }
     ],
     columnCalcs: "table"
   });
@@ -158,16 +158,23 @@ const initGrids = () => {
 // [3] 비즈니스 로직
 const fetchOptions = async () => {
   try {
-    const resLine = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y', code: '' } })
-    lineOptions.value = resLine.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
-    if (lineOptions.value.length > 0) onLineChange();
+    const resLine = await api.post('/api/hp00/HP00_000S_STR', { gubun: 'L0', cmpycd: authStore.cmpycd })
+    lineOptions.value = resLine.data || []
+    if (lineOptions.value.length > 0 && !searchForm.linecd) {
+      searchForm.linecd = lineOptions.value[0].linecd
+    }
+    onLineChange()
   } catch (e) {}
 }
 
 const onLineChange = async () => {
   try {
-    const resProg = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'I8', cmpycd: authStore.cmpycd, linecd: searchForm.linecd, code: '' } })
-    progOptions.value = resProg.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
+    const resProg = await api.post('/api/hp00/HP00_000S_STR', {
+      gubun: 'G0',
+      cmpycd: authStore.cmpycd,
+      gbncd: searchForm.linecd
+    })
+    progOptions.value = resProg.data || []
   } catch (e) {}
 }
 

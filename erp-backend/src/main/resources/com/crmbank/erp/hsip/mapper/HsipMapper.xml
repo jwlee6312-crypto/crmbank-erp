@@ -3,10 +3,13 @@
 <mapper namespace="com.crmbank.erp.hsip.mapper.HsipMapper">
 
     <select id="HSIP_100U_STR" resultType="java.util.LinkedHashMap">
-        exec hsip_100u_str #{actkind}, #{cmpycd}, #{fileno}, #{deptcd}, #{offerno},
-        #{supergbn}, #{imptgbn}, #{issymd}, #{custcd}, #{currcd}, #{frgnrate}, #{nacd},
-        #{shipport}, #{pricond}, #{pritext}, #{arvport}, #{paycond}, #{payterm}, #{lcamt},
-        #{wonamt}, #{frgnamt}, #{xtamt}, #{bigo}, #{inymd}, #{apvyn}, #{apvymd}, #{apvemp}, #{updemp}
+        exec hsip_100u_str
+            #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{custnm},
+            #{fileno}, #{deptcd}, #{offerno}, #{supergbn}, #{imptgbn},
+            #{issymd}, #{custcd}, #{currcd}, #{frgnrate}, #{nacd},
+            #{shipport}, #{pricond}, #{pritext}, #{arvport}, #{paycond},
+            #{payterm}, #{lcamt}, #{wonamt}, #{frgnamt}, #{xtamt},
+            #{bigo}, #{inymd}, #{apvyn}, #{apvymd}, #{apvemp}, #{updemp}
     </select>
 
     <select id="HSIP_101U_STR" resultType="java.util.LinkedHashMap">

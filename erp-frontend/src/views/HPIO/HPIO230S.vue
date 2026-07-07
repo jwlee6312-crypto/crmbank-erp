@@ -78,6 +78,7 @@
 import { reactive, ref, onMounted, computed, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -170,7 +171,10 @@ const initialize = () => {
   rowCount.value = 0
 }
 
-const exportExcel = () => grid?.download("xlsx", `생산지시현황_${searchData.todt}.xlsx`)
+const exportExcel = () => {
+  if (!grid || rowCount.value === 0) return vAlertError('조회된 데이터가 없습니다.')
+  grid.download("xlsx", `생산지시현황_${searchData.fromdt}_${searchData.todt}.xlsx`, { sheetName: '생산지시' })
+}
 
 const formatDate = (v: any) => {
     if (!v) return ''
@@ -179,6 +183,7 @@ const formatDate = (v: any) => {
 }
 
 onMounted(() => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX
   fetchLineOptions()
   nextTick(initGrids)
 })

@@ -17,6 +17,12 @@
             #{ordqty}, #{pctype}, #{ordamt}, #{ordvat}, #{updemp}
     </select>
 
+    <select id="HSOD_200U_STR" resultType="java.util.LinkedHashMap">
+        exec hsod_200u_str
+        #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iotype}, #{ioymd}, #{userid},
+        #{cfmyn}, #{slipyn}, #{fromdt}, #{todt}, #{whcd}, #{deptcd}, #{updemp}
+    </select>
+
     <select id="HSOD_110S_STR" resultType="java.util.LinkedHashMap">
         exec hsod_110s_str #{cmpycd}, #{deptcd}, #{custcdfr}, #{custcdto}, #{fromdt}, #{todt}
     </select>
@@ -30,6 +36,12 @@
     <select id="HSOD_210U_STR" resultType="java.util.LinkedHashMap">
         exec hsod_210u_str #{actkind}, #{cmpycd}, #{gbn}, #{fromdt}, #{todt}, #{ioym}, #{iono},
         #{custcd}, #{deptcd}, #{ioymd}, #{ioamt}, #{iovat}, #{remark}, #{updemp}
+    </select>
+
+    <select id="HSOD_300U_STR" resultType="java.util.LinkedHashMap">
+        exec hsod_300u_str
+        #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iotype}, #{ioymd}, #{userid},
+        #{cfmyn}, #{slipyn}, #{fromdt}, #{todt}, #{whcd}, #{deptcd}, #{updemp}
     </select>
 
 </mapper>

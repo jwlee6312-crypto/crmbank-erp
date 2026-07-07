@@ -1,6 +1,6 @@
 <!--
 	=============================================================
-	프로그램명	: 분개장(현업)
+	프로그램명	: 분개장(현업) (HASL_030S)
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
 	설명        : 부서별/기간별 전표 분개 내역 상세 조회 (소문자 원칙 준수, 라우팅 수정, 중복 방지 및 분리 링크)
@@ -16,7 +16,7 @@
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-journals me-2 text-primary" style="font-size: 18px;"></i>
 				전표관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">분개장(현업) (hasl030s)</span>
+				<span class="text-primary fw-bolder">분개장(현업) (HASL_030S)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-init" @click="initialize">
@@ -106,6 +106,7 @@
 import { ref as _ref, reactive as _reactive, onMounted as _on_mounted, nextTick as _next_tick } from 'vue'
 import { TabulatorFull as tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import { useAlerts as use_alerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore as use_auth_store } from '@/stores/authStore'
@@ -174,7 +175,10 @@ const initialize = () => {
 	maingrid?.clearData()
 }
 
-const excel = () => maingrid?.download("xlsx", "분개장.xlsx")
+const excel = () => {
+	if (!maingrid) return v_alert_error('조회된 데이터가 없습니다.')
+	maingrid.download("xlsx", `분개장_${searchform.fromdt}_${searchform.todt}.xlsx`, { sheetName: '분개장' })
+}
 const print = () => {
 	const params = new URLSearchParams(searchform).toString().toLowerCase()
 	window.open(`/api/hasl/HASL_030P?${params}`, 'Print', 'width=1000,height=800')
@@ -222,7 +226,7 @@ const go_to_slip = (slipkey: string) => {
 	} else return;
 
 	// 💡 시스템 라우팅 규칙(dynamicRoute.ts)에 따라 경로는 '/HASL010U'입니다.
-	const pgmid = 'HASL010U'
+	const pgmid = 'HASL_010U'
 	add_dynamic_route(pgmid, '현업전표등록', 'HASL')
 
 	router.push({
@@ -236,6 +240,7 @@ const go_to_slip = (slipkey: string) => {
 }
 
 _on_mounted(() => {
+	if (typeof window !== 'undefined') (window as any).XLSX = XLSX
 	if (maingridref.value) {
 		maingrid = new tabulator(maingridref.value, {
 			layout: 'fitColumns',
@@ -261,7 +266,8 @@ _on_mounted(() => {
 					cellClick: (e, cell) => {
 						const value = cell.getData().slipno; // 표시 안 된 행이라도 실제 데이터에서 가져옴
 						if(value) go_to_slip(String(value));
-					}
+					},
+					accessorDownload: (v) => v
 				},
 				{ title: "행번호", field: "srowno",hozAlign: "center", width: 65 },
 				{
@@ -277,6 +283,9 @@ _on_mounted(() => {
 					formatter: (cell) => {
 						const val = cell.getValue()
 						return val && val.length === 8 ? `${val.substring(2, 4)}.${val.substring(4, 6)}.${val.substring(6, 8)}` : val
+					},
+					accessorDownload: (val) => {
+						return val && val.length === 8 ? `${val.substring(0, 4)}-${val.substring(4, 6)}-${val.substring(6, 8)}` : val
 					}
 				},
 				{ title: "차변", field: "dbamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", bottomCalcFormatter: "money" },

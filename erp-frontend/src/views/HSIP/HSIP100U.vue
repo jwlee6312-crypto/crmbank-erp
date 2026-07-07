@@ -1,6 +1,6 @@
 <!--
 	=============================================================
-	프로그램명	: 수입발주작업 (HSIP100U)
+	프로그램명	: 수입발주작업 (HSIP_100U)
 	작성일자	: 2025.02.24
 	설명        : 수입 발주 마스터/상세 관리 (HSOD100U 표준 구조 및 소문자 원칙 적용)
 	=============================================================
@@ -16,13 +16,16 @@
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-globe-americas me-2 text-primary" style="font-size: 18px;"></i>
         수입관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        <span class="text-primary fw-bolder">수입발주작업 (HSIP100U)</span>
+        <span class="text-primary fw-bolder">수입발주작업 (HSIP_100U)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-2">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="search">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
         <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!formData.fileno || formData.fileno === '0000'">전체삭제</button>
+        <button class="btn-erp btn-print" @click="openManual">
+          <i class="bi bi-question-circle"></i> 도움말
+        </button>
       </div>
     </div>
 
@@ -216,6 +219,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
 import { getDate } from '@/composables/useDate'
+import { useManualStore } from '@/stores/manualStore'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
@@ -230,6 +234,7 @@ const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const manualStore = useManualStore()
 
 // [1] 데이터 모델링 (HSOD100U 기준 소문자 원칙)
 const searchForm = reactive({ fromdt: firstDay, todt: today, custnm: '' })
@@ -306,7 +311,7 @@ const updateTotals = () => {
     const data = mainGrid?.getData().filter(i => i._status !== '삭제') || []
     const frgnAmt = data.reduce((acc, cur: any) => acc + (Number(cur.amt) || 0), 0)
     formData.frgnamt = frgnAmt
-    formData.wonamt = Math.floor(frgnAmt * formData.frgnrate)
+    formData.wonamt = Math.floor(frgnAmt * (Number(formData.frgnrate) || 0))
     formData.costsum = (Number(formData.lcamt) || 0) + (Number(formData.xtamt) || 0) + (Number(formData.wonamt) || 0)
 }
 
@@ -351,7 +356,7 @@ const handleOpenHelp = (type: string, target?: any) => {
       title: '품목 선택',
       path: '/api/hs00/HS00_000S_STR',
       defaultField: 'itemnm',
-      data: { gubun: 'I9', cmpycd: authStore.cmpycd, gbncd: '', code: '', codenm: '', etcval: '' },
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '3', code: '', codenm: '', etcval: '' },
       columns: [
         { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
         { title: '품목명', field: 'itemnm', width: 200 },
@@ -359,8 +364,6 @@ const handleOpenHelp = (type: string, target?: any) => {
         { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
       ],
       onConfirm: (d: any) => {
-        const price = d.outcost || 0;
-        const vat = Math.floor(price * 0.1);
         target.update({
           itemcd: d.itemcd,
           itemnm: d.itemnm,
@@ -390,7 +393,12 @@ async function search() {
         fromdt: searchForm.fromdt.replace(/-/g, ''),
         todt: searchForm.todt.replace(/-/g, ''),
         custnm: searchForm.custnm,
-        frgnrate: 0, lcamt: 0, wonamt: 0, frgnamt: 0, xtamt: 0
+        // 🚀 숫자 필드는 0, 나머지는 빈 문자열로 명시적 초기화 (NULL 방지)
+        frgnrate: 0, lcamt: 0, wonamt: 0, frgnamt: 0, xtamt: 0,
+        fileno: '', deptcd: '', offerno: '', supergbn: '', imptgbn: '',
+        issymd: '', custcd: '', currcd: '', nacd: '', shipport: '',
+        pricond: '', pritext: '', arvport: '', paycond: '', payterm: '',
+        bigo: '', inymd: '', apvyn: '', apvymd: '', apvemp: '', updemp: ''
     });
     const list = res.data?.data || res.data || [];
     grid1?.setData(list); vAlert('조회되었습니다.');
@@ -403,10 +411,13 @@ async function fetchDetail(fileNo: string) {
         fileno: fileNo,
         actkind: 'S0',
         cmpycd: authStore.cmpycd,
-        fromdt: '',
-        todt: '',
-        custnm: '',
-        frgnrate: 0, lcamt: 0, wonamt: 0, frgnamt: 0, xtamt: 0
+        fromdt: '', todt: '', custnm: '',
+        // 🚀 숫자 필드는 0, 나머지는 빈 문자열 (NULL 방지)
+        frgnrate: 0, lcamt: 0, wonamt: 0, frgnamt: 0, xtamt: 0,
+        deptcd: '', offerno: '', supergbn: '', imptgbn: '',
+        issymd: '', custcd: '', currcd: '', nacd: '', shipport: '',
+        pricond: '', pritext: '', arvport: '', paycond: '', payterm: '',
+        bigo: '', inymd: '', apvyn: '', apvymd: '', apvemp: '', updemp: ''
     });
     if (res.data?.length) {
       // 🚀 전역 axios 인터셉터가 이미 data를 파싱하므로 res.data로 바로 접근
@@ -437,28 +448,69 @@ async function save() {
   if (!confirm('저장하시겠습니까?')) return
 
   try {
-    // 🚀 [Service-Base] 백엔드 통합 저장 서비스 호출 (트랜잭션 보장)
+    // 🚀 [SP Spec Match] HSIP_100U_STR 31개 파라미터 순서 및 타입 완벽 준수
+    const mstData = {
+        actkind: formData._isNew ? 'A0' : 'U0',
+        cmpycd: authStore.cmpycd || '',
+        fromdt: (searchForm.fromdt || '').replace(/-/g, ''),
+        todt: (searchForm.todt || '').replace(/-/g, ''),
+        custnm: formData.custnm || '',
+        fileno: formData.fileno || '',
+        deptcd: formData.deptcd || '',
+        offerno: formData.offerno || '',
+        supergbn: formData.supergbn || '',
+        imptgbn: formData.imptgbn || '',
+        issymd: (formData.issymd || '').replace(/-/g, ''),
+        custcd: formData.custcd || '',
+        currcd: formData.currcd || '',
+        frgnrate: Number(formData.frgnrate) || 0, // numeric(8,3)
+        nacd: formData.nacd || '',
+        shipport: formData.shipport || '',
+        pricond: formData.pricond || '',
+        pritext: formData.pritext || '',
+        arvport: formData.arvport || '',
+        paycond: formData.paycond || '',
+        payterm: formData.payterm || '',
+        lcamt: Number(formData.lcamt) || 0,       // numeric(15,2)
+        wonamt: Number(formData.wonamt) || 0,     // numeric(15,0)
+        frgnamt: Number(formData.frgnamt) || 0,   // numeric(14,4)
+        xtamt: Number(formData.xtamt) || 0,       // numeric(15,2)
+        bigo: formData.bigo || '',
+        inymd: (formData.inymd || '').replace(/-/g, ''),
+        apvyn: formData.apvyn || '',
+        apvymd: formData.apvymd || '',
+        apvemp: formData.apvemp || '',
+        updemp: authStore.userid || ''
+    };
+
     const payload = {
-        mst: {
-            ...formData,
-            actkind: formData._isNew ? 'A0' : 'U0',
-            issymd: formData.issymd.replace(/-/g, '')
-        },
+        mst: mstData,
         dtl: details.map(item => ({
-            ...item,
-            actkind: item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0')
+            actkind: item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0'),
+            cmpycd: authStore.cmpycd || '',
+            fileno: formData.fileno || '',
+            prowno: item.prowno || '', // 🚀 [Rule] 공백 전송 시 SP에서 행 생성 (숫자 금지)
+            itemcd: item.itemcd || '',
+            itsize: item.itsize || '',
+            unit: item.unit || '',
+            qty: Number(item.qty) || 0, // numeric(15,2)
+            amt: Number(item.amt) || 0, // numeric(15,4)
+            updemp: authStore.userid || ''
         }))
     };
 
     const res = await api.post('/api/hsip/HSIP_100U_SAVE', payload);
 
-    if (res.data?.status === 'success') {
+    // 🚀 [Rule] _SAVE 호출 시 인터셉터는 'data' 객체(Map)를 즉시 반환함
+    if (res.data) {
         vAlert('저장되었습니다.');
-        const newFileNo = res.data.data?.fileno || formData.fileno;
+        const resultData = res.data;
+        // 키값은 인터셉터에서 소문자화되어 전달됨
+        const newFileNo = resultData.fileno || mstData.fileno;
         search();
         fetchDetail(newFileNo);
     } else {
-        throw new Error(res.data?.message || '저장 중 오류가 발생했습니다.');
+        throw new Error('저장 후 응답 데이터가 없습니다.');
     }
   } catch (e: any) {
     vAlertError(e.message || '저장 실패');
@@ -484,13 +536,27 @@ function initialize() {
 async function handleFullDelete() {
   if (!confirm('정말 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hsip/HSIP_100U_STR', { fileno: formData.fileno, actkind: 'D0' });
+    await api.post('/api/hsip/HSIP_100U_STR', {
+        fileno: formData.fileno,
+        actkind: 'D0',
+        cmpycd: authStore.cmpycd,
+        // 🚀 모든 필드 명시적 전송 (NULL 방지)
+        frgnrate: 0, lcamt: 0, wonamt: 0, frgnamt: 0, xtamt: 0,
+        deptcd: '', offerno: '', supergbn: '', imptgbn: '',
+        issymd: '', custcd: '', currcd: '', nacd: '', shipport: '',
+        pricond: '', pritext: '', arvport: '', paycond: '', payterm: '',
+        bigo: '', inymd: '', apvyn: '', apvymd: '', apvemp: '', updemp: authStore.userid
+    });
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }
 
 function addGridRow() { mainGrid?.addRow({ qty: 0, price: 0, amt: 0, _status: '입력', _state: 'NEW' }, true); }
 function deleteSelectedRows() { mainGrid?.getSelectedRows().forEach(row => handleRowAction(row)); }
+
+const openManual = () => {
+  manualStore.open('HSIP_100U')
+}
 
 onMounted(async () => {
     nextTick(initGrids);

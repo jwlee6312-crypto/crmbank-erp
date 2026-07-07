@@ -123,20 +123,20 @@ const initGrids = () => {
       { title: "품 목 명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-primary text-decoration-underline cursor-pointer",
         cellClick: (e, cell) => navigateToDetail(cell.getData())
       },
-      { title: "규격", field: "itsize", width: 150 },
+      { title: "규격", field: "itsize", width: 200 },
       { title: "단위", field: "unit", width: 60, hozAlign: "center" },
-      { title: "적정재고", field: "stock", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "현재고", field: "stkqty", width: 100, hozAlign: "right", formatter: "money",
+      { title: "적정재고", field: "stock", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "현재고", field: "stkqty", width: 150, hozAlign: "right", formatter: "money",
         cssClass: "fw-bold",
         formatterParams: (cell: any) => {
           const d = cell.getData();
           return { color: Number(d.stkqty) < Number(d.stock) ? "red" : "" }
         }
       },
-      { title: "과부족", field: "diff", width: 100, hozAlign: "right", formatter: "money", mutatorData: (v,d) => Number(d.stkqty||0) - Number(d.stock||0) },
-      { title: "재고금액", field: "stkamt", width: 120, hozAlign: "right", formatter: "money" },
-      { title: "미입고량", field: "nonqty", width: 100, hozAlign: "right", formatter: "money" },
-      { title: "총 수 량", field: "total_qty", width: 110, hozAlign: "right", formatter: "money", mutatorData: (v,d) => Number(d.stkqty||0) + Number(d.nonqty||0), cssClass: "text-primary fw-bold" }
+      { title: "과부족", field: "diff", width: 150, hozAlign: "right", formatter: "money", mutatorData: (v,d) => Number(d.stkqty||0) - Number(d.stock||0) },
+      { title: "재고금액", field: "stkamt", width: 150, hozAlign: "right", formatter: "money" },
+      { title: "미입고량", field: "nonqty", width: 150, hozAlign: "right", formatter: "money" },
+      { title: "총 수 량", field: "total_qty", width: 150, hozAlign: "right", formatter: "money", mutatorData: (v,d) => Number(d.stkqty||0) + Number(d.nonqty||0), cssClass: "text-primary fw-bold" }
     ],
     columnCalcs: "table"
   });

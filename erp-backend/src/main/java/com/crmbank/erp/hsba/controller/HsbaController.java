@@ -60,20 +60,26 @@ public class HsbaController {
         List<Map<String, Object>> result;
         if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
             String positionalSql = buildPositionalSql(proc, p);
-            result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
-                Map<String, Object> row = new LinkedHashMap<>();
-                List<Object> values = new ArrayList<>();
-                int colCount = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= colCount; i++) {
-                    Object val = rs.getObject(i);
-                    String colName = rs.getMetaData().getColumnLabel(i); 
-                    if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
-                    row.put(colName.toLowerCase(), val == null ? "" : val);
-                    values.add(val == null ? "" : val);
-                }
-                row.put("returnKeyValue", values); 
-                return row;
-            });
+            log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+            try {
+                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    List<Object> values = new ArrayList<>();
+                    int colCount = rs.getMetaData().getColumnCount();
+                    for (int i = 1; i <= colCount; i++) {
+                        Object val = rs.getObject(i);
+                        String colName = rs.getMetaData().getColumnLabel(i);
+                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                        row.put(colName.toLowerCase(), val == null ? "" : val);
+                        values.add(val == null ? "" : val);
+                    }
+                    row.put("returnkeyvalue", values);
+                    return row;
+                });
+            } catch (Exception e) {
+                log.warn("⚠️ 결과 집합 없음 또는 실행 오류 ({}): {}", proc, e.getMessage());
+                result = new ArrayList<>(); // 결과가 없어도 성공으로 간주 (res: OK는 하단에서 처리)
+            }
         } else {
             switch (proc) {
                 case "HSBA_010U_STR": result = hsbaMapper.HSBA_010U_STR(p); break;

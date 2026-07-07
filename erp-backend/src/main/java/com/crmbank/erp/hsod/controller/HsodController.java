@@ -108,14 +108,20 @@ public class HsodController {
                     case "HSOD_101U_STR": resultList = hsodMapper.HSOD_101U_STR(params); break;
                     case "HSOD_110S_STR": resultList = hsodMapper.HSOD_110S_STR(params); break;
                     case "HSOD_120U_STR": resultList = hsodMapper.HSOD_120U_STR(params); break;
+                    case "HSOD_200U_STR": resultList = hsodMapper.HSOD_200U_STR(params); break;
                     case "HSOD_210U_STR": resultList = hsodMapper.HSOD_210U_STR(params); break;
+                    case "HSOD_300U_STR": resultList = hsodMapper.HSOD_300U_STR(params); break;
                     default:
                         return ResponseEntity.notFound().build();
                 }
             }
 
             if (resultList == null || resultList.isEmpty()) {
-                resultList = List.of(Map.of("res", "OK"));
+                if (actkind.startsWith("S")) {
+                    resultList = new ArrayList<>();
+                } else {
+                    resultList = List.of(Map.of("res", "OK"));
+                }
             }
             return ResponseEntity.ok(resultList);
         } catch (Exception e) {

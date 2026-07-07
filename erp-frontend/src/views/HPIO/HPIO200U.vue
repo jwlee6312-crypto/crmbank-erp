@@ -101,7 +101,7 @@ const authStore = useAuthStore()
 const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const { modalVisible, modalProps } = useCommonHelp()
 
 // [1] 데이터 모델링
 const searchForm = reactive({
@@ -212,12 +212,57 @@ const saveData = async () => {
 }
 
 const handleOpenHelp = (type: string, target?: any) => {
-  if (type === 'ORDER') {
-    openHelp('ORDER', (d) => { searchForm.ordym = d.ordym; searchForm.ordno = d.ordno; })
-  } else if (type === 'ITEM') {
-    openHelp('ITEM', (d) => {
-      target.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, stymd: searchForm.lotymd, _status: '입력', _state: 'NEW' });
-    }, { gbncd: searchForm.linecd })
+  const commonPath = '/api/ha00/HA00_00P_STR'
+
+  switch (type) {
+    case 'ORDER': // 주문 도움창
+      Object.assign(modalProps, {
+        title: '주문 선택',
+        path: commonPath,
+        defaultField: 'ordno',
+        data: { gubun: 'OR', cmpycd: authStore.cmpycd },
+        columns: [
+          { title: '주문월', field: 'ordym', width: 100, hozAlign: 'center' },
+          { title: '주문번호', field: 'ordno', width: 100, hozAlign: 'center' },
+          { title: '거래처명', field: 'custnm', minWidth: 200, widthGrow: 1 },
+          { title: '주문일자', field: 'ordymd', width: 120, hozAlign: 'center' }
+        ],
+        onConfirm: (data: any) => {
+          searchForm.ordym = data.ordym
+          searchForm.ordno = data.ordno
+        }
+      })
+      modalVisible.value = true
+      break
+
+    case 'ITEM': // 품목 도움창
+      Object.assign(modalProps, {
+        title: '품목 선택',
+        path: '/api/hp00/HP00_000S_STR',
+        defaultField: 'itemnm',
+        large: true,
+        data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: 'A', code: '', remark: '' },
+        columns: [
+          { title: '자산구분', field: 'astkindnm', width: 120, hozAlign: 'center' },
+          { title: '품목코드', field: 'itemcd', width: 120, hozAlign: 'center' },
+          { title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 1, hozAlign: 'left' },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: (data: any) => {
+          target.update({
+            itemcd: data.itemcd,
+            itemnm: data.itemnm,
+            itsize: data.itsize,
+            unit: data.unit,
+            stymd: searchForm.lotymd,
+            _status: '입력',
+            _state: 'NEW'
+          })
+        }
+      })
+      modalVisible.value = true
+      break
   }
 }
 

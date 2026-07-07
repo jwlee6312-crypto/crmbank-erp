@@ -279,8 +279,6 @@ async function save() {
           throw new Error(String(dtlValues[1] || '상세 내역 저장 중 오류 발생'))
       }
     }
-      }
-    }
 
     vAlert('성공적으로 저장되었습니다.')
     fetchPoList()

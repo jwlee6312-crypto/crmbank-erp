@@ -163,7 +163,7 @@ const authStore = useAuthStore()
 const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const { modalVisible, modalProps } = useCommonHelp()
 
 const initymd = today.replace(/-/g, '')
 const searchForm = reactive({ linecd: '010', linenm: '', ordymd: initymd })
@@ -521,10 +521,100 @@ const saveMaterials = async () => {
 }
 
 const handleOpenHelp = (type: string, row: any) => {
-  if (type === 'REASON') openHelp('REASON', (d) => row.update({ wonincd: d.code, woninnm: d.cdnm }), { gbncd: '210' })
-  else if (type === 'MATERIAL') openHelp('ITEM', (d) => row.update({ mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit, soqty: 0, inqty: 0, _status: '입력', _state: 'NEW' }))
-  else if (type === 'befprog') openHelp('befprog', (d) => { row.update({ befprog: d.progcd, prognm: d.prognm }); if (row.getData()._state === 'EXIST') row.update({ _status: '수정' }); }, { gbncd: searchForm.linecd })
-  else if (type === 'ITEM_PROD') openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, ordqty: 0, prdqty: 0 }))
+  const commonPath = '/api/ha00/HA00_00P_STR'
+  const hpPath = '/api/hp00/HP00_000S_STR'
+
+  switch (type) {
+    case 'REASON': // 불량원인 선택
+      Object.assign(modalProps, {
+        title: '불량원인 선택',
+        path: commonPath,
+        defaultField: 'cdnm',
+        data: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '210' },
+        columns: [
+          { title: '코드', field: 'code', width: 100, hozAlign: 'center' },
+          { title: '원인명', field: 'cdnm', minWidth: 200 }
+        ],
+        onConfirm: (data: any) => {
+          row.update({ wonincd: data.code, woninnm: data.cdnm })
+        }
+      })
+      break
+
+    case 'MATERIAL': // 투입자재 선택
+      Object.assign(modalProps, {
+        title: '자재 선택',
+        path: hpPath,
+        defaultField: 'itemnm',
+        large: true,
+        data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: 'A', code: '', remark: '' },
+        columns: [
+          { title: '품목코드', field: 'itemcd', width: 120, hozAlign: 'center' },
+          { title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 1 },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: (data: any) => {
+          row.update({
+            mitemcd: data.itemcd,
+            mitemnm: data.itemnm,
+            mitsize: data.itsize,
+            munit: data.unit,
+            soqty: 0,
+            inqty: 0,
+            _status: '입력',
+            _state: 'NEW'
+          })
+        }
+      })
+      break
+
+    case 'befprog': // 전공정 선택
+      Object.assign(modalProps, {
+        title: '이전공정 선택',
+        path: hpPath,
+        defaultField: 'prognm',
+        data: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: searchForm.linecd, code: '' },
+        columns: [
+          { title: '코드', field: 'progcd', width: 100, hozAlign: 'center' },
+          { title: '공정명', field: 'prognm', minWidth: 200 }
+        ],
+        onConfirm: (data: any) => {
+          row.update({ befprog: data.progcd, prognm: data.prognm })
+          if (row.getData()._state === 'EXIST') {
+            row.update({ _status: '수정' })
+          }
+        }
+      })
+      break
+
+    case 'ITEM_PROD': // 제품 선택
+      Object.assign(modalProps, {
+        title: '제품 선택',
+        path: hpPath,
+        defaultField: 'itemnm',
+        large: true,
+        data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: 'A', code: '', remark: '' },
+        columns: [
+          { title: '제품코드', field: 'itemcd', width: 120, hozAlign: 'center' },
+          { title: '제품명', field: 'itemnm', minWidth: 250, widthGrow: 1 },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: (data: any) => {
+          row.update({
+            itemcd: data.itemcd,
+            itemnm: data.itemnm,
+            itsize: data.itsize,
+            unit: data.unit,
+            ordqty: 0,
+            prdqty: 0
+          })
+        }
+      })
+      break
+  }
+  modalVisible.value = true
 }
 
 const fetchWhOptions = async () => {

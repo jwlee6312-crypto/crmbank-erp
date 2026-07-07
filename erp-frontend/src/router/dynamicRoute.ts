@@ -8,7 +8,7 @@ import { useMenuStore } from '@/stores/menuStore'
 //               Vite 동적 임포트 오류 해결을 위해 상대 경로 방식으로 변경
 
 export function addDynamicRoute(pgmid: string, pgmnm: string, grpcd: string) {
-	if (router.hasRoute(pgmnm)) return
+	if (router.hasRoute(pgmid)) return
 	const menuStore = useMenuStore()
 
 	// 💡 사용자님의 8자리 PGMID 규칙에 따라 앞 4자리를 폴더명으로 사용합니다.
@@ -26,7 +26,7 @@ export function addDynamicRoute(pgmid: string, pgmnm: string, grpcd: string) {
 	// 메타 데이터에 상단메뉴, 사이드바 메뉴 데이터 저장합니다.
 	router.addRoute('DefaultLayout', {
 		path: `/${pgmid}`,
-		name: pgmnm,
+		name: pgmid,
 		component,
 		meta: {
 			topMenuCode: menuStore.activeCodecd,

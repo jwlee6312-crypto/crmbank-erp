@@ -277,7 +277,7 @@ const fetchList = async () => {
 
 const initialize = () => {
   resetForm(searchData)
-  Object.assign(searchData, { yy: String(now.getFullYear()),.mm: String(now.getMonth() + 1).padStart(2, '0'), linecd: '010', progcd: '' })
+  Object.assign(searchData, { yy: String(now.getFullYear()), mm: String(now.getMonth() + 1).padStart(2, '0'), linecd: '010', progcd: '' })
   grid?.clearData()
   itemCount.value = 0
 }

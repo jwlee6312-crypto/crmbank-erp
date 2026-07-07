@@ -245,14 +245,15 @@ const openModal = (type: string, row: RowComponent) => {
     Object.assign(modalProps, {
       title: '제품 선택',
       path: '/api/hp00/HP00_000S_STR',
-      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2' },
+      data: { gubun: 'I0', cmpycd: authStore.cmpycd, gbncd: 'A' },
       columns: [
+        { title: '자산구분', field: 'astkindnm', width: 100 },
         { title: '코드', field: 'itemcd', width: 100 },
         { title: '제품명', field: 'itemnm', width: 250 },
         { title: '규격', field: 'itsize', width: 150 }
       ],
       onConfirm: (d: any) => {
-        row.update({ itemcd: d.itemcd || d.ITEMCD, itemnm: d.itemnm || d.ITEMNM, itsize: d.itsize || d.ITSIZE, unit: d.unit || d.UNIT });
+        row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit });
         showModal.value = false;
       }
     })

@@ -46,19 +46,16 @@
               <tr>
                 <th class="required bg-light text-center">생산라인</th>
                 <td>
-                  <div class="input-group input-group-sm">
-                    <input v-model="masterData.linecd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="masterData.linenm" type="text" class="form-control" readonly />
-                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('LINE')"><i class="bi bi-search"></i></button>
-                  </div>
+                  <select v-model="masterData.linecd" class="form-select form-select-sm" @change="fetchProgOptions">
+                    <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">{{ opt.linenm }}</option>
+                  </select>
                 </td>
                 <th class="required bg-light text-center">출고공정</th>
                 <td>
-                  <div class="input-group input-group-sm">
-                    <input v-model="masterData.progcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="masterData.prognm" type="text" class="form-control" readonly />
-                    <button class="btn btn-outline-secondary px-2" @click="handleOpenHelp('PROG')"><i class="bi bi-search"></i></button>
-                  </div>
+                  <select v-model="masterData.progcd" class="form-select form-select-sm">
+                    <option value="">-- 선택 --</option>
+                    <option v-for="opt in progOptions" :key="opt.progcd" :value="opt.progcd">{{ opt.prognm }}</option>
+                  </select>
                 </td>
                 <th class="required bg-light text-center">출고번호</th>
                 <td>
@@ -114,7 +111,7 @@ const authStore = useAuthStore()
 const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const { modalVisible, modalProps } = useCommonHelp()
 
 // [1] 데이터 모델링
 const masterData = reactive<any>({
@@ -127,6 +124,8 @@ const masterData = reactive<any>({
 })
 
 const closingInfo = reactive({ clsymd: '', sclsym: '' })
+const lineOptions = ref<any[]>([])
+const progOptions = ref<any[]>([])
 
 // 포맷팅 헬퍼
 const ioym_f = computed({ get: () => masterData.ioym ? `${masterData.ioym.substring(0, 4)}-${masterData.ioym.substring(4, 6)}` : '', set: (v) => { if (v) masterData.ioym = v.replace(/-/g, '') } })
@@ -165,6 +164,24 @@ const initGrids = () => {
 }
 
 // [3] 비즈니스 로직
+async function fetchLineOptions() {
+  try {
+    const res = await api.post('/api/hp00/HP00_000S_STR', { gubun: 'L0', cmpycd: authStore.cmpycd });
+    lineOptions.value = res.data || [];
+    if (lineOptions.value.length && !masterData.linecd) masterData.linecd = lineOptions.value[0].linecd;
+    fetchProgOptions();
+  } catch (e) {}
+}
+
+async function fetchProgOptions() {
+  if (!masterData.linecd) return;
+  try {
+    const res = await api.post('/api/hp00/HP00_000S_STR', { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: masterData.linecd });
+    progOptions.value = res.data || [];
+    if (progOptions.value.length && !masterData.progcd) masterData.progcd = progOptions.value[0].progcd;
+  } catch (e) {}
+}
+
 async function fetchMaster() {
   if (!masterData.linecd || !masterData.ioym || !masterData.iono) return vAlertError('조회 조건을 확인하세요.');
   try {
@@ -244,19 +261,75 @@ async function deleteData() {
 }
 
 const handleOpenHelp = (type: string, row: any) => {
-  if (type === 'LINE') {
-    openHelp('LINE', (d) => { masterData.linecd = d.code; masterData.linenm = d.cdnm });
-  } else if (type === 'PROG') {
-    openHelp('PROG', (d) => { masterData.progcd = d.code; masterData.prognm = d.cdnm }, { linecd: masterData.linecd });
-  } else if (type === 'ITEM') {
-    openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' }), { codegbn: '210' });
-  } else if (type === 'iotype') {
-    openHelp('iotype', (d) => row.update({ iotype: d.code, iotypenm: d.cdnm }), { cmpycd: authStore.cmpycd });
-  } else if (type === 'IDEPT') {
-    openHelp('DEPT', (d) => row.update({ ideptcd: d.deptcd, ideptnm: d.deptnm }));
-  } else if (type === 'SCUST') {
-    openHelp('CUST', (d) => row.update({ scustcd: d.custcd, scustnm: d.custnm }));
+  const commonPath = '/api/ha00/HA00_00P_STR'
+  const hpPath = '/api/hp00/HP00_000S_STR'
+
+  switch (type) {
+    case 'ITEM': // 재공품 선택
+      Object.assign(modalProps, {
+        title: '재공품 선택',
+        path: hpPath,
+        defaultField: 'itemnm',
+        large: true,
+        data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '210' },
+        columns: [
+          { title: '코드', field: 'itemcd', width: 120, hozAlign: 'center' },
+          { title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 1 },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: (d: any) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' })
+      })
+      break
+
+    case 'iotype': // 출고유형 선택
+      Object.assign(modalProps, {
+        title: '출고유형 선택',
+        path: commonPath,
+        data: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '130' },
+        columns: [
+          { title: '코드', field: 'codecd', width: 100, hozAlign: 'center' },
+          { title: '유형명', field: 'codenm', minWidth: 200 }
+        ],
+        onConfirm: (d: any) => {
+          const code = d.codecd || '';
+          const nm =  d.codenm || '';
+          row.update({ iotype: code, iotypenm: nm });
+          if (row.getData()._state === 'EXIST') row.update({ _status: '수정' });
+        }
+      })
+      break
+
+    case 'IDEPT': // 사용부서 선택
+      Object.assign(modalProps, {
+        title: '부서 선택',
+        path: commonPath,
+        defaultField: 'deptnm',
+        data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+        columns: [
+          { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+          { title: '부서명', field: 'deptnm', minWidth: 200 }
+        ],
+        onConfirm: (d: any) => row.update({ ideptcd: d.deptcd, ideptnm: d.deptnm })
+      })
+      break
+
+    case 'SCUST': // 거래처 선택
+      Object.assign(modalProps, {
+        title: '거래처 선택',
+        path: commonPath,
+        defaultField: 'custnm',
+        large: true,
+        data: { gubun: 'C4', cmpycd: authStore.cmpycd },
+        columns: [
+          { title: '코드', field: 'custcd', width: 100, hozAlign: 'center' },
+          { title: '거래처명', field: 'custnm', minWidth: 250 }
+        ],
+        onConfirm: (d: any) => row.update({ scustcd: d.custcd, scustnm: d.custnm })
+      })
+      break
   }
+  modalVisible.value = true
 }
 
 const handleRowAction = (row: any) => {
@@ -283,6 +356,7 @@ onMounted(async () => {
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) { closingInfo.clsymd = r.data[0].clsymd; closingInfo.sclsym = r.data[0].sclsym; }
   })
+  fetchLineOptions();
   nextTick(initGrids);
 })
 </script>

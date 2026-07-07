@@ -43,4 +43,5 @@ public interface HpioMapper {
     List<Map<String, Object>> HPIO_250U_POP(Map<String, Object> params);
     List<Map<String, Object>> HPIO_251S_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_252S_STR(Map<String, Object> params);
+    List<Map<String, Object>> HPIO_253U_STR(Map<String, Object> params);
 }

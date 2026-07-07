@@ -112,7 +112,7 @@ const authStore = useAuthStore()
 const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const { modalVisible, modalProps } = useCommonHelp()
 
 // [1] 데이터 모델링
 const masterData = reactive<any>({
@@ -252,11 +252,85 @@ async function deleteData() {
 }
 
 const handleOpenHelp = (type: string, row: any) => {
-  if (type === 'DEPT') openHelp('DEPT', (d) => { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm });
-  else if (type === 'ITEM') openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' }), { codegbn: 'B' });
-  else if (type === 'iotype') openHelp('iotype', (d) => row.update({ iotype: d.code, iotypenm: d.cdnm }), { cmpycd: authStore.cmpycd });
-  else if (type === 'IDEPT') openHelp('DEPT', (d) => row.update({ ideptcd: d.deptcd, ideptnm: d.deptnm }));
-  else if (type === 'SCUST') openHelp('CUST', (d) => row.update({ scustcd: d.custcd, scustnm: d.custnm }));
+  const commonPath = '/api/ha00/HA00_00P_STR'
+  const hpPath = '/api/hp00/HP00_000S_STR'
+
+  switch (type) {
+    case 'DEPT': // 출고부서 선택
+      Object.assign(modalProps, {
+        title: '부서 선택',
+        path: commonPath,
+        defaultField: 'deptnm',
+        data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+        columns: [
+          { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+          { title: '부서명', field: 'deptnm', minWidth: 200 }
+        ],
+        onConfirm: (d: any) => { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm }
+      })
+      break
+
+    case 'ITEM': // 자재 선택
+      Object.assign(modalProps, {
+        title: '자재 선택',
+        path: hpPath,
+        defaultField: 'itemnm',
+        large: true,
+        data: { gubun: 'I0', cmpycd: authStore.cmpycd, gbncd: 'A', code: '', remark: '' },
+        columns: [
+          { title: '자산구분', field: 'astkindnm', width: 120, hozAlign: 'center' },
+          { title: '품목코드', field: 'itemcd', width: 120, hozAlign: 'center' },
+          { title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 1 },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: (d: any) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' })
+      })
+      break
+
+    case 'iotype': // 출고유형 선택
+      Object.assign(modalProps, {
+        title: '출고유형 선택',
+        path: commonPath,
+        data: { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '130' },
+        columns: [
+          { title: '코드', field: 'codecd', width: 100, hozAlign: 'center' },
+          { title: '유형명', field: 'codenm', minWidth: 200 }
+        ],
+        onConfirm: (d: any) => row.update({ iotype: d.codecd, iotypenm: d.codenm })
+      })
+      break
+
+    case 'IDEPT': // 사용부서 선택
+      Object.assign(modalProps, {
+        title: '사용부서 선택',
+        path: commonPath,
+        defaultField: 'deptnm',
+        data: { gubun: 'D0', cmpycd: authStore.cmpycd },
+        columns: [
+          { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+          { title: '부서명', field: 'deptnm', minWidth: 200 }
+        ],
+        onConfirm: (d: any) => row.update({ ideptcd: d.deptcd, ideptnm: d.deptnm })
+      })
+      break
+
+    case 'SCUST': // 거래처 선택
+      Object.assign(modalProps, {
+        title: '거래처 선택',
+        path: commonPath,
+        defaultField: 'custnm',
+        large: true,
+        data: { gubun: 'C4', cmpycd: authStore.cmpycd },
+        columns: [
+          { title: '코드', field: 'custcd', width: 100, hozAlign: 'center' },
+          { title: '거래처명', field: 'custnm', minWidth: 250 }
+        ],
+        onConfirm: (d: any) => row.update({ scustcd: d.custcd, scustnm: d.custnm })
+      })
+      break
+  }
+  modalVisible.value = true
 }
 
 const handleRowAction = (row: any) => {

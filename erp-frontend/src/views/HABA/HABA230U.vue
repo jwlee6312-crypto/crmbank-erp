@@ -279,8 +279,8 @@ const save = async () => {
 
 const initialize = () => {
 	const prevyyyy = masterForm.yyyy
-	const pre.mm = masterForm.mm
-	const pre.mmgbn = masterForm.mmgbn
+	const prevmm = masterForm.mm
+	const prevmmgbn = masterForm.mmgbn
 	const prevacctcd = masterForm.acctcd
 	const prevacctnm = masterForm.acctnm
 	const prevmgtgbn = masterForm.mgtgbn
@@ -289,8 +289,8 @@ const initialize = () => {
 
 	masterForm.actkind = 'I1'
 	masterForm.yyyy = prevyyyy
-	masterForm.mm = pre.mm
-	masterForm.mmgbn = pre.mmgbn
+	masterForm.mm = prevmm
+	masterForm.mmgbn = prevmmgbn
 	masterForm.acctcd = prevacctcd
 	masterForm.acctnm = prevacctnm
 	masterForm.mgtgbn = prevmgtgbn

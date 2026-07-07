@@ -1,44 +1,45 @@
-<!--	=============================================================
-	프로그램명	: 배부기준관리
+<!--
+	=============================================================
+	프로그램명	: 배부기준관리 (HAPL010U)
 	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 부문별/품목별 배부기준 및 구성비 관리 (표준 디자인 적용)
+	설명        : 부문별/품목별 배부기준 및 구성비 관리 (HAAA800U 표준 UI 적용)
 	=============================================================
 -->
 
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-  <div class="erp-container">
+  <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
-    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-diagram-3-fill me-2 text-primary" style="font-size: 18px;"></i>
         관리손익 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">배부기준관리 (HAPL010U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1">
+      <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-init" @click="resetForm">신규</button>
         <button class="btn-erp btn-search" @click="search">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
+        <button class="btn-erp btn-excel" @click="exportExcel">엑셀</button>
       </div>
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
-    <div class="flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3">
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-      <!-- 🔍 검색 조건 카드 -->
-      <div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
         <div class="card-body p-0 bg-white">
-          <table class="erp-table-full border-0">
+          <table class="erp-table-dense" width="100%">
             <colgroup>
-              <col style="width: 120px;" /><col />
+                <col style="width: 15%" /><col style="width: 85%" />
             </colgroup>
             <tbody>
               <tr>
-                <th>기준구분</th>
+                <th class="text-center bg-light">기준구분</th>
                 <td>
-                  <select v-model="searchForm.divgbn" class="form-select" style="max-width: 200px;" @change="handleSearchChange">
+                  <select v-model="searchForm.divgbn" class="form-select form-select-sm" style="max-width: 250px;" @change="handleSearchChange">
                     <option value="100">부문별 배부</option>
                     <option value="200">품목별 배부</option>
                   </select>
@@ -49,64 +50,68 @@
         </div>
       </div>
 
-      <!-- 📝 입력 정보 카드 -->
-      <div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
-        <div class="card-header bg-white py-2 px-3 border-bottom">
-          <div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-1 text-secondary"></i>배부기준 설정</div>
+      <!-- [중간] 상세 입수정 영역 -->
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
+          <div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>배부기준 설정</div>
+          <div class="d-flex gap-1">
+            <div v-if="formData.actkind === 'U0'" class="badge bg-warning text-dark px-2">수정 중</div>
+            <div v-else class="badge bg-primary text-white px-2">신규 등록</div>
+          </div>
         </div>
         <div class="card-body p-0 bg-white">
-          <table class="erp-table-full border-0">
+          <table class="erp-table-dense w-100">
             <colgroup>
-              <col style="width: 110px;" /><col />
-              <col style="width: 110px;" /><col />
-              <col style="width: 110px;" /><col />
+              <col style="width: 100px;" /><col />
+              <col style="width: 100px;" /><col />
+              <col style="width: 100px;" /><col />
             </colgroup>
             <tbody>
               <tr>
-                <th class="required">기준구분</th>
+                <th class="required bg-light text-center">기준구분</th>
                 <td>
-                  <select v-model="formData.divgbn" class="form-select">
+                  <select v-model="formData.divgbn" class="form-select form-select-sm">
                     <option value="100">부문별 배부</option>
                     <option value="200">품목별 배부</option>
                   </select>
                 </td>
-                <th class="required">배부기준</th>
+                <th class="required bg-light text-center">배부기준</th>
                 <td>
-                  <input v-model="formData.divcd" type="text" class="form-control text-center fw-bold" maxlength="3" :readonly="formData.actkind === 'U0'" />
+                  <input v-model="formData.divcd" type="text" class="form-control form-control-sm text-center fw-bold text-primary" maxlength="3" :disabled="formData.actkind === 'U0'" />
                 </td>
-                <th class="required">배부기준명</th>
+                <th class="required bg-light text-center">배부기준명</th>
                 <td>
-                  <input v-model="formData.divnm" type="text" class="form-control" />
-                </td>
-              </tr>
-              <tr>
-                <th class="required">구성비 1 (%)</th>
-                <td>
-                  <input v-model="formData.rate1" type="number" class="form-control text-end" />
-                </td>
-                <th>구성비 2 (%)</th>
-                <td>
-                  <input v-model="formData.rate2" type="number" class="form-control text-end" :disabled="formData.divgbn === '200'" />
-                </td>
-                <th>구성비 3 (%)</th>
-                <td>
-                  <input v-model="formData.rate3" type="number" class="form-control text-end" :disabled="formData.divgbn === '200'" />
+                  <input v-model="formData.divnm" type="text" class="form-control form-control-sm" />
                 </td>
               </tr>
               <tr>
-                <th>비&nbsp;&nbsp;&nbsp;&nbsp;고</th>
+                <th class="required bg-light text-center">구성비 1 (%)</th>
                 <td>
-                  <input v-model="formData.remark" type="text" class="form-control" maxlength="30" />
+                  <input v-model="formData.rate1" type="number" class="form-control form-control-sm text-end" />
                 </td>
-                <th class="required">출현순서</th>
+                <th class="bg-light text-center">구성비 2 (%)</th>
                 <td>
-                  <input v-model="formData.dspord" type="text" class="form-control text-center" maxlength="3" />
+                  <input v-model="formData.rate2" type="number" class="form-control form-control-sm text-end" :disabled="formData.divgbn === '200'" />
                 </td>
-                <th>사용여부</th>
+                <th class="bg-light text-center">구성비 3 (%)</th>
                 <td>
-                  <div class="form-check mb-0">
-                    <input v-model="formData.useyn" class="form-check-input" type="checkbox" id="useynCheckHapl" true-value="Y" false-value="N">
-                    <label class="form-check-label small fw-bold text-primary" for="useynCheckHapl">사용</label>
+                  <input v-model="formData.rate3" type="number" class="form-control form-control-sm text-end" :disabled="formData.divgbn === '200'" />
+                </td>
+              </tr>
+              <tr>
+                <th class="bg-light text-center">비&nbsp;&nbsp;&nbsp;&nbsp;고</th>
+                <td>
+                  <input v-model="formData.remark" type="text" class="form-control form-control-sm" maxlength="30" />
+                </td>
+                <th class="required bg-light text-center">출현순서</th>
+                <td>
+                  <input v-model="formData.dspord" type="number" class="form-control form-control-sm text-end" />
+                </td>
+                <th class="bg-light text-center">사용</th>
+                <td>
+                  <div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
+                    <input v-model="formData.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useynHapl010">
+                    <label class="form-check-label ms-2 small fw-bold" for="useynHapl010">{{ formData.useyn === 'Y' ? '사용' : '중지' }}</label>
                   </div>
                 </td>
               </tr>
@@ -115,12 +120,17 @@
         </div>
       </div>
 
-      <!-- 📊 그리드 영역 -->
-      <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+      <!-- [하단] 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
+          <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>
+          <span class="fw-bold small text-dark">배부기준 목록</span>
+        </div>
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-            <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
@@ -141,24 +151,54 @@ const searchForm = reactive({
 })
 
 const formData = reactive({
-  actkind: 'A0', divgbn: '100', divcd: '', divnm: '', rate1: 0, rate2: 0, rate3: 0, remark: '', dspord: '', useyn: 'Y'
+  actkind: 'A0', divgbn: '100', divcd: '', divnm: '', rate1: 0, rate2: 0, rate3: 0, remark: '', dspord: 0, useyn: 'Y'
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
 const resetForm = () => {
-  Object.assign(formData, { actkind: 'A0', divgbn: searchForm.divgbn, divcd: '', divnm: '', rate1: 0, rate2: 0, rate3: 0, remark: '', dspord: '', useyn: 'Y' })
+  Object.assign(formData, { actkind: 'A0', divgbn: searchForm.divgbn, divcd: '', divnm: '', rate1: 0, rate2: 0, rate3: 0, remark: '', dspord: 0, useyn: 'Y' })
 }
 
 const handleSearchChange = () => { search(); resetForm() }
 
 const search = async () => {
   try {
-    const res = await api.post('/api/hapl/HAPL_010U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, divgbn: searchForm.divgbn })
-    const data = (res.data || []).map((row: any) => ({
-      divcd: row.divcd, divnm: row.divnm, rate1: Number(row.Srate || 0), rate2: Number(row.Mrate || 0), rate3: Number(row.Erate || 0), remark: row.remark, dspord: row.dspord, useyn: row.useyn, divgbn: searchForm.divgbn
-    }))
+    // 🚀 SQL Server Numeric 변환 오류 방지를 위해 모든 숫자 필드를 0으로 초기화하여 전송
+    const params = {
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
+      divgbn: searchForm.divgbn,
+      divcd: '',
+      divnm: '',
+      rate1: 0,
+      rate2: 0,
+      rate3: 0,
+      remark: '',
+      dspord: 0,
+      useyn: '',
+      userid: authStore.userid
+    }
+    const res = await api.post('/api/hapl/HAPL_010U_STR', params)
+
+    const data = (res.data || []).map((row: any) => {
+      // 키 대소문자 정규화
+      const n: any = {};
+      Object.keys(row).forEach(k => n[k.toLowerCase()] = row[k]);
+
+      return {
+        divcd: n.divcd,
+        divnm: n.divnm,
+        rate1: Number(n.srate || n.rate1 || 0),
+        rate2: Number(n.mrate || n.rate2 || 0),
+        rate3: Number(n.erate || n.rate3 || 0),
+        remark: n.remark,
+        dspord: n.dspord,
+        useyn: n.useyn,
+        divgbn: searchForm.divgbn
+      }
+    })
     mainGrid?.setData(data)
     vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 오류') }
@@ -167,11 +207,33 @@ const search = async () => {
 const save = async () => {
   if (!formData.divcd || !formData.divnm) return vAlertError('필수 항목을 입력하세요.')
   const rateSum = Number(formData.rate1) + Number(formData.rate2) + Number(formData.rate3)
-  if (rateSum !== 100) return vAlertError('구성비의 합은 100이어야 합니다.')
+
+  // 품목별 배부는 구성비 체크 제외하거나 로직 확인 필요하나, 기존 로직 유지
+  if (formData.divgbn === '100' && rateSum !== 100) {
+    return vAlertError('구성비의 합은 100이어야 합니다.')
+  }
+
   try {
-    await api.post('/api/hapl/HAPL_010U_STR', { ...formData, cmpycd: authStore.cmpycd, userid: authStore.userid })
-    vAlert('저장되었습니다.'); search(); resetForm();
+    const payload = { ...formData, cmpycd: authStore.cmpycd, userid: authStore.userid }
+    const res = await api.post('/api/hapl/HAPL_010U_STR', payload)
+
+    // 결과 확인
+    const resData = (res.data && res.data[0]) ? res.data[0] : {};
+    const result = resData.RESULT || resData.result || '';
+
+    if (result === 'N') {
+      vAlertError(resData.MSG || resData.msg || '저장 중 오류가 발생했습니다.');
+    } else {
+      vAlert('저장되었습니다.');
+      search();
+      resetForm();
+    }
   } catch (e) { vAlertError('저장 오류') }
+}
+
+const exportExcel = () => {
+  if (!mainGrid || mainGrid.getData().length === 0) return vAlertError('조회된 데이터가 없습니다.')
+  mainGrid.download("xlsx", `배부기준관리_${searchForm.divgbn}_${new Date().toISOString().slice(0, 10)}.xlsx`, { sheetName: '배부기준' })
 }
 
 onMounted(() => {
@@ -180,7 +242,7 @@ onMounted(() => {
       layout: 'fitColumns', height: '100%',
       columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
       columns: [
-        { title: "배부기준", field: "divcd", width: 90, hozAlign: "center" },
+        { title: "배부기준", field: "divcd", width: 90, hozAlign: "center", cssClass: 'fw-bold border-end' },
         { title: "배부기준 명", field: "divnm", widthGrow: 2, cssClass: 'fw-bold text-primary' },
         { title: "구성비 1", field: "rate1", width: 90, hozAlign: "right", formatter: (c) => c.getValue() + '%' },
         { title: "구성비 2", field: "rate2", width: 90, hozAlign: "right", formatter: (c) => c.getValue() + '%' },
@@ -195,10 +257,18 @@ onMounted(() => {
         }
       ]
     })
-    mainGrid.on("rowClick", (e, row) => { Object.assign(formData, row.getData()); formData.actkind = 'U0' })
+    mainGrid.on("rowClick", (e, row) => {
+      const d = row.getData();
+      Object.assign(formData, d);
+      formData.actkind = 'U0'
+    })
   }
   search()
 })
 
 watch(() => formData.divgbn, (newVal) => { if (newVal === '200') { formData.rate2 = 0; formData.rate3 = 0 } })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+</style>

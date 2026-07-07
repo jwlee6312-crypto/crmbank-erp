@@ -105,7 +105,7 @@ const router = useRouter()
 const { today, firstDay } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const { modalVisible, modalProps } = useCommonHelp()
 
 // [1] 데이터 모델링
 const searchData = reactive({
@@ -132,7 +132,7 @@ const initGrids = () => {
     layout: "fitColumns", height: "100%", placeholder: "데이터 없음",
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
-      { title: "일 자", field: "ioymd", width: 110, hozAlign: "center", formatter: (c) => formatDateString(c.getValue()) },
+      { title: "일 자", field: "ioymd", width: 150, hozAlign: "center", formatter: (c) => formatDateString(c.getValue()) },
       {
         title: "적 요 (거래처/내역)", field: "custnm", minWidth: 250, widthGrow: 1,
         formatter: (cell) => {
@@ -156,19 +156,20 @@ const initGrids = () => {
         },
         bottomCalc: () => "합 계"
       },
-      { title: "입출구분", field: "iotypenm", width: 110, hozAlign: "center" },
-      { title: "입 고", field: "inqty", width: 100, hozAlign: "right", formatter: "money", cssClass: "text-success", bottomCalc: "sum" },
-      { title: "출 고", field: "outqty", width: 100, hozAlign: "right", formatter: "money", cssClass: "text-danger", bottomCalc: "sum" },
+      { title: "입출구분", field: "iotypenm", width: 150, hozAlign: "center" },
+      { title: "입 고", field: "inqty", width: 150, hozAlign: "right", formatter: "money", cssClass: "text-success", bottomCalc: "sum" },
+      { title: "출 고", field: "outqty", width: 150, hozAlign: "right", formatter: "money", cssClass: "text-danger", bottomCalc: "sum" },
       {
-        title: "재 고", field: "stkqty", width: 110, hozAlign: "right",
+        title: "재 고", field: "stkqty", width: 150, hozAlign: "right",
         formatter: (c) => `<span class="${Number(c.getValue()) < 0 ? 'text-danger' : ''} fw-bold">${Number(c.getValue()).toLocaleString()}</span>`
       },
-      { title: "창 고", field: "whnm", width: 120 },
-      { title: "비 고", field: "pkunitnm", width: 100 }
+      { title: "창 고", field: "whnm", width: 150 },
+      { title: "비 고", field: "pkunitnm", width: 150 }
     ],
     columnCalcs: "table"
   });
 }
+
 
 // [3] 비즈니스 로직
 const fetchWhOptions = async () => {
@@ -200,14 +201,46 @@ async function fetchList() {
 }
 
 const handleOpenHelp = (type: string) => {
-  if (type === 'ITEM') {
-    openHelp('ITEM', (d) => {
-      Object.assign(searchData, { itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, astkind: d.astkind });
-      fetchList();
-    }, { codegbn: 'B' });
-  } else if (type === 'WH') {
-    openHelp('WH', (d) => { searchData.whcd = d.whcd; searchData.whnm = d.whnm }, { gubun: 'W1' });
+  const hpPath = '/api/hp00/HP00_000S_STR'
+  const hsPath = '/api/hs00/HS00_000S_STR'
+
+  switch (type) {
+    case 'ITEM': // 품목 선택
+      Object.assign(modalProps, {
+        title: '품목 선택',
+        path: hpPath,
+        large: true,
+        data: { gubun: 'I0', cmpycd: authStore.cmpycd, gbncd: 'A', code: '', remark: '' },
+        columns: [
+          { title: '품목코드', field: 'itemcd', width: 120, hozAlign: 'center' },
+          { title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 1, hozAlign: 'left' },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: (d: any) => {
+          Object.assign(searchData, { itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, astkind: d.astkind });
+          fetchList();
+        }
+      })
+      break
+
+    case 'WH': // 창고 선택
+      Object.assign(modalProps, {
+        title: '창고 선택',
+        path: hsPath,
+        data: { gubun: 'W1', cmpycd: authStore.cmpycd },
+        columns: [
+          { title: '창고코드', field: 'whcd', width: 100, hozAlign: 'center' },
+          { title: '창고명', field: 'whnm', minWidth: 150, widthGrow: 1, hozAlign: 'left' }
+        ],
+        onConfirm: (d: any) => {
+          searchData.whcd = d.whcd;
+          searchData.whnm = d.whnm;
+        }
+      })
+      break
   }
+  modalVisible.value = true
 }
 
 const initialize = () => {

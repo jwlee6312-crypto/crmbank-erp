@@ -295,7 +295,7 @@ const handleOpenHelp = (type: string, target?: any) => {
     Object.assign(modalProps, {
       title: '품목 선택',
       path: '/api/hs00/HS00_000S_STR',
-      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', code: '', codenm: '', remark: '' },
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '3', code: '', codenm: '', remark: '' },
       columns: [
         { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
         { title: '품목명', field: 'itemnm', width: 200 },

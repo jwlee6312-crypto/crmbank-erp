@@ -310,6 +310,21 @@ public class HsioController {
         }
     }
 
+    @PostMapping("/HSIO_600U_SAVE")
+    public ResponseEntity<ApiResponse<?>> saveHSIO600U(@RequestBody Map<String, Object> payload, HttpSession session) {
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user == null) return ResponseEntity.status(401).build();
+        try {
+            payload.put("cmpycd", user.getCmpycd());
+            payload.put("updemp", user.getUserid());
+            Map<String, Object> result = hsioService.saveHSIO600U(payload);
+            return ResponseEntity.ok(ApiResponse.success(result, "출고 처리가 완료되었습니다."));
+        } catch (Exception e) {
+            log.error("❌ [hsio] saveHSIO600U Error: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
+        }
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @PostMapping("/{procedure}")
     public ResponseEntity<?> executeProcedure(
@@ -322,6 +337,7 @@ public class HsioController {
         }
 
         String proc = procedure.toUpperCase();
+        UserSession user = (UserSession) session.getAttribute("user_session");
         try {
             injectSession(params, session);
             fillMissingParameters(proc, params);
@@ -339,6 +355,12 @@ public class HsioController {
 
             log.info("📋 [hsio] 실행 요청: {}", proc);
             
+            // 🚀 [해결] 외부전표전송 특수 로직 (ASP 루프 처리 이식)
+            if ("HSIO_990U_STR".equals(proc) && "U0".equals(actkind)) {
+                hsioService.transferExternalSlip(params, user.getUserid());
+                return ResponseEntity.ok(List.of(Map.of("res", "OK")));
+            }
+
             List<Map<String, Object>> result;
             if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
                 String positionalSql = buildPositionalSql(proc, params);
@@ -480,6 +502,7 @@ public class HsioController {
                     case "HSIO_580U_STR": result = hsioMapper.HSIO_580U_STR(params); break;
                     case "HSIO_581U_STR": result = hsioMapper.HSIO_581U_STR(params); break;
                     case "HSIO_590U_STR": result = hsioMapper.HSIO_590U_STR(params); break;
+                    case "HSIO_600U_STR": result = hsioMapper.HSIO_600U_STR(params); break;
                     case "HSIO_600S_STR": result = hsioMapper.HSIO_600S_STR(params); break;
                     case "HSIO_610S_STR": result = hsioMapper.HSIO_610S_STR(params); break;
                     case "HSIO_620S_STR": result = hsioMapper.HSIO_620S_STR(params); break;
@@ -492,6 +515,7 @@ public class HsioController {
                     case "HSIO_721U_STR": result = hsioMapper.HSIO_721U_STR(params); break;
                     case "HSIO_730U_STR": result = hsioMapper.HSIO_730U_STR(params); break;
                     case "HSIO_731U_STR": result = hsioMapper.HSIO_731U_STR(params); break;
+                    case "HSIO_990U_STR": result = hsioMapper.HSIO_990U_STR(params); break;
                     default:
                         return ResponseEntity.notFound().build();
                 }

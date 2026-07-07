@@ -82,4 +82,8 @@ public class CommService {
     public List<Map<String, Object>> getLeftMenus(String upmucd) {
         return commMapper.GET_LEFT_MENU_LIST(upmucd);
     }
+
+    public List<Map<String, Object>> getProgramList(Map<String, Object> param) {
+        return commMapper.GET_PROGRAM_LIST(param);
+    }
 }

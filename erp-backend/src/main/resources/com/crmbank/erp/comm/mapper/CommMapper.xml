@@ -46,6 +46,15 @@
     <select id="GET_LEFT_MENU_LIST" resultType="map">
         select a.upmucd, a.grpcd, isnull(b.grpnm,'') as grpnm, a.pgmid, a.pgmnm from haaa800t_tbl a inner join haaa810t_tbl b on a.upmucd = b.upmucd and a.grpcd = b.grpcd where a.upmucd = #{upmucd} and a.useyn = 'y' order by b.dspord, a.dspord
     </select>
+    <select id="GET_PROGRAM_LIST" resultType="map">
+        select pgmid, pgmnm
+        from haaa800t_tbl
+        where useyn = 'y'
+        <if test="pgmnm != null and pgmnm != ''">
+            and pgmnm like '%' + #{pgmnm} + '%'
+        </if>
+        order by pgmid
+    </select>
     <select id="GET_COMPANY_INFO" resultType="map">
         exec haba_900u_str 's0', #{cmpycd}
     </select>

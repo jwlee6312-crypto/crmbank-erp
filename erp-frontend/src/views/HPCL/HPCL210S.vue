@@ -265,7 +265,7 @@ const fetchList = async () => {
 
 const initialize = () => {
   resetForm(searchData)
-  Object.assign(searchData, { yy: String(now.getFullYear()),.mm: String(now.getMonth() + 1).padStart(2, '0'), whcd: '000' })
+  Object.assign(searchData, { yy: String(now.getFullYear()), mm: String(now.getMonth() + 1).padStart(2, '0'), whcd: '000' })
   if (astOptions.value.length > 0) searchData.astkind = astOptions.value[0].code
   grid?.clearData()
   itemCount.value = 0

@@ -289,11 +289,75 @@ async function saveAll() {
   } catch (e) { vAlertError('저장 실패'); }
 }
 
-const handleOpenHelp = (type: string, row: any) => {
-  if (type === 'DEPT') openHelp('DEPT', (d) => { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm });
-  else if (type === 'CUST') openHelp('CUST', (d) => { masterData.custcd = d.custcd; masterData.custnm = d.custnm });
-  else if (type === 'ITEM') openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' }), { codegbn: 'B' });
-  else if (type === 'MAT') openHelp('ITEM', (d) => row.update({ mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit, _status: '입력', _state: 'NEW' }));
+const handleOpenHelp = (type: string, target?: any) => {
+  // 1. 모달 기본 설정 초기화
+  const props: any = {
+    title: '',
+    path: '',
+    data: { cmpycd: authStore.cmpycd },
+    columns: [],
+    onConfirm: () => {}
+  };
+
+  // 2. 유형별 설정 (직관적 명시)
+  if (type === 'DEPT') {
+    props.title = '부서 선택';
+    props.path = '/api/ha00/HA00_00P_STR';
+    props.data.gubun = 'D0';
+    props.columns = [
+      { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+      { title: '부서명', field: 'deptnm', width: 200 }
+    ];
+    props.onConfirm = (d: any) => { masterData.deptcd = d.deptcd; masterData.deptnm = d.deptnm };
+  }
+  else if (type === 'CUST') {
+    props.title = '거래처 선택';
+    props.path = '/api/ha00/HA00_00P_STR';
+    props.data.gubun = 'C7'; // 외주가공처(C7)
+    props.columns = [
+      { title: '거래처코드', field: 'custcd', width: 100, hozAlign: 'center' },
+      { title: '거래처명', field: 'custnm', width: 200 }
+    ];
+    props.onConfirm = (d: any) => { masterData.custcd = d.custcd; masterData.custnm = d.custnm };
+  }
+  else if (type === 'ITEM') {
+    props.title = '제품 선택';
+    props.path = '/api/hp00/HP00_000S_STR';
+    props.data.gubun = 'I0'; // 품목 검색(I9)
+    props.data.gbncd = 'A'; // 제품군 필터 예시
+    props.columns = [
+      { title: '자산구분', field: 'astkindnm', width: 100 },
+      { title: '제품코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+      { title: '제품명', field: 'itemnm', width: 200 },
+      { title: '규격', field: 'itsize', width: 150 },
+      { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+    ];
+    props.onConfirm = (d: any) => target.update({
+      itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit,
+      _status: '입력', _state: 'NEW'
+    });
+  }
+  else if (type === 'MAT') {
+    props.title = '자재 선택';
+    props.path = '/api/hp00/HP00_000S_STR';
+    props.data.gubun = 'I0';
+    props.data.gbncd = 'A'; // 제품군 필터 예시
+    props.columns = [
+      { title: '자산구분', field: 'astkindnm', width: 100 },
+      { title: '자재코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+      { title: '자재명', field: 'itemnm', width: 200 },
+      { title: '규격', field: 'itsize', width: 150 },
+      { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+    ];
+    props.onConfirm = (d: any) => target.update({
+      mitemcd: d.itemcd, mitemnm: d.itemnm, mitsize: d.itsize, munit: d.unit,
+      _status: '입력', _state: 'NEW'
+    });
+  }
+
+  // 3. 모달 실행
+  Object.assign(modalProps, props);
+  modalVisible.value = true;
 }
 
 const handleRowAction = (row: any) => {

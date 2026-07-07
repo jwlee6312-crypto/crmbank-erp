@@ -182,8 +182,9 @@ public class HsipController {
                 String prop = pm.getProperty();
                 if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
                     String cleanProp = prop.trim();
-                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
-                        params.put(cleanProp, "");
+                    // 🚀 기존: 무조건 "" 채움 -> 수정: 파라미터가 없거나 null인 경우만 null로 유지 (MyBatis가 처리하도록)
+                    if (!params.containsKey(cleanProp)) {
+                        params.put(cleanProp, null);
                     }
                     if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
                 }
@@ -200,8 +201,12 @@ public class HsipController {
             List<String> values = new ArrayList<>();
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
                 Object val = params.get(pm.getProperty().trim());
-                if (val == null) values.add("''");
-                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+                // 🚀 빈 문자열("")이나 null이 들어오면 SQL 상에서 NULL로 처리하여 numeric 변환 오류 방지
+                if (val == null || (val instanceof String && ((String) val).trim().isEmpty())) {
+                    values.add("NULL");
+                } else {
+                    values.add("'" + val.toString().replace("'", "''").trim() + "'");
+                }
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }

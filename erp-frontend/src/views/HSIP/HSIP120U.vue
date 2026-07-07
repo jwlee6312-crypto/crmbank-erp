@@ -174,7 +174,6 @@ import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-// import { useCommonHelp } from '@/composables/useCommonHelp'
 import { getDate, formatDateToInput } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
@@ -184,7 +183,11 @@ const authStore = useAuthStore()
 const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-// const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
+
+const modalVisible = ref(false)
+const modalProps = reactive<any>({
+  title: '', path: '', data: {}, columns: [], onConfirm: () => {}
+})
 
 const searchForm = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
@@ -211,7 +214,9 @@ const fetchPoList = async () => {
     const res = await api.post('/api/hsip/HSIP_122U_STR', {
         cmpycd: authStore.cmpycd, deptcd: searchForm.deptcd,
         fromdt: (searchForm.fromdt || '').replace(/-/g, ''),
-        todt: (searchForm.todt || '').replace(/-/g, '')
+        todt: (searchForm.todt || '').replace(/-/g, ''),
+        // 🚀 숫자형 파라미터 0 보정 (기반 준수)
+        frgnrate: 0
     })
     poGrid?.setData(res.data || [])
     vAlert('조회되었습니다.')
@@ -219,11 +224,14 @@ const fetchPoList = async () => {
 }
 
 const fetchDetail = async () => {
-  if (!formData.fileno || !formData.shipseq) return
+  if (!formData.fileno) return // 🚀 shipseq가 없어도 조회가 가능하도록 수정
   try {
     const res = await api.post('/api/hsip/HSIP_120U_STR', {
-          fileno: formData.fileno, shipseq: formData.shipseq, passseq: formData.passseq,
-          actkind: 'S0', cmpycd: authStore.cmpycd
+          fileno: formData.fileno,
+          shipseq: formData.shipseq || '10', // 🚀 선적차수 없으면 기본값 10
+          passseq: formData.passseq,
+          actkind: 'S0', cmpycd: authStore.cmpycd,
+          frgnrate: 0
     })
     if (res.data?.length) {
         const data = res.data[0]
@@ -232,13 +240,16 @@ const fetchDetail = async () => {
         data.arvymd = formatDateToInput(data.arvymd)
 
         Object.assign(formData, data)
-        formData.shipseqnm = `${formData.shipseq.substring(0,1)}차 선적`
+        // 🚀 shipseq 정보가 있으면 표시, 없으면 '직통관' 등으로 유연하게 표시
+        formData.shipseqnm = formData.shipseq ? `${formData.shipseq.substring(0,1)}차 선적` : '미선적(직통관)'
+
         const resItems = await api.post('/api/hsip/HSIP_121U_STR', {
             actkind: 'S0', cmpycd: authStore.cmpycd,
-            fileno: formData.fileno, shipseq: formData.shipseq, passseq: formData.passseq,
+            fileno: formData.fileno,
+            shipseq: formData.shipseq || '10', // 🚀 상세 조회도 기본값 대응
+            passseq: formData.passseq,
             gqty: 0, qty: 0, amt: 0
         })
-        console.log(resItems.data)
         itemGrid?.setData(resItems.data || [])
     }
   } catch (e) { vAlertError('상세 조회 실패') }
@@ -259,41 +270,53 @@ const save = async () => {
     const passymd = (formData.passymd || '').replace(/-/g, '')
     const ITEMGRID_DATA = itemGrid?.getData() || []
 
-    // 🔍 수량 및 모드 판별 전처리
-    for (const item of selectedItems) {
-      const totalQty = Number(item.iqty || 0) + Number(item.gqty || 0)
-      const isNewItem = clean(item.iorowno) === ''
-
-      // 신규 등록인 경우 수량이 0보다 커야 함
-      if (isNewItem && totalQty <= 0) {
-        vAlertError(`신규 품목(${item.itemnm})은 통관량 또는 감모량을 입력해야 합니다.`)
-        return
-      }
-      // 수정인 경우 0 허용 (서비스 단에서 삭제 처리됨)
-    }
-
-    // IONO 존재 여부로 마스터 모드 판별
     const rowWithIono = ITEMGRID_DATA.find(d => clean(d.iono) !== '')
     const isUpdate = !!rowWithIono
 
+    // 🚀 [Rule] 모든 필드를 NULL 없이 정제 및 항공 운송(직통관) 대응
+    const mstData = {
+      actkind: isUpdate ? 'U' : 'A',
+      cmpycd: authStore.cmpycd || '',
+      fileno: formData.fileno || '',
+      shipseq: formData.shipseq || '10', // 💡 항공 운송 등 선적 생략 시 기본값 '10'
+      passseq: formData.passseq || '10',
+      passymd: passymd,
+      taxorg: formData.taxorg || '',
+      passno: formData.passno || '',
+      whcd: formData.whcd || '',
+      deptcd: formData.ideptcd || '',
+      ioym: isUpdate ? clean(rowWithIono.ioym) : (clean(formData.ioym) || passymd.substring(0, 6)),
+      iono: isUpdate ? clean(rowWithIono.iono) : '',
+      updemp: authStore.userid || '',
+      frgnrate: Number(formData.frgnrate) || 0 // 🚀 숫자형자료 준수
+    }
+
     const payload = {
-      mst: {
-        ...formData,
-        actkind: isUpdate ? 'U' : 'A',
-        ioym: isUpdate ? clean(rowWithIono.ioym) : (clean(formData.ioym) || passymd.substring(0, 6)),
-        iono: isUpdate ? clean(rowWithIono.iono) : '',
-        passymd: passymd,
-        iogbn: '100', iotype: '100', cfmyn: 'Y',
-        deptcd: formData.ideptcd, updemp: authStore.userid
-      },
+      mst: mstData,
       dtl: selectedItems.map(item => ({
-        ...item,
-        prowno: item.srowno // 🚀 srowno를 prowno에 담아서 전달
+        actkind: isUpdate ? 'U' : 'A',
+        cmpycd: authStore.cmpycd || '',
+        fileno: formData.fileno || '',
+        shipseq: formData.shipseq || '10',
+        passseq: formData.passseq || '10',
+        prowno: item.prowno || '', // 💡 prowno(항번)는 문자열 공백 유지 (자동생성)
+        itemcd: item.itemcd || '',
+        itsize: item.itsize || '',
+        unit: item.unit || '',
+        gqty: Number(item.gqty) || 0, // 🚀 숫자형자료 준수
+        iqty: Number(item.iqty) || 0,
+        qty: Number(item.iqty) || 0,
+        amt: Number(item.amt) || 0,
+        price: Number(item.price) || 0,
+        ioym: mstData.ioym,
+        iono: mstData.iono,
+        iorowno: item.iorowno || '',
+        updemp: authStore.userid || ''
       }))
     }
 
     const res = await api.post('/api/hsip/HSIP_120U_SAVE', payload)
-    if (res.status === 200) { // 🚀 HTTP 상태 코드로 성공 여부 확인 (인터셉터 영향 방지)
+    if (res.data) {
       vAlert('정상적으로 통관 입고 처리가 완료되었습니다.')
       fetchDetail(); fetchPoList();
     }
@@ -318,10 +341,20 @@ function initialize() {
 
 function openHelp(type: string) {
   if (type === 'S_DEPT' || type === 'DEPT') {
-    openCommonHelp('DEPT', (d) => {
-      if (type === 'S_DEPT') { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
-      else { formData.ideptcd = d.deptcd; formData.ideptnm = d.deptnm }
+    Object.assign(modalProps, {
+      title: '부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' },
+      columns: [
+        { title: '부서코드', field: 'deptcd', width: 100, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => {
+        if (type === 'S_DEPT') { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
+        else { formData.ideptcd = d.deptcd; formData.ideptnm = d.deptnm }
+      }
     })
+    modalVisible.value = true
   }
 }
 

@@ -76,7 +76,7 @@
                 </td>
                 <th>품목(모델)</th>
                 <td>
-                  <select v-model="masterData.MODELCD" class="form-select form-select-sm" style="width: 180px;">
+                  <select v-model="masterData.modelcd" class="form-select form-select-sm" style="width: 180px;">
                     <option value="0000000">전체</option>
                     <option v-for="m in modelOptions" :key="m.itemcd" :value="m.itemcd">{{ m.itemnm }}</option>
                   </select>
@@ -159,7 +159,7 @@ const masterData = reactive({
   whcd: '200',
   iwhcd: '100',
   ordym: initym, ordno: '',
-  MODELCD: '0000000',
+  modelcd: '0000000',
   remark: ''
 })
 
@@ -279,7 +279,7 @@ const importData = async () => {
         const res = await api.post('/api/hpio/HPIO_530S_STR', {
             cmpycd: authStore.cmpycd,
             ordym: masterData.ordym, ordno: masterData.ordno,
-            MODELCD: masterData.MODELCD, whcd: masterData.whcd
+            modelcd: masterData.modelcd, whcd: masterData.whcd
         })
         const mapped = res.data.map((i: any) => ({ ...i, _state: 'NEW', _status: '입력', ioqty: i.reqqty }))
         grid?.setData(mapped)
@@ -357,7 +357,7 @@ const initialize = () => {
       deptcd: authStore.deptcd, deptnm: authStore.deptnm,
       ioym: initym, iono: '', ioymd: initymd,
       whcd: '200', iwhcd: '100',
-      ordym: initym, ordno: '', MODELCD: '0000000'
+      ordym: initym, ordno: '', modelcd: '0000000'
   })
   grid?.clearData(); itemCount.value = 0
 }

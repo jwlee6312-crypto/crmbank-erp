@@ -1,115 +1,134 @@
-<!--관리정보/시스템관리/프로그램관리 [ERP 프리미엄 고밀도 표준 - 1열 배치] -->
+<!--
+	=============================================================
+	프로그램명	: 프로그램관리 (HAAA800U)
+	작성일자	: 2025.02.24
+	설명        : 시스템 프로그램 관리 (HSOD100U 디자인 패턴 적용)
+	=============================================================
+-->
+
 <template>
-	<AppAlert :show="showalert" :error="showerror" :message="alertmessage" />
+  <AppAlert :show="showalert" :error="showerror" :message="alertmessage" />
 
-	<div class="erp-container">
-		<!-- 🚀 1. 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 shadow-sm sticky-top">
-			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-window-sidebar me-2 text-primary" style="font-size: 18px;"></i>
-				시스템 관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-				<span class="text-primary fw-bolder">프로그램 관리 (haaa800u)</span>
-			</div>
-			<div class="btn-group-erp pe-3">
-				<button class="btn-erp btn-init" @click="initialize">초기화</button>
-				<button class="btn-erp btn-search" @click="search">조회</button>
-				<button class="btn-erp btn-save" @click="save">저장</button>
-				<button v-if="formdata.actkind === 'U0'" class="btn-erp btn-delete" @click="deletedata">삭제</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <!-- 🚀 1. 상단 액션 바 -->
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-window-sidebar me-2 text-primary" style="font-size: 18px;"></i>
+        시스템 관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">프로그램 관리 (HAAA800U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-save" @click="save">저장</button>
+        <button v-if="formdata.actkind === 'U0'" class="btn-erp btn-delete" @click="deletedata">삭제</button>
+      </div>
+    </div>
 
-		<!-- 💡 메인 컨텐츠 영역 -->
-		<div class="flex-grow-1 overflow-hidden d-flex flex-column gap-3 p-3">
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-			<!-- 🔍 2. 검색 바 섹션 -->
-			<div class="card border-0 shadow-sm flex-shrink-0">
-				<div class="card-body p-2 bg-white rounded">
-					<div class="d-flex align-items-center gap-3">
-						<div class="input-group input-group-sm flex-nowrap" style="width: 350px;">
-							<span class="input-group-text bg-light fw-bold px-3 border-0">업무분류</span>
-							<select v-model="searchform.upmucd" class="form-select border-light-subtle" @change="fetchsearchgrpcd">
-								<option v-for="opt in upmuoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-							</select>
-						</div>
-						<div class="input-group input-group-sm flex-nowrap" style="width: 350px;">
-							<span class="input-group-text bg-light fw-bold px-3 border-0">메뉴그룹</span>
-							<select v-model="searchform.grpcd" class="form-select border-light-subtle" @change="search">
-								<option value="">전체보기</option>
-								<option v-for="item in searchgrpcdoptions" :key="item.grpcd" :value="item.grpcd">{{ item.grpnm }}</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
+      <!-- [상단] 조회 필터 영역 -->
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 10%" /><col style="width: 40%" />
+                <col style="width: 10%" /><col style="width: 40%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light">업무분류</th>
+                <td>
+                  <select v-model="searchform.upmucd" class="form-select form-select-sm" @change="fetchsearchgrpcd">
+                    <option v-for="opt in upmuoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  </select>
+                </td>
+                <th class="text-center bg-light">메뉴그룹</th>
+                <td>
+                  <select v-model="searchform.grpcd" class="form-select form-select-sm" @change="search">
+                    <option value="">전체보기</option>
+                    <option v-for="item in searchgrpcdoptions" :key="item.grpcd" :value="item.grpcd">{{ item.grpnm }}</option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-			<!-- 💡 3. 상세 입수정 영역 -->
-			<div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
-				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
-					<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-secondary"></i>프로그램 정보 관리</div>
-					<div v-if="formdata.actkind === 'U0'" class="badge bg-warning text-dark px-2">수정 중</div>
-					<div v-else class="badge bg-primary text-white px-2">신규 등록</div>
-				</div>
-				<div class="card-body p-0 bg-white">
-					<table class="erp-table-full border-0">
-						<colgroup>
-                            <col style="width: 60px;" /><col style="width: 130px;" />
-                            <col style="width: 60px;" /><col />
-                            <col style="width: 60px;" /><col style="width: 180px;" />
-                            <col style="width: 60px;" /><col style="width: 180px;" />
-                            <col style="width: 60px;" /><col style="width: 80px;" />
-                            <col style="width: 50px;" /><col style="width: 100px;" />
-                        </colgroup>
-						<tbody>
-							<tr>
-								<th class="required">ID</th>
-								<td><input v-model="formdata.pgmid" type="text" class="form-control fw-bold text-primary text-center" maxlength="20" placeholder="pgmid" :disabled="formdata.actkind === 'U0'"/></td>
-								<th class="required">명칭</th>
-								<td><input v-model="formdata.pgmnm" type="text" class="form-control" maxlength="30" /></td>
-								<th class="required">업무</th>
-								<td>
-									<select v-model="formdata.upmucd" class="form-select">
-										<option v-for="opt in upmuoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
-									</select>
-								</td>
-								<th class="required">그룹</th>
-								<td>
-									<select v-model="formdata.grpcd" class="form-select">
-										<option value="">-- 선택 --</option>
-										<option v-for="item in grpcdoptions" :key="item.grpcd" :value="item.grpcd">{{ item.grpnm }}</option>
-									</select>
-								</td>
-								<th class="required">순서</th>
-								<td><input v-model="formdata.dspord" type="text" class="form-control text-end" /></td>
-								<th>사용</th>
-								<td>
-									<div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
-										<input v-model="formdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useyn800">
-										<label class="form-check-label ms-2 small fw-bold" for="useyn800">{{ formdata.useyn === 'Y' ? '사용' : '중지' }}</label>
-									</div>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
+      <!-- [중간] 상세 입수정 영역 -->
+      <div class="card border shadow-sm overflow-hidden flex-shrink-0">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
+          <div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>프로그램 정보 관리</div>
+          <div class="d-flex gap-1">
+            <div v-if="formdata.actkind === 'U0'" class="badge bg-warning text-dark px-2">수정 중</div>
+            <div v-else class="badge bg-primary text-white px-2">신규 등록</div>
+          </div>
+        </div>
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense w-100">
+            <colgroup>
+              <col style="width: 80px;" /><col />
+              <col style="width: 80px;" /><col />
+              <col style="width: 80px;" /><col />
+              <col style="width: 80px;" /><col />
+              <col style="width: 80px;" /><col style="width: 100px;" />
+              <col style="width: 80px;" /><col style="width: 120px;" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="required bg-light text-center">ID</th>
+                <td><input v-model="formdata.pgmid" type="text" class="form-control form-control-sm fw-bold text-primary text-center" maxlength="20" placeholder="pgmid" :disabled="formdata.actkind === 'U0'"/></td>
+                <th class="required bg-light text-center">명칭</th>
+                <td><input v-model="formdata.pgmnm" type="text" class="form-control form-control-sm" maxlength="30" /></td>
+                <th class="required bg-light text-center">업무</th>
+                <td>
+                  <select v-model="formdata.upmucd" class="form-select form-select-sm">
+                    <option v-for="opt in upmuoptions" :key="opt.codecd" :value="opt.codecd">{{ opt.codenm }}</option>
+                  </select>
+                </td>
+                <th class="required bg-light text-center">그룹</th>
+                <td>
+                  <select v-model="formdata.grpcd" class="form-select form-select-sm">
+                    <option value="">-- 선택 --</option>
+                    <option v-for="item in grpcdoptions" :key="item.grpcd" :value="item.grpcd">{{ item.grpnm }}</option>
+                  </select>
+                </td>
+                <th class="required bg-light text-center">순서</th>
+                <td><input v-model="formdata.dspord" type="text" class="form-control form-control-sm text-end" /></td>
+                <th class="bg-light text-center">사용</th>
+                <td>
+                  <div class="form-check form-switch m-0 d-flex align-items-center justify-content-center h-100">
+                    <input v-model="formdata.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" id="useyn800">
+                    <label class="form-check-label ms-2 small fw-bold" for="useyn800">{{ formdata.useyn === 'Y' ? '사용' : '중지' }}</label>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-			<!-- 📊 4. 하단 그리드 영역 -->
-			<div class="card border-0 shadow-sm flex-grow-1 overflow-hidden">
-				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
-					<i class="bi bi-table me-2 text-secondary"></i>
-					<span class="fw-bold small text-dark">프로그램 리스트</span>
-				</div>
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                    <div ref="maingridelement" class="tabulator-instance flex-grow-1"></div>
-                </div>
-			</div>
-		</div>
-	</div>
+      <!-- [하단] 그리드 영역 -->
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center flex-shrink-0">
+          <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>
+          <span class="fw-bold small text-dark">프로그램 리스트</span>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="maingridelement" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
@@ -243,3 +262,7 @@ onMounted(async () => {
 	await fetchupmu()
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+</style>

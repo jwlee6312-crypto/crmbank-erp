@@ -8,7 +8,7 @@
 
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
-  <ItemHelpModal :visible="itemHelpVisible" :cmpycd="authStore.cmpycd" astKind="2" @close="itemHelpVisible = false" @confirm="onSelectItem" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
@@ -44,9 +44,9 @@
                 <th class="text-center bg-light">품목선택</th>
                 <td>
                   <div class="input-group input-group-sm" style="max-width: 400px;">
-                    <input v-model="searchForm.itemcd" class="form-control text-center bg-light" style="max-width: 100px;" placeholder="코드" readonly />
-                    <input v-model="searchForm.itemnm" class="form-control bg-light" placeholder="품목 선택" readonly @click="openHelp" />
-                    <button class="btn btn-outline-secondary" type="button" @click="openHelp"><i class="bi bi-search"></i></button>
+                    <input v-model="searchForm.itemcd" class="form-control text-center" style="max-width: 100px;" placeholder="코드" @keyup.enter="handleItemHelp" />
+                    <input v-model="searchForm.itemnm" class="form-control" placeholder="품목명 입력" @keyup.enter="handleItemHelp" />
+                    <button class="btn btn-outline-secondary" type="button" @click="handleItemHelp"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
               </tr>
@@ -94,13 +94,15 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 import { api } from '@/utils/axios'
 import AppAlert from '@/components/AppAlert.vue'
-import ItemHelpModal from '@/components/ItemHelpModal.vue'
+import Modal from '@/components/Modal.vue'
 import { useAuthStore } from '@/stores/authStore'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
+const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const searchForm = reactive({
 	ym: new Date().toISOString().substring(0, 7),
@@ -109,18 +111,51 @@ const searchForm = reactive({
 })
 
 const selectedItemNm = ref('')
-const itemHelpVisible = ref(false)
 const leftGridRef = ref<HTMLElement | null>(null)
 const mainGridRef = ref<HTMLElement | null>(null)
 let leftGrid: Tabulator | null = null
 let mainGrid: Tabulator | null = null
 
-const openHelp = () => { itemHelpVisible.value = true }
+const handleItemHelp = async () => {
+    const params = {
+        gubun: 'I1',
+        cmpycd: String(authStore.cmpycd),
+        gbncd: '2',
+        code: String(searchForm.itemcd || '').trim(),
+        codenm: String(searchForm.itemnm || '').trim(),
+        ETCVAL: ''
+    }
+
+    if (params.codenm || params.code) {
+        try {
+            const { data } = await api.post('/api/hs00/HS00_000S_STR', params)
+            if (data && data.length === 1) {
+                onSelectItem(data[0])
+                return
+            }
+        } catch (e) { console.error('품목 검색 오류', e) }
+    }
+
+    Object.assign(modalProps, {
+        title: '품목 선택',
+        path: '/api/hs00/HS00_000S_STR',
+        defaultField: 'itemnm',
+        large: true,
+        data: params,
+        columns: [
+            { title: '품목코드', field: 'itemcd', width: 120, hozAlign: 'center' },
+            { title: '품목명', field: 'itemnm', minWidth: 250, widthGrow: 1, hozAlign: 'left', cssClass: 'fw-bold text-primary' },
+            { title: '규격', field: 'itsize', width: 150 },
+            { title: '단위', field: 'unitnm', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: onSelectItem
+    })
+    modalVisible.value = true
+}
 
 const onSelectItem = (data: any) => {
     searchForm.itemcd = String(data.itemcd || '').trim()
     searchForm.itemnm = String(data.itemnm || '').trim()
-    itemHelpVisible.value = false
     handleSearch()
 }
 

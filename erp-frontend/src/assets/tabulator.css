@@ -48,7 +48,7 @@
 
     min-height: 24px !important;
     box-sizing: border-box !important; /* 패딩이 높이에 영향을 주지 않도록 잠금 */
-    display: inline-flex !important;
+    display: inline-flex;
     align-items: center;               /* 플렉스 요소 세로 중앙 정렬 */
     vertical-align: middle !important; /* 인라인 기준선 틀어짐 방지 (핵심) */
 }

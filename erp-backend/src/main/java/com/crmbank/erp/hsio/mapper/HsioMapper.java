@@ -79,4 +79,11 @@ public interface HsioMapper {
     List<Map<String, Object>> HSIO_721U_STR(Object params);
     List<Map<String, Object>> HSIO_730U_STR(Object params);
     List<Map<String, Object>> HSIO_731U_STR(Object params);
+
+    List<Map<String, Object>> HSIO_990U_STR(Object params);
+
+    List<Map<String, Object>> getSlipDetailsForTransfer(Map<String, Object> params);
+
+    // 🚀 생산불출 연동 (사용자 정의 12파라미터)
+    List<Map<String, Object>> HSIO_600U_STR(Map<String, Object> params);
 }

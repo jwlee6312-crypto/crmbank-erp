@@ -323,7 +323,7 @@ const handleOpenHelp = (type: string, target?: any) => {
   } else if (type === 'ITEM') {
     Object.assign(modalProps, {
       title: '품목 선택', path: '/api/hs00/HS00_000S_STR', defaultField: 'itemnm',
-      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '2', code: '', remark: '' },
+      data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: '3', code: '', remark: '' },
       columns: [{ title: '품목코드', field: 'itemcd', width: 100 }, { title: '품목명', field: 'itemnm', width: 200 }, { title: '규격', field: 'itsize', width: 150 }, { title: '단위', field: 'unit', width: 80 }],
       onConfirm: (d: any) => {
         target.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, price: d.incost || 0, balqty: 1, _status: '입력', _state: 'NEW' });

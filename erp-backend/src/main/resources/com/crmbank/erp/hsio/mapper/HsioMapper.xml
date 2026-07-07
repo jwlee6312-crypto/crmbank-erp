@@ -247,7 +247,8 @@
     </select>
 
     <select id="HSIO_581U_STR" resultType="java.util.LinkedHashMap">
-        exec hsio_581u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{ino}, #{odeptcd}, #{owhcd}, #{ioymd}, #{ideptcd}, #{iwhcd}, #{itemcd}, #{unit}, #{ioqty}, #{updemp}
+        exec hsio_581u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{iorowno}, #{ino},
+        #{odeptcd}, #{owhcd}, #{ioymd}, #{ideptcd}, #{iwhcd}, #{itemcd}, #{unit}, #{ioqty}, #{ordym}, #{ordno}, #{updemp}
     </select>
 
     <select id="HSIO_590U_STR" resultType="java.util.LinkedHashMap">
@@ -301,6 +302,45 @@
 
     <select id="HSIO_731U_STR" resultType="java.util.LinkedHashMap">
         exec hsio_731u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{ino}, #{iorowno}, #{ono}, #{deptcd}, #{whcd}, #{ioymd}, #{itemcd}, #{unit}, #{ioqty}, #{ioamt}, #{updemp}
+    </select>
+
+    <!-- 🚀 생산불출 연동 (사용자 정의 12파라미터 규격 복사) -->
+    <select id="HSIO_600U_STR" resultType="java.util.LinkedHashMap">
+        exec hsio_600u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{whcd}, #{outym}, #{outno}, #{mitemcd}, #{ioym}, #{iono}, #{outqty}, #{updemp}
+    </select>
+
+    <select id="HSIO_990U_STR" resultType="java.util.LinkedHashMap">
+        exec hsio_990u_str #{actkind}, #{cmpycd}, #{slipkind}, #{deptcd}, #{fromdt}, #{todt}, #{cfmyn}, #{slipymd}, #{slipno}, #{updemp}
+    </select>
+
+    <!-- 🚀 외부전표전송 상세 조회 (ASP SELECT문 이식) -->
+    <select id="getSlipDetailsForTransfer" resultType="java.util.LinkedHashMap">
+        SELECT A.SLIPYMD,  A.SLIPNO, B.SROWNO, B.ACCTCD,
+               CASE  WHEN B.DBAMT > 0  THEN  '1' ELSE '2' END AS DRCR_FG, B.REMARK,
+               ISNULL(CASE  WHEN B.DBAMT > 0  THEN  B.DBAMT ELSE B.CRAMT END,0) AS AMT,
+               ISNULL(C.OUTCUSTCD, '0000000000') AS CUSTCD, ISNULL(B.MGTNO, '') AS MGTNO,
+               A.ACCTYMD, ISNULL(B.FRGNRATE, 0) AS FRGNRATE,
+               ISNULL(CASE B.ACCTCD WHEN '13500' THEN B.DBAMT * 10
+                                    WHEN '25500' THEN B.CRAMT * 10
+                                    ELSE '0'
+                                    End, 0) AS SUP_AMT,
+               CASE A.SLIPGU	WHEN '030' THEN '21'
+                                WHEN '031' THEN '25'
+                                WHEN '040' THEN '11'
+                                WHEN '041' THEN '16'
+                                ELSE '00'
+                                End AS TAX_TYPE,
+               B.FRGNKIND, ISNULL(B.FRGNAMT, 0) AS FRGNAMT,  A.BUSINESS, C.CUSTNM
+          FROM HSIO230T_TBL A LEFT OUTER JOIN HSIO240T_TBL B
+            ON A.CMPYCD	= B.CMPYCD
+           AND A.SLIPYMD	= B.SLIPYMD
+           AND A.SLIPNO	= B.SLIPNO
+               LEFT OUTER JOIN HABA020T_TBL C
+            ON B.CMPYCD	= C.CMPYCD
+           AND B.CUSTCD	= C.CUSTCD
+         WHERE A.CMPYCD     = #{cmpycd}
+           AND A.SLIPYMD	= #{slipymd}
+           AND A.SLIPNO	= #{slipno}
     </select>
 
 </mapper>

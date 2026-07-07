@@ -96,6 +96,29 @@ export function useCommonHelp() {
         ],
         onConfirm: callback
       })
+    } else if (type === 'JOB_ORDER') {
+      Object.assign(modalProps, {
+        title: '작업지시 선택',
+        path: '/api/hpio/HPIO_250U_POP',
+        defaultField: 'lotno',
+        large: true,
+        searchDate: 'ordymd', // 날짜 필터 활성화
+        data: {
+          cmpycd: authStore.cmpycd,
+          linecd: extraData.linecd || '',
+          frymd: extraData.frymd || '',
+          toymd: extraData.toymd || ''
+        },
+        columns: [
+          { title: '지시일자', field: 'lotymd', width: 100, hozAlign: 'center' },
+          { title: '지시번호', field: 'lotno', width: 120, hozAlign: 'center' },
+          { title: '제품명', field: 'itemnm', minWidth: 200, widthGrow: 1 },
+          { title: '지시량', field: 'ordqty', width: 100, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+          { title: '불출량', field: 'outqty', width: 100, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } },
+          { title: '생산량', field: 'prodqty', width: 100, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 } }
+        ],
+        onConfirm: callback
+      })
     }
     modalVisible.value = true
   }

@@ -233,5 +233,18 @@
           and isnull(a.ordqty, 0) > isnull(a.outqty, 0)
     </select>
 
+    <!-- 자재불출요청 상세 (상세내역용) -->
+    <select id="HPIO_251S_STR" resultType="java.util.LinkedHashMap">
+        exec hpio_251s_str #{cmpycd}, #{fromdt}, #{todt}
+    </select>
+
+    <select id="HPIO_252S_STR" resultType="java.util.LinkedHashMap">
+        exec hpio_252s_str #{cmpycd}, #{fromdt}, #{todt}
+    </select>
+
+    <!-- 자재불출 품목내역 처리 (집계테이블) -->
+    <select id="HPIO_253U_STR" resultType="java.util.LinkedHashMap">
+        exec hpio_253u_str #{actkind}, #{cmpycd}, #{outym}, #{outno}, #{mitemcd}, #{mitsize}, #{munit}, #{reqqty}, #{updemp}
+    </select>
 
 </mapper>

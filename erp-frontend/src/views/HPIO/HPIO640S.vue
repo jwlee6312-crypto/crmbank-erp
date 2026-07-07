@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 품목현재고 (HPIO640S)
 	작성일자	: 2025.02.24
-	설명        : 창고별/자산별 품목의 현재고 및 입출고 요약 현황 조회 (HPIO210U 표준 패턴 적용)
+	설명        : 창고별/자산별 품목의 현재고 및 입출고 요약 현황 조회 (HSOD100U 표준 패턴 적용)
 	=============================================================
 -->
 
@@ -16,6 +16,7 @@
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-box-seam-fill me-2 text-primary" style="font-size: 18px;"></i>
         생산정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        재고관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">품목현재고 (HPIO640S)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-3">
@@ -58,7 +59,7 @@
                     <select v-model="searchForm.astkind" class="form-select form-select-sm" style="width: 150px;">
                       <option v-for="opt in astOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
                     </select>
-                    <span class="text-muted small"><i class="bi bi-info-circle me-1"></i> 품목명을 클릭하면 상세 수불 내역으로 이동합니다.</span>
+                    <span class="text-muted small" style="font-size: 11px;"><i class="bi bi-info-circle me-1 text-primary"></i> 품목명을 클릭하면 상세 수불 내역으로 이동합니다.</span>
                   </div>
                 </td>
               </tr>
@@ -70,8 +71,10 @@
       <!-- [하단] 그리드 영역 -->
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
-          <span class="fw-bold small text-dark"><i class="bi bi-list-ul me-2 text-primary"></i>품목별 재고 현황</span>
-          <span v-if="rowCount" class="badge bg-secondary-subtle text-dark border border-secondary-subtle" style="font-size: 10px;">Total: {{ rowCount }}건</span>
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>품목별 재고 현황</span>
+          <div class="d-flex align-items-center gap-2">
+            <span v-if="rowCount" class="badge bg-secondary-subtle text-dark border border-secondary-subtle" style="font-size: 10px;">Total: {{ rowCount }}건</span>
+          </div>
         </div>
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
           <div ref="tableRef" class="tabulator-instance flex-grow-1"></div>
@@ -101,7 +104,7 @@ const router = useRouter()
 const { today, firstDay } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const { modalVisible, modalProps } = useCommonHelp()
 
 // [1] 데이터 모델링
 const searchForm = reactive({
@@ -127,15 +130,16 @@ const initGrids = () => {
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       { title: "코드", field: "itemcd", width: 100, hozAlign: "center" },
-      { title: "품 목", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-primary text-decoration-underline cursor-pointer",
+      { title: "품 목", field: "itemnm", minWidth: 200, widthGrow: 1,
+        formatter: (cell) => `<span class="text-primary text-decoration-underline cursor-pointer fw-bold">${cell.getValue() || ''}</span>`,
         cellClick: (e, cell) => navigateToDetail(cell.getData())
       },
-      { title: "규격", field: "itsize", width: 150 },
+      { title: "규격", field: "itsize", width: 200 },
       { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-      { title: "전월이월", field: "bqty", width: 100, hozAlign: "right", formatter: "money" },
-      { title: "입고", field: "iqty", width: 100, hozAlign: "right", formatter: "money", cssClass: "text-success" },
-      { title: "출고", field: "oqty", width: 100, hozAlign: "right", formatter: "money", cssClass: "text-danger" },
-      { title: "현재고", field: "sqty", width: 110, hozAlign: "right", formatter: "money", cssClass: "fw-bold bg-light" }
+      { title: "전월이월", field: "bqty", width: 150, hozAlign: "right", formatter: "money" },
+      { title: "입고", field: "iqty", width: 150, hozAlign: "right", formatter: "money", cssClass: "text-success" },
+      { title: "출고", field: "oqty", width: 150, hozAlign: "right", formatter: "money", cssClass: "text-danger" },
+      { title: "현재고", field: "sqty", width: 150, hozAlign: "right", formatter: "money", cssClass: "fw-bold bg-light" }
     ],
   });
 }
@@ -148,7 +152,7 @@ const fetchOptions = async () => {
       api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'J0', cmpycd: authStore.cmpycd, gbncd: '100' } })
     ]);
     whOptions.value = wh.data;
-    astOptions.value = ast.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
+    astOptions.value = ast.data.map((i: any) => ({ code: i.code || i.codecd || i.code, cdnm: i.cdnm || i.codenm || i.cdnm }));
     if (astOptions.value.length > 0) searchForm.astkind = astOptions.value[0].code;
   } catch (e) {}
 }
@@ -178,7 +182,7 @@ const initialize = () => {
   grid?.clearData(); rowCount.value = 0;
 }
 
-const exportExcel = () => grid?.download("xlsx", `품목현재고_${searchData.tymd}.xlsx`)
+const exportExcel = () => grid?.download("xlsx", `품목현재고_${searchForm.tymd}.xlsx`)
 const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
 
 onMounted(async () => {

@@ -262,10 +262,35 @@ async function deleteData() {
   } catch (e) { vAlertError('삭제 실패'); }
 }
 
-const handleOpenHelp = (type: string, row: any) => {
-  if (type === 'ITEM') {
-    openHelp('ITEM', (d) => row.update({ itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit, _status: '입력', _state: 'NEW' }), { iogbn: 'I' });
+const handleOpenHelp = (type: string, target?: any) => {
+  const props: any = {
+    title: '',
+    path: '',
+    data: { cmpycd: authStore.cmpycd },
+    columns: [],
+    onConfirm: () => {}
   }
+
+  if (type === 'ITEM') {
+    props.title = '이관 자재 선택'
+    props.path = '/api/hp00/HP00_000S_STR'
+    props.data.gubun = 'I0'
+    props.data.etcval = 'A' // 자재(I) 필터
+    props.columns = [
+      { title: '자산구분', field: 'astkindnm', width: 100, hozAlign: 'center' },
+      { title: '자재코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+      { title: '자재명', field: 'itemnm', width: 200 },
+      { title: '규격', field: 'itsize', width: 150 },
+      { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+    ]
+    props.onConfirm = (d: any) => target.update({
+      itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit,
+      _status: '입력', _state: 'NEW'
+    })
+  }
+
+  Object.assign(modalProps, props)
+  modalVisible.value = true
 }
 
 const handleRowAction = (row: any) => {

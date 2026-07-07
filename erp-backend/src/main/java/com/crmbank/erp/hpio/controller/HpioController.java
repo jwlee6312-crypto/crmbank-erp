@@ -117,6 +117,7 @@ public class HpioController {
                     case "HPIO_870U_STR": result = hpioMapper.HPIO_870U_STR(params); break;
                     case "HPIO_251S_STR": result = hpioMapper.HPIO_251S_STR(params); break;
                     case "HPIO_252S_STR": result = hpioMapper.HPIO_252S_STR(params); break;
+                    case "HPIO_253U_STR": result = hpioMapper.HPIO_253U_STR(params); break;
                     default: return ResponseEntity.notFound().build();
                 }
             }
