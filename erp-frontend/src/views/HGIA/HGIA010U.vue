@@ -179,6 +179,12 @@
 	</div>
 </template>
 
+<script lang="ts">
+export default {
+    name: 'HGIA010U'
+}
+</script>
+
 <script setup lang="ts">
 import { ref, watch, nextTick, onBeforeUnmount, computed, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
@@ -275,9 +281,18 @@ let tableInstance1: Tabulator | null = null; let tableInstance2: Tabulator | nul
 const initGrids = async () => {
 	await nextTick();
     const commonConfig = { layout: 'fitColumns', height: '100%', placeholder: "내역이 없습니다." };
-	if (tableRef1.value) tableInstance1 = new Tabulator(tableRef1.value, { ...commonConfig, columns: [{ title: "접수번호", field: "svcno", width: 120 }, { title: "상담일시", field: "start_time", width: 150 }, { title: "상담원", field: "consultnm", width: 100 }, { title: "상담요약", field: "ai_summary", hozAlign: 'left' }]});
-	if (tableRef2.value) tableInstance2 = new Tabulator(tableRef2.value, { ...commonConfig, columns: [{ title: "접수번호", field: "svcno", width: 120 }, { title: "접수일자", field: "acceptymd", width: 120 }, { title: "결과", field: "fixed_ment", hozAlign: 'left' }]});
-	if (tableRef3.value) tableInstance3 = new Tabulator(tableRef3.value, { ...commonConfig, columns: [{ title: "발생일", field: "ymd", width: 120 }, { title: "품목", field: "itemnm", hozAlign: 'left' }, { title: "합계", field: "totamt", hozAlign: 'right', formatter: 'money', width: 120 }]});
+	if (tableRef1.value) {
+        if (tableInstance1) tableInstance1.destroy();
+        tableInstance1 = new Tabulator(tableRef1.value, { ...commonConfig, columns: [{ title: "접수번호", field: "svcno", width: 120 }, { title: "상담일시", field: "start_time", width: 150 }, { title: "상담원", field: "consultnm", width: 100 }, { title: "상담요약", field: "ai_summary", hozAlign: 'left' }]});
+    }
+	if (tableRef2.value) {
+        if (tableInstance2) tableInstance2.destroy();
+        tableInstance2 = new Tabulator(tableRef2.value, { ...commonConfig, columns: [{ title: "접수번호", field: "svcno", width: 120 }, { title: "접수일자", field: "acceptymd", width: 120 }, { title: "결과", field: "fixed_ment", hozAlign: 'left' }]});
+    }
+	if (tableRef3.value) {
+        if (tableInstance3) tableInstance3.destroy();
+        tableInstance3 = new Tabulator(tableRef3.value, { ...commonConfig, columns: [{ title: "발생일", field: "ymd", width: 120 }, { title: "품목", field: "itemnm", hozAlign: 'left' }, { title: "합계", field: "totamt", hozAlign: 'right', formatter: 'money', width: 120 }]});
+    }
 };
 
 const selectProduct = (item: any) => { consultData.value.itemnm = item.itemnm; consultData.value.iono = item.iono; consultData.value.itemcd = item.itemcd; }

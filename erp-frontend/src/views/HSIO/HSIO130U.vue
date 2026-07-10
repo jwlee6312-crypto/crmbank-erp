@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick, watch } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -318,6 +318,10 @@ const toggleAllRows = () => {
   const allSelected = grid?.getSelectedRows().length === rows.length
   if (allSelected) grid?.deselectRow(); else grid?.selectRow()
 }
+
+onUnmounted(() => {
+  if (grid) grid.destroy();
+});
 
 onMounted(async () => {
   await fetchOptions();

@@ -114,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -250,6 +250,10 @@ function initialize() {
 
 const formatNumber = (n: any) => Number(n || 0).toLocaleString();
 const formatDate = (d: any) => (d && d.length === 8) ? `${d.substring(0,4)}-${d.substring(4,6)}-${d.substring(6,8)}` : d;
+
+onUnmounted(() => {
+  if (grid) grid.destroy();
+});
 
 onMounted(() => {
   // 영업사원 코드 로드

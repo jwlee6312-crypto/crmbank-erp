@@ -6,48 +6,48 @@
 
     <!-- 업무 이관 등록 (MSSQL 최적화) -->
     <insert id="insertEscalation" parameterType="com.crmbank.erp.crm.dto.CtiEscalationDto" useGeneratedKeys="true" keyProperty="escalation_no">
-        INSERT INTO CTI_ESCALATION_TBL
-        (SVCNO, LINKEDID, REG_DATE, SENDER_ID, DEPTCD, SUMMARY, ESC_MEMO, STATUS, ADDTIME, UPDTIME, UPDEMP)
-        VALUES
-        (#{SVCNO, jdbcType=VARCHAR},
-         ISNULL(#{LINKEDID, jdbcType=VARCHAR}, 'MANUAL'),
-         ISNULL(#{REG_DATE, jdbcType=TIMESTAMP}, GETDATE()),
-         #{SENDER_ID, jdbcType=VARCHAR},
-         #{DEPTCD, jdbcType=VARCHAR},
-         #{SUMMARY, jdbcType=NVARCHAR},
-         #{ESC_MEMO, jdbcType=NVARCHAR},
-         ISNULL(#{STATUS, jdbcType=VARCHAR}, '100'),
-         GETDATE(), GETDATE(), #{SENDER_ID, jdbcType=VARCHAR})
+        insert into cti_escalation_tbl
+        (svcno, linkedid, reg_date, sender_id, deptcd, summary, esc_memo, status, addtime, updtime, updemp)
+        values
+        (#{svcno, jdbcType=VARCHAR},
+         ISNULL(#{linkedid, jdbcType=VARCHAR}, 'MANUAL'),
+         ISNULL(#{reg_date, jdbcType=TIMESTAMP}, GETDATE()),
+         #{sender_id, jdbcType=VARCHAR},
+         #{deptcd, jdbcType=VARCHAR},
+         #{summary, jdbcType=NVARCHAR},
+         #{esc_memo, jdbcType=NVARCHAR},
+         ISNULL(#{status, jdbcType=VARCHAR}, '100'),
+         GETDATE(), GETDATE(), #{sender_id, jdbcType=VARCHAR})
     </insert>
 
     <!-- 업무 이관 수정 (피드백 포함) -->
     <update id="updateEscalation" parameterType="com.crmbank.erp.crm.dto.CtiEscalationDto">
         UPDATE CTI_ESCALATION_TBL
-        SET DEPTCD = #{DEPTCD, jdbcType=VARCHAR},
-            SUMMARY = #{SUMMARY, jdbcType=NVARCHAR},
-            ESC_MEMO = #{ESC_MEMO, jdbcType=NVARCHAR},
-            STATUS = #{STATUS, jdbcType=VARCHAR},
-            FEEDBACK_MEMO = #{FEEDBACK_MEMO, jdbcType=NVARCHAR},
-            FEEDBACK_DATE = #{FEEDBACK_DATE, jdbcType=TIMESTAMP},
-            FEEDBACK_USER = #{FEEDBACK_USER, jdbcType=VARCHAR},
+        SET DEPTCD = #{deptcd, jdbcType=VARCHAR},
+            SUMMARY = #{summary, jdbcType=NVARCHAR},
+            ESC_MEMO = #{esc_memo, jdbcType=NVARCHAR},
+            STATUS = #{status, jdbcType=VARCHAR},
+            FEEDBACK_MEMO = #{feedback_memo, jdbcType=NVARCHAR},
+            FEEDBACK_DATE = #{feedback_date, jdbcType=TIMESTAMP},
+            FEEDBACK_USER = #{feedback_user, jdbcType=VARCHAR},
             UPDTIME = GETDATE(),
-            UPDEMP = #{FEEDBACK_USER, jdbcType=VARCHAR}
-        WHERE ESCALATION_NO = #{ESCALATION_NO}
+            UPDEMP = #{feedback_user, jdbcType=VARCHAR}
+        WHERE ESCALATION_NO = #{escalation_no}
     </update>
 
     <!-- 업무 이관 삭제 -->
     <delete id="deleteEscalation" parameterType="int">
         DELETE FROM CTI_ESCALATION_TBL
-        WHERE ESCALATION_NO = #{ESCALATION_NO}
+        WHERE ESCALATION_NO = #{escalation_no}
     </delete>
 
     <!-- 업무 이관 목록 조회 -->
     <select id="selectEscalationList" parameterType="map" resultType="com.crmbank.erp.crm.dto.CtiEscalationDto">
         SELECT * FROM CTI_ESCALATION_TBL
         <where>
-            <if test="DEPTCD != NULL AND DEPTCD != ''"> AND DEPTCD = #{DEPTCD} </if>
-            <if test="STATUS != NULL AND STATUS != ''"> AND STATUS = #{STATUS} </if>
-            <if test="SVCNO != NULL AND SVCNO != ''"> AND SVCNO = #{SVCNO} </if>
+            <if test="deptcd != NULL AND deptcd != ''"> AND DEPTCD = #{deptcd} </if>
+            <if test="status != NULL AND status != ''"> AND STATUS = #{status} </if>
+            <if test="svcno != NULL AND svcno != ''"> AND SVCNO = #{svcno} </if>
         </where>
         ORDER BY REG_DATE DESC
     </select>
@@ -55,7 +55,7 @@
     <!-- 단건 조회 -->
     <select id="selectEscalation" parameterType="int" resultType="com.crmbank.erp.crm.dto.CtiEscalationDto">
         SELECT * FROM CTI_ESCALATION_TBL
-        WHERE ESCALATION_NO = #{ESCALATION_NO}
+        WHERE ESCALATION_NO = #{escalation_no}
     </select>
 
 </mapper>

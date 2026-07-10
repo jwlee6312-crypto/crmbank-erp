@@ -13,9 +13,12 @@ public interface HpioMapper {
     List<Map<String, Object>> HPIO_251U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_290U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_291U_STR(Map<String, Object> params);
+    List<Map<String, Object>> HPIO_292U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_300U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_301U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_340U_STR(Map<String, Object> params);
+
+    List<Map<String, Object>> HPIO_340U_POPUP(Map<String, Object> params);
     List<Map<String, Object>> HPIO_341U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_350U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_351U_STR(Map<String, Object> params);

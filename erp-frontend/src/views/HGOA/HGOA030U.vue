@@ -1,6 +1,6 @@
 <!--
 	=============================================================
-	프로그램명	  : 질문 및 답변 등록 (대문자 표준 적용)
+	프로그램명	  : 질문 및 답변 등록 (소문자 표준 적용)
     프로그램 ID	: HGOA030U
 	작성일자	    : 25.03.06
 	작성자	      : AI Assistant
@@ -19,7 +19,7 @@
                         <span class="badge bg-primary px-2 py-1 small"><i class="bi bi-search me-1"></i>질문 검색</span>
                     </div>
                     <div class="col-4">
-                        <input v-model="search_form.QUESTION" class="form-control form-control-sm" placeholder="질문 내용을 입력하세요..." @keyup.enter="search" />
+                        <input v-model="search_form.question" class="form-control form-control-sm" placeholder="질문 내용을 입력하세요..." @keyup.enter="search" />
                     </div>
                     <div class="col-auto">
                         <button class="btn btn-sm btn-dark px-3 fw-bold" @click="search" style="height: 26px; font-size: 0.8rem;">조회</button>
@@ -42,13 +42,13 @@
                                 <tr>
                                     <th class="required small">질문내용</th>
                                     <td>
-                                        <textarea v-model="mst_form.QUESTION" class="form-control form-control-sm shadow-none" rows="3" style="font-size: 0.85rem;" placeholder="질문 문구 입력"></textarea>
+                                        <textarea v-model="mst_form.question" class="form-control form-control-sm shadow-none" rows="3" style="font-size: 0.85rem;" placeholder="질문 문구 입력"></textarea>
                                     </td>
                                 </tr>
                                 <tr>
                                     <th class="small">답변유형</th>
                                     <td>
-                                        <select v-model="mst_form.ANS_TP" class="form-select form-select-sm shadow-none" @change="handle_type_change">
+                                        <select v-model="mst_form.ans_tp" class="form-select form-select-sm shadow-none" @change="handle_type_change">
                                             <option value="010">객관식 (선택형)</option>
                                             <option value="020">주관식 (서술형)</option>
                                             <option value="030">혼합형 (객관+주관)</option>
@@ -105,15 +105,15 @@
                                     <tr v-for="(item, index) in dtl_list" :key="index">
                                         <td class="small fw-bold text-secondary">{{ index + 1 }}</td>
                                         <td class="p-0 px-1">
-                                            <input v-model="item.ANS_CONT" class="form-control form-control-sm border-0 bg-transparent py-0 shadow-none"
-                                                   :disabled="mst_form.ANS_TP === '020' && index > 0" placeholder="상담 시 노출될 답변 내용 입력" />
+                                            <input v-model="item.ans_cont" class="form-control form-control-sm border-0 bg-transparent py-0 shadow-none"
+                                                   :disabled="mst_form.ans_tp === '020' && index > 0" placeholder="상담 시 노출될 답변 내용 입력" />
                                         </td>
                                         <td class="p-0">
-                                            <input v-model.number="item.ANS_POINT" type="number" class="form-control form-control-sm border-0 bg-transparent text-center py-0 shadow-none"
-                                                   :disabled="mst_form.ANS_TP === '020'" />
+                                            <input v-model.number="item.ans_point" type="number" class="form-control form-control-sm border-0 bg-transparent text-center py-0 shadow-none"
+                                                   :disabled="mst_form.ans_tp === '020'" />
                                         </td>
                                         <td><input v-model="item.useyn" type="checkbox" true-value="Y" false-value="N" class="form-check-input shadow-none" /></td>
-                                        <td><input v-model="item.ESSAY_YN" type="checkbox" true-value="Y" false-value="N" class="form-check-input shadow-none" /></td>
+                                        <td><input v-model="item.essay_yn" type="checkbox" true-value="Y" false-value="N" class="form-check-input shadow-none" /></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -136,31 +136,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 
 const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
 
-const search_form = reactive({ QUESTION: '' })
-const mst_form = reactive({ cmpycd: '', SURV_NO: '', QUESTION: '', ANS_TP: '010', dspord: '001', useyn: 'Y' })
+const search_form = reactive({ question: '' })
+const mst_form = reactive({ cmpycd: '', surv_no: '', question: '', ans_tp: '010', dspord: '001', useyn: 'Y' })
 const dtl_list = ref<any[]>([])
 
 const is_used = computed(() => (mst_form.useyn || "").toString().toUpperCase() === 'Y')
 
-function create_empty_dtl(ansNo: string) { return { ANS_NO: ansNo, ANS_CONT: '', ANS_POINT: 0, useyn: 'Y', ESSAY_YN: 'N' } }
+function create_empty_dtl(ansNo: string) { return { ans_no: ansNo, ans_cont: '', ans_point: 0, useyn: 'Y', essay_yn: 'N' } }
 function reset_dtl() { dtl_list.value = []; for (let i = 1; i <= 8; i++) dtl_list.value.push(create_empty_dtl(String(i).padStart(3, '0'))) }
 
-const handle_type_change = () => { if (mst_form.ANS_TP === '020') { reset_dtl(); dtl_list.value[0].ANS_CONT = '자유 서술형 응답'; dtl_list.value[0].ESSAY_YN = 'Y'; } }
+const handle_type_change = () => { if (mst_form.ans_tp === '020') { reset_dtl(); dtl_list.value[0].ans_cont = '자유 서술형 응답'; dtl_list.value[0].essay_yn = 'Y'; } }
 
 const table_ref = ref<HTMLDivElement | null>(null)
 let table_instance: Tabulator | null = null
 
 onMounted(() => { reset_dtl(); init_table(); search(); })
+onUnmounted(() => { if (table_instance) table_instance.destroy(); })
 
 function init_table() {
 	if (!table_ref.value) return
+    if (table_instance) table_instance.destroy();
 	table_instance = new Tabulator(table_ref.value, {
 		placeholder: '등록된 질문이 없습니다.', layout: "fitColumns", height: "100%", pagination: "local", paginationSize: 20,
 		columns: [
@@ -189,7 +191,7 @@ async function search() {
 async function load_detail(data: any) {
     Object.assign(mst_form, data)
     try {
-        const { data: details } = await api.get('/crm/outbound/surv/dtl/search', { params: { SURV_NO: mst_form.SURV_NO } });
+        const { data: details } = await api.get('/crm/outbound/surv/dtl/search', { params: { surv_no: mst_form.surv_no } });
         reset_dtl();
         if (details && details.length > 0) {
             details.forEach((d: any, idx: number) => {
@@ -200,12 +202,12 @@ async function load_detail(data: any) {
 }
 
 async function save() {
-    if (!mst_form.QUESTION) return vAlertError('질문 내용을 입력하세요.');
-    const valid_dtl = dtl_list.value.filter(item => (item.ANS_CONT || "").trim() !== '');
+    if (!mst_form.question) return vAlertError('질문 내용을 입력하세요.');
+    const valid_dtl = dtl_list.value.filter(item => (item.ans_cont || "").trim() !== '');
 
     const payload = {
-        MST: mst_form,
-        DTL: valid_dtl
+        mst: mst_form,
+        dtl: valid_dtl
     };
 
     try {
@@ -215,16 +217,16 @@ async function save() {
 }
 
 async function delete_item() {
-    if (!mst_form.SURV_NO) return vAlertError('대상 선택 필요');
+    if (!mst_form.surv_no) return vAlertError('대상 선택 필요');
     if (!confirm('삭제하시겠습니까?')) return;
     try {
-        await api.post('/crm/outbound/surv/delete', { SURV_NO: mst_form.SURV_NO });
+        await api.post('/crm/outbound/surv/delete', { surv_no: mst_form.surv_no });
         vAlert('삭제되었습니다.'); initialize(); search();
     } catch (e) { vAlertError('삭제 실패'); }
 }
 
 function initialize() {
-    Object.assign(mst_form, { cmpycd: '', SURV_NO: '', QUESTION: '', ANS_TP: '010', dspord: '001', useyn: 'Y' });
+    Object.assign(mst_form, { cmpycd: '', surv_no: '', question: '', ans_tp: '010', dspord: '001', useyn: 'Y' });
     reset_dtl();
     table_instance?.deselectRow();
 }

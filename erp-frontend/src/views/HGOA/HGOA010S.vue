@@ -1,6 +1,6 @@
 <!--
 	=============================================================
-	프로그램명	  : 캠페인 상담현황 (HGOA010S)
+	프로그램명	  : 캠페인 상담현황 (HGOA010S - 소문자 표준 적용)
     프로그램 ID	: HGOA010S
 	작성일자	    : 2026.05.19
 	작성자	      : AI Assistant
@@ -54,11 +54,11 @@
             <div class="fw-bold text-primary small border-end pe-3 flex-shrink-0">캠페인 실시간 통계</div>
             <div v-if="selectedCamp" class="stats-group d-flex gap-2 align-items-center flex-grow-1 overflow-auto">
               <div class="stat-badge-mini pointer" :class="{active: currentFilter === ''}" @click="applyFilter('')">
-                전체 {{ STATS.TOT_CNT || 0 }}
+                전체 {{ stats.tot_cnt || 0 }}
               </div>
-              <div v-for="item in DETAIL_STATS" :key="item.rslt_cd"
+              <div v-for="item in detail_stats" :key="item.rslt_cd"
                    class="stat-badge-mini pointer" :class="{active: currentFilter === item.rslt_cd}" @click="applyFilter(item.rslt_cd)">
-                {{ item.RSLT_NM }} {{ item.CNT }}
+                {{ item.rslt_nm }} {{ item.cnt }}
               </div>
             </div>
             <div v-else class="text-muted small italic">캠페인을 선택하세요.</div>
@@ -118,8 +118,8 @@ const { firstDay, today } = getDate()
 // 상태 관리
 const searchForm = reactive({ fromdt: firstDay, todt: today, campnm: '' })
 const selectedCamp = ref<any>(null)
-const STATS = reactive<any>({ TOT_CNT: 0, READY_CNT: 0 });
-const DETAIL_STATS = ref<any[]>([]);
+const stats = reactive<any>({ tot_cnt: 0, ready_cnt: 0 });
+const detail_stats = ref<any[]>([]);
 const currentFilter = ref('');
 const showChatModal = ref(false);
 const selectedChatLog = ref('');
@@ -135,28 +135,28 @@ let surveyTable: Tabulator | null = null;
 
 const handleSearch = async () => {
   try {
-    const res = await api.get('/crm/outbound/camp-list', { params: { CAMP_NM: searchForm.campnm } });
+    const res = await api.get('/crm/outbound/camp-list', { params: { camp_nm: searchForm.campnm } });
     campTable?.setData(res.data || []);
   } catch (e) { vAlertError('조회 실패'); }
 }
 
 const fetchSummary = async (campNo: string) => {
   try {
-    const res = await api.get('/crm/outbound/camp-stats', { params: { CAMP_NO: campNo } });
-    Object.assign(STATS, res.data);
-    DETAIL_STATS.value = res.data.DETAILS || [];
+    const res = await api.get('/crm/outbound/camp-stats', { params: { camp_no: campNo } });
+    Object.assign(stats, res.data);
+    detail_stats.value = res.data.details || [];
     applyFilter('');
   } catch (e) {}
 }
 
 const applyFilter = (filter: string) => {
   currentFilter.value = filter;
-  if (selectedCamp.value) fetchDetails(selectedCamp.value.CAMP_NO, filter);
+  if (selectedCamp.value) fetchDetails(selectedCamp.value.camp_no, filter);
 }
 
 const fetchDetails = async (campNo: string, filter: string = '') => {
   try {
-    const res = await api.get('/crm/outbound/call-list', { params: { CAMP_NO: campNo, FILTER: filter } });
+    const res = await api.get('/crm/outbound/call-list', { params: { camp_no: campNo, filter: filter } });
     detailTable?.setData(res.data || []);
     surveyTable?.clearData();
   } catch (e) {}
@@ -164,7 +164,7 @@ const fetchDetails = async (campNo: string, filter: string = '') => {
 
 const fetchSurveyResults = async (rsltNo: number) => {
   try {
-    const res = await api.get('/crm/outbound/rslt-dtl', { params: { RSLT_NO: rsltNo } });
+    const res = await api.get('/crm/outbound/rslt-dtl', { params: { rslt_no: rsltNo } });
     surveyTable?.setData(res.data || []);
   } catch (e) {}
 }
@@ -178,57 +178,59 @@ const initTables = () => {
   if (!campTableRef.value || !detailTableRef.value || !surveyTableRef.value) return;
 
   // 1. 캠페인 목록
+  if (campTable) campTable.destroy();
   campTable = new Tabulator(campTableRef.value, {
     layout: "fitColumns", height: "100%", selectable: 1, headerVisible: false,
-    columns: [{ title: "캠페인", field: "CAMP_NM", formatter: (cell:any) => `<div class="py-1 small fw-bold text-truncate">${cell.getValue()}</div>` }]
+    columns: [{ title: "캠페인", field: "camp_nm", formatter: (cell:any) => `<div class="py-1 small fw-bold text-truncate">${cell.getValue()}</div>` }]
   });
   campTable.on("rowClick", (e, row) => {
     selectedCamp.value = row.getData();
-    fetchSummary(selectedCamp.value.CAMP_NO);
+    fetchSummary(selectedCamp.value.camp_no);
   });
 
   // 2. 상세 상담 내역
+  if (detailTable) detailTable.destroy();
   detailTable = new Tabulator(detailTableRef.value, {
     layout: "fitColumns", height: "100%", selectable: 1,
     columnDefaults: { headerHozAlign: 'center', headerSort: false },
     columns: [
-      { title: "구분", field: "MEDIA_TYPE", width: 50, hozAlign: 'center', formatter: (cell: any) => cell.getValue() === 'chat' ? '💬' : '📞' },
-      { title: "상담원", field: "CONSULTNM", width: 80 },
-      // 💡 년월일 시분 형식으로 수정 (2026-05-19 13:00)
-      { title: "일시", field: "START_DTIME", width: 140, formatter: (c:any) => c.getValue()?.substring(0, 16) || '-' },
-      { title: "고객명", field: "CUST_NM", width: 90, cssClass: 'fw-bold' },
-      { title: "결과", field: "RSLT_NM", width: 80, formatter: (c:any) => {
+      { title: "구분", field: "media_type", width: 50, hozAlign: 'center', formatter: (cell: any) => cell.getValue() === 'chat' ? '💬' : '📞' },
+      { title: "상담원", field: "consultnm", width: 80 },
+      { title: "일시", field: "start_dtime", width: 140, formatter: (c:any) => c.getValue()?.substring(0, 16) || '-' },
+      { title: "고객명", field: "cust_nm", width: 90, cssClass: 'fw-bold' },
+      { title: "결과", field: "rslt_nm", width: 80, formatter: (c:any) => {
           const val = c.getValue();
           const color = val === '완료' ? 'bg-primary' : (val === '미처리' ? 'bg-secondary' : 'bg-danger');
           return `<span class="badge ${color}">${val}</span>`;
       }},
-      { title: "이력", field: "REC_FILE", width: 80, formatter: (cell:any) => {
+      { title: "이력", field: "rec_file", width: 80, formatter: (cell:any) => {
           const d = cell.getRow().getData();
           let h = '';
-          if (d.REC_FILE) h += '<i class="bi bi-play-circle-fill text-danger fs-6 me-2 cursor-pointer"></i>';
-          if (d.CHAT_LOG) h += '<i class="bi bi-file-earmark-text text-success fs-6 cursor-pointer"></i>';
+          if (d.rec_file) h += '<i class="bi bi-play-circle-fill text-danger fs-6 me-2 cursor-pointer"></i>';
+          if (d.chat_log) h += '<i class="bi bi-file-earmark-text text-success fs-6 cursor-pointer"></i>';
           return h;
       }, cellClick: (e, cell) => {
           const d = cell.getRow().getData();
           const t = (e.target as HTMLElement);
-          if (t.classList.contains('bi-play-circle-fill')) playRecording(d.REC_FILE);
-          if (t.classList.contains('bi-file-earmark-text')) { selectedChatLog.value = d.CHAT_LOG; showChatModal.value = true; }
+          if (t.classList.contains('bi-play-circle-fill')) playRecording(d.rec_file);
+          if (t.classList.contains('bi-file-earmark-text')) { selectedChatLog.value = d.chat_log; showChatModal.value = true; }
       }}
     ]
   });
   detailTable.on("rowClick", (e, row) => {
     const d = row.getData();
-    if (d.RSLT_NO) fetchSurveyResults(d.RSLT_NO);
+    if (d.rslt_no) fetchSurveyResults(d.rslt_no);
     else surveyTable?.clearData();
   });
 
   // 3. 설문 결과 상세
+  if (surveyTable) surveyTable.destroy();
   surveyTable = new Tabulator(surveyTableRef.value, {
     layout: "fitColumns", height: "100%",
     columns: [
-      { title: "질문내용", field: "QUESTION", widthGrow: 2, hozAlign: 'left' },
-      { title: "답변", field: "ANS_CONT", widthGrow: 1, hozAlign: 'center' },
-      { title: "점수", field: "POINT", width: 50, hozAlign: 'right', cssClass: 'fw-bold text-primary' }
+      { title: "질문내용", field: "question", widthGrow: 2, hozAlign: 'left' },
+      { title: "답변", field: "ans_cont", widthGrow: 1, hozAlign: 'center' },
+      { title: "점수", field: "point", width: 50, hozAlign: 'right', cssClass: 'fw-bold text-primary' }
     ]
   });
 }
@@ -238,7 +240,11 @@ const exportExcel = () => {
 }
 
 onMounted(() => { nextTick(() => { initTables(); handleSearch(); }); });
-onUnmounted(() => { campTable?.destroy(); detailTable?.destroy(); surveyTable?.destroy(); });
+onUnmounted(() => {
+  if (campTable) campTable.destroy();
+  if (detailTable) detailTable.destroy();
+  if (surveyTable) surveyTable.destroy();
+});
 </script>
 
 <style scoped>

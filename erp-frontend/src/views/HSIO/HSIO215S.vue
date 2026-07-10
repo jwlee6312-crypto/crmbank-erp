@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -205,6 +205,11 @@ const openHelp = (type: string) => {
     }
 }
 const formatNumber = (val: any) => Number(val || 0).toLocaleString()
+
+onUnmounted(() => {
+  if (poGrid) poGrid.destroy();
+  if (itemGrid) itemGrid.destroy();
+});
 
 onMounted(async () => {
   api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } })

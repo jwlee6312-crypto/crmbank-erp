@@ -131,7 +131,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -338,6 +338,10 @@ function openHelp(type: string) {
 }
 
 function addRow() { grid?.addRow({ upkind: 'A', reqqty: 0, imprice: 0, reqamt: 0, rrowno: '' }); }
+
+onUnmounted(() => {
+  if (grid) grid.destroy();
+});
 
 onMounted(() => {
   // 담당자(사원) 콤보 로드

@@ -23,9 +23,6 @@
         <button class="btn-erp btn-search" @click="search">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
         <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!formData.fileno || formData.fileno === '0000'">전체삭제</button>
-        <button class="btn-erp btn-print" @click="openManual">
-          <i class="bi bi-question-circle"></i> 도움말
-        </button>
       </div>
     </div>
 

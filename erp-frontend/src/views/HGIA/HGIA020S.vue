@@ -98,6 +98,7 @@ const audioRef = ref<HTMLAudioElement | null>(null)
 
 onMounted(() => {
 	if (mainGridRef.value) {
+        if (mainGrid) mainGrid.destroy();
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns',
 			height: '100%',

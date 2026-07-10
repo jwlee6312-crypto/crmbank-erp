@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -170,6 +170,10 @@ function initialize() {
   searchForm.todt = now.toISOString().substring(0, 10);
   grid?.clearData();
 }
+
+onUnmounted(() => {
+  if (grid) grid.destroy();
+});
 
 onMounted(async () => {
   await fetchClosingInfo();

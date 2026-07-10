@@ -38,46 +38,60 @@ public class HpioController {
             return ResponseEntity.status(401).build();
         }
 
-        injectSession(params, session);
         String proc = procedure.toUpperCase();
-
-        if ("HPIO_250U_SAVE".equals(proc)) {
-            return ResponseEntity.ok(hpioService.saveHpio250U(params));
-        }
-
-        String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
-
+        UserSession user = (UserSession) session.getAttribute("user_session");
         try {
+            injectSession(params, session);
             fillMissingParameters(proc, params);
-            log.info("🚀 [hpio] 실행 요청: {}", proc);
+
+            String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
+            if (proc.length() >= 9 && proc.charAt(8) == 'U' && (actkind.startsWith("A") || actkind.startsWith("U"))) {
+                String validationMsg = validateParameters(HpioMapper.class, proc, params);
+                if (validationMsg != null) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                        "status", "VALIDATION_ERROR",
+                        "message", "🛠 [PROGRAM VALID ALARM]\n" + validationMsg
+                    ));
+                }
+            }
+
+            log.info("📋 [hpio] 실행 요청: {}", proc);
             
             List<Map<String, Object>> result;
             if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
                 String positionalSql = buildPositionalSql(proc, params);
                 log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
 
-                try {
-                    result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
-                        Map<String, Object> row = new LinkedHashMap<>();
-                        List<Object> values = new ArrayList<>();
-                        int colCount = rs.getMetaData().getColumnCount();
-                        for (int i = 1; i <= colCount; i++) {
-                            Object val = rs.getObject(i);
-                            String colName = rs.getMetaData().getColumnLabel(i); 
-                            if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
-                            row.put(colName.toLowerCase(), val == null ? "" : val);
-                            values.add(val == null ? "" : val);
+                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    List<Object> values = new ArrayList<>();
+                    int colCount = rs.getMetaData().getColumnCount();
+                    for (int i = 1; i <= colCount; i++) {
+                        Object val = rs.getObject(i);
+                        String colName = rs.getMetaData().getColumnLabel(i); 
+                        
+                        // 🚀 [지시사항] HSIO 패턴: 프로시저별 리턴 필드명(Alias) 강제 지정
+                        if (colName == null || colName.isEmpty() || colName.toLowerCase().startsWith("col")) {
+                            if (proc.equals("HPIO_290U_STR")) {
+                                if (i == 1) colName = "pumym";
+                                else if (i == 2) colName = "pumno";
+                                else if (i == 3) colName = "rtn_msg";
+                            }
+
+                            if (proc.equals("HPIO_340U_STR") || proc.equals("HPIO_341U_STR")) {
+                                if (i == 1) colName = "outym";
+                                else if (i == 2) colName = "outno";
+                                else if (i == 3) colName = proc.equals("HPIO_340U_STR") ? "inno" : "iorowno";
+                            }
                         }
-                        row.put("returnKeyValue", values); 
-                        return row;
-                    });
-                } catch (org.springframework.jdbc.UncategorizedSQLException ex) {
-                    if (ex.getMessage() != null && ex.getMessage().contains("결과 집합을 반환하지 않았습니다")) {
-                        result = List.of(Map.of("res", "OK"));
-                    } else {
-                        throw ex;
+                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                        row.put(colName.toLowerCase(), val == null ? "" : val);
+                        values.add(val == null ? "" : val);
                     }
-                }
+                    row.put("returnKeyValue", values); 
+                    return row;
+                });
+                log.info("🎯 [succ] data: {}", result);
             } else {
                 switch (proc) {
                     case "HPIO_200U_STR": result = hpioMapper.HPIO_200U_STR(params); break;
@@ -85,12 +99,13 @@ public class HpioController {
                     case "HPIO_230S_STR": result = hpioMapper.HPIO_230S_STR(params); break;
                     case "HPIO_250U_STR": result = hpioMapper.HPIO_250U_STR(params); break;
                     case "HPIO_251U_STR": result = hpioMapper.HPIO_251U_STR(params); break;
-                    case "HPIO_250U_POP": result = hpioMapper.HPIO_250U_POP(params); break;
                     case "HPIO_290U_STR": result = hpioMapper.HPIO_290U_STR(params); break;
                     case "HPIO_291U_STR": result = hpioMapper.HPIO_291U_STR(params); break;
+                    case "HPIO_292U_STR": result = hpioMapper.HPIO_292U_STR(params); break;
                     case "HPIO_300U_STR": result = hpioMapper.HPIO_300U_STR(params); break;
                     case "HPIO_301U_STR": result = hpioMapper.HPIO_301U_STR(params); break;
                     case "HPIO_340U_STR": result = hpioMapper.HPIO_340U_STR(params); break;
+                    case "HPIO_340U_POPUP": result = hpioMapper.HPIO_340U_POPUP(params); break;
                     case "HPIO_341U_STR": result = hpioMapper.HPIO_341U_STR(params); break;
                     case "HPIO_350U_STR": result = hpioMapper.HPIO_350U_STR(params); break;
                     case "HPIO_351U_STR": result = hpioMapper.HPIO_351U_STR(params); break;
@@ -115,15 +130,21 @@ public class HpioController {
                     case "HPIO_720S_STR": result = hpioMapper.HPIO_720S_STR(params); break;
                     case "HPIO_850S_STR": result = hpioMapper.HPIO_850S_STR(params); break;
                     case "HPIO_870U_STR": result = hpioMapper.HPIO_870U_STR(params); break;
+                    case "HPIO_250U_POP": result = hpioMapper.HPIO_250U_POP(params); break;
                     case "HPIO_251S_STR": result = hpioMapper.HPIO_251S_STR(params); break;
                     case "HPIO_252S_STR": result = hpioMapper.HPIO_252S_STR(params); break;
                     case "HPIO_253U_STR": result = hpioMapper.HPIO_253U_STR(params); break;
-                    default: return ResponseEntity.notFound().build();
+                    default:
+                        return ResponseEntity.notFound().build();
                 }
             }
 
             if (result == null || result.isEmpty()) {
-                result = (actkind.startsWith("S") || actkind.startsWith("L") || actkind.isEmpty()) ? new ArrayList<>() : List.of(Map.of("res", "OK"));
+                if (actkind.startsWith("S") || actkind.startsWith("L") || actkind.startsWith("P") || actkind.isEmpty()) {
+                    result = new ArrayList<>();
+                } else {
+                    result = List.of(Map.of("res", "OK"));
+                }
             }
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -135,38 +156,62 @@ public class HpioController {
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) params.put("cmpycd", user.getCmpycd());
-            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) params.put("userid", user.getUserid());
+            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
+                params.put("cmpycd", user.getCmpycd());
+            }
+            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
+                params.put("userid", user.getUserid());
+            }
             params.put("updemp", user.getUserid());
         }
     }
 
     private void fillMissingParameters(String proc, Map<String, Object> params) {
         try {
-            String statementId = "com.crmbank.erp.hpio.mapper.HpioMapper." + proc;
+            String statementId = HpioMapper.class.getName() + "." + proc;
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return;
             MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
             BoundSql boundSql = ms.getBoundSql(params);
+            
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
                 String prop = pm.getProperty();
                 if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
                     String cleanProp = prop.trim();
                     if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
-                        // 🚀 사용자 약속: 빈 문자열 할당만 수행 (숫자 주입 제거)
                         params.put(cleanProp, "");
                     }
                     if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception e) { log.warn("🛠 missing parameter alarm ({}): {}", proc, e.getMessage()); }
+    }
+
+    private String validateParameters(Class<?> mapperClass, String proc, Map<String, Object> vueParams) {
+        try {
+            String statementId = mapperClass.getName() + "." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return null;
+            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
+            BoundSql boundSql = ms.getBoundSql(vueParams);
+            List<ParameterMapping> xmlMappings = boundSql.getParameterMappings();
+            Set<String> xmlKeys = new LinkedHashSet<>();
+            for (ParameterMapping pm : xmlMappings) {
+                String prop = pm.getProperty();
+                if (prop != null && !prop.startsWith("_") && !prop.contains(".")) xmlKeys.add(prop);
+            }
+            if (vueParams.keySet().size() < xmlKeys.size()) {
+                return String.format("📍 [PARAM SHORTAGE] XML:%d > VUE:%d\n📋 [REQUIRED]: %s", xmlKeys.size(), vueParams.keySet().size(), xmlKeys);
+            }
+            return null;
+        } catch (Exception e) { return "VALIDATION ERROR: " + e.getMessage(); }
     }
 
     private String buildPositionalSql(String proc, Map<String, Object> params) {
         try {
-            String statementId = "com.crmbank.erp.hpio.mapper.HpioMapper." + proc;
+            String statementId = HpioMapper.class.getName() + "." + proc;
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
             MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
             BoundSql boundSql = ms.getBoundSql(params);
+            
             List<String> values = new ArrayList<>();
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
                 Object val = params.get(pm.getProperty().trim());

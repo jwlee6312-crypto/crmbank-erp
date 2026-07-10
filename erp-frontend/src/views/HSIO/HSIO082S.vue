@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -241,6 +241,10 @@ const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) ||
 const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val;
 const print = () => vAlert('출력 기능을 준비 중입니다.');
 const excel = () => grid.value?.download("xlsx", "발주상세현황.xlsx", { sheetName: "발주상세" });
+
+onUnmounted(() => {
+  if (grid.value) grid.value.destroy();
+});
 
 onMounted(() => {
   api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' } }).then(r => {

@@ -1,94 +1,162 @@
 <template>
-	<div class="manual-container">
-		<div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-			<h5 class="mb-0 fw-bold text-primary">
-				<i class="bi bi-book me-2"></i>시스템 도움말
-			</h5>
-			<button type="button" class="btn-close" @click="close"></button>
-		</div>
-
-		<!-- [1] DB 기반 HTML 매뉴얼 출력 -->
-		<div v-if="dbContent" class="manual-html-content ql-editor" v-html="dbContent"></div>
-
-		<!-- [2] 기존 이미지 기반 매뉴얼 출력 (DB 내용 없을 경우) -->
-		<div v-else-if="images.length > 0">
-			<div v-for="img in images" :key="img" class="mb-3 text-center">
-				<img :src="img" class="img-fluid rounded shadow-sm border" alt="manual" />
+	<div class="manual-sidebar">
+		<!-- 헤더: 초슬림 다크 디자인 (더 세련된 느낌) -->
+		<div class="sidebar-header">
+			<div class="header-content">
+				<i class="bi bi-lightbulb-fill text-warning me-2"></i>
+				<span class="title">HELP GUIDE</span>
+				<span class="pgm-id ms-auto">{{ fileName }}</span>
+				<button class="close-x" @click="close"><i class="bi bi-x"></i></button>
 			</div>
 		</div>
 
-		<!-- [3] 내용이 없을 경우 -->
-		<div v-else class="text-center py-5 text-muted">
-			<i class="bi bi-info-circle display-4"></i>
-			<p class="mt-3">등록된 매뉴얼이 없습니다.</p>
+		<!-- 본문 컨텐츠 -->
+		<div class="sidebar-body">
+			<!-- 텍스트 매뉴얼 -->
+			<div v-if="dbContent" class="content-render">
+				<div class="rich-text" v-html="formattedContent"></div>
+			</div>
+
+			<!-- 이미지 매뉴얼 -->
+			<div v-else-if="images.length > 0" class="image-stack">
+				<img v-for="img in images" :key="img" :src="img" alt="manual" />
+			</div>
+
+			<!-- 데이터 없음 -->
+			<div v-else class="no-data">
+				<i class="bi bi-slash-circle"></i>
+				<p>등록된 매뉴얼이 없습니다.</p>
+			</div>
+		</div>
+
+		<!-- 하단 바 -->
+		<div class="sidebar-footer">
+			<span>SYSTEM ASSISTANT</span>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useManualStore } from '@/stores/manualStore'
+import { ref, onMounted, computed } from 'vue'
+import { api as axiosApi } from '@/utils/axios'
 import { API_URL } from '@/config/api'
-import 'quill/dist/quill.snow.css' // 에디터 스타일과 맞추기 위해 추가
 
-const manualStore = useManualStore()
-const api = API_URL
+const props = defineProps<{ fileName: string }>()
+const emit = defineEmits(['close'])
+
 const images = ref<string[]>([])
 const dbContent = ref('')
 
-onMounted(async () => {
-	const base = manualStore.fileName
-	if (!base) return
+// "투박함"을 완전히 제거한 세련된 렌더링 규칙
+const formattedContent = computed(() => {
+	if (!dbContent.value) return ''
+	const lines = dbContent.value.split('\n')
+	return lines.map(line => {
+		let trimmed = line.trim()
+		if (!trimmed) return '<div class="spacer"></div>'
 
-	// 🚀 [1] DB 기반 매뉴얼 먼저 조회
-	try {
-		const resDb = await fetch(`${api}/api/manual/db/${base}`, { credentials: 'include' })
-		if (resDb.ok) {
-			const data = await resDb.json()
-			if (data && data.content) {
-				dbContent.value = data.content
-				return // DB에 내용이 있으면 여기서 중단
-			}
+		// ■ 제목 -> 아주 얇고 세련된 라인형 제목
+		if (trimmed.startsWith('■')) {
+			return `<div class="h1-style">${trimmed.substring(1)}</div>`
 		}
-	} catch (e) {
-		console.warn("DB 매뉴얼 조회 실패, 이미지 방식을 시도합니다.", e)
-	}
+		// ● 소제목 -> 세련된 도트형 제목
+		if (trimmed.startsWith('●')) {
+			return `<div class="h2-style"><span></span>${trimmed.substring(1)}</div>`
+		}
+		// [강조] -> 미니멀한 알림 박스
+		if (trimmed.startsWith('[') && trimmed.includes(']')) {
+			const endIdx = trimmed.indexOf(']')
+			const tag = trimmed.substring(1, endIdx)
+			const content = trimmed.substring(endIdx + 1)
+			return `<div class="alert-box"><b>${tag}</b>${content}</div>`
+		}
 
-	// 🚀 [2] DB에 없으면 기존 이미지 방식 시도
-	for (let i = 1; i <= 10; i++) {
-		const num = String(i).padStart(2, '0')
-		const url = `${api}/manual/${base}_${num}`
-		const res = await fetch(url, { credentials: 'include' })
-		if (res.ok) {
-			images.value.push(url)
-		} else {
-			break
-		}
-	}
+		return `<div class="p-style">${line}</div>`
+	}).join('')
 })
 
-function close() {
-	manualStore.close()
-}
+onMounted(async () => {
+	if (!props.fileName) return
+	const cleanId = props.fileName.replace(/_/g, '')
+	try {
+		const res = await axiosApi.get(`/api/manual/db/${cleanId}`)
+		if (res.data?.content) { dbContent.value = res.data.content; return }
+	} catch (e) {}
+
+	const apiBase = API_URL
+	for (let i = 1; i <= 3; i++) {
+		const url = `${apiBase}/manual/${props.fileName}_${String(i).padStart(2, '0')}`
+		const res = await fetch(url, { credentials: 'include' })
+		if (res.ok) images.value.push(url); else break
+	}
+})
+const close = () => emit('close')
 </script>
 
 <style scoped>
-.manual-container {
-	width: 1000px;
-	min-height: 400px;
-	max-height: 80vh;
-	padding: 10px;
+/* 초슬림 사이드바 스타일링 */
+.manual-sidebar {
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background: #fff;
+	font-family: 'Segoe UI', 'Pretendard', sans-serif;
 }
-.manual-html-content {
-	font-size: 14px;
-	line-height: 1.6;
-	color: #333;
+
+.sidebar-header {
+	background: #2c3e50; /* 전문적인 다크 블루 그레이 */
+	height: 40px; /* 더 작게 */
+	padding: 0 12px;
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
 }
-/* Quill 에디터 스타일 유지 */
-:deep(.ql-editor img) {
-	max-width: 100%;
-	height: auto;
-	display: block;
-	margin: 10px auto;
+.header-content {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	color: #fff;
 }
+.title { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #ecf0f1; }
+.pgm-id { font-size: 9px; color: #95a5a6; margin-left: 8px; }
+.close-x {
+	background: none; border: none; color: #bdc3c7; font-size: 18px;
+	cursor: pointer; padding: 0; margin-left: auto;
+}
+.close-x:hover { color: #fff; }
+
+.sidebar-body { flex: 1; overflow-y: auto; background: #fff; }
+.sidebar-body::-webkit-scrollbar { width: 3px; }
+.sidebar-body::-webkit-scrollbar-thumb { background: #ced4da; }
+
+.content-render { padding: 15px; }
+.rich-text { font-size: 12px; color: #333; line-height: 1.6; }
+
+/* 콤팩트 렌더링 스타일 */
+:deep(.h1-style) {
+	font-size: 13px; font-weight: 800; color: #000;
+	border-bottom: 2px solid #3498db;
+	padding-bottom: 3px; margin: 15px 0 8px 0;
+}
+:deep(.h2-style) {
+	font-size: 12px; font-weight: 700; color: #2c3e50;
+	margin: 10px 0 5px 0; display: flex; align-items: center;
+}
+:deep(.h2-style span) {
+	width: 3px; height: 3px; background: #3498db; border-radius: 50%; margin-right: 6px;
+}
+:deep(.alert-box) {
+	background: #f1f4f6; border-radius: 4px;
+	padding: 8px 10px; margin: 8px 0; font-size: 11.5px;
+	border-left: 3px solid #3498db;
+}
+:deep(.alert-box b) { color: #2980b9; margin-right: 5px; }
+:deep(.spacer) { height: 8px; }
+:deep(.p-style) { margin-bottom: 3px; }
+
+.sidebar-footer {
+	height: 24px; background: #f8f9fa; border-top: 1px solid #eee;
+	display: flex; align-items: center; justify-content: center;
+}
+.sidebar-footer span { font-size: 8px; color: #95a5a6; font-weight: 600; }
 </style>

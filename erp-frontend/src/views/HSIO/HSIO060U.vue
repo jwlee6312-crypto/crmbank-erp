@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -289,6 +289,11 @@ function initialize() {
   }
   poGrid?.clearData(); itemGrid?.clearData();
 }
+
+onUnmounted(() => {
+  if (poGrid) poGrid.destroy();
+  if (itemGrid) itemGrid.destroy();
+});
 
 function openHelp(type: string) {
   if (type === 'DEPT_search') {

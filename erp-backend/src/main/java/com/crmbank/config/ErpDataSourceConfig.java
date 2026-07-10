@@ -26,8 +26,8 @@ import com.zaxxer.hikari.HikariDataSource;
  * Using explicit bean names to prevent dependency injection errors in multi-datasource environments.
  */
 @MapperScan(
-    basePackages = "com.crmbank.erp", 
-    sqlSessionTemplateRef = "erpSqlSessionTemplate"
+    basePackages = "com.crmbank.erp",
+    sqlSessionFactoryRef = "erpSqlSessionFactory"
 )
 public class ErpDataSourceConfig {
 

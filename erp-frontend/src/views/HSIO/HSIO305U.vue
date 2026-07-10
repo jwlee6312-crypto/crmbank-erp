@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, nextTick, computed } from 'vue'
+import { reactive, ref, onMounted, nextTick, computed, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -439,6 +439,11 @@ const handleDelete = async () => {
 
 const formatNumber = (n: any) => Number(n || 0).toLocaleString();
 
+onUnmounted(() => {
+  if (grid1) grid1.destroy();
+  if (grid2) grid2.destroy();
+});
+
 onMounted(() => {
   // 어음종류 코드 로드
   api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', cmpycd: authStore.cmpycd, gbncd: '150' }).then(r => {
@@ -448,7 +453,7 @@ onMounted(() => {
   api.get('/api/hp00/hp00_000s_str', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
     if (r.data?.length) { const n = normalize(r.data)[0]; closingInfo.sclsym = n.sclsym; }
   });
-  nextTick(init_grids);
+  nextTick(initGrids);
 })
 </script>
 

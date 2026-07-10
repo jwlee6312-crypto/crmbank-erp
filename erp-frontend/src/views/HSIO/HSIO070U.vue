@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -195,6 +195,11 @@ function openHelp(type: string) {
     openCommonHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
   }
 }
+
+onUnmounted(() => {
+  if (poGrid) poGrid.destroy();
+  if (itemGrid) itemGrid.destroy();
+});
 
 onMounted(async () => {
   await loadClsInfo();

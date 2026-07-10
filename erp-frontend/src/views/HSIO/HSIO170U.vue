@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -221,6 +221,11 @@ function openHelp(type: string) {
     })
   }
 }
+
+onUnmounted(() => {
+  if (poGrid) poGrid.destroy();
+  if (itemGrid) itemGrid.destroy();
+});
 
 onMounted(() => {
   if (poGridRef.value) {

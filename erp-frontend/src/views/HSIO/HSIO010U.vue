@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -276,6 +276,11 @@ async function handleFullDelete() {
     vAlert('삭제되었습니다.'); initialize(); search();
   } catch (e) { vAlertError('삭제 실패'); }
 }
+
+onUnmounted(() => {
+  if (grid1) grid1.destroy();
+  if (grid2) grid2.destroy();
+});
 
 onMounted(async () => {
     nextTick(initGrids);

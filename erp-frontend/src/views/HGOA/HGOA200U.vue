@@ -26,7 +26,7 @@
             <div class="d-flex align-items-center gap-2">
                 <div class="stats-mini d-flex align-items-center px-3 py-1 bg-white rounded border border-danger border-opacity-25 shadow-sm">
                     <span class="fw-bold text-muted me-2" style="font-size: 0.7rem;">현재 대기:</span>
-                    <span class="small fw-bold text-danger">{{ GRID_DATA.length }}건</span>
+                    <span class="small fw-bold text-danger">{{ grid_data.length }}건</span>
                 </div>
                 <button class="btn btn-dark btn-xs rounded px-3 py-1 fw-bold d-flex align-items-center gap-1 shadow-sm transition-all" @click="fetch_pending_list">
                     <i class="bi bi-arrow-clockwise"></i>새로고침
@@ -44,7 +44,7 @@
                         <div class="metric-mini-card bg-white p-2 px-3 rounded-3 shadow-sm border-0 h-100 border-start border-3" :class="'border-' + val.color">
                             <div class="text-muted fw-bold mb-0" style="font-size: 0.65rem;">{{ val.label }}</div>
                             <div class="d-flex align-items-center justify-content-between">
-                                <div class="fw-bold text-dark" style="font-size: 1.1rem;">{{ METRICS[key] }}</div>
+                                <div class="fw-bold text-dark" style="font-size: 1.1rem;">{{ metrics[key] }}</div>
                                 <i :class="['bi', val.icon, 'opacity-25']" style="font-size: 1rem;"></i>
                             </div>
                         </div>
@@ -57,7 +57,7 @@
                         <div class="fw-bold text-dark" style="font-size: 0.75rem;"><i class="bi bi-list-task me-2 text-primary"></i>고객 응대 리스트</div>
                     </div>
                     <div class="card-body p-0 position-relative bg-white">
-                        <div ref="PENDING_TABLE_REF" class="tabulator-compact-erp"></div>
+                        <div ref="pending_table_ref" class="tabulator-compact-erp"></div>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                 <div class="card border-0 shadow-lg rounded-3 h-100 overflow-hidden d-flex flex-column bg-white border-top border-3 border-primary">
                     <div class="card-header bg-light bg-opacity-25 py-2 px-3 border-0 d-flex justify-content-between align-items-center border-bottom">
                         <div class="fw-bold text-primary" style="font-size: 0.75rem;"><i class="bi bi-pencil-square me-2"></i>응대 결과 등록</div>
-                        <button v-if="SELECTED_ITEM" class="btn btn-primary btn-xs rounded-pill px-2 fw-bold shadow-sm d-flex align-items-center gap-1" @click="make_call">
+                        <button v-if="selected_item" class="btn btn-primary btn-xs rounded-pill px-2 fw-bold shadow-sm d-flex align-items-center gap-1" @click="make_call">
                             <i class="bi bi-telephone-fill" style="font-size: 0.6rem;"></i>전화연결
                         </button>
                     </div>
@@ -75,14 +75,14 @@
                     <div class="card-body p-3 d-flex flex-column h-100 overflow-auto scrollbar-sm">
                         <!-- 고객 정보 섹션 -->
                         <div class="selected-info-box mb-3 p-2 rounded border bg-light bg-opacity-50">
-                            <template v-if="SELECTED_ITEM">
+                            <template v-if="selected_item">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="badge" style="font-size: 0.65rem;" :class="SELECTED_ITEM.CALL_TYPE === '콜백' ? 'bg-danger' : 'bg-warning text-dark'">
-                                        {{ SELECTED_ITEM.CALL_TYPE }}
+                                    <span class="badge" style="font-size: 0.65rem;" :class="selected_item.call_type === '콜백' ? 'bg-danger' : 'bg-warning text-dark'">
+                                        {{ selected_item.call_type }}
                                     </span>
-                                    <span class="text-muted fw-bold" style="font-size: 0.65rem;"><i class="bi bi-clock me-1"></i>{{ SELECTED_ITEM?.START_TIME }}</span>
+                                    <span class="text-muted fw-bold" style="font-size: 0.65rem;"><i class="bi bi-clock me-1"></i>{{ selected_item?.start_time }}</span>
                                 </div>
-                                <div class="fw-bold text-dark text-center" style="font-size: 1rem; letter-spacing: 0.05rem;">{{ SELECTED_ITEM?.CONTACT_NO }}</div>
+                                <div class="fw-bold text-dark text-center" style="font-size: 1rem; letter-spacing: 0.05rem;">{{ selected_item?.contact_no }}</div>
                             </template>
                             <template v-else>
                                 <div class="text-center py-4 text-muted" style="font-size: 0.7rem;"><i class="bi bi-cursor me-1"></i>목록에서 고객을 선택하세요</div>
@@ -90,10 +90,10 @@
                         </div>
 
                         <!-- 등록 폼 (폰트 크기 및 구성 조정) -->
-                        <div class="row g-2 flex-grow-1" v-if="SELECTED_ITEM">
+                        <div class="row g-2 flex-grow-1" v-if="selected_item">
                             <div class="col-12 text-start">
                                 <label class="fw-bold text-secondary mb-1" style="font-size: 0.7rem;">응대 결과 <span class="text-danger">*</span></label>
-                                <select v-model="FORM.rslt_cd" class="form-select form-select-sm shadow-none border-light-subtle fw-bold" style="font-size: 0.75rem;">
+                                <select v-model="form.rslt_cd" class="form-select form-select-sm shadow-none border-light-subtle fw-bold" style="font-size: 0.75rem;">
                                     <option value="">결과를 선택하세요</option>
                                     <option v-for="code in result_codeS" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
                                 </select>
@@ -101,21 +101,21 @@
 
                             <div class="col-12 text-start">
                                 <label class="fw-bold text-secondary mb-1" style="font-size: 0.7rem;">상담결과내용</label>
-                                <textarea v-model="FORM.remark" class="form-control form-control-sm border-light-subtle shadow-none p-2 rounded-2 fw-medium" rows="12" style="font-size: 0.75rem;" placeholder="통화 내용을 상세히 기록하세요."></textarea>
+                                <textarea v-model="form.remark" class="form-control form-control-sm border-light-subtle shadow-none p-2 rounded-2 fw-medium" rows="12" style="font-size: 0.75rem;" placeholder="통화 내용을 상세히 기록하세요."></textarea>
                             </div>
 
                             <div class="col-12 text-start">
                                 <label class="fw-bold text-secondary mb-1" style="font-size: 0.7rem;">처리담당자</label>
                                 <div class="d-flex align-items-center gap-2 bg-light p-2 rounded-2 border border-light-subtle">
                                     <i class="bi bi-person-check text-muted" style="font-size: 0.75rem;"></i>
-                                    <span class="fw-bold text-dark" style="font-size: 0.7rem;">{{ FORM.user_nm }} ({{ FORM.userid }})</span>
+                                    <span class="fw-bold text-dark" style="font-size: 0.7rem;">{{ form.user_nm }} ({{ form.userid }})</span>
                                 </div>
                             </div>
 
                             <div class="col-12 mt-auto pt-3">
                                 <button class="btn btn-primary w-100 py-2 rounded-2 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2"
-                                        @click="handle_save" :disabled="IS_SAVING">
-                                    <span v-if="IS_SAVING" class="spinner-border spinner-border-sm"></span>
+                                        @click="handle_save" :disabled="is_saving">
+                                    <span v-if="is_saving" class="spinner-border spinner-border-sm"></span>
                                     <i v-else class="bi bi-check2-all fs-6"></i>
                                     <span class="small">응대 완료 처리</span>
                                 </button>
@@ -141,80 +141,81 @@ import AppAlert from '@/components/AppAlert.vue'
 const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
 const authStore = useAuthStore()
 
-const GRID_DATA = ref<any[]>([])
-const SELECTED_ITEM = ref<any>(null)
+const grid_data = ref<any[]>([])
+const selected_item = ref<any>(null)
 const result_codeS = ref<any[]>([])
-const IS_SAVING = ref(false)
-const FORM = reactive({ rslt_cd: '', remark: '', user_nm: '', userid: '' })
-const METRICS = reactive<any>({ INBOUND_total: 0, INBOUND_ANSWERED: 0, INBOUND_ABANDONED: 0 })
+const is_saving = ref(false)
+const form = reactive({ rslt_cd: '', remark: '', user_nm: '', userid: '' })
+const metrics = reactive<any>({ inbound_total: 0, inbound_answered: 0, inbound_abandoned: 0 })
 
 const METRIC_CONFIG = {
-    INBOUND_total: { label: '오늘의 총 인입', icon: 'bi-telephone-inbound', color: 'primary' },
-    INBOUND_ANSWERED: { label: '응대 완료 건', icon: 'bi-check2-all', color: 'success' },
-    INBOUND_ABANDONED: { label: '미연결 / 포기', icon: 'bi-telephone-x', color: 'danger' }
+    inbound_total: { label: '오늘의 총 인입', icon: 'bi-telephone-inbound', color: 'primary' },
+    inbound_answered: { label: '응대 완료 건', icon: 'bi-check2-all', color: 'success' },
+    inbound_abandoned: { label: '미연결 / 포기', icon: 'bi-telephone-x', color: 'danger' }
 }
 
-const PENDING_TABLE_REF = ref<HTMLElement | null>(null)
+const pending_table_ref = ref<HTMLElement | null>(null)
 let TABLE_INSTANCE: Tabulator | null = null
 
 const fetch_pending_list = async () => {
     try {
         const { data } = await api.get('/api/crm/inbound/pending-list');
-        GRID_DATA.value = data || [];
-        TABLE_INSTANCE?.setData(GRID_DATA.value);
-        SELECTED_ITEM.value = null;
+        grid_data.value = data || [];
+        TABLE_INSTANCE?.setData(grid_data.value);
+        selected_item.value = null;
 
-        METRICS.INBOUND_ABANDONED = GRID_DATA.value.length;
-        METRICS.INBOUND_ANSWERED = Math.max(12, Math.floor(Math.random() * 20) + 10);
-        METRICS.INBOUND_total = METRICS.INBOUND_ANSWERED + METRICS.INBOUND_ABANDONED;
+        metrics.inbound_abandoned = grid_data.value.length;
+        metrics.inbound_answered = Math.max(12, Math.floor(Math.random() * 20) + 10);
+        metrics.inbound_total = metrics.inbound_answered + metrics.inbound_abandoned;
     } catch (e) { vAlertError('데이터 조회 실패'); }
 }
 
 const handle_save = async () => {
-    if (!FORM.rslt_cd) return vAlertError('응대 결과를 선택하세요.');
-    IS_SAVING.value = true;
+    if (!form.rslt_cd) return vAlertError('응대 결과를 선택하세요.');
+    is_saving.value = true;
     try {
         const payload = {
-            INTERACTION_ID: SELECTED_ITEM.value.INTERACTION_ID,
-            rslt_cd: FORM.rslt_cd,
-            remark: FORM.remark,
-            userid: FORM.userid
+            INTERACTION_ID: selected_item.value.INTERACTION_ID,
+            rslt_cd: form.rslt_cd,
+            remark: form.remark,
+            userid: form.userid
         };
         await api.post('/api/crm/inbound/interaction/save-response', payload);
         vAlert('처리가 완료되었습니다.');
         fetch_pending_list();
-    } catch (e) { vAlertError('저장 실패'); } finally { IS_SAVING.value = false; }
+    } catch (e) { vAlertError('저장 실패'); } finally { is_saving.value = false; }
 }
 
 const make_call = () => {
-    if (!SELECTED_ITEM.value) return;
-    vAlert(SELECTED_ITEM.value.CONTACT_NO + ' 번호로 연결합니다.');
+    if (!selected_item.value) return;
+    vAlert(selected_item.value.contact_no + ' 번호로 연결합니다.');
 }
 
 onMounted(async () => {
     try { result_codeS.value = await fetchCrmSelectData('920'); } catch (e) {}
 
-    TABLE_INSTANCE = new Tabulator(PENDING_TABLE_REF.value!, {
+    if (TABLE_INSTANCE) TABLE_INSTANCE.destroy();
+    TABLE_INSTANCE = new Tabulator(pending_table_ref.value!, {
         layout: "fitColumns",
         height: "100%",
         selectable: 1,
         placeholder: "조회 내역 없음",
         columnDefaults: { headerHozAlign: 'center', headerSort: false, resizable: false },
         columns: [
-            { title: "고객전화번호", field: "CONTACT_NO", width: 150, hozAlign: "center", cssClass: "fw-bold text-primary small py-1 text-start" },
-            { title: "발생시각", field: "START_TIME", width: 160, hozAlign: "center", formatter: (c:any) => `<span style="font-size: 0.72rem;" class="text-dark fw-bold">${c.getValue() || '-'}</span>` },
-            { title: "응대완료시각", field: "END_TIME", width: 160, hozAlign: "center", formatter: (c:any) => `<span style="font-size: 0.72rem;" class="text-muted">${c.getValue() || '-'}</span>` },
+            { title: "고객전화번호", field: "contact_no", width: 150, hozAlign: "center", cssClass: "fw-bold text-primary small py-1 text-start" },
+            { title: "발생시각", field: "start_time", width: 160, hozAlign: "center", formatter: (c:any) => `<span style="font-size: 0.72rem;" class="text-dark fw-bold">${c.getValue() || '-'}</span>` },
+            { title: "응대완료시각", field: "end_time", width: 160, hozAlign: "center", formatter: (c:any) => `<span style="font-size: 0.72rem;" class="text-muted">${c.getValue() || '-'}</span>` },
             { title: "응대완료담당자", field: "user_nm", hozAlign: "center", formatter: (c:any) => c.getValue() ? `<span class="badge bg-light text-dark border px-2" style="font-size: 0.65rem;">${c.getValue()}</span>` : '-' }
         ]
     });
 
     TABLE_INSTANCE.on("rowClick", (e, row) => {
         const data = row.getData();
-        SELECTED_ITEM.value = data;
-        FORM.rslt_cd = '';
-        FORM.remark = '';
-        FORM.user_nm = authStore.user_name;
-        FORM.userid = authStore.user_id;
+        selected_item.value = data;
+        form.rslt_cd = '';
+        form.remark = '';
+        form.user_nm = authStore.user_name;
+        form.userid = authStore.user_id;
     });
 
     fetch_pending_list();

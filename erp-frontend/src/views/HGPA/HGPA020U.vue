@@ -24,7 +24,7 @@
                         <tbody>
                             <tr>
                                 <th class="bg-light fw-bold text-end pe-2">그룹명 (ID)</th>
-                                <td><input v-model="TEMP_QUEUE.name" class="form-control form-control-sm fw-bold" placeholder="예: 8000" /></td>
+                                <td><input v-model="temp_queue.name" class="form-control form-control-sm fw-bold" placeholder="예: 8000" /></td>
                             </tr>
                             <tr>
                                 <th class="bg-light fw-bold text-end pe-2">전략 (Strategy)</th>
@@ -129,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -168,9 +168,15 @@ onMounted(() => {
         search_all_endpoints();
     })
 })
+onUnmounted(() => {
+    queue_table_instance?.destroy();
+    member_table_instance?.destroy();
+    agent_table_instance?.destroy();
+})
 
 function initTables() {
     // 💡 필드명 대문자 통일
+    if (queue_table_instance) queue_table_instance.destroy();
 	queue_table_instance = new Tabulator(queue_table_ref.value!, {
 		placeholder: 'No Data', layout: 'fitColumns', selectable: 1, height: '100%',
 		columns: [{ title: '그룹명 (Name)', field: 'name', hozAlign: 'left', headerSort: false, editor: 'input' }]
@@ -181,6 +187,7 @@ function initTables() {
 		search_members(data.name);
 	})
 
+    if (member_table_instance) member_table_instance.destroy();
 	member_table_instance = new Tabulator(member_table_ref.value!, {
 		placeholder: '상담원 없음', layout: 'fitColumns', selectable: true, height: '100%',
 		columns: [
@@ -195,6 +202,7 @@ function initTables() {
 		],
 	})
 
+    if (agent_table_instance) agent_table_instance.destroy();
 	agent_table_instance = new Tabulator(agent_table_ref.value!, {
 		placeholder: '내선 정보 없음', layout: 'fitColumns', selectable: true, height: '100%',
 		columns: [
@@ -238,7 +246,7 @@ function move_right_to_left() {
     
     const current = member_table_instance?.getData() || [];
     agents.forEach(a => { 
-        if (!current.find(m => m.INTERFACE_NO === a.ID)) {
+        if (!current.find(m => m.interface_no === a.id)) {
             member_table_instance?.addRow({
                 queue_name: selected_queue_name.value,
                 membername: a.callerid || '상담원',

@@ -25,13 +25,15 @@
     </insert>
 
     <select id="getProgramList" parameterType="map" resultType="map">
-        SELECT pgmid, pgmnm
-        FROM haaa800t_tbl
-        WHERE useyn = 'y'
+        SELECT A.pgmid, A.pgmnm,
+               CASE WHEN B.progid IS NOT NULL THEN 'Y' ELSE 'N' END as reg_yn
+        FROM haaa800t_tbl A
+        LEFT JOIN COM_MANUAL B ON REPLACE(A.pgmid, '_', '') = B.progid
+        WHERE A.useyn = 'y'
         <if test="pgmnm != null and pgmnm != ''">
-            AND pgmnm LIKE '%' + #{pgmnm} + '%'
+            AND A.pgmnm LIKE '%' + #{pgmnm} + '%'
         </if>
-        ORDER BY pgmid
+        ORDER BY A.pgmid
     </select>
 
 </mapper>

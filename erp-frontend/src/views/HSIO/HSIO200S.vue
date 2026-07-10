@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -184,6 +184,10 @@ function initialize() {
 const print = () => { vAlert('인쇄 기능을 준비 중입니다.') }
 const openHelp = (type: string) => { /* 팝업 로직 */ }
 const modalVisible = ref(false); const modalProps = reactive<any>({ title: '', path: '', onConfirm: () => {} })
+
+onUnmounted(() => {
+  if (mainGrid) mainGrid.destroy();
+});
 
 onMounted(async () => {
 	if (mainGridRef.value) {

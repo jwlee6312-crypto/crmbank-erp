@@ -70,7 +70,7 @@ public class InboundController {
         try {
             // 💡 [소문자 표준화] session key: "user_session"
             UserSession user = (UserSession) session.getAttribute("user_session");
-            String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+            String cmpycd = user != null ? user.getCmpycd() : "";
             String userid = user != null ? user.getUserid() : "system";
             String deptcd = user != null ? user.getDeptcd() : "";
             
@@ -138,42 +138,42 @@ public class InboundController {
             @RequestParam(required = false) String custnm,
             HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
-        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        String cmpycd = user != null ? user.getCmpycd() : "";
         return inboundService.getStatusList(cmpycd, fromdt, todt, custnm);
     }
 
     @GetMapping("/customer-detail")
     public Map<String, Object> getCustomerDetail(@RequestParam String custcd, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
-        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        String cmpycd = user != null ? user.getCmpycd() : "";
         return inboundService.getCustomerByCustCd(cmpycd, custcd);
     }
 
     @GetMapping("/item-list")
     public List<Map<String, Object>> getItemList(@RequestParam String custcd, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
-        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        String cmpycd = user != null ? user.getCmpycd() : "";
         return inboundService.getItemList(cmpycd, custcd);
     }
 
     @GetMapping("/call-history")
     public List<Map<String, Object>> getCallHistory(@RequestParam String custcd, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
-        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        String cmpycd = user != null ? user.getCmpycd() : "";
         return inboundService.getCallHistory(cmpycd, custcd);
     }
 
     @GetMapping("/service-history")
     public List<Map<String, Object>> getServiceHistory(@RequestParam String custcd, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
-        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        String cmpycd = user != null ? user.getCmpycd() : "";
         return inboundService.getServiceHistory(cmpycd, custcd);
     }
 
     @GetMapping("/settle-history")
     public List<Map<String, Object>> getSettleHistory(@RequestParam String custcd, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
-        String cmpycd = user != null ? user.getCmpycd() : "haionnet";
+        String cmpycd = user != null ? user.getCmpycd() : "";
         return inboundService.getSettleHistory(cmpycd, custcd);
     }
 

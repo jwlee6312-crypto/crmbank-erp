@@ -26,7 +26,7 @@ export function addDynamicRoute(pgmid: string, pgmnm: string, grpcd: string) {
 	// 메타 데이터에 상단메뉴, 사이드바 메뉴 데이터 저장합니다.
 	router.addRoute('DefaultLayout', {
 		path: `/${pgmid}`,
-		name: pgmid,
+		name: pgmid, // 💡 중요: 이 name이 파일명(컴포넌트 추론명)과 일치해야 함
 		component,
 		meta: {
 			topMenuCode: menuStore.activeCodecd,

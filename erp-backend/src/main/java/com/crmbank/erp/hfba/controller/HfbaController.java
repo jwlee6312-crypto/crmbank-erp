@@ -71,6 +71,9 @@ public class HfbaController {
                     case "FBA1040U_STR": result = hfbaMapper.FBA1040U_STR(params); break;
                     case "FBA1060U_STR": result = hfbaMapper.FBA1060U_STR(params); break;
                     case "FBA2010U_STR": result = hfbaMapper.FBA2010U_STR(params); break;
+                    case "FBA2020U_SEL": result = hfbaMapper.FBA2020U_SEL(params); break;
+                    case "FBA2020U_MOD": result = hfbaMapper.FBA2020U_MOD(params); break;
+                    case "FBA2020U_DEL": result = hfbaMapper.FBA2020U_DEL(params); break;
                     case "FBA3010U_STR": result = hfbaMapper.FBA3010U_STR(params); break;
                     case "SELECT_DIVIDE_LIST": result = hfbaMapper.selectDivideList(params); break;
                     case "SELECT_ACCT_LIST": result = hfbaMapper.selectAcctList(params); break;

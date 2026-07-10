@@ -268,9 +268,9 @@ const save = async () => {
   try {
     const clean = (val: any) => String(val || '').trim()
     const passymd = (formData.passymd || '').replace(/-/g, '')
-    const ITEMGRID_DATA = itemGrid?.getData() || []
+    const ITEMgrid_data = itemGrid?.getData() || []
 
-    const rowWithIono = ITEMGRID_DATA.find(d => clean(d.iono) !== '')
+    const rowWithIono = ITEMgrid_data.find(d => clean(d.iono) !== '')
     const isUpdate = !!rowWithIono
 
     // 🚀 [Rule] 모든 필드를 NULL 없이 정제 및 항공 운송(직통관) 대응

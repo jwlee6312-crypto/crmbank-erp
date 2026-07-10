@@ -16,7 +16,13 @@
       </aside>
 
       <!-- 3. 본문 영역 (탭 + 컨텐츠) -->
-      <main class="erp-content">
+      <main class="erp-content" style="position: relative;">
+        <!-- 🚀 매뉴얼 도움말 버튼 (프레임 최우측 상단 고정) -->
+        <div v-if="tabStore.activeTabId" class="tab-manual-btn-fixed" @click="openManual" title="도움말 열기">
+          <i class="bi bi-question-circle"></i>
+          <span>도움말</span>
+        </div>
+
         <!-- 💡 탭 바 -->
         <nav class="erp-tab-bar custom-scrollbar">
           <div
@@ -25,6 +31,7 @@
             class="erp-tab-item"
             :class="{ 'is-active': tabStore.activeTabId === tab.pgmId }"
             @click="tabStore.selectTab(tab)"
+            @contextmenu.prevent="tabStore.closeOtherTabs(tab.pgmId)"
           >
             <i class="bi bi-file-earmark-text me-2 tab-icon"></i>
             <span class="tab-title">{{ tab.pgmNm }}</span>
@@ -32,13 +39,17 @@
               <i class="bi bi-x-lg"></i>
             </span>
           </div>
+          <div v-if="tabStore.tabs.length > 0" class="tab-reset-btn" @click="tabStore.closeAllTabs" title="모든 탭 닫기">
+            <i class="bi bi-trash"></i>
+          </div>
         </nav>
 
         <!-- 3-2. 프로그램 컨텐츠 영역 -->
         <section class="erp-page-container">
-          <router-view v-slot="{ Component }">
-            <keep-alive>
-              <component :is="Component" :key="$route.fullPath" />
+          <router-view v-slot="{ Component, route }">
+            <!-- 💡 include는 컴포넌트의 'name'(파일명)과 탭의 'pgmId'를 매칭시킴 -->
+            <keep-alive :include="tabStore.tabs.map(t => t.pgmId)">
+              <component :is="Component" :key="route.name" />
             </keep-alive>
           </router-view>
         </section>
@@ -58,14 +69,22 @@ import TopNavbar from '@/components/TopNavbar.vue'
 import SideMenu from '@/components/SideMenu.vue'
 import { useTabStore } from '@/stores/tabStore'
 import { useLoadingStore } from '@/stores/loadingStore'
+import { useManualStore } from '@/stores/manualStore'
 import AppSpinner from '@/components/AppSpinner.vue'
 
 const tabStore = useTabStore()
 const loadingStore = useLoadingStore()
+const manualStore = useManualStore()
 const isSidebarCollapsed = ref(false)
 
 const toggleSidebar = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value
+}
+
+const openManual = () => {
+  if (tabStore.activeTabId) {
+    manualStore.open(tabStore.activeTabId)
+  }
 }
 </script>
 
@@ -83,7 +102,8 @@ const toggleSidebar = () => {
 .erp-header {
   height: 65px;
   flex-shrink: 0;
-  z-index: 1000;
+  z-index: 10001; /* 💡 로딩 오버레이(9999)보다 더 높게 설정하여 클릭 보장 */
+  position: relative;
 }
 
 .erp-main-wrapper {
@@ -165,6 +185,43 @@ const toggleSidebar = () => {
   height: 36px;
   border-top: 3px solid #005a9f;
 }
+
+.tab-reset-btn {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #f56c6c;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.tab-reset-btn:hover { opacity: 1; }
+
+.tab-manual-btn-fixed {
+  position: absolute;
+  right: 15px; /* 프레임 끝에서 약간 띄움 */
+  top: 9px;    /* 탭 바(40px)의 중앙 부분에 오도록 조정 */
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  background-color: #ffc107;
+  color: #000;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 1000; /* 탭보다 위, 하지만 모달보다는 아래 */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+}
+.tab-manual-btn-fixed:hover {
+  background-color: #e5ac00;
+  transform: translateY(-1px);
+}
+.tab-manual-btn-fixed i { font-size: 12px; }
 
 .erp-loading { position: fixed; inset: 0; background: rgba(255,255,255,0.7); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 </style>

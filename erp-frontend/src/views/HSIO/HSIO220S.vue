@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -115,6 +115,10 @@ function initialize() {
 
 const print = () => { vAlert('인쇄 기능을 준비 중입니다.') }
 const formatNumber = (val: any) => Number(val || 0).toLocaleString()
+
+onUnmounted(() => {
+  if (mainGrid) mainGrid.destroy();
+});
 
 onMounted(() => {
 	if (mainGridRef.value) {

@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick, watch } from 'vue'
+import { reactive, ref, onMounted, computed, nextTick, watch, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -342,6 +342,10 @@ function openHelp(type: string) {
 
 const formatDateString = (v: any, sep: string) => v && v.length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : v
 const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0)
+
+onUnmounted(() => {
+  if (grid) grid.destroy();
+});
 
 onMounted(() => {
   nextTick(() => initGrid())

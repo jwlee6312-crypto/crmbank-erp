@@ -151,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -335,6 +335,11 @@ onMounted(async () => {
 
 const formatNumber = (val: any) => Number(val || 0).toLocaleString()
 const formatDate = (val: any) => val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val;
+
+onUnmounted(() => {
+  if (poGrid) poGrid.destroy();
+  if (itemGrid) itemGrid.destroy();
+});
 </script>
 
 <style scoped>

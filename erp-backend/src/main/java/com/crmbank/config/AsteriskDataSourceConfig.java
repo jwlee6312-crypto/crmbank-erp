@@ -25,7 +25,7 @@ import javax.sql.DataSource;
  */
 @MapperScan(
     basePackages = "com.crmbank.asterisk.mapper",
-    sqlSessionTemplateRef = "asteriskSqlSessionTemplate"
+    sqlSessionFactoryRef = "asteriskSqlSessionFactory"
 )
 public class AsteriskDataSourceConfig {
 

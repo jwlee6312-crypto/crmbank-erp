@@ -118,11 +118,14 @@ import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 
+import { useManualStore } from '@/stores/manualStore'
+
 const authStore = useAuthStore()
 const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
 const { modalVisible, modalProps } = useCommonHelp()
+const manualStore = useManualStore()
 
 // [1] 데이터 모델링 (소문자 원칙)
 const formData = reactive<any>({

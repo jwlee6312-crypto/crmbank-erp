@@ -143,7 +143,8 @@ public class AsteriskService implements ManagerEventListener {
             data.put("exten", exten);
             data.put("linkedid", linkedId);
             Map<String, Object> params = new HashMap<>();
-            params.put("cmpycd", "haionnet"); params.put("phone", callerId);
+            params.put("cmpycd", ""); // 💡 [교정] 하드코딩 제거 (향후 DID별 매핑 로직 필요)
+            params.put("phone", callerId);
             Map<String, Object> customer = inboundMapper.findCustomerByPhoneMap(params);
             if (customer != null) customer.forEach((k, v) -> data.put(k.toLowerCase(), v));
             else data.put("custnm", "미등록 고객");

@@ -1,6 +1,6 @@
 <!--
 	=============================================================
-	프로그램명	  : 캠페인 등록 (대문자 표준 적용)
+	프로그램명	  : 캠페인 등록 (소문자 표준 적용)
     프로그램 ID	: HGOA020U
 	작성일자	    : 25.03.06
 	작성자	      : AI Assistant
@@ -51,15 +51,13 @@
                                     <tr>
                                         <th class="bg-light text-end pe-2 text-primary fw-bold">설문유형</th>
                                         <td>
-                                            <!-- 💡 대문자 SURV_GB 바인딩 -->
-                                            <select v-model="form.SURV_GB" class="form-select form-select-sm border-primary" @change="load_survey_preview">
+                                            <select v-model="form.surv_gb" class="form-select form-select-sm border-primary" @change="load_survey_preview">
                                                 <option value="">선택하세요</option>
-                                                <!-- 💡 대문자 codecd, codenm 사용 -->
                                                 <option v-for="code in code_910" :key="code.codecd" :value="code.codecd">{{ code.codenm }}</option>
                                             </select>
                                         </td>
                                         <th class="bg-light text-end pe-2">캠페인명</th>
-                                        <td><input v-model="form.CAMP_NM" type="text" class="form-control form-control-sm" /></td>
+                                        <td><input v-model="form.camp_nm" type="text" class="form-control form-control-sm" /></td>
                                     </tr>
                                     <tr>
                                         <th class="bg-light text-end pe-2">실행상태</th>
@@ -78,11 +76,11 @@
                                     </tr>
                                     <tr>
                                         <th class="bg-light text-end pe-2">시작인사</th>
-                                        <td colspan="3"><textarea v-model="form.START_MENT" class="form-control form-control-sm" rows="1"></textarea></td>
+                                        <td colspan="3"><textarea v-model="form.start_ment" class="form-control form-control-sm" rows="1"></textarea></td>
                                     </tr>
                                     <tr>
                                         <th class="bg-light text-end pe-2">종료인사</th>
-                                        <td colspan="3"><textarea v-model="form.END_MENT" class="form-control form-control-sm" rows="1"></textarea></td>
+                                        <td colspan="3"><textarea v-model="form.end_ment" class="form-control form-control-sm" rows="1"></textarea></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -94,15 +92,14 @@
                             <span><i class="bi bi-ui-checks me-1 text-secondary"></i>설문 문항 미리보기</span>
                         </div>
                         <div class="preview-body-scroll flex-grow-1 overflow-auto bg-white">
-                            <!-- 💡 대문자 키값(SURV_NO, QUESTION, ANSWERS)으로 렌더링 -->
-                            <div v-for="(q, idx) in survey_list" :key="q.SURV_NO" class="survey-item-row border-bottom d-flex align-items-center p-2 text-start">
+                            <div v-for="(q, idx) in survey_list" :key="q.surv_no" class="survey-item-row border-bottom d-flex align-items-center p-2 text-start">
                                 <div class="col-1 text-center fw-bold text-secondary">{{ idx + 1 }}</div>
                                 <div class="col-7 ps-3">
-                                    <div class="fw-bold small text-dark">{{ q.QUESTION }}</div>
-                                    <div class="text-muted" style="font-size: 0.7rem;">ID: {{ q.SURV_NO }}</div>
+                                    <div class="fw-bold small text-dark">{{ q.question }}</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">ID: {{ q.surv_no }}</div>
                                 </div>
                                 <div class="col-4 bg-light bg-opacity-25 rounded p-2 text-primary small italic">
-                                    <i class="bi bi-reply-all-fill me-1"></i>{{ q.ANSWERS || (q.ANS_TP === '020' ? '주관식 입력형' : '답변 요약 없음') }}
+                                    <i class="bi bi-reply-all-fill me-1"></i>{{ q.answers || (q.ans_tp === '020' ? '주관식 입력형' : '답변 요약 없음') }}
                                 </div>
                             </div>
                         </div>
@@ -114,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import { useAlerts } from '@/composables/useAlerts'
 import { fetchCrmSelectData } from '@/composables/useFetchSelectData'
@@ -123,8 +120,7 @@ import AppAlert from '@/components/AppAlert.vue'
 
 const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
 
-// 💡 모든 속성명을 대문자로 정의
-const form = reactive({ cmpycd: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', remark: '', actdate: '', status: '010', START_MENT: '', END_MENT: '' })
+const form = reactive({ cmpycd: '', camp_no: '', camp_nm: '', surv_gb: '', remark: '', actdate: '', status: '010', start_ment: '', end_ment: '' })
 const campaigns = ref<any[]>([]); const survey_list = ref<any[]>([]); const code_910 = ref<any[]>([]); const code_930 = ref<any[]>([])
 const list_ref = ref<HTMLDivElement | null>(null); let list_instance: Tabulator | null = null
 
@@ -145,11 +141,11 @@ onMounted(async () => {
 
 const init_main_grid = () => {
     if (!list_ref.value) return
+    if (list_instance) list_instance.destroy();
     list_instance = new Tabulator(list_ref.value, {
         placeholder: '데이터 없음', layout: 'fitColumns', height: '100%', selectable: 1,
-        // 💡 필드명을 대문자로 수정
         columns: [
-            { title: "캠페인명", field: "CAMP_NM", hozAlign: "left" },
+            { title: "캠페인명", field: "camp_nm", hozAlign: "left" },
             { title: "상태", field: "status", hozAlign: "center", width: 70 }
         ]
     })
@@ -160,9 +156,9 @@ const init_main_grid = () => {
 }
 
 const load_survey_preview = async () => {
-    if (!form.SURV_GB) { survey_list.value = []; return; }
+    if (!form.surv_gb) { survey_list.value = []; return; }
     try {
-        const { data } = await api.get('/crm/outbound/camp-surv-mst-list', { params: { surv_gb: form.SURV_GB } })
+        const { data } = await api.get('/crm/outbound/camp-surv-mst-list', { params: { surv_gb: form.surv_gb } })
         console.log('load_survey_preview:', data)
         survey_list.value = data
     } catch (e) {
@@ -182,7 +178,7 @@ async function search() {
 }
 
 function initialize() {
-	Object.assign(form, { cmpycd: '', CAMP_NO: '', CAMP_NM: '', SURV_GB: '', remark: '', actdate: new Date().toISOString().slice(0,10).replace(/-/g,''), status: '010', START_MENT: '', END_MENT: '' })
+	Object.assign(form, { cmpycd: '', camp_no: '', camp_nm: '', surv_gb: '', remark: '', actdate: new Date().toISOString().slice(0,10).replace(/-/g,''), status: '010', start_ment: '', end_ment: '' })
 	survey_list.value = [];
     list_instance?.deselectRow();
 }
@@ -190,8 +186,8 @@ function initialize() {
 const handle_new = () => { initialize(); vAlert('신규 모드'); }
 
 async function save() {
-    if (!form.CAMP_NM || !form.SURV_GB) return vAlertError('필수 항목을 입력하세요.');
-    const url = form.CAMP_NO ? '/crm/outbound/camp-modify' : '/crm/outbound/camp-save';
+    if (!form.camp_nm || !form.surv_gb) return vAlertError('필수 항목을 입력하세요.');
+    const url = form.camp_no ? '/crm/outbound/camp-modify' : '/crm/outbound/camp-save';
 	try {
 		await api.post(url, form)
 		vAlert('저장되었습니다.');
@@ -200,14 +196,20 @@ async function save() {
 }
 
 async function delete_campaign() {
-	if (!form.CAMP_NO || !confirm('삭제하시겠습니까?')) return
+	if (!form.camp_no || !confirm('삭제하시겠습니까?')) return
 	try {
-		await api.post('/crm/outbound/camp-delete', { camp_no: form.CAMP_NO })
+		await api.post('/crm/outbound/camp-delete', { camp_no: form.camp_no })
 		vAlert('삭제되었습니다.');
         initialize();
         search();
 	} catch (e) { vAlertError('삭제 실패') }
 }
+onUnmounted(() => {
+    if (list_instance) {
+        list_instance.destroy();
+        list_instance = null;
+    }
+})
 </script>
 
 <style scoped>

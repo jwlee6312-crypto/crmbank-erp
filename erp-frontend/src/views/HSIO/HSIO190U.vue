@@ -449,7 +449,11 @@ onMounted(async () => {
     initialize();
 })
 
-onUnmounted(() => { searchStore.removeTab(route.name as string) });
+onUnmounted(() => {
+  if (grid1) grid1.destroy();
+  if (grid2) grid2.destroy();
+  searchStore.removeTab(route.name as string)
+});
 </script>
 
 <style scoped>

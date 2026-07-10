@@ -19,17 +19,17 @@ public class OutboundController {
     private final OutboundService outboundService;
 
     /**
-     * 💡 [핵심] 모든 요청 파라미터를 대문자로 통합 관리
+     * 💡 [핵심] 모든 요청 파라미터를 소문자로 통합 관리 (CRM 소문자 원칙 적용)
      */
     private Map<String, Object> getParams(Map<String, Object> params, HttpSession session) {
-        Map<String, Object> upperParams = new HashMap<>();
+        Map<String, Object> lowParams = new HashMap<>();
         if (params != null) {
-            params.forEach((k, v) -> upperParams.put(k.toUpperCase(), v));
+            params.forEach((k, v) -> lowParams.put(k.toLowerCase(), v));
         }
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        upperParams.put("cmpycd", user != null ? user.getCmpycd() : "HAIONNET");
-        upperParams.put("userid", user != null ? user.getUserid() : "SYSTEM");
-        return upperParams;
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        lowParams.put("cmpycd", user != null ? user.getCmpycd() : "");
+        lowParams.put("userid", user != null ? user.getUserid() : "SYSTEM");
+        return lowParams;
     }
 
     // 1. 공통 코드 및 캠페인 목록 조회
@@ -46,8 +46,8 @@ public class OutboundController {
     // 2. 캠페인 마스터 관리
     @PostMapping("/camp-save")
     public void saveCamp(@RequestBody CampMstDto dto, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("USER_SESSION");
-        dto.setCmpycd(user != null ? user.getCmpycd() : "HAIONNET");
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        dto.setCmpycd(user != null ? user.getCmpycd() : "");
         dto.setUpdemp(user != null ? user.getUserid() : "SYSTEM");
         outboundService.saveCampMst(dto);
     }
@@ -72,7 +72,7 @@ public class OutboundController {
     public void saveSurv(@RequestBody Map<String, Object> payload, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         outboundService.saveSurveyTransaction(payload,
-                user != null ? user.getCmpycd() : "HAIONNET",
+                user != null ? user.getCmpycd() : "",
                 user != null ? user.getUserid() : "SYSTEM");
     }
 
@@ -101,9 +101,11 @@ public class OutboundController {
     @PostMapping("/call-list/save")
     public void saveCallList(@RequestBody List<Map<String, Object>> list, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
-        String cmpycd = user != null ? user.getCmpycd() : "HAIONNET";
-        list.forEach(item -> item.put("cmpycd", cmpycd));
-        outboundService.saveCallListBatch(list);
+        String cmpycd = user != null ? user.getCmpycd() : "";
+        String userid = user != null ? user.getUserid() : "SYSTEM";
+        
+        // 서비스 레이어에 회사 코드와 사용자 ID를 함께 전달
+        outboundService.saveCallListBatch(list, cmpycd, userid);
     }
 
     @PostMapping("/call-list/delete")
@@ -151,14 +153,14 @@ public class OutboundController {
     }
 
     /**
-     * 💡 [최종] 캠페인 상담 통합 저장 (에러 보정 및 안정화)
+     * 💡 [최종] 캠페인 상담 통합 저장 (소문자 표준화 적용)
      * 프론트엔드 HGOA100U.vue에서 호출함
      */
     @PostMapping("/save-consolidated")
     public Map<String, Object> saveConsolidated(@RequestBody Map<String, Object> payload, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
         try {
-            // 모든 키를 대문자로 변환하여 서비스 레이어의 통합 저장 로직 호출
+            // 모든 키를 소문자로 변환하여 서비스 레이어의 통합 저장 로직 호출
             outboundService.saveConsolidated(getParams(payload, session));
             result.put("success", true);
         } catch (Exception e) {

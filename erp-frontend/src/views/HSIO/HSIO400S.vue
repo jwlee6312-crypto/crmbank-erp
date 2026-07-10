@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, nextTick } from 'vue'
+import { onMounted, reactive, ref, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
@@ -179,6 +179,10 @@ function openHelp(type: string) {
 
 function formatMoney(val: any) { return new Intl.NumberFormat().format(Number(val) || 0) }
 function printReport() { vAlert('인쇄 기능을 준비 중입니다.') }
+
+onUnmounted(() => {
+  if (mainGrid) mainGrid.destroy();
+});
 
 onMounted(async () => {
 	if (mainGridRef.value) {

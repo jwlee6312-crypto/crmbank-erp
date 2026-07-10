@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -228,6 +228,10 @@ function openHelp(type: string) {
 const formatNumber = (val: any) => new Intl.NumberFormat().format(Number(val) || 0);
 const print = () => vAlert('출력 기능을 준비 중입니다.');
 const excel = () => grid.value?.download("xlsx", "발주현황.xlsx", { sheetName: "발주현황" });
+
+onUnmounted(() => {
+  if (grid.value) grid.value.destroy();
+});
 
 onMounted(() => {
   nextTick(() => {

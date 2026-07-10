@@ -158,8 +158,12 @@ const initGrids = () => {
           const d = cell.getData();
           const field = cell.getField();
 
-          // 1. 상태 업데이트
-          if (d._state === 'EXIST' && !d._status) cell.getRow().update({ _status: '수정' });
+          // 1. 상태 업데이트 (EXIST -> 수정, NEW -> 입력)
+          if (d._state === 'EXIST' && !d._status) {
+              cell.getRow().update({ _status: '수정' });
+          } else if (d._state === 'NEW' && !d._status) {
+              cell.getRow().update({ _status: '입력' });
+          }
 
           // 2. 생산량 관련 필드 수정 시 자동 계산 실행
           if (['capahh', 'gadtmdd', 'gadrate', 'jungrate'].includes(field)) {

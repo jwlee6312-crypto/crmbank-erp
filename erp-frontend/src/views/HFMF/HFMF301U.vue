@@ -21,6 +21,7 @@
       <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-init" @click="loadClsInfo">초기화</button>
         <button class="btn-erp btn-save" @click="handleExecute">생성실행</button>
+        <button class="btn-erp btn-print" @click="openManual">도움말</button>
       </div>
     </div>
 
@@ -128,8 +129,11 @@ import { api } from '@/utils/axios'
 import AppAlert from '@/components/AppAlert.vue'
 import { useAuthStore } from '@/stores/authStore'
 
+import { useManualStore } from '@/stores/manualStore'
+
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
+const manualStore = useManualStore()
 
 const clsInfo = reactive({ wclsym: '' })
 const searchForm = reactive({ ym: new Date().toISOString().substring(0, 7) })
@@ -170,6 +174,10 @@ const handleExecute = async () => {
 		vAlert('원가 생성 작업이 완료되었습니다.')
 		resultInfo.enddt = new Date().toLocaleTimeString()
 	} catch (e) { vAlertError('작업 중 오류 발생') }
+}
+
+const openManual = () => {
+  manualStore.open('HFMF301U')
 }
 
 onMounted(loadClsInfo)

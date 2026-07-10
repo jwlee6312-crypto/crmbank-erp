@@ -21,6 +21,7 @@
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-search" @click="handleSearch">조회</button>
+        <button class="btn-erp btn-print" @click="openManual">도움말</button>
       </div>
     </div>
 
@@ -100,9 +101,12 @@ import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import { useAuthStore } from '@/stores/authStore'
 
+import { useManualStore } from '@/stores/manualStore'
+
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { modalVisible, modalProps, openHelp } = useCommonHelp()
+const manualStore = useManualStore()
 
 const searchForm = reactive({
 	ym: new Date().toISOString().substring(0, 7),
@@ -198,6 +202,10 @@ const print = (type: 'Excel' | 'Print') => {
     } else {
         mainGrid?.print(false, true);
     }
+}
+
+const openManual = () => {
+  manualStore.open('HFMF212S')
 }
 
 onMounted(() => {

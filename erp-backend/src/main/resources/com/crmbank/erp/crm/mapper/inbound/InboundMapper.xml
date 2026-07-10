@@ -4,18 +4,18 @@
 
     <!-- [1. 통합 Interaction 로그] - MSSQL MERGE -->
     <insert id="insertTotalInteractionLog" parameterType="com.crmbank.erp.crm.dto.TotalCallLogDto">
-        MERGE INTO TOTAL_INTERACTION_LOG AS target
-        USING (SELECT #{uniqueid} AS INTERACTION_ID) AS source
-        ON (target.INTERACTION_ID = source.INTERACTION_ID)
-        WHEN MATCHED THEN
-            UPDATE SET SOURCE_ID = #{linkedid, jdbcType=VARCHAR},
-                       REC_FILE = #{REC_FILE, jdbcType=VARCHAR},
-                       RESULT_CD = ISNULL(#{RESULT_CD, jdbcType=VARCHAR}, target.RESULT_CD),
-                       KEYWORD = ISNULL(#{KEYWORD, jdbcType=VARCHAR}, target.KEYWORD),
-                       STATUS = '300'
-        WHEN NOT MATCHED THEN
-            INSERT (INTERACTION_ID, CMPYCD, MEDIA_TYPE, SOURCE_ID, DIRECTION, SRC_NO, DST_NO, START_TIME, STATUS, RESULT_CD, REC_FILE, KEYWORD, CALLBACK_YN, CALLBACK_NO, CALLBACK_RETRY_CNT, CALLBACK_REQ_TIME)
-            VALUES (#{uniqueid}, #{CMPYCD}, ISNULL(#{MEDIA_TYPE, jdbcType=VARCHAR}, 'CALL'), #{linkedid, jdbcType=VARCHAR}, #{DIRECTION, jdbcType=VARCHAR}, #{SRC_NO, jdbcType=VARCHAR}, #{DST_NO, jdbcType=VARCHAR}, ISNULL(#{START_TIME, jdbcType=TIMESTAMP}, GETDATE()), '010', '100', #{REC_FILE, jdbcType=VARCHAR}, ISNULL(#{KEYWORD, jdbcType=VARCHAR}, #{SRC_NO, jdbcType=VARCHAR}), #{CALLBACK_YN, jdbcType=CHAR}, #{CALLBACK_NO, jdbcType=VARCHAR}, #{CALLBACK_RETRY_CNT, jdbcType=INTEGER}, #{CALLBACK_REQ_TIME, jdbcType=TIMESTAMP});
+        merge into total_interaction_log as target
+        using (select #{uniqueid} as interaction_id) as source
+        on (target.interaction_id = source.interaction_id)
+        when matched then
+            UPDATE SET source_id = #{linkedid, jdbcType=VARCHAR},
+                       rec_file = #{rec_file, jdbcType=VARCHAR},
+                       result_cd = ISNULL(#{result_cd, jdbcType=VARCHAR}, target.result_cd),
+                       keyword = ISNULL(#{keyword, jdbcType=VARCHAR}, target.keyword),
+                       status = '300'
+        when not matched then
+            insert (interaction_id, cmpycd, media_type, source_id, direction, src_no, dst_no, start_time, status, result_cd, rec_file, keyword, callback_yn, callback_no, callback_retry_cnt, callback_req_time)
+            VALUES (#{uniqueid}, #{cmpycd}, ISNULL(#{media_type, jdbcType=VARCHAR}, 'CALL'), #{linkedid, jdbcType=VARCHAR}, #{direction, jdbcType=VARCHAR}, #{src_no, jdbcType=VARCHAR}, #{dst_no, jdbcType=VARCHAR}, ISNULL(#{start_time, jdbcType=TIMESTAMP}, GETDATE()), '010', '100', #{rec_file, jdbcType=VARCHAR}, ISNULL(#{keyword, jdbcType=VARCHAR}, #{src_no, jdbcType=VARCHAR}), #{callback_yn, jdbcType=CHAR}, #{callback_no, jdbcType=VARCHAR}, #{callback_retry_cnt, jdbcType=INTEGER}, #{callback_req_time, jdbcType=TIMESTAMP});
     </insert>
 
     <update id="updateCallAnswer" parameterType="map">
@@ -23,26 +23,26 @@
         SET ANSWER_TIME = GETDATE(),
             STATUS = '200',
             RESULT_CD = '200',
-            EXTEN = #{EXTEN, jdbcType=VARCHAR},
-            USERID = #{USERID, jdbcType=VARCHAR},
-            EXT_DATA = '{"QUEUE_NM":"' + ISNULL(#{QUEUE_NM, jdbcType=VARCHAR}, '') + '"}'
-        WHERE INTERACTION_ID = #{UNIQUEID, jdbcType=VARCHAR}
+            EXTEN = #{exten, jdbcType=VARCHAR},
+            USERID = #{userid, jdbcType=VARCHAR},
+            EXT_DATA = '{"queue_nm":"' + ISNULL(#{queue_nm, jdbcType=VARCHAR}, '') + '"}'
+        WHERE INTERACTION_ID = #{uniqueid, jdbcType=VARCHAR}
     </update>
 
     <update id="updateCallHangup" parameterType="map">
         UPDATE TOTAL_INTERACTION_LOG
         SET END_TIME = GETDATE(),
-            TALK_SEC = DATEDIFF(SECOND, ISNULL(ANSWER_TIME, START_TIME), GETDATE()),
-            HANGUP_CAUSE = #{HANGUP_CAUSE, jdbcType=VARCHAR},
-            RESULT_CD = #{RESULT_CD, jdbcType=VARCHAR},
-            REC_FILE = #{REC_FILE, jdbcType=VARCHAR},
+            TALK_SEC = DATEDIFF(SECOND, ISNULL(answer_time, start_time), GETDATE()),
+            HANGUP_CAUSE = #{hangup_cause, jdbcType=VARCHAR},
+            RESULT_CD = #{result_cd, jdbcType=VARCHAR},
+            REC_FILE = #{rec_file, jdbcType=VARCHAR},
             STATUS = '300'
-        WHERE INTERACTION_ID = #{UNIQUEID, jdbcType=VARCHAR}
+        WHERE INTERACTION_ID = #{uniqueid, jdbcType=VARCHAR}
     </update>
 
     <!-- [2. 기준 정보 및 체크] -->
     <select id="checkWorkMode" parameterType="map" resultType="string">
-        SELECT USEYN FROM HABA900T_TBL WHERE CDTYPE = '605' AND CODECD = '000'
+        select useyn from haba900t_tbl where cdtype = '605' and codecd = '000'
     </select>
 
     <select id="checkHoliday" parameterType="map" resultType="string">
@@ -50,109 +50,110 @@
     </select>
 
     <select id="checkInternum" parameterType="map" resultType="string">
-        SELECT INNER_NO FROM HABA920T_TBL WHERE CMPYCD = #{CMPYCD} AND USERID = #{USERID}
+        select inner_no from haba920t_tbl where cmpycd = #{cmpycd} and userid = #{userid}
     </select>
 
     <!-- [3. 고객 정보 조회] -->
     <select id="findCustomerByPhoneMap" parameterType="map" resultType="map">
-        SELECT B.CUSTCD, B.CUSTNM, ISNULL(A.NAME, B.BOSSNM) AS USERNM, B.TELNO AS COMPANY_TEL, ISNULL(A.PHONENO, B.TELNO) AS HPNO, B.ADDRESS, B.EMAIL, B.CUSTGBN, B.STATUS
-        FROM PHONE_NUMBER_MAP A
-        INNER JOIN HABA020T_TBL B ON B.CMPYCD = #{CMPYCD} AND A.CUSTCD = B.CUSTCD
-        WHERE REPLACE(A.PHONENO, '-', '') = REPLACE(#{PHONE, jdbcType=VARCHAR}, '-', '') AND A.USEYN = 'Y'
+        select b.custcd, b.custnm, isnull(a.name, b.bossnm) as usernm, b.telno as company_tel, isnull(a.phoneno, b.telno) as hpno, b.address, b.email, b.custgbn, b.status
+        from phone_number_map a
+        inner join haba020t_tbl b on b.cmpycd = #{cmpycd} and a.custcd = b.custcd
+        where replace(a.phoneno, '-', '') = REPLACE(#{phone, jdbcType=VARCHAR}, '-', '') and a.useyn = 'Y'
     </select>
 
     <select id="findCustomerByCustCd" parameterType="map" resultType="map">
-        SELECT CUSTCD, CUSTNM, BOSSNM AS USERNM, TELNO AS COMPANY_TEL, TELNO AS HPNO, ADDRESS, EMAIL, CUSTGBN, STATUS
-        FROM HABA020T_TBL
-        WHERE CMPYCD = #{CMPYCD} AND CUSTCD = #{CUSTCD}
+        select custcd, custnm, bossnm as usernm, telno as company_tel, telno as hpno, address, email, custgbn, status
+        from haba020t_tbl
+        where cmpycd = #{cmpycd} and custcd = #{custcd}
     </select>
 
     <!-- [4. 상담 관리] - MSSQL SVCNO 채번 -->
     <select id="generateSvcNo" parameterType="map" resultType="string">
-        SELECT SUBSTRING(#{SVCYMD, jdbcType=VARCHAR}, 1, 6) +
+        SELECT SUBSTRING(#{svcymd, jdbcType=VARCHAR}, 1, 6) +
         RIGHT('000000' + CAST(ISNULL(MAX(CAST(SUBSTRING(SVCNO, 7, 6) AS INT)), 0) + 1 AS VARCHAR), 6) AS SVCNO
         FROM CALL_MST_TBL
-        WHERE UPPER(CMPYCD) = UPPER(#{CMPYCD, jdbcType=VARCHAR}) AND SUBSTRING(SVCNO, 1, 6) = SUBSTRING(#{SVCYMD, jdbcType=VARCHAR}, 1, 6)
+        WHERE CMPYCD = #{cmpycd, jdbcType=VARCHAR}
+          AND SUBSTRING(SVCNO, 1, 6) = SUBSTRING(#{svcymd, jdbcType=VARCHAR}, 1, 6)
     </select>
 
     <insert id="insertCallMst" parameterType="com.crmbank.erp.crm.dto.CallMstDto">
-        INSERT INTO CALL_MST_TBL
-        (CMPYCD, SVCNO, DEPTCD, CUSTCD, SVCYMD, IONO, ITEMCD, TRB_MENT, ANS_MENT, AI_SUMMARY, START_TIME, END_TIME, CONSULTID, REC_FILE, ESCALATION_YN, ESCALATION_NO, ESC_MEMO, HAPPYCALL_YN, INTERACTION_ID, LINKEDID, CALL_TELNO, CALL_USERNM, CALL_EMAIL, ADDTIME, UPDTIME, UPDEMP)
-        VALUES
-        (#{CMPYCD}, #{SVCNO}, #{DEPTCD, jdbcType=VARCHAR}, #{CUSTCD, jdbcType=VARCHAR}, #{SVCYMD, jdbcType=VARCHAR},
-         #{IONO, jdbcType=VARCHAR}, #{ITEMCD, jdbcType=VARCHAR}, #{TRB_MENT, jdbcType=NVARCHAR}, #{ANS_MENT, jdbcType=NVARCHAR}, #{AI_SUMMARY, jdbcType=NVARCHAR},
-         #{START_TIME, jdbcType=TIMESTAMP}, #{END_TIME, jdbcType=TIMESTAMP}, #{CONSULTID, jdbcType=VARCHAR}, #{REC_FILE, jdbcType=VARCHAR},
-         #{ESCALATION_YN, jdbcType=VARCHAR}, #{ESCALATION_NO, jdbcType=VARCHAR}, #{ESC_MEMO, jdbcType=NVARCHAR}, #{HAPPYCALL_YN, jdbcType=VARCHAR},
-         #{INTERACTION_ID, jdbcType=VARCHAR}, ISNULL(#{LINKEDID, jdbcType=VARCHAR}, 'MANUAL'), #{CALL_TELNO, jdbcType=VARCHAR}, #{CALL_USERNM, jdbcType=VARCHAR}, #{CALL_EMAIL, jdbcType=VARCHAR},
-         GETDATE(), GETDATE(), #{UPDEMP, jdbcType=VARCHAR})
+        insert into call_mst_tbl
+        (cmpycd, svcno, deptcd, custcd, svcymd, iono, itemcd, trb_ment, ans_ment, ai_summary, start_time, end_time, consultid, rec_file, escalation_yn, escalation_no, esc_memo, happycall_yn, interaction_id, linkedid, call_telno, call_usernm, call_email, addtime, updtime, updemp)
+        values
+        (#{cmpycd}, #{svcno}, #{deptcd, jdbcType=VARCHAR}, #{custcd, jdbcType=VARCHAR}, #{svcymd, jdbcType=VARCHAR},
+         #{iono, jdbcType=VARCHAR}, #{itemcd, jdbcType=VARCHAR}, #{trb_ment, jdbcType=NVARCHAR}, #{ans_ment, jdbcType=NVARCHAR}, #{ai_summary, jdbcType=NVARCHAR},
+         #{start_time, jdbcType=TIMESTAMP}, #{end_time, jdbcType=TIMESTAMP}, #{consultid, jdbcType=VARCHAR}, #{rec_file, jdbcType=VARCHAR},
+         #{escalation_yn, jdbcType=VARCHAR}, #{escalation_no, jdbcType=VARCHAR}, #{esc_memo, jdbcType=NVARCHAR}, #{happycall_yn, jdbcType=VARCHAR},
+         #{interaction_id, jdbcType=VARCHAR}, ISNULL(#{linkedid, jdbcType=VARCHAR}, 'MANUAL'), #{call_telno, jdbcType=VARCHAR}, #{call_usernm, jdbcType=VARCHAR}, #{call_email, jdbcType=VARCHAR},
+         GETDATE(), GETDATE(), #{updemp, jdbcType=VARCHAR})
     </insert>
 
     <update id="updateCallMst" parameterType="com.crmbank.erp.crm.dto.CallMstDto">
-        UPDATE CALL_MST_TBL
-        SET TRB_MENT = #{TRB_MENT, jdbcType=NVARCHAR},
-            ANS_MENT = #{ANS_MENT, jdbcType=NVARCHAR},
-            AI_SUMMARY = #{AI_SUMMARY, jdbcType=NVARCHAR},
-            ITEMCD = #{ITEMCD, jdbcType=VARCHAR},
-            IONO = #{IONO, jdbcType=VARCHAR},
-            SVCYMD = #{SVCYMD, jdbcType=VARCHAR},
-            ESCALATION_YN = #{ESCALATION_YN, jdbcType=VARCHAR},
-            ESCALATION_NO = #{ESCALATION_NO, jdbcType=VARCHAR},
-            ESC_MEMO = #{ESC_MEMO, jdbcType=NVARCHAR},
-            REC_FILE = #{REC_FILE, jdbcType=VARCHAR},
-            INTERACTION_ID = #{INTERACTION_ID, jdbcType=VARCHAR},
-            LINKEDID = ISNULL(#{LINKEDID, jdbcType=VARCHAR}, 'MANUAL'),
-            CALL_TELNO = #{CALL_TELNO, jdbcType=VARCHAR},
-            CALL_USERNM = #{CALL_USERNM, jdbcType=VARCHAR},
-            CALL_EMAIL = #{CALL_EMAIL, jdbcType=VARCHAR},
-            HAPPYCALL_YN = #{HAPPYCALL_YN, jdbcType=VARCHAR},
+        update call_mst_tbl
+        set trb_ment = #{trb_ment, jdbcType=NVARCHAR},
+            ANS_MENT = #{ans_ment, jdbcType=NVARCHAR},
+            AI_SUMMARY = #{ai_summary, jdbcType=NVARCHAR},
+            ITEMCD = #{itemcd, jdbcType=VARCHAR},
+            IONO = #{iono, jdbcType=VARCHAR},
+            SVCYMD = #{svcymd, jdbcType=VARCHAR},
+            ESCALATION_YN = #{escalation_yn, jdbcType=VARCHAR},
+            ESCALATION_NO = #{escalation_no, jdbcType=VARCHAR},
+            ESC_MEMO = #{esc_memo, jdbcType=NVARCHAR},
+            REC_FILE = #{rec_file, jdbcType=VARCHAR},
+            INTERACTION_ID = #{interaction_id, jdbcType=VARCHAR},
+            LINKEDID = ISNULL(#{linkedid, jdbcType=VARCHAR}, 'MANUAL'),
+            CALL_TELNO = #{call_telno, jdbcType=VARCHAR},
+            CALL_USERNM = #{call_usernm, jdbcType=VARCHAR},
+            CALL_EMAIL = #{call_email, jdbcType=VARCHAR},
+            HAPPYCALL_YN = #{happycall_yn, jdbcType=VARCHAR},
             UPDTIME = GETDATE(),
-            UPDEMP = #{UPDEMP, jdbcType=VARCHAR}
-        WHERE CMPYCD = #{CMPYCD}
-        AND SVCNO = #{SVCNO}
+            UPDEMP = #{updemp, jdbcType=VARCHAR}
+        WHERE CMPYCD = #{cmpycd}
+        AND SVCNO = #{svcno}
     </update>
 
     <delete id="deleteCallMst" parameterType="map">
-        DELETE FROM CALL_MST_TBL WHERE CMPYCD = #{CMPYCD} AND SVCNO = #{SVCNO}
+        delete from call_mst_tbl where cmpycd = #{cmpycd} and svcno = #{svcno}
     </delete>
 
     <select id="selectCallMst" parameterType="map" resultType="com.crmbank.erp.crm.dto.CallMstDto">
-        SELECT * FROM CALL_MST_TBL WHERE CMPYCD = #{CMPYCD} AND SVCNO = #{SVCNO}
+        select * from call_mst_tbl where cmpycd = #{cmpycd} and svcno = #{svcno}
     </select>
 
     <insert id="insertEscalation" parameterType="com.crmbank.erp.crm.dto.CtiEscalationDto" useGeneratedKeys="true" keyProperty="ESCALATION_NO">
-        INSERT INTO CTI_ESCALATION_TBL
-        (SVCNO, LINKEDID, REG_DATE, SENDER_ID, DEPTCD, SUMMARY, ESC_MEMO, STATUS, ADDTIME, UPDTIME, UPDEMP)
-        VALUES
-        (#{SVCNO, jdbcType=VARCHAR}, ISNULL(#{linkedid, jdbcType=VARCHAR}, 'MANUAL'), GETDATE(), #{SENDER_ID, jdbcType=VARCHAR}, #{DEPTCD, jdbcType=VARCHAR},
-         #{SUMMARY, jdbcType=NVARCHAR}, #{ESC_MEMO, jdbcType=NVARCHAR}, '100', GETDATE(), GETDATE(), #{SENDER_ID, jdbcType=VARCHAR})
+        insert into cti_escalation_tbl
+        (svcno, linkedid, reg_date, sender_id, deptcd, summary, esc_memo, status, addtime, updtime, updemp)
+        values
+        (#{svcno, jdbcType=VARCHAR}, ISNULL(#{linkedid, jdbcType=VARCHAR}, 'MANUAL'), GETDATE(), #{sender_id, jdbcType=VARCHAR}, #{deptcd, jdbcType=VARCHAR},
+         #{summary, jdbcType=NVARCHAR}, #{esc_memo, jdbcType=NVARCHAR}, '100', GETDATE(), GETDATE(), #{sender_id, jdbcType=VARCHAR})
     </insert>
 
     <!-- [6. 녹취 파일 관리] -->
     <insert id="insertCallMonitor" parameterType="com.crmbank.erp.crm.dto.CallMonitorDto">
-        INSERT INTO CALL_MONITOR_TBL (CMPYCD, SVCNO, [ROW], MONITERNM, ADDTIME, UPDTIME, UPDEMP)
+        insert into call_monitor_tbl (cmpycd, svcno, [row], moniternm, addtime, updtime, updemp)
         VALUES (#{cmpycd}, #{svcno}, #{row}, #{moniternm, jdbcType=VARCHAR}, GETDATE(), GETDATE(), #{updemp, jdbcType=VARCHAR})
     </insert>
 
     <delete id="deleteCallMonitor" parameterType="map">
-        DELETE FROM CALL_MONITOR_TBL WHERE CMPYCD = #{CMPYCD} AND SVCNO = #{SVCNO}
+        delete from call_monitor_tbl where cmpycd = #{cmpycd} and svcno = #{svcno}
     </delete>
 
     <!-- [7. 이력 조회] -->
     <select id="selectItemList" parameterType="map" resultType="map">
-        SELECT A.SALSYMD, B.ITEMNM, A.IONO, A.ITEMCD
-        FROM HSIO102T_TBL A LEFT OUTER JOIN HSBA010T_TBL B
-        ON A.CMPYCD = B.CMPYCD AND A.ITEMCD = B.ITEMCD
-        WHERE A.CMPYCD = #{CMPYCD, jdbcType=VARCHAR} AND A.CUSTCD = #{CUSTCD, jdbcType=VARCHAR} AND A.IOGBN = '200' AND A.CFMYN = 'Y'
+        select a.salsymd, b.itemnm, a.iono, a.itemcd
+        from hsio102t_tbl a left outer join hsba010t_tbl b
+        on a.cmpycd = b.cmpycd and a.itemcd = b.itemcd
+        WHERE A.CMPYCD = #{cmpycd, jdbcType=VARCHAR} AND A.CUSTCD = #{custcd, jdbcType=VARCHAR} AND A.IOGBN = '200' AND A.CFMYN = 'Y'
         ORDER BY A.SALSYMD DESC
     </select>
 
     <select id="selectCallHistory" parameterType="map" resultType="map">
-        SELECT A.SVCNO, FORMAT(A.START_TIME, 'yyyy-MM-dd HH:mm') AS START_TIME,
-               A.AI_SUMMARY, A.TRB_MENT, A.ANS_MENT, B.USERNM AS CONSULTNM, A.REC_FILE,
-               A.CALL_TELNO AS HPNO, A.CALL_USERNM, A.CALL_EMAIL
-        FROM CALL_MST_TBL A
-        LEFT OUTER JOIN HABA920T_TBL B ON A.CMPYCD = B.CMPYCD AND A.CONSULTID = B.USERID
-        WHERE A.CMPYCD = #{CMPYCD, jdbcType=VARCHAR} AND A.CUSTCD = #{CUSTCD, jdbcType=VARCHAR}
+        select a.svcno, format(a.start_time, 'yyyy-mm-dd hh:mm') as start_time,
+               a.ai_summary, a.trb_ment, a.ans_ment, b.usernm as consultnm, a.rec_file,
+               a.call_telno as hpno, a.call_usernm, a.call_email
+        from call_mst_tbl a
+        left outer join haba920t_tbl b on a.cmpycd = b.cmpycd and a.consultid = b.userid
+        WHERE A.CMPYCD = #{cmpycd, jdbcType=VARCHAR} AND A.CUSTCD = #{custcd, jdbcType=VARCHAR}
         ORDER BY A.START_TIME DESC
     </select>
     <!--    selectServiceHistory selectSettleHistory 추가할 것 인바운 상당 내역에 필요-->
@@ -163,42 +164,42 @@
 
     <insert id="upsertTransferData" parameterType="map">
         MERGE INTO CTI_TRANSFER_TBL AS target
-        USING (SELECT #{linkedid, jdbcType=VARCHAR} AS LINKEDID) AS source
-        ON (target.LINKEDID = source.LINKEDID)
-        WHEN MATCHED THEN
-            UPDATE SET FROM_EXTEN = #{from_exten, jdbcType=VARCHAR},
+        USING (SELECT #{linkedid, jdbcType=VARCHAR} as linkedid) AS source
+        ON (target.linkedid = source.linkedid)
+        when matched then
+            update set from_exten = #{from_exten, jdbcType=VARCHAR},
                        TO_EXTEN = #{to_exten, jdbcType=VARCHAR},
                        TRANSFER_CNT = ISNULL(target.TRANSFER_CNT, 0) + 1,
                        UPDTIME = GETDATE()
-        WHEN NOT MATCHED THEN
-            INSERT (LINKEDID, CMPYCD, FROM_EXTEN, TO_EXTEN, TRANSFER_CNT, ADDTIME, UPDTIME)
+        when not matched then
+            insert (linkedid, cmpycd, from_exten, to_exten, transfer_cnt, addtime, updtime)
             VALUES (#{linkedid, jdbcType=VARCHAR}, #{cmpycd, jdbcType=VARCHAR}, #{from_exten, jdbcType=VARCHAR}, #{to_exten, jdbcType=VARCHAR}, 1, GETDATE(), GETDATE());
     </insert>
 
     <!-- 인바운드 상담현황 조회 (HGIA020S) -->
     <select id="selectStatusList" parameterType="map" resultType="map">
-        SELECT A.START_TIME,
-        C.CUSTNM,
-        A.CALL_TELNO AS HPNO,
-        A.CALL_USERNM,
-        A.CALL_EMAIL,
-        A.SVCNO,
-        A.AI_SUMMARY,
-        A.TRB_MENT,
-        A.ANS_MENT,
-        A.ESC_MEMO,
-        U.USERNM AS CONSULTNM,
-        A.CONSULTID,
-        A.REC_FILE,
-        A.CMPYCD
+        select a.start_time,
+        c.custnm,
+        a.call_telno as hpno,
+        a.call_usernm,
+        a.call_email,
+        a.svcno,
+        a.ai_summary,
+        a.trb_ment,
+        a.ans_ment,
+        a.esc_memo,
+        u.usernm as consultnm,
+        a.consultid,
+        a.rec_file,
+        a.cmpycd
         FROM CALL_MST_TBL A
-        LEFT JOIN HABA020T_TBL C ON A.CMPYCD = C.CMPYCD AND A.CUSTCD = C.CUSTCD
-         LEFT JOIN HABA920T_TBL U ON A.CMPYCD = U.CMPYCD AND A.CONSULTID = U.USERID
-        WHERE A.CMPYCD = #{CMPYCD, jdbcType=VARCHAR}
-        AND A.SVCYMD BETWEEN #{FROMDT, jdbcType=VARCHAR} AND #{TODT, jdbcType=VARCHAR}
+        left join haba020t_tbl c on a.cmpycd = c.cmpycd and a.custcd = c.custcd
+        left join haba920t_tbl u on a.cmpycd = u.cmpycd and a.consultid = u.userid
+        WHERE A.CMPYCD = #{cmpycd, jdbcType=VARCHAR}
+        AND A.SVCYMD BETWEEN #{fromdt, jdbcType=VARCHAR} AND #{todt, jdbcType=VARCHAR}
         <if test="custnm != null and custnm != ''">
             AND C.CUSTNM LIKE CONCAT('%', #{custnm, jdbcType=VARCHAR}, '%')
         </if>
-        ORDER BY A.START_TIME DESC
+        order by a.start_time desc
     </select>
 </mapper>

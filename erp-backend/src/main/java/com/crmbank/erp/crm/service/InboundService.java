@@ -54,8 +54,10 @@ public class InboundService {
      */
     @Transactional
     public String saveCallMst(CallMstDto dto, List<String> recordings, String svcymd, String agentDeptCd) {
-        // 💡 [교정] 모든 DTO 접근을 소문자 표준 메서드로 변경
-        dto.setCmpycd(dto.getCmpycd() != null ? dto.getCmpycd() : "haionnet");
+        // 💡 [교정] 하드코딩된 회사코드 제거 및 소문자 표준화 적용
+        if (dto.getCmpycd() == null || dto.getCmpycd().isEmpty()) {
+            dto.setCmpycd(""); 
+        }
         dto.setHappycall_yn("n"); 
         
         if (dto.getCall_telno() != null) dto.setCall_telno(dto.getCall_telno().trim());

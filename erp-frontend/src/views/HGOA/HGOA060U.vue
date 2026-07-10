@@ -1,6 +1,6 @@
 <!--
 	=============================================================
-	프로그램명	  : 캠페인 속성(JSON) 매핑 관리 (대문자 표준 적용)
+	프로그램명	  : 캠페인 속성(JSON) 매핑 관리 (소문자 표준 적용)
     프로그램 ID	: HGOA060U
 	작성일자	    : 25.03.06
 	작성자	      : AI Assistant
@@ -39,7 +39,7 @@
                     <div class="card-header bg-white py-1 fw-bold small d-flex justify-content-between align-items-center border-bottom">
                         <span>
                             <i class="bi bi-list-check me-1"></i>
-                            <span v-if="SELECTED_SURV_GB_NM" class="text-primary fw-bold">[{{ SELECTED_SURV_GB_NM }}] </span>
+                            <span v-if="selected_surv_gb_nm" class="text-primary fw-bold">[{{ selected_surv_gb_nm }}] </span>
                             매핑 리스트 (엑셀 헤더 ↔ DB 표준키)
                         </span>
                         <button class="btn btn-xs btn-outline-primary" @click="add_row">+ 행추가</button>
@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -64,26 +64,30 @@ import { api } from '@/utils/axios'
 import AppAlert from '@/components/AppAlert.vue'
 
 const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
+const authStore = useAuthStore()
 
 const type_grid_ref = ref<HTMLDivElement | null>(null)
 const mapping_grid_ref = ref<HTMLDivElement | null>(null)
 let type_grid_instance: Tabulator | null = null
 let mapping_grid_instance: Tabulator | null = null
 
-const SELECTED_SURV_GB = ref('')
-const SELECTED_SURV_GB_NM = ref('')
+const selected_surv_gb = ref('')
+const selected_surv_gb_nm = ref('')
 
 onMounted(async () => {
     init_grids()
     try {
-        // 💡 대문자 코드 데이터 로드
         const codes = await fetchCrmSelectData('910')
         type_grid_instance?.setData(codes)
     } catch (e) { console.error('코드 로드 실패') }
 })
+onUnmounted(() => {
+    type_grid_instance?.destroy();
+    mapping_grid_instance?.destroy();
+})
 
 const init_grids = () => {
-    // 1. 좌측 설문유형 그리드 (대문자 필드)
+    if (type_grid_instance) type_grid_instance.destroy();
     type_grid_instance = new Tabulator(type_grid_ref.value!, {
         layout: "fitColumns",
         height: "100%",
@@ -97,69 +101,74 @@ const init_grids = () => {
 
     type_grid_instance.on("rowClick", (e, row) => {
         const data = row.getData()
-        SELECTED_SURV_GB.value = data.codecd
-        SELECTED_SURV_GB_NM.value = data.codenm
+        selected_surv_gb.value = data.codecd
+        selected_surv_gb_nm.value = data.codenm
         search()
     })
 
-    // 2. 우측 매핑 설정 그리드 (대문자 필드)
+    if (mapping_grid_instance) mapping_grid_instance.destroy();
     mapping_grid_instance = new Tabulator(mapping_grid_ref.value!, {
         layout: "fitColumns",
         height: "100%",
         placeholder: "유형을 선택하세요",
         columns: [
-            { title: "엑셀 헤더명 (한글)", field: "ATTR_NM", editor: "input", headerSort: false },
-            { title: "DB 저장 키 (영문 표준)", field: "ATTR_KEY", editor: "input", headerSort: false },
+            { title: "엑셀 헤더명 (한글)", field: "attr_nm", editor: "input", headerSort: false },
+            { title: "DB 저장 키 (영문 표준)", field: "attr_key", editor: "input", headerSort: false },
             {
-                title: "데이터 타입", field: "DATA_TYPE", editor: "list", width: 120,
+                title: "데이터 타입", field: "data_type", editor: "list", width: 200,
                 editorParams: { values: ["STRING", "NUMBER", "DATE"] }
+            }
+            /* 💡 통계 및 삭제 기능은 필요 시 활성화 (현재는 데이터 수집만 진행)
+            , {
+                title: "통계활용", field: "stats_yn", width: 100, hozAlign: "center", headerSort: false,
+                formatter: (cell) => cell.getValue() === 'Y' ? '<i class="bi bi-check-square-fill text-primary fs-5"></i>' : '<i class="bi bi-square text-muted fs-5"></i>',
+                cellClick: (e, cell) => {
+                    const newVal = cell.getValue() === 'Y' ? 'N' : 'Y';
+                    cell.setValue(newVal);
+                }
             },
-            { title: "통계활용", field: "STATS_YN", editor: "tickCross", width: 90, hozAlign: "center", formatter: "tickCross" },
             {
-                formatter: "buttonCross", width: 40, hozAlign: "center", headerSort: false,
+                title: "삭제", width: 60, hozAlign: "center", headerSort: false,
+                formatter: () => '<i class="bi bi-trash3 text-danger cursor-pointer fs-6"></i>',
                 cellClick: (e, cell) => {
                     if(confirm('이 매핑 항목을 삭제하시겠습니까?')) cell.getRow().delete()
                 }
             }
+            */
         ]
     })
 }
 
 const search = async () => {
-    if (!SELECTED_SURV_GB.value) return
+    if (!selected_surv_gb.value) return
     try {
-        // 💡 대문자 파라미터 적용
         const { data } = await api.get('/crm/outbound/attr-mapper/list', {
-            params: { cmpycd: authStore.cmpycd },
-            params: { SURV_GB: SELECTED_SURV_GB.value },
+            params: { surv_gb: selected_surv_gb.value }
         })
-        console.log(data)
         mapping_grid_instance?.setData(data)
     } catch (e) { vAlertError('조회 실패') }
 }
 
 const add_row = () => {
-    if (!SELECTED_SURV_GB.value) return vAlertError('먼저 설문유형을 선택하세요.')
+    if (!selected_surv_gb.value) return vAlertError('먼저 설문유형을 선택하세요.')
     mapping_grid_instance?.addRow({
-        SURV_GB: SELECTED_SURV_GB.value,
-        DATA_TYPE: 'STRING',
-        STATS_YN: 'Y'
+        surv_gb: selected_surv_gb.value,
+        data_type: 'STRING',
+        stats_yn: 'Y'
     })
 }
 
 const save = async () => {
-    if (!SELECTED_SURV_GB.value) return vAlertError('유형이 선택되지 않았습니다.')
+    if (!selected_surv_gb.value) return vAlertError('유형이 선택되지 않았습니다.')
     const data = mapping_grid_instance?.getData()
 
-    // 유효성 검사 (대문자 필드)
-    const invalid = data?.some(item => !item.ATTR_NM || !item.ATTR_KEY)
+    const invalid = data?.some(item => !item.attr_nm || !item.attr_key)
     if (invalid) return vAlertError('헤더명과 DB 키는 필수 입력입니다.')
 
     try {
-        // 💡 대문자 페이로드 구성
         await api.post('/crm/outbound/attr-mapper/save', {
-            SURV_GB: SELECTED_SURV_GB.value,
-            LIST: data
+            surv_gb: selected_surv_gb.value,
+            list: data
         })
         vAlert('정상적으로 저장되었습니다.')
         search()
@@ -167,27 +176,16 @@ const save = async () => {
 }
 
 function initialize() {
-    SELECTED_SURV_GB.value = '';
-    SELECTED_SURV_GB_NM.value = '';
+    selected_surv_gb.value = '';
+    selected_surv_gb_nm.value = '';
     type_grid_instance?.deselectRow();
     mapping_grid_instance?.clearData();
 }
 </script>
 
 <style scoped>
-.hgo060-wrapper {
-    height: calc(100vh - 110px);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.content-body {
-    flex-grow: 1;
-    overflow: hidden;
-    min-height: 0;
-}
-
+.hgo060-wrapper { height: calc(100vh - 110px); display: flex; flex-direction: column; overflow: hidden; }
+.content-body { flex-grow: 1; overflow: hidden; min-height: 0; }
 .tabulator-full-height { height: 100%; border-top: 1px solid #dee2e6; font-size: 0.8rem; }
 .btn-xs { padding: 1px 8px; font-size: 0.75rem; font-weight: bold; }
 </style>

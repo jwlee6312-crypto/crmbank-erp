@@ -35,30 +35,37 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
 	<router-view />
 
 	<teleport to="body">
-		<div v-if="popup.isOpen" class="popup-overlay" @click="popup.close()">
-			<div class="popup-content" @click.stop>
+		<transition name="slide-fade">
+			<div v-if="popup.isOpen" class="manual-floating-panel shadow-lg">
 				<ManualPopup :fileName="popup.fileName" @close="popup.close()" />
 			</div>
-		</div>
+		</transition>
 	</teleport>
 </template>
 
 <style>
-.popup-overlay {
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	z-index: 9999;
+/* 도움말 전용 우측 완전 고정 사이드바 - 탭 레이아웃 간섭 무시 */
+.manual-floating-panel {
+	position: fixed !important;
+	top: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	left: auto !important; /* 왼쪽 고정 해제 */
+	width: 320px !important; /* 더 작고 슬림하게 */
+	height: 100vh !important;
+	background: #fff !important;
+	z-index: 999999 !important; /* 무조건 최상위 */
+	box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15) !important;
+	border-left: 1px solid #c8ced3 !important;
+	display: flex !important;
+	flex-direction: column !important;
 }
 
-.popup-content {
-	background: #fff;
-	padding: 20px;
-	border-radius: 6px;
-	max-height: 90vh;
-	overflow: auto;
+/* 애니메이션: 우측 끝에서 튀어나옴 */
+.slide-fade-enter-active, .slide-fade-leave-active {
+	transition: transform 0.2s ease-in-out !important;
+}
+.slide-fade-enter-from, .slide-fade-leave-to {
+	transform: translateX(100%) !important;
 }
 </style>

@@ -56,7 +56,8 @@ public class ConsultSaveService {
         if (startDtime == null) startDtime = LocalDateTime.now().minusMinutes(5);
         if (endDtime == null) endDtime = LocalDateTime.now();
 
-        String cmpycd = (request.getCmpycd() != null && !request.getCmpycd().isEmpty()) ? request.getCmpycd() : "haionnet";
+        // 💡 [교정] 하드코딩 제거 및 소문자 표준화
+        String cmpycd = (request.getCmpycd() != null && !request.getCmpycd().isEmpty()) ? request.getCmpycd() : "";
         String mediaType = (request.getMedia_type() != null && !request.getMedia_type().isEmpty()) ? request.getMedia_type() : "chat";
 
         CampRsltMstDto mstDto = CampRsltMstDto.builder()
@@ -87,7 +88,6 @@ public class ConsultSaveService {
                 String survNo = (String) survey.get("surv_no");
                 String ansNo = survey.get("ans_no") != null ? (String) survey.get("ans_no") : "001";
 
-                // 💡 프론트에서 이미 점수를 가져왔으므로 DB 조회 없이 전달받은 점수 사용
                 Object pointObj = survey.get("point");
                 BigDecimal point = BigDecimal.ZERO;
                 if (pointObj != null) {
@@ -103,7 +103,7 @@ public class ConsultSaveService {
                         .rslt_no(mstDto.getRslt_no())
                         .surv_no(survNo)
                         .ans_no(ansNo)
-                        .point(point) // 💡 전달받은 점수 바로 등록
+                        .point(point) 
                         .remark((String) survey.get("essay"))
                         .updemp(request.getUserid())
                         .addtime(LocalDateTime.now())
@@ -113,13 +113,14 @@ public class ConsultSaveService {
             }
         }
 
+        // 💡 [교정] 파라미터 키 소문자 표준화
         Map<String, Object> statusParam = new HashMap<>();
-        statusParam.put("CMPYCD", cmpycd);
-        statusParam.put("CALL_SEQ", request.getCall_seq());
-        statusParam.put("STATUS", "030");
-        statusParam.put("RSLT_CD", request.getRslt_cd());
-        statusParam.put("RESV_DTIME", request.getResv_dtime());
-        statusParam.put("RESV_Memo", request.getResv_memo());
+        statusParam.put("cmpycd", cmpycd);
+        statusParam.put("call_seq", request.getCall_seq());
+        statusParam.put("status", "030");
+        statusParam.put("rslt_cd", request.getRslt_cd());
+        statusParam.put("resv_dtime", request.getResv_dtime());
+        statusParam.put("resv_memo", request.getResv_memo());
         outboundMapper.updateCallListStatus(statusParam);
     }
 }

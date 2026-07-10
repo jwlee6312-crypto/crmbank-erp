@@ -36,16 +36,22 @@
   
     <!-- 임가공/외주가공 계약 품의 -->
     <select id="HPIO_290U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_290u_str #{actkind}, #{cmpycd}, #{pumym}, #{pumno}, #{deptcd},
-        #{pumgbn}, #{gelcnd}, #{custcd}, #{pumymd}, #{fromdt}, #{todt},
+        exec hpio_290u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{pumym}, #{pumno}, #{deptcd},
+        #{pumgbn}, #{gelcnd}, #{custcd}, #{pumymd}, #{frymd}, #{toymd},
         #{cfmyn}, #{remark}, #{updemp}
     </select>
 
     <!-- 임가공/외주가공 계약 품의(상세) -->
     <select id="HPIO_291U_STR" resultType="java.util.LinkedHashMap">
         exec hpio_291u_str #{actkind}, #{cmpycd}, #{pumym}, #{pumno}, #{itemcd},
-        #{itemcd_o}, #{itsize}, #{unit}, #{price}, #{remark}, #{updemp}
+        #{itsize}, #{unit}, #{price}, #{remark}, #{updemp}
     </select>
+
+    <select id="HPIO_292U_STR" resultType="java.util.LinkedHashMap">
+        exec hpio_292u_str #{actkind}, #{cmpycd}, #{pumym}, #{pumno}, #{itemcd},
+        #{mitemcd}, #{mitsize}, #{munit}, #{soqty}, #{remark}, #{updemp}
+    </select>
+
 
     <!-- 생산실적 -->
     <select id="HPIO_300U_STR" resultType="java.util.LinkedHashMap">
@@ -66,14 +72,15 @@
 
     <!-- 외주가공출고 MASTER -->
     <select id="HPIO_340U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_340u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{prodcd}, #{linecd}, #{progcd},
+        exec hpio_340u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{iogbn}, #{outym}, #{outno},
+        #{prodcd}, #{linecd}, #{progcd},
         #{outymd}, #{odeptcd}, #{owhcd}, #{ocustcd}, #{itemcd}, #{itsize}, #{unit}, #{proqty}, #{proymd},
         #{ideptcd}, #{iwhcd}, #{remark}, #{inyn}, #{pumym}, #{pumno}, #{inym}, #{inno}, #{updemp}
     </select>
 
     <!-- 외주가공출고 상세 -->
     <select id="HPIO_341U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_341u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{ono}, #{iorowno}, #{ino},
+        exec hpio_341u_str #{actkind}, #{cmpycd}, #{iogbn}, #{outym}, #{outno}, #{iorowno}, #{inno},
         #{linecd}, #{progcd}, #{odeptcd}, #{owhcd}, #{custcd}, #{ioymd}, #{ideptcd},
         #{iwhcd}, #{itemcd}, #{unit}, #{ioqty}, #{pumym}, #{pumno}, #{updemp}
     </select>
@@ -247,4 +254,24 @@
         exec hpio_253u_str #{actkind}, #{cmpycd}, #{outym}, #{outno}, #{mitemcd}, #{mitsize}, #{munit}, #{reqqty}, #{updemp}
     </select>
 
+    <select id="HPIO_340U_POPUP" parameterType="map">
+        select a.pumym, a.pumno,  a.custcd, i.custnm, j.deptnm, k.usernm,
+            a.pumymd,b.itemcd, e.itemnm, e.itsize,e.unit,   b.price
+            from hpba300t_tbl a left outer join hpba301t_tbl b
+            on a.cmpycd = b.cmpycd
+            and a.pumym = b.pumym
+            and a.pumno = b.pumno
+            left outer join hsba010t_tbl e
+            on b.cmpycd  = e.cmpycd
+            and b.itemcd  = e.itemcd
+            left outer join haba020t_tbl i
+            on a.cmpycd = i.cmpycd and a.custcd = i.custcd
+            left outer join haba120t_tbl j
+            on a.cmpycd = j.cmpycd and a.deptcd = j.deptcd
+            left outer join haba920t_tbl k
+            on a.cmpycd = k.cmpycd
+            and a.updemp = k.userid
+      where a.cmpycd  =  #{cmpycd}
+        and a.pumymd between  #{fromdt} and  #{todt}
+    </select>
 </mapper>

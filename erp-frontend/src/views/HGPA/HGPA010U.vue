@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -65,9 +65,11 @@ let table_instance: Tabulator | null = null
 onMounted(() => {
     nextTick(() => init_table())
 })
+onUnmounted(() => { if (table_instance) table_instance.destroy(); })
 
 function init_table() {
 	if (!TABLE_REF.value) return
+    if (table_instance) table_instance.destroy();
 	table_instance = new Tabulator(TABLE_REF.value, {
 		placeholder: '데이터가 없습니다.',
         layout: 'fitColumns',
@@ -93,7 +95,7 @@ function init_table() {
 async function search() {
 	try {
         const { data } = await api.get('/api/crm/asterisk/pjsip/search', { params: search_form })
-        // 💡 백엔드에서 대문자 키로 반환하므로 바로 세팅
+        // 💡 백엔드에서 소문자 키로 반환하므로 바로 세팅
         console.log(data)
 
         table_instance?.setData(data)

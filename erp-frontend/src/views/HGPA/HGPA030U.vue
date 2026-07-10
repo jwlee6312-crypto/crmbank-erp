@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -84,9 +84,11 @@ let table_instance: Tabulator | null = null
 onMounted(() => {
     nextTick(() => init_table())
 })
+onUnmounted(() => { if (table_instance) table_instance.destroy(); })
 
 function init_table() {
 	if (!table_ref.value) return
+    if (table_instance) table_instance.destroy();
 	table_instance = new Tabulator(table_ref.value, {
 		placeholder: '데이터가 없습니다.',
 		layout: 'fitColumns',

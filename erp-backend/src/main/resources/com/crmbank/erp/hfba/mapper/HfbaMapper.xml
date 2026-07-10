@@ -26,6 +26,20 @@
         exec fba3010u_str #{cmpycd}, #{actkind}, #{yymm}, #{yn}, #{remark}, #{userid}
     </select>
 
+    <select id="FBA2020U_SEL" resultType="java.util.LinkedHashMap">
+        exec fba2020u_sel #{cmpycd}, #{actkind}, #{yyyy}, #{gubun}, #{prtseq}
+    </select>
+
+    <select id="FBA2020U_MOD" resultType="java.util.LinkedHashMap">
+        exec fba2020u_mod #{cmpycd}, #{actkind}, #{yyyy}, #{gubun}, #{prtseq}, #{prtacct}, #{prtacctnm},
+        #{dspyn}, #{dsprl}, #{upacct}, #{calseq}, #{calacct}, #{calacctnm}, #{dc}, #{calcaulm},
+        #{calcaulmnm}, #{calgagam}, #{bigo}, #{updemp}
+    </select>
+
+    <select id="FBA2020U_DEL" resultType="java.util.LinkedHashMap">
+        exec fba2020u_del #{cmpycd}, #{actkind}, #{yyyy}, #{gubun}, #{prtseq}, #{calseq}
+    </select>
+
     <!-- 💡 계정과목 직접 조회 -->
     <select id="selectAcctList" resultType="java.util.LinkedHashMap">
         select acct, acctnm

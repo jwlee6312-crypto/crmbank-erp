@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue'
+import { reactive, ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import AppAlert from '@/components/AppAlert.vue'
@@ -297,6 +297,10 @@ function openHelp(type: string) {
 
 function formatNumber(val: any) { return new Intl.NumberFormat().format(Number(val) || 0) }
 function formatDate(val: any) { return val && val.length === 8 ? `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}` : val; }
+
+onUnmounted(() => {
+  if (grid) grid.destroy();
+});
 
 onMounted(async () => {
   api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'cl', cmpycd: authStore.cmpycd } }).then(r => {

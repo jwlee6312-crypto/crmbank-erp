@@ -37,7 +37,8 @@ public interface OutboundMapper {
 
     // 4. 콜 리스트 (대문자 Map 수용)
     List<Map<String, Object>> selectCampCallList(Map<String, Object> params);
-    int insertCampCallListBatch(@Param("list") List<Map<String, Object>> list);
+    // 💡 [변경] 불안정한 배치 대신 단건 인서트를 반복 호출하는 방식으로 변경 (안정성 최우선)
+    int insertCampCallList(Map<String, Object> params);
     int deleteCampCallListBatch(Map<String, Object> params);
     int updateCallListStatus(Map<String, Object> params);
 

@@ -20,33 +20,55 @@
 				<p class="login-subtitle">Intelligence-Driven ERP & CRM Integration</p>
 			</div>
 
-			<div class="label">ID</div>
-			<div class="form-item-wrap">
-				<input
-					id="userid"
-					v-model="form.userid"
-					type="text"
-					class="inp"
-					name="userid"
-					placeholder="Enter your ID"
-				/>
+			<!-- 💡 회사코드 입력 추가 및 라벨 수정 -->
+			<div class="form-group">
+				<div class="label"><i class="bi bi-building me-1"></i>Company Code</div>
+				<div class="form-item-wrap">
+					<input
+						id="cmpycd"
+						v-model="form.cmpycd"
+						type="text"
+						class="inp"
+						name="cmpycd"
+						placeholder="Enter your Company Code"
+						required
+					/>
+				</div>
 			</div>
 
-			<div class="label">Password</div>
-			<div class="form-item-wrap">
-				<input
-					id="pw"
-					v-model="form.passwd"
-					type="password"
-					class="inp"
-					name="passwd"
-					placeholder="Enter your password"
-				/>
+			<div class="form-group">
+				<div class="label"><i class="bi bi-person-circle me-1"></i>User ID</div>
+				<div class="form-item-wrap">
+					<input
+						id="userid"
+						v-model="form.userid"
+						type="text"
+						class="inp"
+						name="userid"
+						placeholder="Enter your ID"
+						required
+					/>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<div class="label"><i class="bi bi-shield-lock-fill me-1"></i>Password</div>
+				<div class="form-item-wrap">
+					<input
+						id="pw"
+						v-model="form.passwd"
+						type="password"
+						class="inp"
+						name="passwd"
+						placeholder="Enter your password"
+						required
+					/>
+				</div>
 			</div>
 
 			<button type="submit" class="login-btn">
 				<span>Log In</span>
-				<i class="bi bi-arrow-right-short ms-1"></i>
+				<i class="bi bi-arrow-right-short ms-1 fs-5"></i>
 			</button>
 
 			<div class="login-footer">
@@ -72,7 +94,7 @@ interface FormData {
 }
 
 const form = reactive<FormData>({
-	cmpycd: 'COIT',
+	cmpycd: '', // 💡 하드코딩 제거 및 초기값 설정
 	userid: '',
 	passwd: '',
 })
@@ -108,7 +130,7 @@ const login = async () => {
 .login-page {
 	width: 100vw;
 	height: 100vh;
-	background: radial-gradient(circle at top right, #e3f2fd, #f9f9f9);
+	background: radial-gradient(circle at top right, #e3f2fd, #f0f4f8);
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -116,7 +138,7 @@ const login = async () => {
 }
 
 .login-card {
-	width: 460px;
+	width: 440px;
 	padding: 50px 40px;
 	background: rgba(255, 255, 255, 0.95);
 	border-radius: 24px;
@@ -126,17 +148,6 @@ const login = async () => {
 	display: flex;
 	flex-direction: column;
 	position: relative;
-}
-
-.login-card::before {
-	content: '';
-	position: absolute;
-	top: -2px; left: -2px; right: -2px; bottom: -2px;
-	background: linear-gradient(45deg, #005a9f, #42a5f5, #00c8ff);
-	z-index: -1;
-	border-radius: 26px;
-	opacity: 0.15;
-	filter: blur(10px);
 }
 
 .login-header {
@@ -157,7 +168,6 @@ const login = async () => {
 	font-weight: 800;
 	letter-spacing: -1.5px;
 	line-height: 1;
-	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .text-smart { color: #005a9f; }
@@ -180,18 +190,31 @@ const login = async () => {
 .login-title {
 	font-size: 22px;
 	font-weight: 700;
-	color: #2d3748;
+	color: #1a202c;
 	margin-bottom: 6px;
 	letter-spacing: -0.5px;
 }
 
 .login-subtitle { font-size: 14px; color: #718096; font-weight: 400; }
-.label { margin-bottom: 8px; font-size: 13px; color: #4a5568; font-weight: 600; }
-.form-item-wrap { margin-bottom: 24px; }
+
+.form-group {
+	margin-bottom: 18px;
+}
+
+.label {
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #4a5568;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.form-item-wrap { margin-bottom: 0px; }
 
 .inp {
 	width: 100%;
-	padding: 14px 16px;
+	padding: 12px 16px;
 	font-size: 14px;
 	border: 1.5px solid #e2e8f0;
 	border-radius: 12px;
@@ -221,6 +244,7 @@ const login = async () => {
 	justify-content: center;
 	align-items: center;
 	box-shadow: 0 10px 15px -3px rgba(0, 90, 159, 0.3);
+    margin-top: 10px;
 }
 
 .login-btn:hover {

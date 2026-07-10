@@ -4,154 +4,154 @@
 
     <!-- [1. 캠페인 관리] -->
     <select id="generateCampNo" parameterType="map" resultType="string">
-        SELECT RIGHT('00000' + CAST(ISNULL(MAX(CAST(CAMP_NO AS INT)), 0) + 1 AS VARCHAR), 5)
-        FROM CAMPAIGN_MST WHERE CMPYCD = #{cmpycd}
+        select right('00000' + cast(isnull(max(cast(camp_no as int)), 0) + 1 as varchar), 5)
+        from campaign_mst where cmpycd = #{cmpycd}
     </select>
 
     <select id="selectCampList" parameterType="map" resultType="map">
-        SELECT A.CAMP_NO, A.CAMP_NM, A.SURV_GB, B.CODENM AS SURVGBNM, A.ACTDATE, A.REMARK, A.STATUS, A.START_MENT, A.END_MENT
-        FROM CAMPAIGN_MST A
-        LEFT JOIN HABA900T_TBL B ON A.SURV_GB = B.CODECD AND B.CDTYPE = '910'
-        WHERE A.CMPYCD = #{cmpycd}
+        select a.cmpycd as cmpycd, a.camp_no as camp_no, a.camp_nm as camp_nm, a.surv_gb as surv_gb, b.codenm as survgbnm, a.actdate as actdate, a.remark as remark, a.status as status, a.start_ment as start_ment, a.end_ment as end_ment
+        from campaign_mst a
+        left join haba900t_tbl b on a.surv_gb = b.codecd and b.cdtype = '910'
+        where a.cmpycd = #{cmpycd}
         <if test="camp_nm != null and camp_nm != ''"> AND A.CAMP_NM LIKE '%' + #{camp_nm} + '%' </if>
         ORDER BY A.CAMP_NO DESC
     </select>
 
     <insert id="insertCampMst" parameterType="com.crmbank.erp.crm.dto.CampMstDto">
-        INSERT INTO CAMPAIGN_MST (CMPYCD, CAMP_NO, CAMP_NM, SURV_GB, ACTDATE, REMARK, STATUS, START_MENT, END_MENT, ADDTIME, UPDTIME, UPDEMP)
+        insert into campaign_mst (cmpycd, camp_no, camp_nm, surv_gb, actdate, remark, status, start_ment, end_ment, addtime, updtime, updemp)
         VALUES (#{cmpycd}, #{camp_no}, #{camp_nm}, #{surv_gb}, #{actdate}, #{remark}, #{status}, #{start_ment}, #{end_ment}, GETDATE(), GETDATE(), #{updemp})
     </insert>
 
     <update id="updateCampMst" parameterType="com.crmbank.erp.crm.dto.CampMstDto">
-        UPDATE CAMPAIGN_MST SET
-            CAMP_NM = #{camp_nm}, SURV_GB = #{surv_gb}, ACTDATE = #{actdate}, REMARK = #{remark},
-            STATUS = #{status}, START_MENT = #{start_ment}, END_MENT = #{end_ment}, UPDTIME = GETDATE(), UPDEMP = #{updemp}
-        WHERE CMPYCD = #{cmpycd} AND CAMP_NO = #{camp_no}
+        update campaign_mst set
+            camp_nm = #{camp_nm}, surv_gb = #{surv_gb}, actdate = #{actdate}, remark = #{remark},
+            status = #{status}, start_ment = #{start_ment}, end_ment = #{end_ment}, updtime = getdate(), updemp = #{updemp}
+        where cmpycd = #{cmpycd} and camp_no = #{camp_no}
     </update>
 
     <select id="selectCampCallList" parameterType="map" resultType="map">
         SELECT
-            A.CALL_SEQ, A.CMPYCD, A.CAMP_NO, A.SURV_GB, A.CUST_NM, A.EMAIL, A.TEL_NO, A.STATUS,
-            ISNULL(A.RSLT_CD,'') AS RSLT_CD, ISNULL(B.CODENM, '미처리') AS RSLT_NM,
-            A.USERID, A.EXT_DATA, R.RSLT_NO,
-            FORMAT(R.START_DTIME, 'YYYY-MM-DD HH:MM:SS') AS START_DTIME,
-            FORMAT(R.END_DTIME, 'YYYY-MM-DD HH:MM:SS') AS END_DTIME,
-            R.REMARK, R.REC_FILE, R.MEDIA_TYPE, R.CHAT_LOG,
-            U.USERNM AS CONSULTNM
-        FROM CAMPAIGN_CALL_LIST A
-        LEFT OUTER JOIN HABA900T_TBL B ON B.CDTYPE = '920' AND A.RSLT_CD = B.CODECD
-        OUTER APPLY (
-            SELECT TOP 1
-                RS.RSLT_NO, RS.START_DTIME, RS.END_DTIME, RS.REMARK, RS.REC_FILE, RS.MEDIA_TYPE, RS.CHAT_LOG, RS.USERID, RS.CMPYCD
-            FROM CAMPAIGN_RSLT_MST RS
-            WHERE RS.CMPYCD = A.CMPYCD AND RS.CALL_SEQ = A.CALL_SEQ
-            ORDER BY RS.RSLT_NO DESC
-        ) R
-        LEFT OUTER JOIN HABA920T_TBL U ON R.USERID = U.USERID AND R.CMPYCD = U.CMPYCD
-        WHERE A.CMPYCD = #{cmpycd}
-          AND A.CAMP_NO = #{camp_no}
+            a.call_seq as call_seq, a.cmpycd as cmpycd, a.camp_no as camp_no, a.surv_gb as surv_gb, a.cust_nm as cust_nm, a.email as email, a.tel_no as tel_no, a.status as status,
+            isnull(a.rslt_cd,'') as rslt_cd, isnull(b.codenm, '미처리') as rslt_nm,
+            a.userid as userid, a.ext_data as ext_data, r.rslt_no as rslt_no,
+            format(r.start_dtime, 'yyyy-MM-dd HH:mm:ss') as start_dtime,
+            format(r.end_dtime, 'yyyy-MM-dd HH:mm:ss') as end_dtime,
+            r.remark as remark, r.rec_file as rec_file, r.media_type as media_type, r.chat_log as chat_log,
+            u.usernm as consultnm
+        from campaign_call_list a
+        left outer join haba900t_tbl b on b.cdtype = '920' and a.rslt_cd = b.codecd
+        outer apply (
+            select top 1
+                rs.rslt_no, rs.start_dtime, rs.end_dtime, rs.remark, rs.rec_file, rs.media_type, rs.chat_log, rs.userid, rs.cmpycd
+            from campaign_rslt_mst rs
+            where rs.cmpycd = a.cmpycd and rs.call_seq = a.call_seq
+            order by rs.rslt_no desc
+        ) r
+        left outer join haba920t_tbl u on r.userid = u.userid and r.cmpycd = u.cmpycd
+        where a.cmpycd = #{cmpycd}
+          and a.camp_no = #{camp_no}
         <if test="call_seq != null"> AND a.call_seq = #{call_seq} </if>
         <if test="filter != null and filter != '' and filter != '000'"> AND a.rslt_cd = #{filter} </if>
         <if test="keyword != null and keyword != ''">
-            AND (A.CUST_NM LIKE '%' + #{keyword} + '%' OR A.TEL_NO LIKE '%' + #{keyword} + '%')
+            and (a.cust_nm like '%' + #{keyword} + '%' or a.tel_no like '%' + #{keyword} + '%' or a.email like '%' + #{keyword} + '%')
         </if>
-        ORDER BY A.CALL_SEQ DESC
+        order by a.call_seq desc
     </select>
 
     <delete id="deleteCampMst" parameterType="map">
-        DELETE FROM CAMPAIGN_MST WHERE CMPYCD = #{cmpycd} AND CAMP_NO = #{camp_no}
+        delete from campaign_mst where cmpycd = #{cmpycd} and camp_no = #{camp_no}
     </delete>
 
     <!-- [2. 질문 및 답변 관리] -->
     <select id="generateSurvNo" parameterType="map" resultType="string">
-        SELECT RIGHT('00000' + CAST(ISNULL(MAX(CAST(SURV_NO AS INT)), 0) + 1 AS VARCHAR), 5)
-        FROM SURV_MST WHERE CMPYCD = #{cmpycd}
+        select right('00000' + cast(isnull(max(cast(surv_no as int)), 0) + 1 as varchar), 5)
+        from surv_mst where cmpycd = #{cmpycd}
     </select>
 
     <select id="selectSurvMstList" parameterType="map" resultType="map">
-        SELECT A.SURV_NO, A.QUESTION, A.ANS_TP, A.DSPORD, A.USEYN,
-               (SELECT STUFF((SELECT ', ' + ANS_CONT FROM SURV_DTL
-                WHERE CMPYCD = A.CMPYCD AND SURV_NO = A.SURV_NO AND USEYN = 'Y'
-                ORDER BY ANS_NO FOR XML PATH('')), 1, 2, '')) AS ANSWERS
-        FROM SURV_MST A WHERE A.CMPYCD = #{cmpycd}
-        ORDER BY A.DSPORD, A.SURV_NO
+        select a.surv_no as surv_no, a.question as question, a.ans_tp as ans_tp, a.dspord as dspord, a.useyn as useyn,
+               (select stuff((select ', ' + ans_cont from surv_dtl
+                where cmpycd = a.cmpycd and surv_no = a.surv_no and useyn = 'y'
+                order by ans_no for xml path('')), 1, 2, '')) as answers
+        from surv_mst a where a.cmpycd = #{cmpycd}
+        order by a.dspord, a.surv_no
     </select>
 
     <insert id="insertSurvMst" parameterType="com.crmbank.erp.crm.dto.SurvMstDto">
-        INSERT INTO SURV_MST (CMPYCD, SURV_NO, QUESTION, ANS_TP, DSPORD, USEYN, ADDTIME, UPDTIME, UPDEMP)
-        VALUES (#{cmpycd}, #{surv_no}, #{question}, #{ans_tp}, #{dspord}, #{useyn}, GETDATE(), GETDATE(), #{updemp})
+        insert into surv_mst (cmpycd, surv_no, question, ans_tp, dspord, useyn, addtime, updtime, updemp)
+        values (#{cmpycd}, #{surv_no}, #{question}, #{ans_tp}, #{dspord}, #{useyn}, getdate(), getdate(), #{updemp})
     </insert>
 
     <update id="updateSurvMst" parameterType="com.crmbank.erp.crm.dto.SurvMstDto">
-        UPDATE surv_mst SET question = #{question}, ans_tp = #{ans_tp}, dspord = #{dspord}, useyn = #{useyn}, updtime = GETDATE(), updemp = #{updemp}
-        WHERE cmpycd = #{cmpycd} AND surv_no = #{surv_no}
+        update surv_mst set question = #{question}, ans_tp = #{ans_tp}, dspord = #{dspord}, useyn = #{useyn}, updtime = getdate(), updemp = #{updemp}
+        where cmpycd = #{cmpycd} and surv_no = #{surv_no}
     </update>
 
     <delete id="deleteSurvMst" parameterType="map">
-        DELETE FROM SURV_MST WHERE CMPYCD = #{cmpycd} AND SURV_NO = #{surv_no}
+        delete from surv_mst where cmpycd = #{cmpycd} and surv_no = #{surv_no}
     </delete>
 
     <select id="selectSurvDtlList" parameterType="map" resultType="map">
-        SELECT ANS_NO, ANS_CONT, ANS_POINT, USEYN, ESSAY_YN FROM SURV_DTL
-        WHERE CMPYCD = #{cmpycd} AND SURV_NO = #{surv_no} ORDER BY ANS_NO
+        select ans_no as ans_no, ans_cont as ans_cont, ans_point as ans_point, useyn as useyn, essay_yn as essay_yn from surv_dtl
+        where cmpycd = #{cmpycd} and surv_no = #{surv_no} order by ans_no
     </select>
 
     <insert id="insertSurvDtl" parameterType="com.crmbank.erp.crm.dto.SurvDtlDto">
-        INSERT INTO SURV_DTL (CMPYCD, SURV_NO, ANS_NO, ANS_CONT, ANS_POINT, USEYN, ESSAY_YN, ADDTIME, UPDTIME, UPDEMP)
-        VALUES (#{cmpycd}, #{surv_no}, #{ans_no}, #{ans_cont}, #{ans_point}, #{useyn}, #{essay_yn}, GETDATE(), GETDATE(), #{updemp})
+        insert into surv_dtl (cmpycd, surv_no, ans_no, ans_cont, ans_point, useyn, essay_yn, addtime, updtime, updemp)
+        values (#{cmpycd}, #{surv_no}, #{ans_no}, #{ans_cont}, #{ans_point}, #{useyn}, #{essay_yn}, getdate(), getdate(), #{updemp})
     </insert>
 
     <delete id="deleteSurvDtlAll" parameterType="map">
-        DELETE FROM SURV_DTL WHERE CMPYCD = #{cmpycd} AND SURV_NO = #{surv_no}
+        delete from surv_dtl where cmpycd = #{cmpycd} and surv_no = #{surv_no}
     </delete>
 
     <!-- [3. 설문 구성 및 코드] -->
     <select id="selectSurvTypeStats" parameterType="map" resultType="map">
-        SELECT A.CODECD, A.CODENM, COUNT(B.SURV_NO) AS Q_CNT
-        FROM HABA900T_TBL A
-        LEFT JOIN CAMP_SURVEY B ON A.CODECD = B.SURV_GB AND B.CMPYCD = #{cmpycd}
-        WHERE A.CDTYPE = '910' AND A.USEYN = 'Y'
-        GROUP BY A.CODECD, A.CODENM, A.DSPORD ORDER BY A.DSPORD
+        select a.codecd as codecd, a.codenm as codenm, count(b.surv_no) as q_cnt
+        from haba900t_tbl a
+        left join camp_survey b on a.codecd = b.surv_gb and b.cmpycd = #{cmpycd}
+        where a.cdtype = '910' and a.useyn = 'y'
+        group by a.codecd, a.codenm, a.dspord order by a.dspord
     </select>
 
     <select id="selectMappedQuestions" parameterType="map" resultType="map">
-        SELECT A.SURV_NO, B.QUESTION, A.SORTCD, B.ANS_TP
-        FROM CAMP_SURVEY A JOIN SURV_MST B ON A.CMPYCD = B.CMPYCD AND A.SURV_NO = B.SURV_NO
-        WHERE A.CMPYCD = #{cmpycd} AND A.SURV_GB = #{surv_gb}
-        ORDER BY A.SORTCD
+        select a.surv_no as surv_no, b.question as question, a.sortcd as sortcd, b.ans_tp as ans_tp
+        from camp_survey a join surv_mst b on a.cmpycd = b.cmpycd and a.surv_no = b.surv_no
+        where a.cmpycd = #{cmpycd} and a.surv_gb = #{surv_gb}
+        order by a.sortcd
     </select>
 
     <insert id="insertCampSurvey" parameterType="map">
-        INSERT INTO CAMP_SURVEY (CMPYCD, SURV_GB, SURV_NO, SORTCD, USEYN, ADDTIME, UPDTIME, UPDEMP)
-        VALUES (#{cmpycd}, #{surv_gb}, #{surv_no}, #{sortcd}, #{useyn}, GETDATE(), GETDATE(), #{updemp})
+        insert into camp_survey (cmpycd, surv_gb, surv_no, sortcd, useyn, addtime, updtime, updemp)
+        values (#{cmpycd}, #{surv_gb}, #{surv_no}, #{sortcd}, #{useyn}, getdate(), getdate(), #{updemp})
     </insert>
 
     <delete id="deleteCampSurveyAll" parameterType="map">
-        DELETE FROM CAMP_SURVEY WHERE CMPYCD = #{cmpycd} AND SURV_GB = #{surv_gb}
+        delete from camp_survey where cmpycd = #{cmpycd} and surv_gb = #{surv_gb}
     </delete>
 
     <select id="selectAttrMapperList" parameterType="map" resultType="com.crmbank.erp.crm.dto.CampAttrMapperDto">
-        SELECT CMPYCD, SURV_GB, ATTR_NM, ATTR_KEY, DATA_TYPE, STATS_YN, USEYN
-        FROM CAMP_ATTR_MAPPER
-        WHERE CMPYCD = #{cmpycd} AND SURV_GB = #{surv_gb}
-        ORDER BY ATTR_KEY
+        select cmpycd, surv_gb, attr_nm, attr_key, data_type, stats_yn, useyn
+        from camp_attr_mapper
+        where cmpycd = #{cmpycd} and surv_gb = #{surv_gb}
+        order by attr_key
     </select>
 
     <insert id="insertAttrMapper" parameterType="com.crmbank.erp.crm.dto.CampAttrMapperDto">
-        INSERT INTO CAMP_ATTR_MAPPER (CMPYCD, SURV_GB, ATTR_NM, ATTR_KEY, DATA_TYPE, STATS_YN, USEYN, ADDTIME, UPDTIME, UPDEMP)
-        VALUES (#{cmpycd}, #{surv_gb}, #{attr_nm}, #{attr_key}, #{data_type}, #{stats_yn}, #{useyn}, GETDATE(), GETDATE(), #{updemp})
+        insert into camp_attr_mapper (cmpycd, surv_gb, attr_nm, attr_key, data_type, stats_yn, useyn, addtime, updtime, updemp)
+        values (#{cmpycd}, #{surv_gb}, #{attr_nm}, #{attr_key}, #{data_type}, #{stats_yn}, #{useyn}, getdate(), getdate(), #{updemp})
     </insert>
 
     <delete id="deleteAttrMapperAll" parameterType="map">
-        DELETE FROM CAMP_ATTR_MAPPER WHERE CMPYCD = #{cmpycd} AND SURV_GB = #{surv_gb}
+        delete from camp_attr_mapper where cmpycd = #{cmpycd} and surv_gb = #{surv_gb}
     </delete>
 
     <!-- 5. 상담 결과 저장 (소문자 필드 및 JdbcType 대문자 교정) -->
     <insert id="insertCampaignRsltMst" parameterType="com.crmbank.erp.crm.dto.CampRsltMstDto" useGeneratedKeys="true" keyProperty="rslt_no">
-        INSERT INTO campaign_rslt_mst (
+        insert into campaign_rslt_mst (
             cmpycd, call_seq, camp_no, start_dtime, end_dtime, phone_type, call_telno,
             rslt_cd, remark, userid, line_num, interaction_id, media_type, chat_log, ai_summary, rec_file, addtime, updtime, updemp
-        ) VALUES (
+        ) values (
             #{cmpycd}, #{call_seq}, #{camp_no},
             #{start_dtime, jdbcType=TIMESTAMP}, #{end_dtime, jdbcType=TIMESTAMP},
             #{phone_type, jdbcType=VARCHAR}, #{call_telno, jdbcType=VARCHAR},
@@ -173,13 +173,17 @@
         )
     </insert>
 
-    <insert id="insertCampCallListBatch" parameterType="list">
-        INSERT INTO campaign_call_list
-        (cmpycd, camp_no, surv_gb, cust_nm, email, tel_no, status, rslt_cd, userid, ext_data, addtime, updtime, updemp)
-        VALUES
-        <foreach collection="list" item="item" separator=",">
-            (#{item.cmpycd}, #{item.camp_no}, #{item.surv_gb}, #{item.cust_nm}, #{item.email}, #{item.tel_no}, #{item.status}, #{item.rslt_cd}, #{item.userid}, #{item.ext_data, typeHandler=com.crmbank.global.handler.JsonTypeHandler}, GETDATE(), GETDATE(), #{item.updemp})
-        </foreach>
+    <!-- 💡 [변경] 단건 인서트로 변경하여 타입 안정성 확보 -->
+    <insert id="insertCampCallList" parameterType="map">
+        INSERT INTO campaign_call_list (
+            cmpycd, camp_no, surv_gb, cust_nm, email, tel_no, status, rslt_cd, userid, ext_data, addtime, updtime, updemp
+        ) VALUES (
+            #{cmpycd, jdbcType=VARCHAR}, #{camp_no, jdbcType=VARCHAR}, #{surv_gb, jdbcType=VARCHAR},
+            #{cust_nm, jdbcType=VARCHAR}, #{email, jdbcType=VARCHAR}, #{tel_no, jdbcType=VARCHAR},
+            #{status, jdbcType=VARCHAR}, #{rslt_cd, jdbcType=VARCHAR}, #{userid, jdbcType=VARCHAR},
+            #{ext_data, jdbcType=VARCHAR, typeHandler=com.crmbank.global.handler.JsonTypeHandler},
+            GETDATE(), GETDATE(), #{updemp, jdbcType=VARCHAR}
+        )
     </insert>
 
     <delete id="deleteCampCallListBatch" parameterType="map">
@@ -211,13 +215,13 @@
 
     <select id="selectCampCallStats" parameterType="map" resultType="map">
         SELECT COUNT(*) AS tot_cnt, SUM(CASE WHEN status = '010' THEN 1 ELSE 0 END) AS ready_cnt
-        FROM campaign_call_list WHERE CMPYCD = #{cmpycd} AND CAMP_NO = #{camp_no}
+        FROM campaign_call_list WHERE cmpycd = #{cmpycd} AND camp_no = #{camp_no}
     </select>
 
     <select id="selectCampDetailStats" parameterType="map" resultType="map">
         SELECT b.codecd AS rslt_cd, b.codenm AS rslt_nm, COUNT(a.call_seq) AS cnt
           FROM HABA900T_TBL b LEFT JOIN campaign_call_list a
-            ON a.cmpycd = b.cmpycd
+            ON a.cmpycd = #{cmpycd}
            AND a.camp_no = #{camp_no}
            AND a.rslt_cd = b.codecd
          WHERE b.cdtype = '920' AND b.useyn = 'Y'
@@ -235,12 +239,12 @@
     </insert>
 
     <select id="selectCampaignHistory" parameterType="map" resultType="map">
-        SELECT x.cust_nm,
+        SELECT x.cust_nm AS cust_nm,
                a.start_time AS addtime,
                ISNULL(c.codenm, '미처리') AS rslt_nm,
-               a.media_type,
+               a.media_type AS media_type,
                ISNULL(b.remark, '') AS memo,
-               a.interaction_id
+               a.interaction_id AS interaction_id
         FROM total_interaction_log a
         JOIN campaign_call_list x ON a.cmpycd = x.cmpycd AND x.call_seq = #{call_seq}
         LEFT JOIN campaign_rslt_mst b ON a.interaction_id = b.interaction_id
@@ -259,19 +263,19 @@
     </select>
 
     <select id="selectCampSurvMstList" parameterType="map" resultType="map">
-        SELECT a.surv_no, b.question, b.ans_tp, b.dspord, b.useyn,
-        (SELECT STUFF((SELECT ', ' + ans_cont FROM surv_dtl
-        WHERE cmpycd = b.cmpycd AND surv_no = b.surv_no AND useyn = 'Y'
-        ORDER BY ans_no FOR XML PATH('')), 1, 2, '')) AS answers
-        FROM camp_survey a LEFT OUTER JOIN surv_mst b
-        ON a.cmpycd = b.cmpycd
-        AND a.surv_no = b.surv_no
-        WHERE a.cmpycd = #{cmpycd}
-        AND surv_gb = #{surv_gb}
+        select a.surv_no as surv_no, b.question as question, b.ans_tp as ans_tp, b.dspord as dspord, b.useyn as useyn,
+        (select stuff((select ', ' + ans_cont from surv_dtl
+        where cmpycd = b.cmpycd and surv_no = b.surv_no and useyn = 'y'
+        order by ans_no for xml path('')), 1, 2, '')) as answers
+        from camp_survey a left outer join surv_mst b
+        on a.cmpycd = b.cmpycd
+        and a.surv_no = b.surv_no
+        where a.cmpycd = #{cmpycd}
+        and surv_gb = #{surv_gb}
     </select>
 
     <select id="selectCampaignRsltDtl" parameterType="map" resultType="map">
-        SELECT a.surv_no, b.question, a.ans_no, c.ans_cont, a.point, a.remark
+        SELECT a.surv_no AS surv_no, b.question AS question, a.ans_no AS ans_no, c.ans_cont AS ans_cont, a.point AS point, a.remark AS remark
         FROM campaign_rslt_dtl a
         JOIN surv_mst b ON a.cmpycd = b.cmpycd AND a.surv_no = b.surv_no
         LEFT JOIN surv_dtl c ON a.cmpycd = c.cmpycd AND a.surv_no = c.surv_no AND a.ans_no = c.ans_no

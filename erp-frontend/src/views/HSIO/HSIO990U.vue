@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -210,6 +210,10 @@ function openSlipPrint(row: any) {
   const url = `/HASL/HASL_SLIP_PRINT_OUT?SLIPGU=010&SLIPYMD=${slipymd}&SLIPNO=${slipno}&DEPTCD=${hdeptcd || authStore.deptcd}`
   window.open(url, '전표인쇄', 'width=800,height=700,scrollbars=yes')
 }
+
+onUnmounted(() => {
+  if (grid) grid.destroy();
+});
 
 onMounted(async () => {
   await fetchOptions()

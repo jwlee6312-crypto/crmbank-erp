@@ -125,9 +125,65 @@ public class OutboundService {
     }
 
     @Transactional
-    public void saveCallListBatch(List<Map<String, Object>> list) {
-        if (list != null && !list.isEmpty()) {
-            outboundMapper.insertCampCallListBatch(list);
+    public void saveCallListBatch(List<Map<String, Object>> list, String cmpycd, String userid) {
+        if (list == null || list.isEmpty()) return;
+        
+        if (cmpycd == null || cmpycd.trim().isEmpty()) {
+            throw new IllegalArgumentException("회사 코드(cmpycd)는 필수 입력 항목입니다.");
+        }
+
+        // 1. 자동 매핑 정보 동기화 (첫 번째 행 기준)
+        Map<String, Object> first = list.get(0);
+        String survGb = (String) first.get("surv_gb");
+        Map<String, Object> extData = (Map<String, Object>) first.get("ext_data");
+        if (extData != null && !extData.isEmpty()) {
+            syncCampAttrMapper(cmpycd, survGb, extData.keySet(), userid);
+        }
+
+        // 2. 단건씩 루프를 돌며 저장 (안정성 확보)
+        for (Map<String, Object> item : list) {
+            item.put("cmpycd", cmpycd);
+            item.put("updemp", userid);
+            if (item.get("userid") == null) item.put("userid", userid);
+            
+            if (item.get("camp_no") == null || String.valueOf(item.get("camp_no")).trim().isEmpty()) {
+                throw new IllegalArgumentException("캠페인 번호(camp_no)가 누락된 항목이 있습니다.");
+            }
+            
+            // 확실한 단건 인서트 호출
+            outboundMapper.insertCampCallList(item);
+        }
+        log.info("캠페인 대상자 {}건 저장 완료 (cmpycd: {})", list.size(), cmpycd);
+    }
+
+    /**
+     * 💡 엑셀의 새로운 헤더를 시스템 매핑 정보로 자동 등록
+     */
+    private void syncCampAttrMapper(String cmpycd, String survGb, Set<String> keys, String userid) {
+        Map<String, Object> p = new HashMap<>();
+        p.put("cmpycd", cmpycd);
+        p.put("surv_gb", survGb);
+        
+        List<CampAttrMapperDto> existing = outboundMapper.selectAttrMapperList(p);
+        Set<String> existingKeys = new HashSet<>();
+        if (existing != null) {
+            existing.forEach(e -> existingKeys.add(e.getAttr_key()));
+        }
+
+        for (String key : keys) {
+            if (!existingKeys.contains(key)) {
+                CampAttrMapperDto dto = new CampAttrMapperDto();
+                dto.setCmpycd(cmpycd);
+                dto.setSurv_gb(survGb);
+                dto.setAttr_nm(key);   // 화면 표시명: 엑셀 헤더 그대로
+                dto.setAttr_key(key);  // 데이터 키: 엑셀 헤더 그대로
+                dto.setData_type("STRING");
+                dto.setStats_yn("N");  // 💡 [변경] 자동 등록 시 통계 활용은 기본 'N'으로 (관리자가 사후 검토)
+                dto.setUseyn("Y");
+                dto.setUpdemp(userid != null ? userid : "SYSTEM");
+                outboundMapper.insertAttrMapper(dto);
+                log.info("새로운 캠페인 속성 자동 등록: {} ({})", key, survGb);
+            }
         }
     }
 
