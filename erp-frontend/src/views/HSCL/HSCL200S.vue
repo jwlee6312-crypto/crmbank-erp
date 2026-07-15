@@ -79,6 +79,7 @@
 import { reactive, ref, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
@@ -228,6 +229,7 @@ function print(type: string) {
 }
 
 onMounted(async () => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX;
   await fetchOptions()
   nextTick(() => initGrid())
 })

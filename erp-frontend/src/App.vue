@@ -51,7 +51,7 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
 	right: 0 !important;
 	bottom: 0 !important;
 	left: auto !important; /* 왼쪽 고정 해제 */
-	width: 320px !important; /* 더 작고 슬림하게 */
+	width: 350px !important; /* 가독성을 위해 너비 약 10% 확대 */
 	height: 100vh !important;
 	background: #fff !important;
 	z-index: 999999 !important; /* 무조건 최상위 */

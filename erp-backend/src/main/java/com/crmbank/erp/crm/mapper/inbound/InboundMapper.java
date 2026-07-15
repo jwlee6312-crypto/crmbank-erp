@@ -14,7 +14,7 @@ public interface InboundMapper {
     List<Map<String, Object>> selectCallHistory(Map<String, Object> params);
     List<Map<String, Object>> selectServiceHistory(Map<String, Object> params);
     List<Map<String, Object>> selectSettleHistory(Map<String, Object> params);
-    
+
     // 인바운드 상담현황 조회 (HGIA020S)
     List<Map<String, Object>> selectStatusList(Map<String, Object> params);
 

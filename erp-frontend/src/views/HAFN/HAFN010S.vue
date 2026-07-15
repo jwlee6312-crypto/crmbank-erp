@@ -68,6 +68,7 @@
 import { ref as _ref, reactive as _reactive, onMounted as _on_mounted } from 'vue'
 import { TabulatorFull as tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import { useAlerts as use_alerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore as use_auth_store } from '@/stores/authStore'
@@ -194,6 +195,7 @@ const go_cust_ledger = (row: any) => {
 }
 
 _on_mounted(() => {
+	if (typeof window !== 'undefined') (window as any).XLSX = XLSX;
 	if (maingridref.value) {
 		maingrid = new tabulator(maingridref.value, {
 			layout: 'fitColumns',

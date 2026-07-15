@@ -24,6 +24,7 @@ public class UserSession implements Serializable {
     private String salsyn;
     private String usergrp;
     private String datename;
+    private String photo_path; // 🚀 사진 경로 추가
 
     private String leftlogo;
     private String rightimg;

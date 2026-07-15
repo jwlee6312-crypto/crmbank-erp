@@ -18,12 +18,14 @@ export const useAuthStore = defineStore(
 		const usergrp = ref<string>('')
 		const salsyn = ref<string>('')
 		const email = ref<string>('')
+		const photo_path = ref<string>('') // 🚀 사진 경로 필드 추가
 
 		const tabStore = useTabStore()
 		const menuStore = useMenuStore()
 
 		function setUserInfo(data: any) {
 			if (!data) return;
+			console.log('👤 로그인 사용자 정보:', data); // 🚀 데이터 구조 확인용
 			cmpycd.value = data.cmpycd || ''
 			userid.value = String(data.userid || '').trim()
 			usernm.value = String(data.usernm || '').trim()
@@ -33,6 +35,7 @@ export const useAuthStore = defineStore(
 			usergrp.value = data.usergrp || ''
 			salsyn.value = data.salsyn || ''
 			email.value = data.email || ''
+			photo_path.value = String(data.photo_path || '').trim() // 🚀 사진 경로 매핑 및 공백 제거
 			isAuthenticated.value = !!userid.value
 		}
 
@@ -66,7 +69,14 @@ export const useAuthStore = defineStore(
 				}
 			} catch (e: any) {
 				console.error('로그인 실패:', e)
-				throw new Error(e.response?.data?.message || '로그인 중 오류가 발생했습니다.')
+				// 💡 백엔드에서 문자열("비밀번호가 틀립니다")을 보내므로 data를 통째로 가져옴
+				let errorMsg = '로그인 중 오류가 발생했습니다.'
+				if (e.response?.data) {
+					errorMsg = typeof e.response.data === 'string' ? e.response.data : (e.response.data.message || errorMsg)
+				} else if (e.message) {
+					errorMsg = e.message
+				}
+				throw new Error(errorMsg)
 			}
 		}
 
@@ -96,11 +106,12 @@ export const useAuthStore = defineStore(
 			usergrp.value = ''
 			salsyn.value = ''
 			email.value = ''
+			photo_path.value = ''
 		}
 
 		return {
 			isAuthenticated,
-			cmpycd, userid, usernm, inner_no, deptcd, deptnm, usergrp, salsyn, email,
+			cmpycd, userid, usernm, inner_no, deptcd, deptnm, usergrp, salsyn, email, photo_path,
 			login, logout, resetState, checkSession, setUserInfo
 		}
 	},

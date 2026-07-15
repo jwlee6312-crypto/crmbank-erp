@@ -39,7 +39,7 @@ public class InboundController {
     public ResponseEntity<Map<String, Object>> logCallback(@RequestBody Map<String, Object> params) {
         try {
             log.info("📞 [ARS CALLBACK] 요청 수신: {}", params);
-            
+
             TotalCallLogDto logDto = TotalCallLogDto.builder()
                     .uniqueid(String.valueOf(params.get("interaction_id")))
                     .keyword(String.valueOf(params.get("keyword")))
@@ -73,18 +73,18 @@ public class InboundController {
             String cmpycd = user != null ? user.getCmpycd() : "";
             String userid = user != null ? user.getUserid() : "system";
             String deptcd = user != null ? user.getDeptcd() : "";
-            
+
             CallMstDto dto = request.getDto();
             dto.setCmpycd(cmpycd);
             dto.setConsultid(userid);
             dto.setUpdemp(userid);
             dto.setDeptcd(deptcd);
             dto.setHappycall_yn("N");
-            
+
             if (dto.getInteraction_id() == null || dto.getInteraction_id().isEmpty()) {
                 dto.setInteraction_id("IN_" + UUID.randomUUID().toString().substring(0, 8));
             }
-            
+
             dto.setEnd_time(LocalDateTime.now());
 
             if (request.getRecordings() != null && !request.getRecordings().isEmpty()) {
@@ -116,7 +116,7 @@ public class InboundController {
 
         Map<String, String> result = new HashMap<>();
         result.put("summary", summary);
-        result.put("deptcd", ""); 
+        result.put("deptcd", "");
         return result;
     }
 

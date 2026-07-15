@@ -245,8 +245,17 @@ const initGrids = () => {
         editable: isNotReceived,
         cellEdited: (cell) => {
             const d = cell.getData();
-            const prdqty = Number(d.prdqty || 0);
+            let prdqty = Number(d.prdqty || 0);
+            const ordqty = Number(d.ordqty || 0);
             const errqty = Number(d.errqty || 0);
+
+            // [체크] 지시량 초과 입력 제한
+            if (prdqty > ordqty) {
+                alert(`생산량이 지시량(${ordqty})을 초과할 수 없습니다.`);
+                prdqty = ordqty;
+                cell.getRow().update({ prdqty: prdqty });
+            }
+
             cell.getRow().update({ godqty: prdqty - errqty });
 
             if (d._state === 'EXIST') {

@@ -73,6 +73,7 @@ import { reactive, ref, onMounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
@@ -221,6 +222,7 @@ function print(type: string) {
 const formatDateString = (v: any, sep: string) => v && v.length === 8 ? `${v.substring(0, 4)}${sep}${v.substring(4, 6)}${sep}${v.substring(6, 8)}` : v
 
 onMounted(async () => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX;
   await fetchOptions()
   nextTick(() => initGrid())
 })

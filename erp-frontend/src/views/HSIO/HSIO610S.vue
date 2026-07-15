@@ -101,6 +101,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -161,6 +162,7 @@ function handleOpenHelp(type: string) {
 }
 
 onMounted(async () => {
+	if (typeof window !== 'undefined') (window as any).XLSX = XLSX;
 	try {
 		const resWh = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'W0', cmpycd: authStore.cmpycd })
 		whOptions.value = resWh.data || []

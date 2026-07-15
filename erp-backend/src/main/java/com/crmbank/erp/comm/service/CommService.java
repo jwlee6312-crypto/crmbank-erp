@@ -43,6 +43,9 @@ public class CommService {
         // 2. 사용자 정보 조회 (HA00_010S_STR)
         Map<String, Object> userInfo = commMapper.GET_USER_INFO(param);
         if (userInfo == null) throw new Exception("등록되지 않은 사용자아이디 입니다.");
+        
+        log.info("🔍 [사용자 정보 조회 결과] keys: {}", userInfo.keySet());
+        log.info("🔍 [사진 경로 확인] photo_path: {}", userInfo.get("photo_path"));
 
         // 3. 비밀번호 체크
         String dbPw = getVal(userInfo, "pw", "");
@@ -64,6 +67,7 @@ public class CommService {
         session.setSalsyn(getVal(userInfo, "salsyn", ""));
         session.setUsergrp(getVal(userInfo, "usergrp", ""));
         session.setEmail(getVal(userInfo, "email", ""));
+        session.setPhoto_path(getVal(userInfo, "photo_path", "")); // 🚀 사진 경로 매핑
 
         log.info("🔓 [로그인 성공] ID: {}, 이름: {}, 내선: {}", session.getUserid(), session.getUsernm(), session.getInner_no());
 

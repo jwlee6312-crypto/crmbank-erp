@@ -4,8 +4,9 @@
     <div v-if="!isCollapsed" class="profile-card">
       <div class="user-details text-center">
         <div class="avatar-area mb-2">
-          <div class="avatar-placeholder">
-            <i class="bi bi-person-fill"></i>
+          <div class="avatar-placeholder cursor-pointer" @click="goToProfile" title="개인정보 관리로 이동">
+            <img v-if="profileImageSrc" :src="profileImageSrc" class="profile-img" alt="Profile" />
+            <i v-else class="bi bi-person-fill"></i>
           </div>
         </div>
         <div class="user-info-text">
@@ -59,6 +60,7 @@ import { useMenuStore } from '@/stores/menuStore'
 import { useTabStore } from '@/stores/tabStore'
 import { useAuthStore } from '@/stores/authStore'
 import { addDynamicRoute } from '@/router/dynamicRoute'
+import { API_URL } from '@/config/api'
 
 const props = defineProps({
   isCollapsed: Boolean
@@ -69,12 +71,32 @@ const menuStore = useMenuStore()
 const tabStore = useTabStore()
 const openGroupId = ref<string | null>(null)
 
+// 🚀 프로필 이미지 경로 계산
+const profileImageSrc = computed(() => {
+  if (authStore.photo_path) {
+    const baseUrl = API_URL || window.location.origin
+    if (authStore.photo_path.startsWith('http')) return authStore.photo_path
+    return `${baseUrl}/api/comm/upload/display/${authStore.photo_path}`
+  }
+  return '' // 사진 없으면 빈 값 (아이콘 표시)
+})
+
 const isGroupOpen = (grpcd: string) => openGroupId.value === grpcd
 const toggleGroup = (grpcd: string) => {
   openGroupId.value = openGroupId.value === grpcd ? null : grpcd
 }
 
 const groupedItems = computed(() => menuStore.groupedSidebarItems)
+
+function goToProfile() {
+  const pgmId = 'HABA910U';
+  const pgmNm = '개인정보 관리';
+  const grpCd = '900'; // 시스템 관리 그룹 코드
+
+  // 🚀 공식 메뉴 이동 로직과 동일하게 처리 (탭 추가 및 이동)
+  addDynamicRoute(pgmId, pgmNm, grpCd);
+  tabStore.addTab({ pgmId: pgmId, pgmNm: pgmNm, path: `/${pgmId}` });
+}
 
 function goPage(pgmid: string, pgmnm: string, grpcd: string) {
   addDynamicRoute(pgmid, pgmnm, grpcd)
@@ -100,6 +122,13 @@ function goPage(pgmid: string, pgmnm: string, grpcd: string) {
   margin: 0 auto;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   border: 2px solid #fff;
+  overflow: hidden; /* 💡 사진이 원 밖으로 나가지 않게 */
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-name-info { font-weight: 800; color: #2c3e50; font-size: 14px; margin-top: 10px; line-height: 1.2; }

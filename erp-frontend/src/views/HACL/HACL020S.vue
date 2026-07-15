@@ -61,6 +61,7 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -174,7 +175,10 @@ const search = async () => {
 const excel = () => grid?.download("xlsx", `대차대조표_${searchForm.yy}${searchForm.mm}.xlsx`)
 const print = () => window.open(`/api/hacl/HACL_020P?yy=${searchForm.yy}&mm=${searchForm.mm}&PRTGU=1`)
 
+const excel = () => grid?.download("xlsx", `대차대조표_${searchForm.yy}_${searchForm.mm}.xlsx`)
+
 onMounted(() => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX
   nextTick(initGrid)
   search()
 })

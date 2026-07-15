@@ -35,25 +35,6 @@
            and a.linecd = #{linecd}
            and isnull(a.planqty, 0) - isnull(a.ordqty, 0) > 0
          order by a.itemcd, a.linecd, a.progcd;
-
-<!--        select a.ordymd, a.ordno, a.custcd, c.custnm, a.yymmdd,
-        case dayofweek(str_to_date(a.yymmdd, '%Y%m%d'))
-        when 1 then '일' when 2 then '월' when 3 then '화'
-        when 4 then '수' when 5 then '목' when 6 then '금' when 7 then '토'
-        end as day_nm,
-        a.ser, a.napgi_dt, a.itemcd, b.itemnm, a.linecd, d.linenm, b.itsize,
-        b.unit, a.progcd, e.prognm, a.planqty, a.ordqty, f.ordamt as suppamt
-        from HPPL160T_TBL a
-        left join item_tbl b on a.cmpycd = b.cmpycd and a.itemcd = b.itemcd
-        left join cust_tbl c on a.cmpycd = c.cmpycd and a.custcd = c.custcd
-        left join pd_line d on a.cmpycd = d.cmpycd and a.linecd  = d.linecd
-        left join pd_prog e on a.cmpycd = e.cmpycd and a.linecd  = e.linecd and a.progcd = e.progcd
-        left join sales_order_dtl_tbl f on a.cmpycd = f.cmpycd and a.ordno  = f.ordno and a.orowno = f.orowno
-        where a.cmpycd = #{cmpycd}
-        and a.yymmdd = #{yymmdd}
-        and a.linecd = #{linecd}
-        and ifnull(a.planqty, 0) - ifnull(a.ordqty, 0) > 0
-        order by a.itemcd, a.linecd, a.progcd  -->
     </select>
 
     <!-- 작업지시 상세 목록 조회 (linecd 추가) -->
@@ -82,19 +63,6 @@
            and a.linecd = #{linecd}
            and a.yymmdd = #{yymmdd}
            and d.lotno is not null
-<!--        select a.progcd, b.prognm, a.itemcd, c.itemnm, c.itsize, c.unit,
-        a.planqty, ifnull(d.ordqty, 0) as ordqty, d.lotno, ifnull(d.ordymd, '') as ordymd,
-        case when ifnull(d.prodqty, 0) > 0 then 'N' else 'Y' end as updyn,
-        a.yymmdd, a.ser, a.linecd
-        from HPPL160T_TBL a
-        left join pd_prog b on a.cmpycd = b.cmpycd and a.linecd = b.linecd and a.progcd = b.progcd
-        left join item_tbl c on a.cmpycd = c.cmpycd and a.itemcd = c.itemcd
-        left join HPIO210T_TBL d on a.cmpycd = d.cmpycd and a.linecd = d.linecd and a.progcd = d.progcd
-        and a.yymmdd = d.yymmdd and a.ser = d.ser and a.itemcd = d.itemcd
-        where a.cmpycd = #{cmpycd}
-        and a.linecd = #{linecd}
-        and a.yymmdd = #{yymmdd}
-        and d.lotno is not null -->
     </select>
 
     <select id="selectNewLotNo" resultType="string">

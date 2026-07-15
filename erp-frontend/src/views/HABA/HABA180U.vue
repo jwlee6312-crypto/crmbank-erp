@@ -182,6 +182,7 @@
 import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import AppAlert from '@/components/AppAlert.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
@@ -315,6 +316,7 @@ const handleopenhelp = (type: string) => {
 const excel = () => maingrid?.download("xlsx", `거래처관리_${new Date().toISOString().substring(0, 10)}.xlsx`)
 
 onMounted(async () => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX
   await loadinitdata()
 
   // 🚀 프로그램 네비게이션 처리 (HABA190S 등에서 넘어온 파라미터 처리)

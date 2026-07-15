@@ -41,7 +41,7 @@ defineProps({
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	z-index: 2000;
+	z-index: 30000; /* 💡 상단 네비바(10001) 및 모달보다 위로 배치 */
 	min-width: 280px;
 	max-width: 90vw;
 	padding: 12px 16px;

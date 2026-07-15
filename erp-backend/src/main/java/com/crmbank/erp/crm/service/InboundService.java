@@ -56,10 +56,10 @@ public class InboundService {
     public String saveCallMst(CallMstDto dto, List<String> recordings, String svcymd, String agentDeptCd) {
         // 💡 [교정] 하드코딩된 회사코드 제거 및 소문자 표준화 적용
         if (dto.getCmpycd() == null || dto.getCmpycd().isEmpty()) {
-            dto.setCmpycd(""); 
+            dto.setCmpycd("");
         }
-        dto.setHappycall_yn("n"); 
-        
+        dto.setHappycall_yn("n");
+
         if (dto.getCall_telno() != null) dto.setCall_telno(dto.getCall_telno().trim());
         if (dto.getCall_usernm() != null) dto.setCall_usernm(dto.getCall_usernm().trim());
         if (dto.getCall_email() != null) dto.setCall_email(dto.getCall_email().trim());
@@ -99,7 +99,7 @@ public class InboundService {
                     .summary(dto.getAi_summary())
                     .esc_memo(dto.getEsc_memo())
                     .build();
-            
+
             inboundMapper.insertEscalation(escDto);
 
             if (escDto.getEscalation_no() != null) {
@@ -148,7 +148,7 @@ public class InboundService {
                 .result_cd("100")
                 .rec_file(dto.getRec_file())
                 .build();
-        
+
         inboundMapper.insertTotalInteractionLog(logDto);
 
         return dto.getSvcno();

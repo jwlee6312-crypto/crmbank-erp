@@ -43,6 +43,14 @@ public class HabaController {
             injectSession(params, session);
             fillMissingParameters(proc, params);
 
+            // 🚀 HABA_920U_STR (사용자 관리): 비밀번호 공백 시 회사코드로 강제 설정
+            if ("HABA_920U_STR".equals(proc)) {
+                Object pwObj = params.get("pw");
+                if (pwObj == null || pwObj.toString().trim().isEmpty()) {
+                    params.put("pw", params.get("cmpycd"));
+                }
+            }
+
             String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
             if (proc.length() >= 9 && proc.charAt(8) == 'U' && (actkind.startsWith("A") || actkind.startsWith("U"))) {
                 String validationMsg = validateParameters(HabaMapper.class, proc, params);

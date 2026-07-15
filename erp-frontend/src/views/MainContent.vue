@@ -1,24 +1,22 @@
 <template>
 	<div class="main-content p-2 w-100 d-flex flex-column" style="height: 100vh; overflow: hidden;">
-		<!-- 탭 UI (표준화 대상) -->
+		<!-- 탭 UI (상단 바 버튼 이동으로 인해 최적화됨) -->
 		<div class="tabs-container d-flex mb-1 flex-shrink-0" style="height: 32px; align-items: center;">
 			<div class="tabs d-flex overflow-auto flex-grow-1" style="scrollbar-width: none; -ms-overflow-style: none;">
 				<div
 					v-for="(tab, index) in tabs"
 					:key="index"
 					class="tab d-flex align-items-center px-3 py-1 me-1 border rounded-top cursor-pointer position-relative"
-					:class="activeTab === tab.route ? 'bg-primary text-white border-primary' : 'bg-light text-secondary'"
-					style="font-size: 12px; white-space: nowrap; height: 30px;"
+					:class="activeTab === tab.route ? 'bg-primary text-white border-primary fw-bold' : 'bg-light text-secondary'"
+					style="font-size: 12px; white-space: nowrap; height: 30px; border-bottom: none !important;"
 					@click="switchTab(tab.route)"
 				>
+					<i class="bi bi-file-earmark-text me-1" v-if="activeTab === tab.route"></i>
 					{{ tab.name }}
-					<span class="ms-2 cursor-pointer" @click.stop="closeTab(index)">
+					<span class="ms-2 cursor-pointer opacity-75" @click.stop="closeTab(index)">
 						<i class="bi bi-x-circle-fill" :class="activeTab === tab.route ? 'text-white' : 'text-muted'"></i>
 					</span>
 				</div>
-			</div>
-			<div v-if="tabs.length > 0" class="tab-buttons d-flex ms-2">
-				<button class="btn btn-sm btn-outline-secondary py-0" style="font-size: 11px; height: 26px;" @click="closeAllTabs">전체 닫기</button>
 			</div>
 		</div>
 

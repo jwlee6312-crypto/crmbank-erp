@@ -1,8 +1,8 @@
 <!--
 	=============================================================
-	프로그램명	: 자재이관출고 (HPIO500U)
-	작성일자	: 2025.02.24
-	설명        : 창고 간 자재 이관 출고 및 입고 자동 연계 관리 (HPIO210U 표준 패턴 적용)
+	프로그램명	: 이관출고등록 (HPIO500U)
+	작성일자	: 2025.02.25
+	설명        : 생산 공정/창고 간 자재 및 반제품 이관 출고 관리 (HSIO580U 디자인 참조)
 	=============================================================
 -->
 
@@ -15,132 +15,210 @@
     <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-arrow-left-right me-2 text-primary" style="font-size: 18px;"></i>
-        생산정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        <span class="text-primary fw-bolder">자재이관출고 (HPIO500U)</span>
+        생산관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        재고관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">이관출고등록 (HPIO500U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1 pe-3">
+      <div class="btn-group-erp d-flex gap-1 pe-2">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
-        <button class="btn-erp btn-search" @click="fetchMaster">조회</button>
-        <button class="btn-erp btn-save" @click="saveData">저장</button>
-        <button class="btn-erp btn-delete" @click="deleteData" :disabled="!masterData.iono">전체삭제</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-save" @click="save" :disabled="isClosed">저장</button>
+        <button class="btn-erp btn-delete" @click="handleFullDelete" :disabled="!form_02.iono || isClosed">전체삭제</button>
       </div>
     </div>
 
     <!-- 💡 2. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-      <!-- 🅰️ 출고 마스터 정보 폼 -->
+      <!-- [상단] 조회 필터 영역 -->
       <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
-        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
-          <span class="fw-bold small text-dark"><i class="bi bi-file-earmark-text me-2 text-primary"></i>이관 마스터 정보</span>
-        </div>
         <div class="card-body p-0 bg-white">
-          <table class="erp-table-dense w-100">
+          <table class="erp-table-dense" width="100%">
             <colgroup>
-              <col style="width: 100px;" /><col />
-              <col style="width: 100px;" /><col />
-              <col style="width: 100px;" /><col />
+                <col style="width: 10%" /><col style="width: 40%" />
+                <col style="width: 10%" /><col style="width: 40%" />
             </colgroup>
             <tbody>
               <tr>
-                <th class="required bg-light text-center">출고부서</th>
+                <th class="text-center bg-light">이동일자</th>
+                <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
+                  <DateForm v-model:fromdt="form_01.fromdt" v-model:todt="form_01.todt" />
+                </td>
+                <th class="text-center bg-light">출고창고</th>
                 <td>
-                  <select v-model="masterData.deptcd" class="form-select form-select-sm">
-                    <option v-for="opt in deptOptions" :key="opt.code" :value="opt.code">{{ opt.cdnm }}</option>
+                  <select v-model="form_01.owhcd" class="form-select form-select-sm w-50">
+                    <option value="">전체</option>
+                    <option v-for="item in owhcdData" :key="item.whcd" :value="item.whcd">{{ item.whnm }}</option>
                   </select>
                 </td>
-                <th class="required bg-light text-center">출고번호</th>
-                <td>
-                  <div class="d-flex align-items-center gap-1">
-                    <input v-model="ioym_f" type="month" class="form-control" style="max-width: 120px;" />
-                    <input v-model="masterData.iono" type="text" class="form-control text-center bg-light fw-bold text-primary" style="width: 60px;" readonly placeholder="번호" />
-                  </div>
-                </td>
-                <th class="required bg-light text-center">출고일자</th>
-                <td><input v-model="ioymd_f" type="date" class="form-control" /></td>
-              </tr>
-              <tr>
-                <th class="required bg-light text-center">출고창고</th>
-                <td>
-                  <select v-model="masterData.whcd" class="form-select form-select-sm">
-                    <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
-                  </select>
-                </td>
-                <th class="required bg-light text-center">입고창고</th>
-                <td>
-                  <select v-model="masterData.iwhcd" class="form-select form-select-sm">
-                    <option v-for="opt in whOptions" :key="opt.whcd" :value="opt.whcd">{{ opt.whnm }}</option>
-                  </select>
-                </td>
-                <th class="bg-light text-center">특기사항</th>
-                <td><input v-model="masterData.remark" class="form-control" /></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- 🅱️ 자재 상세 그리드 영역 -->
-      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
-        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
-          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>이관 자재 상세 내역</span>
-          <div class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" style="font-size: 11px;">+ 행추가</button>
-            <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" style="font-size: 11px;">- 행삭제</button>
+      <!-- [하단] 투-그리드 레이아웃 영역 -->
+      <div class="d-flex gap-2 flex-grow-1 overflow-hidden" style="min-height: 0;">
+
+        <!-- ⬅️ 좌측: 이관출고 목록 -->
+        <div class="card border shadow-sm d-flex flex-column overflow-hidden grid-container-left" style="width: 350px; min-width: 350px;">
+          <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">이관 목록</div>
+          <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+            <div ref="tableRef1" class="tabulator-instance flex-grow-1"></div>
           </div>
         </div>
-        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-          <div ref="tableRef" class="tabulator-instance flex-grow-1"></div>
+
+        <!-- ➡️ 우측: 마스터 상세 폼 + 품목 상세 그리드 -->
+        <div class="flex-grow-1 d-flex flex-column gap-2 overflow-hidden">
+
+          <!-- 상세 마스터 정보 폼 -->
+          <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+            <div class="card-body p-0 bg-white">
+              <table class="erp-table-dense w-100">
+                <colgroup>
+                  <col style="width: 100px;" /><col />
+                  <col style="width: 100px;" /><col />
+                  <col style="width: 100px;" /><col />
+                  <col style="width: 100px;" /><col />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <th class="required bg-light">출고부서</th>
+                    <td>
+                      <div class="input-group input-group-sm">
+                        <input v-model="form_02.odeptnm" class="form-control" readonly />
+                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('ODEPT')" :disabled="isClosed"><i class="bi bi-search"></i></button>
+                      </div>
+                    </td>
+                    <th class="bg-light text-center border-start">출고번호</th>
+                    <td><input :value="displayIoNo" class="form-control bg-light text-primary fw-bold text-center" readonly placeholder="자동생성" /></td>
+                    <th class="required bg-light text-center border-start">출고일자</th>
+                    <td><input v-model="form_02.outymd" type="date" class="form-control" :readonly="isClosed" /></td>
+                    <th class="required bg-light text-center border-start">입고부서</th>
+                    <td>
+                      <div class="input-group input-group-sm">
+                        <input v-model="form_02.ideptnm" class="form-control" readonly />
+                        <button class="btn btn-outline-secondary" @click="handleOpenHelp('IDEPT')" :disabled="isClosed"><i class="bi bi-search"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th class="required bg-light">출고창고</th>
+                    <td>
+                      <select v-model="form_02.owhcd" class="form-select" :disabled="isClosed">
+                        <option v-for="item in owhcdData" :key="item.whcd" :value="item.whcd">{{ item.whnm }}</option>
+                      </select>
+                    </td>
+                    <th class="required bg-light text-center border-start">입고창고</th>
+                    <td>
+                      <select v-model="form_02.iwhcd" class="form-select" :disabled="isClosed">
+                        <option v-for="item in iwhcdData" :key="item.whcd" :value="item.whcd">{{ item.whnm }}</option>
+                      </select>
+                    </td>
+                    <th class="bg-light text-center border-start">라인/공정</th>
+                    <td colspan="3">
+                      <div class="d-flex gap-1">
+                        <select v-model="form_02.linecd" class="form-select" :disabled="isClosed" @change="onLineChange">
+                          <option v-for="opt in lineOptions" :key="opt.linecd" :value="opt.linecd">{{ opt.linenm }}</option>
+                        </select>
+                        <select v-model="form_02.progcd" class="form-select" :disabled="isClosed">
+                          <option v-for="opt in progOptions" :key="opt.progcd" :value="opt.progcd">{{ opt.prognm }}</option>
+                        </select>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th class="bg-light">특기사항</th>
+                    <td colspan="7"><input v-model="form_02.remark" class="form-control" :readonly="isClosed" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 상세 품목 그리드 영역 -->
+          <div class="card border shadow-sm flex-grow-1 d-flex flex-column overflow-hidden grid-container-right">
+            <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+              <span class="fw-bold small text-dark d-flex align-items-center"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>이관 품목 리스트</span>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" :disabled="isClosed" style="font-size: 11px;">+ 행추가</button>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" @click="deleteSelectedRows" :disabled="isClosed" style="font-size: 11px;">- 행삭제</button>
+              </div>
+            </div>
+            <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+              <div ref="tableRef2" class="tabulator-instance flex-grow-1"></div>
+            </div>
+          </div>
         </div>
       </div>
-
     </div>
   </div>
+
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 </template>
 
 <script setup lang="ts">
 import { reactive, ref, onMounted, computed, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
+import DateForm from '@/components/DateForm.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
-import { useCommonHelp } from '@/composables/useCommonHelp'
 import { getDate } from '@/composables/useDate'
-import AppAlert from '@/components/AppAlert.vue'
-import Modal from '@/components/Modal.vue'
+import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
-const { today } = getDate()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const { resetForm } = useFormReset()
-const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 // [1] 데이터 모델링
-const masterData = reactive<any>({
+const form_01 = reactive({ fromdt: firstDay, todt: today, owhcd: '' })
+const form_02 = reactive<any>({
   actkind: 'S0', cmpycd: authStore.cmpycd,
-  deptcd: authStore.deptcd,
-  ioym: today.replace(/-/g, '').substring(0, 6), iono: '',
-  ioymd: today.replace(/-/g, ''),
-  whcd: '200', iwhcd: '100',
-  remark: ''
+  ioym: '', iono: '0000', outymd: today,
+  odeptcd: authStore.deptcd, odeptnm: authStore.deptnm, owhcd: '100',
+  ideptcd: '', ideptnm: '', iwhcd: '100',
+  linecd: '', progcd: '',
+  prodcd: '200', iogbn: '200', remark: '', sts: 'N'
 })
 
-const deptOptions = ref<any[]>([]); const whOptions = ref<any[]>([])
-const closingInfo = reactive({ clsymd: '', sclsym: '' })
+const displayIoNo = computed(() => (!form_02.iono || form_02.iono === '0000') ? '' : `${form_02.ioym}-${form_02.iono}`)
 
-// 포맷팅 헬퍼
-const ioym_f = computed({ get: () => masterData.ioym ? `${masterData.ioym.substring(0, 4)}-${masterData.ioym.substring(4, 6)}` : '', set: (v) => { if (v) masterData.ioym = v.replace(/-/g, '') } })
-const ioymd_f = computed({ get: () => formatDate(masterData.ioymd), set: (v) => { if (v) masterData.ioymd = v.replace(/-/g, '') } })
+const closingInfo = reactive({ sclsym: '' })
+const owhcdData = ref<any[]>([])
+const iwhcdData = ref<any[]>([])
+const lineOptions = ref<any[]>([])
+const progOptions = ref<any[]>([])
 
-const tableRef = ref<HTMLDivElement | null>(null)
-let grid: Tabulator | null = null
+const tableRef1 = ref<HTMLDivElement | null>(null)
+const tableRef2 = ref<HTMLDivElement | null>(null)
+let grid1: Tabulator | null = null
+let grid2: Tabulator | null = null
 
-// [2] 그리드 초기화
+const isClosed = computed(() => {
+  if (!closingInfo.sclsym || !form_02.outymd) return false
+  return form_02.outymd.replace(/-/g, '').substring(0, 6) <= closingInfo.sclsym
+})
+
 const initGrids = () => {
-  grid = new Tabulator(tableRef.value!, {
-    layout: "fitColumns", height: "100%", placeholder: "데이터 없음", selectable: true,
+  grid1 = new Tabulator(tableRef1.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "데이터 없음", selectable: 1,
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center", headerSort: false },
+      { title: "출고일자", field: "outymd", hozAlign: "center", width: 100, headerSort: false, formatter: (c) => formatDate(c.getValue()) },
+      { title: "출고번호", field: "iono_full", hozAlign: "center", width: 110, cssClass: "fw-bold text-primary", headerSort: false },
+      { title: "출고부서", field: "odeptnm", hozAlign: "left", headerSort: false }
+    ],
+  });
+  grid1.on("rowClick", (e, row) => fetchDetail(row.getData()));
+
+  grid2 = new Tabulator(tableRef2.value!, {
+    layout: "fitColumns", height: "100%", placeholder: "품목 없음", selectable: true,
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       { title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection" },
@@ -151,146 +229,65 @@ const initGrids = () => {
           if (v === '삭제') return '<span class="badge bg-danger">삭제</span>';
           return '';
       }},
-      { title: "자재코드", field: "itemcd", width: 120, hozAlign: "center" },
-      { title: "자재명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary', cellClick: (e, cell) => handleOpenHelp('ITEM', cell.getRow()) },
-      { title: "규격", field: "itsize", width: 180 },
-      { title: "단위", field: "unit", width: 70, hozAlign: "center" },
-      { title: "출고수량", field: "ioqty", width: 150, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow fw-bold",
-        cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
+      { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: 'fw-bold text-primary',
+        cellClick: (e, cell) => { if(!isClosed.value) handleOpenHelp('ITEM', cell.getRow()) }
       },
-      { title: "비고", field: "remark", minWidth: 200, editor: "input",
-        cellEdited: (cell) => { const d = cell.getData(); if (d._state === 'EXIST') cell.getRow().update({ _status: '수정' }); }
-      },
-      { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => handleRowAction(cell.getRow()) }
-    ],
+      { title: "규격", field: "itsize", width: 150 },
+      { title: "단위", field: "unit", width: 80, hozAlign: "center" },
+      { title: "수량", field: "ioqty", width: 100, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 }, cellEdited: (cell) => calcRow(cell.getRow()) },
+      { title: "삭제", width: 40, hozAlign: "center", formatter: () => "<i class='bi bi-trash text-danger'></i>",
+        cellClick: (e, cell) => handleRowAction(cell.getRow())
+      }
+    ]
   });
 }
 
-// [3] 비즈니스 로직
-const fetchDeptOptions = async () => {
-  try {
-    const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'D0', cmpycd: authStore.cmpycd });
-    deptOptions.value = res.data.map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm }));
-  } catch (e) {}
+const calcRow = (row: any) => {
+  const d = row.getData();
+  if (d._state === 'EXIST' && d._status !== '삭제') row.update({ _status: '수정' });
 }
 
-const fetchWhOptions = async () => {
-  try {
-    const res = await api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } });
-    whOptions.value = res.data.map((i: any) => ({ whcd: i.whcd, whnm: i.whnm }));
-  } catch (e) {}
-}
-
-async function fetchMaster() {
-  if (!masterData.deptcd || !masterData.ioym || !masterData.iono) return vAlertError('조회 조건을 확인하세요.');
-  try {
-    const res = await api.post('/api/hpio/HPIO_500U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono, deptcd: masterData.deptcd });
-    if (res.data?.length) {
-      Object.assign(masterData, res.data[0]);
-      fetchDetails();
-    } else vAlert('데이터가 없습니다.');
-  } catch (e) { vAlertError('조회 실패'); }
-}
-
-async function fetchDetails() {
-  try {
-    const res = await api.post('/api/hpio/HPIO_501U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, iogbn: '200', ioym: masterData.ioym, iono: masterData.iono });
-    grid?.setData(res.data.map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
-  } catch (e) {}
-}
-
-async function saveData() {
-  const ioYmd = masterData.ioymd.replace(/-/g, '')
-  if (ioYmd <= closingInfo.clsymd) return vAlertError('회계 마감된 일자입니다.');
-
-  const details = grid?.getData().filter((r: any) => r._status) || [];
-  if (!details.length && !masterData.iono) return vAlertError('출고할 자재를 추가하세요.');
-
-  if (!confirm('저장하시겠습니까?')) return
-
-  try {
-    const actkind = !masterData.iono ? 'A' : 'U'
-    // 🚀 [Seed-Model] Step 1. 마스터 저장
-    const resM = await api.post('/api/hpio/HPIO_500U_STR', { ...masterData, actkind, cmpycd: authStore.cmpycd, iogbn: '200', linecd: '010', progcd: '888', userid: authStore.userid });
-    const mstData = resM.data?.[0];
-
-    // 🚀 [Seed-Model] Step 2. 무결성 키 추출 (0번: 상태/년월, 1번: 메시지/번호)
-    const rowValues = mstData?.returnkeyvalue || Object.values(mstData || {});
-    const key1 = (mstData?.ioym || rowValues[0] || '').toString().trim();
-    const key2 = (mstData?.iono || rowValues[1] || '').toString().trim();
-
-    // 🚀 [Seed-Model] Step 3. 에러 판별
-    if (key1 === '000000') {
-        throw new Error(key2 || '업무 규칙 위반으로 저장할 수 없습니다.');
-    }
-
-    if (!key1 || !key2) {
-        throw new Error('입출 번호를 서버로부터 수신하지 못했습니다. (Data Integrity Error)');
-    }
-
-    // 🚀 [Seed-Model] Step 4. 상세 내역 연결 저장 (A0 루프)
-    const newIono = key2;
-    const newInno = mstData?.inno || rowValues[2] || ''; // 입고번호가 있다면 추출
-
-    for (const item of details) {
-      const act = item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U');
-      const resDtl = await api.post('/api/hpio/HPIO_501U_STR', {
-        ...item, actkind: act, cmpycd: authStore.cmpycd, iogbn: '200',
-        ioym: key1, iono: newIono, inno: newInno,
-        deptcd: masterData.deptcd, whcd: masterData.whcd, iwhcd: masterData.iwhcd,
-        ioymd: masterData.ioymd, userid: authStore.userid
-      });
-
-      // 상세 저장 결과도 무결성 체크
-      const dtlValues = resDtl.data?.[0]?.returnkeyvalue || Object.values(resDtl.data?.[0] || {});
-      if (dtlValues[0] === '000000') {
-          throw new Error(dtlValues[1] || '상세 내역 저장 중 오류 발생');
-      }
-    }
-
-    vAlert('저장되었습니다.');
-    masterData.iono = newIono;
-    fetchMaster();
-  } catch (e: any) { vAlertError(e.message || '저장 실패'); }
-}
-
-async function deleteData() {
-  if (!confirm('현재 이관 내역 전체를 삭제하시겠습니까?')) return
-  try {
-    await api.post('/api/hpio/HPIO_500U_STR', { ...masterData, actkind: 'D', cmpycd: authStore.cmpycd, iogbn: '200', linecd: '010', progcd: '888' });
-    vAlert('삭제되었습니다.'); initialize();
-  } catch (e) { vAlertError('삭제 실패'); }
-}
+const modalVisible = ref(false)
+const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 const handleOpenHelp = (type: string, target?: any) => {
-  const props: any = {
-    title: '',
-    path: '',
-    data: { cmpycd: authStore.cmpycd },
-    columns: [],
-    onConfirm: () => {}
+  if (isClosed.value) return;
+  switch (type) {
+    case 'ODEPT':
+      Object.assign(modalProps, {
+        title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, codenm: form_02.odeptnm },
+        columns: [{ title: '코드', field: 'deptcd', width: 100 }, { title: '부서명', field: 'deptnm', width: 200 }],
+        onConfirm: (d: any) => { form_02.odeptcd = d.deptcd; form_02.odeptnm = d.deptnm }
+      }); modalVisible.value = true;
+      break;
+    case 'IDEPT':
+      Object.assign(modalProps, {
+        title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, codenm: form_02.ideptnm },
+        columns: [{ title: '코드', field: 'deptcd', width: 100 }, { title: '부서명', field: 'deptnm', width: 200 }],
+        onConfirm: (d: any) => { form_02.ideptcd = d.deptcd; form_02.ideptnm = d.deptnm }
+      }); modalVisible.value = true;
+      break;
+    case 'ITEM':
+      Object.assign(modalProps, {
+        title: '품목 선택',
+        path: '/api/hp00/HP00_000S_STR',
+        defaultField: 'itemnm',
+        data: { gubun: 'I1', cmpycd: authStore.cmpycd, gbncd: 'A', code: '', remark: '' },
+        columns: [
+          { title: '품목코드', field: 'itemcd', width: 100, hozAlign: 'center' },
+          { title: '품목명', field: 'itemnm', width: 200 },
+          { title: '규격', field: 'itsize', width: 150 },
+          { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
+        ],
+        onConfirm: (d: any) => {
+          target.update({
+            itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit || 'EA',
+            ioqty: 1, _status: '입력', _state: 'NEW'
+          });
+        }
+      }); modalVisible.value = true;
+      break;
   }
-
-  if (type === 'ITEM') {
-    props.title = '이관 자재 선택'
-    props.path = '/api/hp00/HP00_000S_STR'
-    props.data.gubun = 'I0'
-    props.data.etcval = 'A' // 자재(I) 필터
-    props.columns = [
-      { title: '자산구분', field: 'astkindnm', width: 100, hozAlign: 'center' },
-      { title: '자재코드', field: 'itemcd', width: 100, hozAlign: 'center' },
-      { title: '자재명', field: 'itemnm', width: 200 },
-      { title: '규격', field: 'itsize', width: 150 },
-      { title: '단위', field: 'unit', width: 80, hozAlign: 'center' }
-    ]
-    props.onConfirm = (d: any) => target.update({
-      itemcd: d.itemcd, itemnm: d.itemnm, itsize: d.itsize, unit: d.unit,
-      _status: '입력', _state: 'NEW'
-    })
-  }
-
-  Object.assign(modalProps, props)
-  modalVisible.value = true
 }
 
 const handleRowAction = (row: any) => {
@@ -299,27 +296,139 @@ const handleRowAction = (row: any) => {
   else row.update({ _status: d._status === '삭제' ? '' : '삭제' });
 }
 
-const addRow = () => grid?.addRow({ ioqty: 0, _status: '입력', _state: 'NEW' }, true);
-const deleteSelectedRows = () => grid?.getSelectedRows().forEach(r => handleRowAction(r));
+async function search() {
+  try {
+    const res = await api.post('/api/hpio/HPIO_500U_STR', {
+      actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '200',
+      fromdt: form_01.fromdt.replace(/-/g, ''),
+      todt: form_01.todt.replace(/-/g, ''),
+      owhcd: form_01.owhcd
+    });
+    const data = (res.data || []).map((row: any) => ({
+      ...row,
+      iono_full: row.ioym && row.iono ? `${row.ioym}-${row.iono}` : ''
+    }));
+    grid1?.setData(data);
+    vAlert('조회되었습니다.');
+  } catch (e) { vAlertError('조회 실패'); }
+}
 
-const initialize = () => {
-  resetForm(masterData);
-  Object.assign(masterData, { cmpycd: authStore.cmpycd, deptcd: authStore.deptcd, ioym: today.replace(/-/g, '').substring(0, 6), iono: '', ioymd: today.replace(/-/g, ''), whcd: '200', iwhcd: '100' });
-  grid?.clearData();
+async function fetchDetail(row: any) {
+  const fYmd = (d: string) => d && d.length === 8 ? `${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6, 8)}` : today;
+  Object.assign(form_02, { ...row, outymd: fYmd(row.outymd) });
+  if (row.linecd) onLineChange(); // 하위 공정 로드
+
+  try {
+    const res = await api.post('/api/hpio/HPIO_501U_STR', {
+      actkind: 'S0', cmpycd: authStore.cmpycd, iogbn: '200',
+      ioym: row.ioym, ono: row.iono
+    });
+    grid2?.setData((res.data || []).map((i: any) => ({ ...i, _state: 'EXIST', _status: '' })));
+  } catch (e) { vAlertError('상세 로드 실패'); }
+}
+
+async function save() {
+  if (isClosed.value) return vAlertError('마감된 월입니다.');
+  if (!form_02.odeptcd || !form_02.owhcd || !form_02.ideptcd || !form_02.iwhcd) return vAlertError('출고/입고 부서와 창고를 확인하세요.');
+
+  const details = grid2?.getData().filter(r => r._status) || [];
+  if (!details.length && (!form_02.iono || form_02.iono === '0000')) return vAlertError('항목을 추가하세요.');
+
+  const targetIoym = form_02.outymd.replace(/-/g, '').substring(0, 6);
+
+  try {
+    // 마스터 저장
+    const mstPayload = {
+      ...form_02,
+      actkind: !form_02.iono || form_02.iono === '0000' ? 'A0' : 'U0',
+      ioym: targetIoym,
+      outymd: form_02.outymd.replace(/-/g, ''),
+      updemp: authStore.userid
+    };
+
+    // 이관출고는 보통 통합 저장 API가 필요하나, 없으면 루프 처리
+    const resMst = await api.post('/api/hpio/HPIO_500U_STR', mstPayload);
+    const mstResult = resMst.data?.[0];
+    const iono = mstResult?.iono || form_02.iono;
+
+    for (const item of details) {
+      await api.post('/api/hpio/HPIO_501U_STR', {
+        ...item,
+        actkind: item._status === '입력' ? 'A0' : (item._status === '삭제' ? 'D0' : 'U0'),
+        cmpycd: authStore.cmpycd, iogbn: '200', ioym: targetIoym, ono: iono,
+        linecd: form_02.linecd, progcd: form_02.progcd,
+        odeptcd: form_02.odeptcd, owhcd: form_02.owhcd,
+        ideptcd: form_02.ideptcd, iwhcd: form_02.iwhcd,
+        ioymd: form_02.outymd.replace(/-/g, ''),
+        updemp: authStore.userid
+      });
+    }
+
+    vAlert('저장되었습니다.'); search();
+  } catch (e) { vAlertError('저장 실패'); }
+}
+
+const fetchWhOptions = async () => {
+  try {
+    const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'W0', cmpycd: authStore.cmpycd });
+    owhcdData.value = res.data; iwhcdData.value = res.data;
+  } catch (e) {}
+}
+
+const fetchLineOptions = async () => {
+  try {
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'L0', cmpycd: authStore.cmpycd, gbncd: 'Y' } });
+    lineOptions.value = res.data;
+  } catch (e) {}
+}
+
+const onLineChange = async () => {
+  if (!form_02.linecd) { progOptions.value = []; return; }
+  try {
+    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'G0', cmpycd: authStore.cmpycd, gbncd: form_02.linecd } });
+    progOptions.value = res.data;
+  } catch (e) {}
+}
+
+function addRow() {
+  if (isClosed.value) return;
+  grid2?.addRow({ ioqty: 1, _status: '입력', _state: 'NEW' }, true);
+}
+
+function deleteSelectedRows() {
+  grid2?.getSelectedRows().forEach(row => handleRowAction(row));
+}
+
+function initialize() {
+  resetForm(form_02);
+  Object.assign(form_02, {
+    cmpycd: authStore.cmpycd, ioym: '', iono: '0000', outymd: today,
+    odeptcd: authStore.deptcd, odeptnm: authStore.deptnm, owhcd: '100',
+    ideptcd: '', ideptnm: '', iwhcd: '100', prodcd: '200', iogbn: '200', sts: 'N'
+  });
+  grid1?.clearData(); grid2?.clearData();
+}
+
+async function handleFullDelete() {
+  if (!confirm('정말 전체 삭제하시겠습니까?')) return;
+  try {
+    await api.post('/api/hpio/HPIO_500U_STR', { ...form_02, actkind: 'D0' });
+    vAlert('삭제되었습니다.'); initialize(); search();
+  } catch (e) { vAlertError('삭제 실패'); }
 }
 
 const formatDate = (v: any) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v;
 
 onMounted(async () => {
-  await fetchDeptOptions(); await fetchWhOptions();
-  api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } }).then(r => {
-    if (r.data?.length) { closingInfo.clsymd = r.data[0].clsymd; closingInfo.sclsym = r.data[0].sclsym; }
-  })
   nextTick(initGrids);
+  fetchWhOptions();
+  fetchLineOptions();
+  api.post('/api/hp00/HP00_000S_STR', { gubun: 'CL', cmpycd: authStore.cmpycd }).then(r => { if(r.data?.length) closingInfo.sclsym = r.data[0].sclsym; });
+  initialize();
 })
 </script>
 
 <style scoped>
-.tabulator-instance { width: 100% !important; background-color: #fff; }
-.grid-container-right { border-bottom: 3px solid #005a9f !important; }
+.tabulator-instance { width: 100% !important; background-color: #fff; font-size: 12px; }
+.grid-container-left, .grid-container-right { border-bottom: 3px solid #005a9f !important; }
 </style>

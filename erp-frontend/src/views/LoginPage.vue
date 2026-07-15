@@ -116,8 +116,8 @@ const login = async () => {
 			alert('서버가 꺼져있거나 응답하지 않습니다.')
 			return
 		}
-		// 백엔드 응답이 소문자 표준화되었으므로 e.response.data.message 등을 확인
-		const errorMsg = e.response?.data?.message || e.message || '로그인에 실패했습니다.';
+		// 💡 실제 에러 메시지(예: "비밀번호가 틀립니다")를 그대로 표시
+		const errorMsg = e.message || '로그인에 실패했습니다.';
 		alert(errorMsg)
 	}
 }

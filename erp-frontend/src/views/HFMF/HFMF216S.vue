@@ -80,6 +80,7 @@ import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
+import * as XLSX from 'xlsx'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
@@ -125,13 +126,19 @@ async function search() {
   } catch (e) { vAlertError('조회 실패') }
 }
 
-const excel = () => grid?.download("xlsx", `제조원가명세서_${searchForm.yy}${searchForm.mm}.xlsx`)
+// const excel = () => grid?.download("xlsx", `제조원가명세서_${searchForm.yy}${searchForm.mm}.xlsx`)
+const excel = () => {
+    if (!grid) return v_alert_error('조회된 데이터가 없습니다.')
+    grid.download("xlsx", `제조원가명세서_$_${searchform.yy}_${searchform.mm}.xlsx`, { sheetName: '제조원가명세서' })
+}
+
 const print = () => {
   const params = `yy=${searchForm.yy}&mm=${searchForm.mm}&PRTGU=1`
   window.open(`/api/hfmf/HFMF_216P?${params}`, 'CostStatement', 'width=1000,height=800,scrollbars=yes')
 }
 
 onMounted(() => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX;
   nextTick(() => {
     initGrids();
     search();

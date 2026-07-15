@@ -99,6 +99,7 @@
 import { reactive, ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
@@ -247,6 +248,7 @@ onUnmounted(() => {
 });
 
 onMounted(() => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX;
   api.get('/api/ha00/HA00_00P_STR', { params: { gubun: 'SD', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' } }).then(r => {
     console.log(r.data);
     empOptions.value = r.data.map((i: any) => ({

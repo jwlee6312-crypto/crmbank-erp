@@ -78,10 +78,28 @@ public class HpioController {
                                 else if (i == 3) colName = "rtn_msg";
                             }
 
-                            if (proc.equals("HPIO_340U_STR") || proc.equals("HPIO_341U_STR")) {
+                            if (proc.equals("HPIO_340U_STR")) {
                                 if (i == 1) colName = "outym";
                                 else if (i == 2) colName = "outno";
-                                else if (i == 3) colName = proc.equals("HPIO_340U_STR") ? "inno" : "iorowno";
+                                else if (i == 3) colName = "inno";
+                            }
+                            if (proc.equals("HPIO_110U_STR")) {
+                                if (i == 1) colName = "jsanym";
+                                else if (i == 2) colName = "jsanno";
+                            }
+                            if (proc.equals("HPIO_500U_STR")) {
+                                if (i == 1) colName = "ioym";
+                                else if (i == 2) colName = "iono";
+                                else if (i == 3) colName = "inno";
+                            }
+                            if (proc.equals("HPIO_510U_STR")) {
+                                if (i == 1) colName = "ioym";
+                                else if (i == 2) colName = "iono";
+                                else if (i == 3) colName = "ino";
+                            }
+                            if (proc.equals("HPIO_520U_STR")) {
+                                if (i == 1) colName = "ioym";
+                                else if (i == 2) colName = "iono";
                             }
                         }
                         if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
@@ -94,6 +112,7 @@ public class HpioController {
                 log.info("🎯 [succ] data: {}", result);
             } else {
                 switch (proc) {
+                    case "HPIO_110U_STR": result = hpioMapper.HPIO_110U_STR(params); break;
                     case "HPIO_200U_STR": result = hpioMapper.HPIO_200U_STR(params); break;
                     case "HPIO_210U_STR": result = hpioMapper.HPIO_210U_STR(params); break;
                     case "HPIO_230S_STR": result = hpioMapper.HPIO_230S_STR(params); break;

@@ -78,6 +78,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -151,6 +152,7 @@ function openHelp(type: string) {
 }
 
 onMounted(() => {
+	if (typeof window !== 'undefined') (window as any).XLSX = XLSX
 	if (mainGridRef.value) {
 		const monthCols = Array.from({ length: 12 }, (_, i) => ({
 			title: `${i + 1}월`, field: `M${i + 1}`, widthGrow: 1, hozAlign: "right",

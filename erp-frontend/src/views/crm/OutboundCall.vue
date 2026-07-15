@@ -10,7 +10,7 @@
           <div class="card-body p-3 bg-light">
             <div class="mb-3">
               <label class="form-label small fw-bold">내 내선 정보</label>
-              <div class="badge bg-primary d-block p-2">내선: {{ authStore.extension || '미지정' }} ({{ authStore.userName }})</div>
+              <div class="badge bg-primary d-block p-2">내선: {{ authStore.inner_no || '미지정' }} ({{ authStore.usernm }})</div>
             </div>
 
             <label class="form-label small fw-bold">캠페인 선택</label>
@@ -158,7 +158,7 @@ const filteredCustomerList = computed(() => customerList.value)
 const campaignScript = computed(() => campaigns.value[0].script)
 
 const makeCall = async (num: string) => {
-  const myExten = authStore.extension;
+  const myExten = authStore.inner_no;
   if (!myExten) return alert('내선 정보가 없습니다.');
 
   // 💡 새 전화 시 녹취 파일 정보 초기화
@@ -182,7 +182,7 @@ watch(() => ctiStore.isTalking, (talking) => {
 
 const handleHangup = async () => {
   isCalling.value = false;
-  const myExten = authStore.extension;
+  const myExten = authStore.inner_no;
   if (!myExten) return;
   try { await api.get(`/api/crm/cti/hangup?exten=${myExten}`) } catch (e) {}
 }

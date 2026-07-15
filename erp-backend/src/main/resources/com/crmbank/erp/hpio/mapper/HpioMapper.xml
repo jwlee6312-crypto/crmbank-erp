@@ -2,6 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.crmbank.erp.hpio.mapper.HpioMapper">
 
+    <!-- 외주가공비 정산  -->
+    <select id="HPIO_110U_STR" resultType="java.util.LinkedHashMap">
+        exec hpio_110u_str #{actkind}, #{cmpycd}, #{iogbn}, #{fromdt}, #{todt}, #{custcd},
+        #{deptcd}, #{ioym}, #{iono}, #{iorowno}, #{taxunit}, #{vattype},
+        #{jsanym}, #{jsanno}, #{jsanymd}, #{jsanamt}, #{jsanvat}, #{updemp}
+    </select>
+
     <!-- LOT 부여작업 -->
     <select id="HPIO_200U_STR" resultType="java.util.LinkedHashMap">
         exec hpio_200u_str #{actkind}, #{cmpycd}, #{linecd}, #{lotymd}, #{lotno},
@@ -47,6 +54,7 @@
         #{itsize}, #{unit}, #{price}, #{remark}, #{updemp}
     </select>
 
+    <!-- 외주가공 자재 소요량     -->
     <select id="HPIO_292U_STR" resultType="java.util.LinkedHashMap">
         exec hpio_292u_str #{actkind}, #{cmpycd}, #{pumym}, #{pumno}, #{itemcd},
         #{mitemcd}, #{mitsize}, #{munit}, #{soqty}, #{remark}, #{updemp}
@@ -70,7 +78,7 @@
         #{befprog}, #{astkind}, #{updemp}
     </select>
 
-    <!-- 외주가공출고 MASTER -->
+    <!-- 외주가공출고 MASTER proqty : 지시수량 -->
     <select id="HPIO_340U_STR" resultType="java.util.LinkedHashMap">
         exec hpio_340u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{iogbn}, #{outym}, #{outno},
         #{prodcd}, #{linecd}, #{progcd},
@@ -88,20 +96,17 @@
 
     <!-- 생산실적(외주가공) -->
     <select id="HPIO_350U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_350u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{proymd},
-        #{ordymd}, #{equpcd}, #{prodcd}, #{workjo}, #{wkgbn}, #{whcd},
-        #{itemcd}, #{itemcd_o}, #{custcd}, #{itsize}, #{unit}, #{prdqty},
-        #{godqty}, #{errqty}, #{errcd}, #{wonincd}, #{lotymd}, #{lotno},
-        #{workmm}, #{bigo}, #{outym}, #{outno}, #{outprice}, #{outamt},
-        #{outvat}, #{useyn}, #{updemp}
+        exec hpio_350u_str #{actkind}, #{cmpycd}, #{prodid}, #{linecd}, #{progcd}, #{custcd},
+        #{ordymd},  #{proymd}, #{equpcd}, #{prodcd}, #{wkgbn}, #{whcd},
+        #{itemcd}, #{itsize}, #{unit}, #{prdqty},  #{godqty}, #{errqty}, #{lotymd}, #{lotno},
+        #{workmm}, #{bigo}, #{outym}, #{outno}, #{useyn}, #{updemp}
     </select>
 
     <!-- 생산투입실적(외주가공) -->
     <select id="HPIO_351U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_351u_str #{actkind}, #{cmpycd}, #{linecd}, #{progcd}, #{proymd},
-        #{ordymd}, #{equpcd}, #{prodcd}, #{workjo}, #{wkgbn}, #{itemcd},
-        #{custcd}, #{mitemcd}, #{mitemcd_o}, #{mitsize}, #{munit}, #{whcd},
-        #{befprog}, #{astkind}, #{soqty}, #{inqty}, #{bigo}, #{useyn}, #{updemp}
+        exec hpio_351u_str #{actkind}, #{cmpycd}, #{prodid}, #{matlid},
+        #{mitemcd}, #{mitsize}, #{munit}, #{whcd},
+        #{befprog}, #{astkind}, #{soqty}, #{inqty}, #{useyn}, #{updemp}
     </select>
 
     <select id="HPIO_360S_STR" resultType="java.util.LinkedHashMap">
@@ -149,9 +154,9 @@
 
     <!-- 이관출고 MASTER -->
     <select id="HPIO_500U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_500u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono}, #{prodcd}, #{linecd}, #{progcd},
-        #{outymd}, #{odeptcd}, #{owhcd}, #{ocustcd}, #{itemcd}, #{itsize}, #{unit}, #{proqty}, #{proymd},
-        #{ideptcd}, #{iwhcd}, #{remark}, #{ordym}, #{ordno}, #{updemp}
+        exec hpio_500u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{iogbn}, #{ioym}, #{iono},
+        #{prodcd}, #{linecd}, #{progcd}, #{outymd}, #{odeptcd}, #{owhcd}, #{ocustcd}, #{itemcd},
+        #{itsize}, #{unit}, #{proqty}, #{proymd}, #{ideptcd}, #{iwhcd}, #{remark}, #{ordym}, #{ordno}, #{updemp}
     </select>
 
     <!-- 이관 출고내역 처리 -->
@@ -163,7 +168,7 @@
 
     <!-- 타계정출고 MASTER -->
     <select id="HPIO_510U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_510u_str #{actkind}, #{cmpycd}, #{iogbn}, #{ioym}, #{iono},
+        exec hpio_510u_str #{actkind}, #{cmpycd},#{fromdt}, #{todt}, #{iogbn}, #{ioym}, #{iono},
         #{ioymd}, #{iotype}, #{custcd}, #{deptcd}, #{whcd}, #{userid},
         #{inyn}, #{ino}, #{remark}, #{cfmyn}, #{updemp}
     </select>
@@ -178,7 +183,8 @@
 
     <!-- 재공타계정출고 MASTER -->
     <select id="HPIO_520U_STR" resultType="java.util.LinkedHashMap">
-        exec hpio_520u_str #{actkind}, #{cmpycd}, #{ioym}, #{iono}, #{ioymd}, #{linecd}, #{progcd}, #{remark}, #{updemp}
+        exec hpio_520u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{ioym}, #{iono}, #{ioymd},
+        #{linecd}, #{progcd}, #{remark}, #{updemp}
     </select>
 
     <!-- 재공 타계정 출고내역 처리 -->

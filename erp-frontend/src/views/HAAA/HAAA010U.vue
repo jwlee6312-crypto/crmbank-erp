@@ -22,8 +22,8 @@
 				<button class="btn-erp btn-search" @click="search">조회</button>
 				<button class="btn-erp btn-save" @click="save">저장</button>
 				<button class="btn-erp btn-delete" @click="deletedata" :disabled="formdata.actkind !== 'u1'">삭제</button>
-				<button class="btn-erp btn-excel" @click="excel">엑셀</button>
-				<button class="btn-erp btn-print" @click="print">인쇄</button>
+		<!--		<button class="btn-erp btn-excel" @click="excel">엑셀</button>
+				<button class="btn-erp btn-print" @click="print">인쇄</button> -->
 			</div>
 		</div>
 
@@ -109,6 +109,7 @@
 import { onMounted, reactive, ref, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useAlerts } from '@/composables/useAlerts'
@@ -195,6 +196,7 @@ function print() {
 }
 
 onMounted(async () => {
+	if (typeof window !== 'undefined') (window as any).XLSX = XLSX
 	if (groupgridelement.value) {
 		groupgrid = new Tabulator(groupgridelement.value, {
 			layout: 'fitColumns', height: '100%', selectable: 1,

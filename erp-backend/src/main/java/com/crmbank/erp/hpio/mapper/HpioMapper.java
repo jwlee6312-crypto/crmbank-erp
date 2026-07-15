@@ -6,6 +6,7 @@ import java.util.Map;
 
 @Mapper
 public interface HpioMapper {
+    List<Map<String, Object>> HPIO_110U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_200U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_210U_STR(Map<String, Object> params);
     List<Map<String, Object>> HPIO_230S_STR(Map<String, Object> params);

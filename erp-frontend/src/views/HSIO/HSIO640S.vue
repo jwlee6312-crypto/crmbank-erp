@@ -74,6 +74,7 @@ import { reactive, ref, onMounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
@@ -194,6 +195,7 @@ function print(type: string) {
 }
 
 onMounted(async () => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX;
   await fetchOptions()
   nextTick(() => initGrid())
 })

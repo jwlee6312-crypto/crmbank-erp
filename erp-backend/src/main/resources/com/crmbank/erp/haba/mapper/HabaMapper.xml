@@ -160,7 +160,8 @@
     </select>
 
     <select id="HABA_910U_STR" resultType="java.util.LinkedHashMap">
-        EXEC HABA_910U_STR #{actkind}, #{cmpycd}, #{userid}, #{usernm}, #{deptcd}, #{deptnm}, #{pw}, #{telno}, #{hpno}, #{email}, #{useyn}, #{userid}, #{pricegbn}
+        EXEC HABA_910U_STR #{actkind}, #{cmpycd}, #{userid}, #{usernm}, #{deptcd}, #{deptnm},
+        #{pw}, #{telno}, #{hpno}, #{email}, #{useyn}, #{userid}, #{pricegbn}, #{photo_path}, #{inner_no}
     </select>
 
     <select id="HABA_920U_STR" resultType="java.util.LinkedHashMap">
@@ -168,7 +169,7 @@
             #{actkind}, #{word},   #{cmpycd},   #{userid},      #{usernm},
             #{deptcd},  #{deptnm}, #{empno},    #{salsyn},      #{pw},
             #{telno},   #{hpno},   #{email},    #{sdept},       #{useyn},
-            #{usergrp}, #{updemp}, #{pricegbn}, #{positionoff}, #{inner_no}
+            #{usergrp}, #{updemp}, #{pricegbn}, #{positionoff}, #{inner_no}, #{photo_path}
     </select>
 
     <select id="HABA_935U_STR" resultType="java.util.LinkedHashMap">

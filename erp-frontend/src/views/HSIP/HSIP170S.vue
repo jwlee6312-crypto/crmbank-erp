@@ -202,20 +202,20 @@ onMounted(() => {
                 return `<span class='fw-bold text-primary'>[${data[0].itemcd}] ${data[0].itemnm}</span> <span class='ms-2 badge bg-light text-dark'>규격: ${data[0].itsize} | 입고수량: ${Number(data[0].inqty).toLocaleString()}</span>`;
             },
 			columns: [
+				{ title: '규격', field: 'itsize', width: 100 },
+				{ title: '단위', field: 'unit', hozAlign: 'center', width: 60 },
 				{ title: '비용명', field: 'costnm', widthGrow: 1.2, hozAlign: 'left', bottomCalc: () => 'POS 전체 합계' },
 				{
 					title: '단가', field: 'calc_price', hozAlign: 'right', width: 100,
 					formatter: (cell) => {
 						const d = cell.getData(); const amt = Number(d.costamt || 0); const qty = Number(d.inqty || 1);
-                        if (qty === 0) return '0.00';
+						if (qty === 0) return '0.00';
 						return (amt / qty).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 					}
 				},
 				{ title: '금액', field: 'costamt', hozAlign: 'right', width: 120, formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'fw-bold',
-                  bottomCalc: 'sum', groupCalc: 'sum' // 🚀 전체 합계 및 그룹 소계
-                },
-                { title: '규격', field: 'itsize', width: 120 },
-				{ title: '단위', field: 'unit', hozAlign: 'center', width: 60 }
+					bottomCalc: 'sum', groupCalc: 'sum' // 🚀 전체 합계 및 그룹 소계
+				}
 			]
 		})
 	}

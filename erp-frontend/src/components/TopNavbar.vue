@@ -22,18 +22,21 @@
       </li>
     </ul>
 
-    <!-- 사용자 정보 및 액션 영역 -->
-    <div class="d-flex align-items-center gap-3">
-      <div v-if="authStore.usernm" class="user-profile-box d-none d-lg-flex align-items-center">
-        <div class="avatar-icon">
-          <i class="bi bi-person-fill"></i>
-        </div>
-        <div class="user-text-info">
-          <span class="user-name">{{ authStore.usernm }}님</span>
-          <span class="user-dept">{{ authStore.deptnm }}</span>
-        </div>
-      </div>
+    <!-- 🚀 상단 액션 영역 (도움말 패널, 전체닫기) -->
+    <div class="d-flex align-items-center gap-2 pe-3">
+      <!-- 1. 전체닫기 버튼 -->
+      <button class="btn-navbar-tool" @click="closeAllTabs" title="모든 탭 닫기">
+        <i class="bi bi-x-square me-1"></i>전체닫기
+      </button>
 
+      <!-- 2. 도움말 버튼 (우측 패널 열기 방식) -->
+      <button class="btn-navbar-tool btn-help-highlight" @click="openManualPanel" title="현재 화면 도움말 열기">
+        <i class="bi bi-question-circle me-1"></i>도움말
+      </button>
+
+      <div class="vr mx-2 bg-white opacity-25" style="height: 20px;"></div>
+
+      <!-- 3. 로그아웃 버튼 -->
       <button class="btn-logout-custom" @click="logout">
         <i class="bi bi-power"></i>
         <span>로그아웃</span>
@@ -47,25 +50,42 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMenuStore } from '@/stores/menuStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useTabStore } from '@/stores/tabStore'
+import { useManualStore } from '@/stores/manualStore'
 
 const menuStore = useMenuStore()
 const authStore = useAuthStore()
+const tabStore = useTabStore()
+const manualStore = useManualStore()
 const router = useRouter()
 
 const headerMenus = computed(() => {
   if (!menuStore.topMenuItems) return []
   return menuStore.topMenuItems.map((item: any) => ({
-    codecd: item.codecd, // 💡 소문자 표준 적용
-    codenm: item.codenm  // 💡 소문자 표준 적용
+    codecd: item.codecd,
+    codenm: item.codenm
   }))
 })
 
-const selectTopMenu = async (codecd: string) => {
-  await menuStore.selectTopMenu(codecd)
-}
-
+const selectTopMenu = async (codecd: string) => { await menuStore.selectTopMenu(codecd) }
 const handleLogoClick = () => { router.push('/') }
 const logout = async () => { await authStore.logout() }
+
+/** 🚀 모든 탭 닫기 */
+const closeAllTabs = () => {
+  if (confirm('열려있는 모든 탭을 닫으시겠습니까?')) {
+    tabStore.closeAllTabs()
+    window.location.href = '/'
+  }
+}
+
+/** 🚀 우측 패널 도움말 열기 (기존 방식 유지) */
+const openManualPanel = () => {
+  const activeId = tabStore.activeTabId
+  if (!activeId) return alert('도움말을 보려면 프로그램을 먼저 선택하세요.')
+  // manualStore를 사용하여 우측 슬라이딩 패널을 엽니다.
+  manualStore.open(activeId)
+}
 </script>
 
 <style scoped>
@@ -77,10 +97,25 @@ const logout = async () => { await authStore.logout() }
 .logo-subtitle { font-size: 0.55rem; color: rgba(255, 255, 255, 0.7); margin-top: 2px; font-weight: 600; }
 .custom-menu .nav-link { color: rgba(255, 255, 255, 0.8) !important; font-size: 1rem; font-weight: 600; padding: 0.5rem 1.5rem !important; }
 .custom-menu .nav-link:hover, .custom-menu .nav-link.active { color: #ffffff !important; }
-.user-profile-box { background: rgba(255, 255, 255, 0.1); padding: 5px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); gap: 10px; }
-.avatar-icon { width: 32px; height: 32px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #005a9f; }
-.user-text-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
-.user-name { color: #fff; font-size: 0.9rem; font-weight: 700; }
-.user-dept { color: rgba(255, 255, 255, 0.7); font-size: 0.7rem; font-weight: 500; }
+
+/* 🚀 상단 툴 버튼 스타일 */
+.btn-navbar-tool {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-navbar-tool:hover { background: rgba(255, 255, 255, 0.2); border-color: #ffc107; }
+
+/* 🚀 도움말 버튼 강조 (노란색 텍스트 포인트) */
+.btn-help-highlight { color: #ffc107; border-color: rgba(255, 193, 7, 0.3); }
+.btn-help-highlight:hover { border-color: #ffc107; background: rgba(255, 193, 7, 0.1); }
+
 .btn-logout-custom { display: flex; align-items: center; gap: 8px; background: transparent; border: 1px solid #ffc107; color: #ffc107; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.btn-logout-custom:hover { background: #ffc107; color: #005a9f; }
 </style>

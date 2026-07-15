@@ -14,7 +14,7 @@
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="fetchList">조회</button>
         <button class="btn-erp btn-print" @click="print">인쇄</button>
-        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
+        <button class="btn-erp btn-excel" @click="excel"></button>
       </div>
     </div>
 
@@ -92,6 +92,7 @@
 import { reactive, ref, onMounted, computed, nextTick, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import * as XLSX from 'xlsx'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 import { useAlerts } from '@/composables/useAlerts'
@@ -234,6 +235,7 @@ onUnmounted(() => {
 });
 
 onMounted(() => {
+  if (typeof window !== 'undefined') (window as any).XLSX = XLSX;
   nextTick(() => {
     initGrid();
     fetchList();

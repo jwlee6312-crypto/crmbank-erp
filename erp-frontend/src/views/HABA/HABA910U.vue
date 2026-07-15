@@ -2,12 +2,12 @@
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="erp-container">
+	<div class="erp-container d-flex flex-column h-100 bg-white">
 		<!-- 🚀 1. 상단 액션 바 -->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom shadow-sm bg-white py-1">
+		<div class="erp-header d-flex justify-content-between align-items-center border-bottom shadow-sm bg-white py-1 flex-shrink-0">
 			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 13px;">
 				<i class="bi bi-person-badge-fill me-2 text-primary"></i>
-				기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				시스템관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
 				<span class="text-primary fw-bolder">개인정보 관리 (HABA910U)</span>
 			</div>
 			<div class="btn-group-erp pe-2">
@@ -16,162 +16,219 @@
 			</div>
 		</div>
 
-		<!-- 💡 메인 컨텐츠 영역 (섹션 간 확실한 간격 확보: gap-3) -->
-		<div class="flex-grow-1 overflow-hidden d-flex flex-column gap-3 p-3">
-
-			<!-- 🔍 2. 상단 검색/정보 바 섹션 (패턴 통일) -->
-
-
-			<!-- 💡 3. 상세 정보 수정 카드 (2열 고밀도 밸런스 레이아웃) -->
-			<div class="card border-0 shadow-sm overflow-hidden flex-shrink-0" style="max-width: 1000px;">
-				<div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center">
-					<i class="bi bi-pencil-square me-2 text-secondary"></i>
-					<span class="fw-bold small text-dark">사용자 프로필 수정</span>
+		<!-- 💡 메인 컨텐츠 영역 -->
+		<div class="flex-grow-1 overflow-auto p-3 bg-light">
+			<div class="card border-0 shadow-sm overflow-hidden mx-auto" style="max-width: 900px;">
+				<div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+					<span class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>내 프로필 정보 수정</span>
+					<span class="badge bg-primary-subtle text-primary border-0 px-2" style="font-size: 10px;">사용자 본인 전용</span>
 				</div>
-				<div class="card-body p-3 bg-white">
-					<table class="erp-table-full border">
-						<colgroup>
-							<col style="width: 130px;" /><col />
-							<col style="width: 130px;" /><col />
-						</colgroup>
-						<tbody>
-							<tr>
-								<th>아이디</th>
-								<td>
-									<input v-model="formData.userid" type="text" class="form-control bg-light fw-bold text-primary text-center" readonly />
-								</td>
-								<th class="required">성    명</th>
-								<td>
-									<input v-model="formData.usernm" type="text" class="form-control" placeholder="성함 입력" />
-								</td>
-							</tr>
-							<tr>
-								<th class="required">비밀번호</th>
-								<td>
-									<input v-model="formData.pw" type="password" class="form-control" placeholder="변경할 비밀번호" />
-								</td>
-								<th class="required">비밀번호 확인</th>
-								<td>
-									<input v-model="formData.pw_c" type="password" class="form-control" placeholder="비밀번호 재입력" />
-								</td>
-							</tr>
-							<tr>
-								<th>연락처(TEL)</th>
-								<td>
-									<input v-model="formData.telno" type="text" class="form-control text-center" />
-								</td>
-								<th>핸드폰(HP)</th>
-								<td>
-									<input v-model="formData.hpno" type="text" class="form-control text-center text-primary fw-bold" />
-								</td>
-							</tr>
-							<tr>
-								<th>이메일 주소</th>
-								<td colspan="3">
-									<input v-model="formData.email" type="email" class="form-control" placeholder="example@domain.com" />
-								</td>
-							</tr>
-							<tr>
-								<th class="required">소속부서</th>
-								<td>
-									<div class="input-group input-group-sm flex-nowrap">
-										<input v-model="formData.deptcd" type="text" class="form-control bg-light text-center" style="max-width: 70px;" readonly />
-										<input v-model="formData.deptnm" type="text" class="form-control" readonly />
-										<button class="btn btn-outline-secondary px-2" disabled><i class="bi bi-lock-fill"></i></button>
-									</div>
-								</td>
-								<th>단가관리 권한</th>
-								<td>
-									<select v-model="formData.pricegbn" class="form-select">
-										<option value="1">공급가의 단가</option>
-										<option value="2">(공급가+부가세)의 단가</option>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<th class="border-bottom-0">사용여부</th>
-								<td colspan="3" class="border-bottom-0">
-									<div class="form-check form-switch m-0 d-flex align-items-center h-100">
-										<input v-model="formData.useyn" class="form-check-input mt-0" type="checkbox" true-value="Y" false-value="N" disabled>
-										<label class="form-check-label ms-2 small fw-bold text-secondary">정상 사용 중 (관리자 설정)</label>
-									</div>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+				<div class="card-body p-4 bg-white">
+					<div class="row g-4">
+						<!-- 📸 좌측: 사진 업로드 섹션 -->
+						<div class="col-md-3 text-center border-end pe-4">
+							<div class="profile-photo-wrapper mx-auto position-relative shadow-sm bg-light rounded border overflow-hidden" style="width: 150px; height: 180px;">
+								<img :src="profileImageSrc" class="w-100 h-100 object-fit-cover" :style="{ opacity: isUploading ? 0.3 : 1 }" alt="Profile" />
 
-					<!-- 안내 영역 -->
-					<div class="mt-4 p-3 rounded bg-light border-start border-4 border-primary">
-						<h6 class="fw-bold small mb-2"><i class="bi bi-info-circle-fill me-1 text-primary"></i> 정보 수정 안내</h6>
-						<ul class="mb-0 small text-secondary list-unstyled">
-							<li class="mb-1">· 비밀번호는 영문, 숫자 조합으로 4자 이상 설정을 권장합니다.</li>
-							<li class="mb-1">· 부서 정보 및 사용 여부는 시스템 관리자만 변경할 수 있습니다.</li>
-							<li>· 변경된 정보는 <strong>다음 로그인 시점</strong>부터 모든 시스템에 적용됩니다.</li>
-						</ul>
+								<div v-if="isUploading" class="position-absolute top-50 start-50 translate-middle text-primary">
+									<div class="spinner-border spinner-border-sm"></div>
+								</div>
+
+								<label v-if="!isUploading" class="photo-edit-btn position-absolute bottom-0 end-0 bg-primary text-white d-flex align-items-center justify-content-center shadow" style="width: 32px; height: 32px; cursor: pointer; border-radius: 4px 0 0 0;">
+									<i class="bi bi-camera-fill"></i>
+									<input type="file" class="d-none" @change="handleImageUpload" accept="image/*" />
+								</label>
+							</div>
+							<div class="mt-3">
+								<div class="fw-bold text-dark mb-1">{{ formData.usernm || '사용자' }}</div>
+								<div class="text-muted extra-small">{{ formData.userid }}</div>
+								<button class="btn btn-xs btn-outline-secondary mt-3 w-100" @click="triggerFileUpload" :disabled="isUploading">
+									<i class="bi bi-upload me-1"></i>사진 변경
+								</button>
+							</div>
+						</div>
+
+						<!-- 📝 우측: 정보 입력 섹션 -->
+						<div class="col-md-9">
+							<table class="erp-table-dense w-100">
+								<colgroup>
+									<col style="width: 120px;" /><col />
+									<col style="width: 120px;" /><col />
+								</colgroup>
+								<tbody>
+									<tr>
+										<th class="bg-light">아이디</th>
+										<td><input v-model="formData.userid" type="text" class="form-control form-control-sm bg-light fw-bold text-primary text-center" readonly /></td>
+										<th class="required bg-light">성 명</th>
+										<td><input v-model="formData.usernm" type="text" class="form-control form-control-sm" placeholder="성함 입력" /></td>
+									</tr>
+									<tr>
+										<th class="required bg-light">비밀번호</th>
+										<td><input v-model="formData.pw" type="password" class="form-control form-control-sm" placeholder="변경 시에만 입력" /></td>
+										<th class="required bg-light">비밀번호 확인</th>
+										<td><input v-model="formData.pw_c" type="password" class="form-control form-control-sm" placeholder="비밀번호 재입력" /></td>
+									</tr>
+									<tr>
+										<th class="bg-light">연락처(TEL)</th>
+										<td><input v-model="formData.telno" type="text" class="form-control form-control-sm text-center" /></td>
+										<th class="bg-light">핸드폰(HP)</th>
+										<td><input v-model="formData.hpno" type="text" class="form-control form-control-sm text-center text-primary fw-bold" /></td>
+									</tr>
+									<tr>
+										<th class="bg-light text-primary">내선번호</th>
+										<td><input v-model="formData.inner_no" type="text" class="form-control form-control-sm text-center fw-bold" placeholder="CTI 내선번호" /></td>
+										<th class="bg-light">이메일 주소</th>
+										<td><input v-model="formData.email" type="email" class="form-control form-control-sm" placeholder="example@domain.com" /></td>
+									</tr>
+									<tr>
+										<th class="bg-light">소속부서</th>
+										<td colspan="3">
+											<div class="input-group input-group-sm">
+												<input v-model="formData.deptnm" type="text" class="form-control bg-light" readonly />
+												<span class="input-group-text bg-light"><i class="bi bi-lock-fill small"></i></span>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+
+							<div class="mt-4 p-3 rounded bg-primary bg-opacity-10 border-start border-4 border-primary">
+								<h6 class="fw-bold small mb-2 text-primary"><i class="bi bi-info-circle-fill me-1"></i> 정보 수정 안내</h6>
+								<ul class="mb-0 extra-small text-secondary list-unstyled lh-base">
+									<li>· 비밀번호는 영문, 숫자 조합으로 4자 이상 설정을 권장합니다.</li>
+									<li>· 소속 부서 및 기본 권한 정보는 시스템 관리자만 변경 가능합니다.</li>
+									<li>· 사진을 변경하거나 정보를 수정한 후에는 반드시 상단의 <strong>[저장]</strong> 버튼을 눌러야 최종 반영됩니다.</li>
+								</ul>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
-			<div class="flex-grow-1"></div> <!-- 하단 여백용 -->
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive, ref, computed } from 'vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useAlerts } from '@/composables/useAlerts'
+import { API_URL } from '@/config/api'
 import AppAlert from '@/components/AppAlert.vue'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
+const isUploading = ref(false)
+const localImagePreview = ref('')
+
 const formData = reactive({
-	actkind: 'S1',
-	userid: authStore.userid,
-	usernm: authStore.usernm,
-	pw: '',
-	pw_c: '',
-	telno: '',
-	hpno: '',
-	email: '',
-	deptcd: '',
-	deptnm: '',
-	pricegbn: '1',
-	useyn: 'Y'
+	actkind: 'S1', cmpycd: authStore.cmpycd, userid: authStore.userid,
+	usernm: '', pw: '', pw_c: '', telno: '', hpno: '', email: '',
+	inner_no: '', deptcd: '', deptnm: '', pricegbn: '1', useyn: 'Y', photo_path: ''
+})
+
+const profileImageSrc = computed(() => {
+	if (localImagePreview.value) return localImagePreview.value
+	if (formData.photo_path) {
+		const baseUrl = API_URL || window.location.origin
+		if (formData.photo_path.startsWith('http') || formData.photo_path.startsWith('data:')) return formData.photo_path
+		return `${baseUrl}/api/comm/upload/display/${formData.photo_path}`
+	}
+	return '/img/default-avatar.png'
 })
 
 async function fetchInfo() {
 	try {
+        // 🚀 XML에 inner_no, photo_path가 추가되었으므로 모든 파라미터 키를 채워 보냅니다.
 		const res = await api.post('/api/haba/HABA_910U_STR', {
-			actkind: 'S1',
-			cmpycd: authStore.cmpycd,
-			userid: authStore.userid
+			actkind: 'S1', cmpycd: authStore.cmpycd, userid: authStore.userid,
+            usernm: '', deptcd: '', deptnm: '', pw: '', telno: '', hpno: '', email: '',
+            useyn: 'Y', pricegbn: '1', photo_path: '', inner_no: ''
 		})
 		if (res.data && res.data.length > 0) {
 			Object.assign(formData, res.data[0])
 			formData.pw_c = formData.pw
+			localImagePreview.value = ''
 		}
-	} catch (e) { vAlertError('개인 정보 로드 실패') }
+	} catch (e) {
+        console.error('❌ [HABA910U] Load Error:', e)
+        vAlertError('개인 정보 로드 실패. 서버 로그를 확인하세요.')
+    }
 }
 
 async function save() {
 	if (!formData.usernm) return vAlertError('성명을 입력하세요.')
-	if (formData.pw !== formData.pw_c) return vAlertError('비밀번호 확인이 일치하지 않습니다.')
+	if (formData.pw && formData.pw !== formData.pw_c) return vAlertError('비밀번호 확인이 일치하지 않습니다.')
 
 	try {
-		await api.post('/api/haba/HABA_910U_STR', {
+		const res = await api.post('/api/haba/HABA_910U_STR', {
 			...formData,
-			actkind: 'U1',
-			cmpycd: authStore.cmpycd,
-			userid: authStore.userid
+			actkind: 'U1'
 		})
-		vAlert('성공적으로 저장되었습니다.')
-		fetchInfo()
-	} catch (e) { vAlertError('저장 실패') }
+
+		const result = res.data?.[0] || {}
+		const isSuccess = String(result.result || result.res || '').toUpperCase() === 'OK'
+
+		if (isSuccess) {
+			vAlert('✅ 정보가 성공적으로 저장되었습니다.')
+			// Store 데이터 실시간 동기화
+			authStore.setUserInfo({
+				...authStore.$state,
+				usernm: formData.usernm,
+				photo_path: formData.photo_path,
+				email: formData.email,
+				inner_no: formData.inner_no
+			})
+			await fetchInfo()
+		} else {
+			vAlertError(result.msg || '저장 처리 중 오류가 발생했습니다.')
+		}
+	} catch (e) { vAlertError('저장 통신 실패') }
+}
+
+async function handleImageUpload(e: any) {
+	const file = e.target.files[0]
+	if (!file) return
+
+	const reader = new FileReader()
+	reader.onload = (event: any) => { localImagePreview.value = event.target.result }
+	reader.readAsDataURL(file)
+
+	isUploading.value = true
+	try {
+		const uploadFormData = new FormData()
+		uploadFormData.append('file', file)
+		uploadFormData.append('userid', formData.userid)
+		const res = await api.post('/api/comm/upload/profile', uploadFormData)
+		if (res.data?.filepath) {
+			formData.photo_path = res.data.filepath
+			vAlert('✅ 사진이 임시 업로드되었습니다. 저장 버튼을 눌러야 반영됩니다.')
+		}
+	} catch (e) {
+		vAlertError('❌ 사진 업로드 실패')
+		localImagePreview.value = ''
+	} finally {
+		isUploading.value = false
+	}
+}
+
+function triggerFileUpload() {
+	const input = document.querySelector('input[type="file"]') as HTMLInputElement
+	if (input) input.click()
 }
 
 onMounted(() => {
 	fetchInfo()
 })
 </script>
+
+<style scoped>
+.erp-container { font-family: 'Pretendard', sans-serif; letter-spacing: -0.02rem; }
+.extra-small { font-size: 11px; }
+.btn-xs { padding: 2px 8px; font-size: 11px; }
+.profile-photo-wrapper { transition: all 0.2s; border: 2px solid #fff; }
+.profile-photo-wrapper:hover { border-color: #0d6efd; }
+.photo-edit-btn:hover { background-color: #004a87 !important; }
+.erp-table-dense th { padding: 8px !important; }
+</style>
