@@ -116,7 +116,7 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 // [1] 데이터 모델링
 const currentYear = new Date().getFullYear()
 const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
-const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
+const yearOptions = Array.from({ length: 20 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({
@@ -141,13 +141,13 @@ const initGrids = () => {
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
-      { title: "부서명", field: "DEPTNM", hozAlign: "left", cssClass: "fw-bold text-primary" }
+      { title: "부서명", field: "deptnm", hozAlign: "left", cssClass: "fw-bold text-primary" }
     ],
   });
   deptGrid.on("rowClick", (e, row) => {
     const d = row.getData();
-    selectedDept.code = d.DEPTCD;
-    selectedDept.nm = d.DEPTNM;
+    selectedDept.code = d.deptcd;
+    selectedDept.nm = d.deptnm;
     fetchItems();
   });
 
@@ -161,17 +161,17 @@ const initGrids = () => {
           if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
           return '';
       }},
-      { title: "품목명", field: "ITEMNM", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-dark" },
-      { title: "규격", field: "ITSIZE", width: 120 },
-      { title: "단위", field: "UNIT", width: 60, hozAlign: "center" },
-      { title: "거래처", field: "CUSTNM", width: 180, hozAlign: "left" },
-      { title: "배부적수", field: "DIVRATE1", width: 110, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow",
+      { title: "품목명", field: "itemnm", minWidth: 200, widthGrow: 1, cssClass: "fw-bold text-dark" },
+      { title: "규격", field: "itsize", width: 120 },
+      { title: "단위", field: "unit", width: 60, hozAlign: "center" },
+      { title: "거래처", field: "custnm", width: 180, hozAlign: "left" },
+      { title: "배부적수", field: "divrate1", width: 110, hozAlign: "right", editor: "number", cssClass: "bg-light-yellow",
         cellEdited: (cell) => {
             cell.getRow().update({ _status: '수정' });
             calcRate();
         }
       },
-      { title: "배부율 (%)", field: "RATE1", width: 100, hozAlign: "right", formatter: (c) => Number(c.getValue() || 0).toFixed(1) + '%' }
+      { title: "배부율 (%)", field: "rate1", width: 100, hozAlign: "right", formatter: (c) => Number(c.getValue() || 0).toFixed(1) + '%' }
     ],
   });
 }
@@ -179,8 +179,8 @@ const initGrids = () => {
 // [3] 비즈니스 로직
 const loadInitData = async () => {
   try {
-    const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, col0: '200', col1: '200' });
-    divideOptions.value = (res.data || []).map((i: any) => ({ code: i.code || i.code, cdnm: i.cdnm || i.codenm }));
+    const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, gbncd: '200', code: '200' });
+    divideOptions.value = (res.data || []).map((i: any) => ({ code: i.divcd, cdnm: i.divnm  }));
     if (divideOptions.value.length > 0) searchForm.divcd = divideOptions.value[0].code;
   } catch (e) { console.error(e) }
 }
@@ -211,11 +211,11 @@ const fetchItems = async () => {
 
 const calcRate = () => {
     const data = mainGrid?.getData() || [];
-    const totalWeight = data.reduce((acc, cur: any) => acc + Number(cur.DIVRATE1 || 0), 0);
+    const totalWeight = data.reduce((acc, cur: any) => acc + Number(cur.divrate1 || 0), 0);
     data.forEach(row => {
-        const weight = Number(row.DIVRATE1 || 0);
+        const weight = Number(row.divrate1 || 0);
         const rate = totalWeight > 0 ? (weight / totalWeight) * 100 : 0;
-        mainGrid?.getRow(row).update({ RATE1: rate });
+        mainGrid?.getRow(row).update({ rate1: rate });
     });
 }
 
@@ -232,22 +232,48 @@ const generateWeights = async () => {
 }
 
 const save = async () => {
-    if (updYn.value === 'N') return vAlertError('마감된 자료는 재작업할 수 없습니다.');
-    const details = mainGrid?.getData().filter((r: any) => r._status === '수정') || [];
-    if (details.length === 0) return vAlertError('수정된 항목이 없습니다.');
+  if (updYn.value === 'N') return vAlertError('마감된 자료는 재작업할 수 없습니다.')
+  const details = mainGrid?.getData().filter((r: any) => r._status === '수정') || []
+  if (details.length === 0) return vAlertError('수정된 항목이 없습니다.')
 
-    try {
-        const ym = searchForm.yy + searchForm.mm;
-        for (const row of details) {
-            await api.post('/api/hapl/HAPL_050U_STR', {
-                actkind: 'U0', cmpycd: authStore.cmpycd, gubun: '020', yymm: ym, divcd: searchForm.divcd,
-                deptcd: selectedDept.code, custcd: row.CUSTCD, userid: row.USERID, itemcd: row.ITEMCD,
-                itsize: row.ITSIZE, unit: row.UNIT, itemnm: row.ITEMNM,
-                divrate1: row.DIVRATE1, divrate2: '0', divrate3: '0', upduser: authStore.userid
-            });
-        }
-        vAlert('저장되었습니다.'); fetchItems();
-    } catch (e) { vAlertError('저장 실패') }
+  if (!confirm('저장하시겠습니까?')) return
+
+  try {
+    const ym = searchForm.yy + searchForm.mm
+    const res = await api.post('/api/hapl/HAPL_050U_STR', {
+      actkind: 'U0',
+      cmpycd: authStore.cmpycd,
+      gubun: '020',
+      stdym: ym,
+      divcd: searchForm.divcd,
+      deptcd: selectedDept.code,
+      items: details.map((row: any) => ({
+        custcd: row.custcd || row.CUSTCD,
+        user_id: row.userid || row.USERID,
+        itemcd: row.itemcd || row.ITEMCD,
+        itsize: row.itsize || row.itsize || '',
+        unit: row.unit || row.unit || '',
+        itemnm: row.itemnm || row.itemnm || '',
+        divrate1: Number(row.divrate1 || row.divrate1 || 0),
+        divrate2: 0,
+        divrate3: 0
+      }))
+    })
+
+    const resData = res.data?.[0] || {}
+    const resCode = String(resData.outym || resData.col_0 || resData.res || '').trim()
+    const resMsg = String(resData.outno || resData.col_1 || resData.msg || '').trim()
+
+    if (resCode === '000000' || resCode === 'N') {
+      vAlertError(resMsg || '저장 중 오류가 발생했습니다.')
+    } else {
+      vAlert('저장되었습니다.')
+      fetchItems()
+    }
+  } catch (e: any) {
+    const errorMsg = e.response?.data?.error || e.message || '저장 실패'
+    vAlertError(errorMsg)
+  }
 }
 
 const initialize = () => {

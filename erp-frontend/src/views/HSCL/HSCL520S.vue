@@ -3,24 +3,24 @@
   <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
-    <!-- 🚀 1. 상단 액션 바 -->
+    <!-- ?? 1. ?�단 ?�션 �?-->
     <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-list-columns-reverse me-2 text-primary" style="font-size: 18px;"></i>
-        마감관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        통계현황 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        <span class="text-primary fw-bolder">거래처 매출원가 list (HSCL520S)</span>
+        마감관�?<i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        ?�계?�황 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">거래�?매출?��? list (HSCL520S)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-3">
-        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-init" @click="initialize">초기??/button>
         <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
+        <button class="btn-erp btn-excel" @click="excel">?��?</button>
       </div>
     </div>
 
-    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <!-- ?�� 2. 메인 컨텐�??�역 -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
-      <!-- 🅰️ 조회 조건 영역 -->
+      <!-- ?���?조회 조건 ?�역 -->
       <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
         <div class="card-body p-0 bg-white">
           <table class="erp-table-dense" width="100%">
@@ -31,21 +31,21 @@
             </colgroup>
             <tbody>
               <tr>
-                <th class="required text-center bg-light">판매부서</th>
+                <th class="required text-center bg-light">?�매부??/th>
                 <td>
                   <div class="input-group input-group-sm">
                     <input v-model="searchForm.deptnm" class="form-control fw-bold text-primary" readonly />
                     <button class="btn btn-outline-secondary" @click="openHelp"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
-                <th class="required text-center bg-light">조회연월</th>
+                <th class="required text-center bg-light">조회?�월</th>
                 <td>
                   <div class="d-flex align-items-center gap-1">
                     <select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;">
-                      <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
+                      <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}??/option>
                     </select>
                     <select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;">
-                      <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}월</option>
+                      <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}??/option>
                     </select>
                   </div>
                 </td>
@@ -58,10 +58,10 @@
         </div>
       </div>
 
-      <!-- 🅱️ 데이터 그리드 영역 -->
+      <!-- ?���??�이??그리???�역 -->
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
-          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>거래처별 매출원가 및 이익 현황</span>
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>거래처별 매출?��? �??�익 ?�황</span>
         </div>
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
           <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
@@ -77,6 +77,7 @@ import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import * as XLSX from 'xlsx'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
@@ -94,7 +95,7 @@ const currentYear = new Date().getFullYear()
 const yearOptions = Array.from({ length: 6 }, (_, i) => currentYear - i)
 const monthOptions = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 
-// 🔍 검색 데이터
+// ?�� 검???�이??
 const searchForm = reactive<any>({
 	deptcd: authStore.deptcd,
 	deptnm: authStore.deptnm,
@@ -102,11 +103,11 @@ const searchForm = reactive<any>({
     mm: today.substring(5, 7)
 })
 
-const closingMonth = ref('') // 시스템 마감월 (sclsym)
+const closingMonth = ref('') // ?�스??마감??(sclsym)
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
-// 초기 데이터 (마감정보) 조회
+// 초기 ?�이??(마감?�보) 조회
 const getClosingInfo = async () => {
 	try {
 		const res = await api.post('/api/hs00/HS00_000S_STR', { gubun: 'CL', cmpycd: authStore.cmpycd })
@@ -115,13 +116,13 @@ const getClosingInfo = async () => {
 			searchForm.yy = Number(closingMonth.value.substring(0, 4))
 			searchForm.mm = closingMonth.value.substring(4, 6)
 		}
-	} catch (e) { console.error('마감정보 조회 실패') }
+	} catch (e) { console.error('마감?�보 조회 ?�패') }
 }
 
 const search = async () => {
-    if (!searchForm.deptcd) return vAlertError('판매부서를 선택해 주십시오.')
+    if (!searchForm.deptcd) return vAlertError('?�매부?��? ?�택??주십?�오.')
 	const searchym = `${searchForm.yy}${searchForm.mm}`
-    if (closingMonth.value && searchym > closingMonth.value) return vAlertError('영업마감작업 후 조회하시기 바랍니다.')
+    if (closingMonth.value && searchym > closingMonth.value) return vAlertError('?�업마감?�업 ??조회?�시�?바랍?�다.')
 
 	try {
 		const res = await api.post('/api/hscl/HSCL_520S_STR', {
@@ -131,8 +132,8 @@ const search = async () => {
 		})
         const data = (res.data || []).map((i: any) => Object.fromEntries(Object.entries(i).map(([k, v]) => [k.toLowerCase(), v])));
 		mainGrid?.setData(data)
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 실패') }
+		vAlert('조회?�었?�니??')
+	} catch (e) { vAlertError('조회 ?�패') }
 }
 
 const initialize = () => {
@@ -144,11 +145,11 @@ const initialize = () => {
 
 const excel = () => mainGrid?.download("xlsx", "거래처매출원가list.xlsx")
 
-// 부서 도움창 설정
+// 부???��?�??�정
 function openHelp() {
     Object.assign(modalProps, {
-        title: '부서 선택', path: '/api/ha00/HA00_00P_STR',
-        columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+        title: '부???�택', path: '/api/ha00/HA00_00P_STR',
+        columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부?�명', field: 'deptnm', width: 180 }],
         data: { gubun: 'D0', cmpycd: authStore.cmpycd },
         onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm; search(); }
     })
@@ -167,16 +168,16 @@ onMounted(() => {
 			height: '100%',
 			groupBy: ["deptnm", "custnm"],
 			groupHeader: (value, count, data, group) => {
-				const label = group.getField() === "deptnm" ? "부서: " : "거래처: "
-				return `<span class='fw-bold'>${label}${value || ''}</span> <span class='ms-2 text-muted small'>(${count}건)</span>`
+				const label = group.getField() === "deptnm" ? "부?? " : "거래�? "
+				return `<span class='fw-bold'>${label}${value || ''}</span> <span class='ms-2 text-muted small'>(${count}�?</span>`
 			},
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
                 { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
-				{ title: "부서명", field: "deptnm", width: 130, visible: false },
-				{ title: "거래처", field: "custnm", minWidth: 180, visible: false },
+				{ title: "부?�명", field: "deptnm", width: 130, visible: false },
+				{ title: "거래�?, field: "custnm", minWidth: 180, visible: false },
 				{
-					title: "매출일자", field: "salsymd", width: 110,
+					title: "매출?�자", field: "salsymd", width: 110,
 					formatter: (cell) => {
 						const val = cell.getValue()
 						return val && val.length === 8 ? `${val.substring(0, 4)}.${val.substring(4, 6)}.${val.substring(6, 8)}` : (val || '')
@@ -189,20 +190,20 @@ onMounted(() => {
 						return (d.ioym && d.iono) ? `${d.ioym}-${d.iono}` : ''
 					}
 				},
-				{ title: "품목명", field: "itemnm", hozAlign: "left", minWidth: 200, cssClass: "fw-bold" },
-				{ title: "수량", field: "jsanqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "?�목�?, field: "itemnm", hozAlign: "left", minWidth: 200, cssClass: "fw-bold" },
+				{ title: "?�량", field: "jsanqty", width: 100, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{
 					title: "매출금액", field: "jsanamt", width: 110, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money"
 				},
 				{
-					title: "매출원가", field: "wonamt", width: 110, hozAlign: "right",
+					title: "매출?��?", field: "wonamt", width: 110, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					bottomCalc: "sum", bottomCalcFormatter: "money"
 				},
 				{
-					title: "이익율", field: "bnfrate", width: 90, hozAlign: "right",
+					title: "?�익??, field: "bnfrate", width: 90, hozAlign: "right",
 					formatter: (cell) => {
 						const val = cell.getValue()
 						return val ? Number(val).toFixed(2) + '%' : '0.00%'

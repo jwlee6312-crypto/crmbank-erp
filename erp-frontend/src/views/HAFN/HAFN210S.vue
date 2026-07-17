@@ -1,9 +1,9 @@
 <!--
 	=============================================================
-	프로그램명	: 차입금명세서
-	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 기준일자 현재의 차입금 명세 및 잔액 현황 조회
+	?�로그램�?: 차입금명?�서
+	?�성?�자	: 2025.02.24
+	?�성??    : AI Assistant
+	?�명        : 기�??�자 ?�재??차입�?명세 �??�액 ?�황 조회
 	=============================================================
 -->
 
@@ -11,30 +11,30 @@
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
 	<div class="erp-container">
-		<!-- 🚀 상단 액션 바 -->
+		<!-- ?? ?�단 ?�션 �?-->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-cash me-2 text-primary" style="font-size: 18px;"></i>
-				자금관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">차입금명세서 (HAFN210S)</span>
+				?�금관�?<i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				<span class="text-primary fw-bolder">차입금명?�서 (HAFN210S)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기화
+					<i class="bi bi-arrow-clockwise"></i> 초기??
 				</button>
 				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
 				<button class="btn-erp btn-print" @click="print">
-					<i class="bi bi-printer"></i> 인쇄
+					<i class="bi bi-printer"></i> ?�쇄
 				</button>
 				<button class="btn-erp btn-excel" @click="excel">
-					<i class="bi bi-file-earmark-excel"></i> 엑셀
+					<i class="bi bi-file-earmark-excel"></i> ?��?
 				</button>
 			</div>
 		</div>
 
-		<!-- 🔍 검색 조건 영역 -->
+		<!-- ?�� 검??조건 ?�역 -->
 		<div class="p-2 pb-0 flex-shrink-0">
 			<div class="card border shadow-sm overflow-hidden bg-light">
 				<table class="erp-table-full" style="table-layout: fixed;">
@@ -43,11 +43,11 @@
 					</colgroup>
 					<tbody>
 						<tr>
-							<th class="text-center border-end">회계일자</th>
+							<th class="text-center border-end">?�계?�자</th>
 							<td class="bg-white">
 								<div class="d-flex align-items-center gap-2">
 									<input v-model="searchForm.ymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
-									<span class="small fw-bold text-secondary">현재</span>
+									<span class="small fw-bold text-secondary">?�재</span>
 								</div>
 							</td>
 						</tr>
@@ -56,7 +56,7 @@
 			</div>
 		</div>
 
-		<!-- 📊 그리드 영역 -->
+		<!-- ?�� 그리???�역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
                 <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -72,6 +72,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
@@ -82,7 +83,7 @@ const { resetForm } = useFormReset()
 
 const today = new Date().toISOString().substring(0, 10)
 
-// 🔍 검색 조건
+// ?�� 검??조건
 const searchForm = reactive({
 	ymd: today
 })
@@ -114,8 +115,8 @@ const search = async () => {
 		}))
 
 		mainGrid?.setData(data)
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 실패') }
+		vAlert('조회?�었?�니??')
+	} catch (e) { vAlertError('조회 ?�패') }
 }
 
 const initialize = () => {
@@ -124,7 +125,7 @@ const initialize = () => {
 	mainGrid?.clearData()
 }
 
-const excel = () => mainGrid?.download("xlsx", `차입금명세서_${searchForm.ymd}.xlsx`)
+const excel = () => mainGrid?.download("xlsx", `차입금명?�서_${searchForm.ymd}.xlsx`)
 
 const print = () => {
 	const params = `ymd=${searchForm.ymd}`
@@ -143,25 +144,25 @@ onMounted(() => {
 				const sumJan = data.reduce((acc, curr) => acc + curr.janamt, 0)
 				return `
 					<div class="d-flex justify-content-between w-100 pe-4">
-						<span class="fw-bold text-dark">${value} 계</span>
+						<span class="fw-bold text-dark">${value} �?/span>
 						<div class="small fw-bold">
-							<span class="mx-2 text-muted">차입액: ${sumLoan.toLocaleString()} / 상환액: ${sumRepay.toLocaleString()} / 잔액: ${sumJan.toLocaleString()}</span>
+							<span class="mx-2 text-muted">차입?? ${sumLoan.toLocaleString()} / ?�환?? ${sumRepay.toLocaleString()} / ?�액: ${sumJan.toLocaleString()}</span>
 						</div>
 					</div>
 				`
 			},
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "차입처", field: "custnm", width: 180 },
+				{ title: "차입�?, field: "custnm", width: 180 },
 				{ title: "차입번호", field: "mgtno", width: 120 },
-				{ title: "차입일", field: "stdymd", hozAlign: "center", width: 90 },
-				{ title: "만기일", field: "endymd", hozAlign: "center", width: 90 },
-				{ title: "이율", field: "rate", hozAlign: "right", width: 70,
+				{ title: "차입??, field: "stdymd", hozAlign: "center", width: 90 },
+				{ title: "만기??, field: "endymd", hozAlign: "center", width: 90 },
+				{ title: "?�율", field: "rate", hozAlign: "right", width: 70,
 					formatter: (cell) => Number(cell.getValue() || 0).toFixed(2)
 				},
-				{ title: "차입액", field: "loanamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: "상환액", field: "repayamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
-				{ title: "잔액", field: "janamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110,
+				{ title: "차입??, field: "loanamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: "?�환??, field: "repayamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110 },
+				{ title: "?�액", field: "janamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 110,
 					cssClass: "fw-bold text-danger"
 				},
 				{ title: "비고", field: "bigo", minWidth: 150 },

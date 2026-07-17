@@ -92,11 +92,11 @@
               <div class="d-flex flex-column gap-3">
                 <div class="d-flex align-items-center">
                   <span class="erp-label" style="min-width: 100px;">시작시간</span>
-                  <input :value="resultInfo.amt_bf" class="form-control bg-light text-center fw-bold" readonly />
+                  <input :value="resultInfo.bfamt" class="form-control bg-light text-center fw-bold" readonly />
                 </div>
                 <div class="d-flex align-items-center">
                   <span class="erp-label" style="min-width: 100px;">종료시간</span>
-                  <input :value="resultInfo.amt_af" class="form-control bg-light text-center fw-bold" readonly />
+                  <input :value="resultInfo.afamt" class="form-control bg-light text-center fw-bold" readonly />
                 </div>
               </div>
             </div>
@@ -151,7 +151,7 @@ const ym_f = computed({
 
 const clsInfo = reactive({ wclsym: '' })
 const targetForm = reactive({ useyn1: 'Y', useyn2: 'Y', useyn3: 'Y' })
-const resultInfo = reactive({ amt_bf: '-', amt_af: '-', qty_bf: '0', qty_af: '0' })
+const resultInfo = reactive({ bfamt: '-', afamt: '-', qty_bf: '0', qty_af: '0' })
 
 // [2] 비즈니스 로직
 const loadClsInfo = async () => {
@@ -187,7 +187,7 @@ const handleExecute = async () => {
         cmpycd: authStore.cmpycd, actkind: 'A0', ym: ym, colgbn: '2000', userid: authStore.userid
       })
       const v = Object.values(res.data[0]);
-      Object.assign(resultInfo, { amt_bf: v[2], amt_af: v[3], qty_bf: v[4], qty_af: v[5] });
+      Object.assign(resultInfo, { bfamt: v[2], afamt: v[3], qty_bf: v[4], qty_af: v[5] });
     }
     if (targetForm.useyn2 === 'Y') await api.post('/api/hfmf/FMF2010U_STR', { cmpycd: authStore.cmpycd, actkind: 'A0', ym: ym, colgbn: '9000', userid: authStore.userid });
     if (targetForm.useyn3 === 'Y') await api.post('/api/hfmf/FMF2010U_STR', { cmpycd: authStore.cmpycd, actkind: 'A0', ym: ym, colgbn: '8000', userid: authStore.userid });
@@ -207,13 +207,13 @@ const handleCancel = async () => {
     if (targetForm.useyn3 === 'Y') await api.post('/api/hfmf/FMF2010U_STR', { ...params, colgbn: '8000' })
 
     vAlert('취소되었습니다.')
-    Object.assign(resultInfo, { amt_bf: '-', amt_af: '-', qty_bf: '0', qty_af: '0' })
+    Object.assign(resultInfo, { bfamt: '-', afamt: '-', qty_bf: '0', qty_af: '0' })
   } catch (e) { vAlertError('취소 중 오류 발생') }
 }
 
 const initialize = () => {
   searchForm.ym = today.substring(0, 7).replace(/-/g, '')
-  Object.assign(resultInfo, { amt_bf: '-', amt_af: '-', qty_bf: '0', qty_af: '0' })
+  Object.assign(resultInfo, { bfamt: '-', afamt: '-', qty_bf: '0', qty_af: '0' })
   loadClsInfo()
 }
 

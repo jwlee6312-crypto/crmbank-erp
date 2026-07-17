@@ -167,7 +167,7 @@ const save = async () => {
         COSTCD: item.COSTCD,
         IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
         IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
-        DEPTCD: item.DEPTCD || authStore.deptcd,
+        deptcd: item.deptcd || authStore.deptcd,
         FILENO: formData.FILENO,
         DOCNO: item.DOCNO,
         CROWNO: item.ROWNO || item.crowno,
@@ -175,11 +175,11 @@ const save = async () => {
         spyamt: item.costamt || item.costamt,
         vatamt: item.vatamt || 0,
         CUSTCD: item.CUSTCD,
-        TAXUNIT: item.TAXUNIT || '10',
+        taxunit: item.taxunit || '10',
         vattype: item.vattype || '10',
         SLIPYMD: formData.PUBYMD.replace(/-/g, ''),
         slipkind: slipKind,
-        HDEPTCD: item.DEPTCD || authStore.deptcd,
+        Hdeptcd: item.deptcd || authStore.deptcd,
         BUSINESS: formData.FILENO + "-" + (item.BIGO || ''),
         UPDEMP: authStore.USERID
       }

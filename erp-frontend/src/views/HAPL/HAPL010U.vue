@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 배부기준관리 (HAPL010U)
 	작성일자	: 2025.02.24
-	설명        : 부문별/품목별 배부기준 및 구성비 관리 (HAAA800U 표준 UI 적용)
+	설명        : 부문별/품목별 배부기준 및 구성비 관리 (표준화 로깅 및 Numeric 에러 방지 적용)
 	=============================================================
 -->
 
@@ -139,6 +139,7 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import AppAlert from '@/components/AppAlert.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -158,6 +159,7 @@ const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
 const resetForm = () => {
+  console.log('🔄 [HAPL010U] 폼 초기화')
   Object.assign(formData, { actkind: 'A0', divgbn: searchForm.divgbn, divcd: '', divnm: '', rate1: 0, rate2: 0, rate3: 0, remark: '', dspord: 0, useyn: 'Y' })
 }
 
@@ -165,10 +167,11 @@ const handleSearchChange = () => { search(); resetForm() }
 
 const search = async () => {
   try {
-    // 🚀 SQL Server Numeric 변환 오류 방지를 위해 모든 숫자 필드를 0으로 초기화하여 전송
+    console.log('🔍 [HAPL010U] 조회 시작 (gubun: 020)')
     const params = {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
+      gubun: '020',
       divgbn: searchForm.divgbn,
       divcd: '',
       divnm: '',
@@ -180,10 +183,11 @@ const search = async () => {
       useyn: '',
       userid: authStore.userid
     }
+
     const res = await api.post('/api/hapl/HAPL_010U_STR', params)
+    console.log('🎯 [HAPL010U] 조회 응답 건수:', res.data?.length || 0)
 
     const data = (res.data || []).map((row: any) => {
-      // 키 대소문자 정규화
       const n: any = {};
       Object.keys(row).forEach(k => n[k.toLowerCase()] = row[k]);
 
@@ -201,34 +205,48 @@ const search = async () => {
     })
     mainGrid?.setData(data)
     vAlert('조회되었습니다.')
-  } catch (e) { vAlertError('조회 오류') }
+  } catch (e) {
+    console.error('❌ [HAPL010U] 조회 실패:', e)
+    vAlertError('조회 중 오류가 발생했습니다.')
+  }
 }
 
 const save = async () => {
-  if (!formData.divcd || !formData.divnm) return vAlertError('필수 항목을 입력하세요.')
-  const rateSum = Number(formData.rate1) + Number(formData.rate2) + Number(formData.rate3)
+  if (!formData.divcd || !formData.divnm) return vAlertError('배부기준과 명칭을 입력하세요.')
 
-  // 품목별 배부는 구성비 체크 제외하거나 로직 확인 필요하나, 기존 로직 유지
-  if (formData.divgbn === '100' && rateSum !== 100) {
+  const rate1 = Number(formData.rate1 || 0)
+  const rate2 = Number(formData.rate2 || 0)
+  const rate3 = Number(formData.rate3 || 0)
+  const dspord = Number(formData.dspord || 0)
+
+  if (formData.divgbn === '100' && (rate1 + rate2 + rate3) !== 100) {
     return vAlertError('구성비의 합은 100이어야 합니다.')
   }
 
+  if (!confirm('저장하시겠습니까?')) return
+
   try {
-    const payload = { ...formData, cmpycd: authStore.cmpycd, userid: authStore.userid }
-    const res = await api.post('/api/hapl/HAPL_010U_STR', payload)
+    const res = await api.post('/api/hapl/HAPL_010U_STR', {
+      ...formData,
+      rate1, rate2, rate3, dspord,
+      gubun: '020',
+      cmpycd: authStore.cmpycd,
+      userid: authStore.userid
+    })
 
-    // 결과 확인
-    const resData = (res.data && res.data[0]) ? res.data[0] : {};
-    const result = resData.RESULT || resData.result || '';
+    const resData = res.data?.[0] || {}
+    const resCode = String(resData.outym || resData.res || resData.col_0 || '').trim()
+    const resMsg = String(resData.outno || resData.msg || resData.col_1 || '').trim()
 
-    if (result === 'N') {
-      vAlertError(resData.MSG || resData.msg || '저장 중 오류가 발생했습니다.');
+    if (resCode === '000000' || resCode === 'N' || resCode === 'ERROR') {
+      vAlertError(resMsg || '저장 중 오류가 발생했습니다.');
     } else {
       vAlert('저장되었습니다.');
-      search();
-      resetForm();
+      search(); resetForm();
     }
-  } catch (e) { vAlertError('저장 오류') }
+  } catch (e: any) {
+    vAlertError('저장 실패: ' + (e.response?.data?.error || e.message))
+  }
 }
 
 const exportExcel = () => {
@@ -237,6 +255,7 @@ const exportExcel = () => {
 }
 
 onMounted(() => {
+  console.log('🚀 [HAPL010U] 마운트 완료')
   if (mainGridRef.value) {
     mainGrid = new Tabulator(mainGridRef.value, {
       layout: 'fitColumns', height: '100%',
@@ -259,6 +278,7 @@ onMounted(() => {
     })
     mainGrid.on("rowClick", (e, row) => {
       const d = row.getData();
+      console.log('🖱️ [HAPL010U] 행 선택:', d)
       Object.assign(formData, d);
       formData.actkind = 'U0'
     })

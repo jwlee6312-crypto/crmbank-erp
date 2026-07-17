@@ -348,7 +348,7 @@ const normalizeKeys = (obj: any) => {
         Object.entries(obj).map(([k, v]) => [k.toLowerCase(), v && typeof v === 'string' ? v.trim() : v])
     );
 
-    // 💡 사용자 지시: 조회 시 SUBCD = trim(Rs("CUSTCD")), SUBNM = trim(Rs("CUSTNM")) 로 변환하여 로드
+    // 💡 사용자 지시: 조회 시 SUBCD = trim(Rs("CUSTCD")), SUBNM = trim(Rs("custnm")) 로 변환하여 로드
     const custCd = normalized.custcd || '';
     const custNm = normalized.custnm || '';
 

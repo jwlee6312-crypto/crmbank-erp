@@ -267,7 +267,7 @@ const openModal = (type: string, row: RowComponent) => {
         { title: '거래처명', field: 'custnm', width: 200 }
       ],
       onConfirm: (d: any) => {
-        row.update({ custcd: d.custcd || d.CUSTCD, custnm: d.custnm || d.CUSTNM });
+        row.update({ custcd: d.custcd || d.CUSTCD, custnm: d.custnm || d.custnm });
         showModal.value = false;
       }
     })

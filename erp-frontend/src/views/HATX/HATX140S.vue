@@ -1,8 +1,8 @@
 <!--	=============================================================
-	프로그램명	: 신용카드매출전표등발행금액집계표
-	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 신용카드 및 현금영수증 발행 내역의 과세/면세별 총괄 집계 (HSOD100U 표준 UI 적용)
+	?�로그램�?: ?�용카드매출?�표?�발?�금?�집계표
+	?�성?�자	: 2025.02.24
+	?�성??    : AI Assistant
+	?�명        : ?�용카드 �??�금?�수�?발행 ?�역??과세/면세�?총괄 집계 (HSOD100U ?��? UI ?�용)
 	=============================================================
 -->
 
@@ -13,23 +13,23 @@
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-collection-fill me-2 text-primary" style="font-size: 18px;"></i>
-				세무관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-				<span class="text-primary fw-bolder">신용카드매출전표등발행금액집계표 (HATX140S)</span>
+				?�무관�?<i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				<span class="text-primary fw-bolder">?�용카드매출?�표?�발?�금?�집계표 (HATX140S)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-init" @click="initialize">
-					초기화
+					초기??
 				</button>
 				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
 				<button class="btn-erp btn-print" @click="print">
-					<i class="bi bi-printer"></i> 인쇄
+					<i class="bi bi-printer"></i> ?�쇄
 				</button>
 			</div>
 		</div>
 
-		<!-- 🔍 검색 조건 영역 -->
+		<!-- ?�� 검??조건 ?�역 -->
 		<div class="p-2 pb-0 flex-shrink-0">
 			<div class="card border shadow-sm bg-white overflow-hidden">
 				<div class="card-body p-0">
@@ -40,25 +40,25 @@
 						</colgroup>
 						<tbody>
 							<tr>
-								<th class="bg-light text-center">사 업 장</th>
+								<th class="bg-light text-center">??????/th>
 								<td>
-									<select v-model="searchForm.TAXUNIT" class="form-select form-select-sm">
-										<option value="000">전체</option>
+									<select v-model="searchForm.taxunit" class="form-select form-select-sm">
+										<option value="000">?�체</option>
 										<option v-for="opt in taxUnitOptions" :key="opt.code" :value="opt.code">{{ opt.codenm }}</option>
 									</select>
 								</td>
-								<th class="bg-light text-center">기    간</th>
+								<th class="bg-light text-center">�?   �?/th>
 								<td>
 									<div class="d-flex align-items-center gap-1 px-1">
 										<select v-model="searchForm.YY" class="form-select form-select-sm" style="width: 100px;">
-											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
+											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}??/option>
 										</select>
 										<select v-model="searchForm.FMM" class="form-select form-select-sm" style="width: 70px;">
-											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
+											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}??/option>
 										</select>
 										<span>~</span>
 										<select v-model="searchForm.TMM" class="form-select form-select-sm" style="width: 70px;">
-											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
+											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}??/option>
 										</select>
 									</div>
 								</td>
@@ -69,35 +69,35 @@
 			</div>
 		</div>
 
-		<!-- 💡 메인 컨텐츠 영역 -->
+		<!-- ?�� 메인 컨텐�??�역 -->
 		<div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-3 bg-light main-content-wrapper">
 
-			<!-- 🅰️ 메인 집계 그리드 -->
+			<!-- ?���?메인 집계 그리??-->
 			<div class="card border shadow-sm flex-shrink-0 overflow-hidden d-flex flex-column bg-white">
 				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
-					<span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1 text-primary"></i> 발행금액 현황</span>
+					<span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1 text-primary"></i> 발행금액 ?�황</span>
 				</div>
 				<div class="card-body p-0 overflow-hidden">
 					<div ref="mainGridRef" class="tabulator-instance border-0"></div>
 				</div>
 			</div>
 
-			<!-- 🅱️ 세금계산서/계산서 교부내역 그리드 -->
+			<!-- ?���??�금계산??계산??교�??�역 그리??-->
 			<div class="card border shadow-sm flex-shrink-0 overflow-hidden d-flex flex-column bg-white" style="max-width: 600px;">
 				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
-					<span class="fw-bold small text-dark"><i class="bi bi-journal-text me-1 text-primary"></i> 세금계산서(계산서) 교부 내역</span>
+					<span class="fw-bold small text-dark"><i class="bi bi-journal-text me-1 text-primary"></i> ?�금계산??계산?? 교�? ?�역</span>
 				</div>
 				<div class="card-body p-0 overflow-hidden">
 					<div ref="subGridRef" class="tabulator-instance border-0"></div>
 				</div>
 			</div>
 
-			<!-- ℹ️ 작성방법 안내 -->
+			<!-- ?�️ ?�성방법 ?�내 -->
 			<div class="alert alert-secondary border-0 shadow-sm mb-0 p-3 flex-shrink-0">
 				<div class="small text-muted">
-					<p class="mb-2 fw-bold text-dark">※ 작성방법</p>
-					<p class="mb-1">1. <strong>신용카드매출전표 등 발행금액 현황</strong>: 부가가치세 과세 매출분, 면세 매출분 및 봉사료로 각각 구분하여 기입하고, 과세 매출분란은 공급대가(부가가치세를 포함합니다)를 기입합니다.</p>
-					<p class="mb-0">2. <strong>세금계산서(계산서) 교부내역</strong>: 위 현황의 합계 금액 중 세금계산서 또는 계산서를 교부한 금액을 기입합니다.</p>
+					<p class="mb-2 fw-bold text-dark">???�성방법</p>
+					<p class="mb-1">1. <strong>?�용카드매출?�표 ??발행금액 ?�황</strong>: 부가가치세 과세 매출�? 면세 매출�?�?봉사료로 각각 구분?�여 기입?�고, 과세 매출분�??� 공급?�가(부가가치세�??�함?�니??�?기입?�니??</p>
+					<p class="mb-0">2. <strong>?�금계산??계산?? 교�??�역</strong>: ???�황???�계 금액 �??�금계산???�는 계산?��? 교�???금액??기입?�니??</p>
 				</div>
 			</div>
 
@@ -110,6 +110,7 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -125,7 +126,7 @@ const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({
-	TAXUNIT: '000',
+	taxunit: '000',
 	YY: String(currentYear),
 	FMM: currentMonth,
 	TMM: currentMonth
@@ -140,7 +141,7 @@ const fetchOptions = async () => {
 	try {
 		const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authStore.cmpycd, search: ' ' });
 		taxUnitOptions.value = res.data || [];
-		if (taxUnitOptions.value.length > 0) searchForm.TAXUNIT = taxUnitOptions.value[0].code;
+		if (taxUnitOptions.value.length > 0) searchForm.taxunit = taxUnitOptions.value[0].code;
 	} catch (e) { console.error(e) }
 }
 
@@ -152,25 +153,25 @@ async function search() {
 		const res = await api.post('/api/hatx/HATX_140S_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
-			taxunit: searchForm.TAXUNIT,
+			taxunit: searchForm.taxunit,
 			ymfr: ymfr,
 			ymto: ymto
 		});
 
 		if (res.data?.length) {
 			const d = res.data[0];
-			// 매핑 로직 (ASP rs 인덱스 기반)
+			// 매핑 로직 (ASP rs ?�덱??기반)
 			const mainData = [
-				{ gubun: '합  계', tot: d.col0, card: d.col1, cash: d.col2 },
-				{ gubun: '과세 매출분', tot: d.col3, card: d.col4, cash: d.col5 },
-				{ gubun: '면세 매출분', tot: d.col6, card: d.col7, cash: d.col8 },
-				{ gubun: '봉사료', tot: d.col9, card: d.col10, cash: d.col11 }
+				{ gubun: '?? �?, tot: d.col0, card: d.col1, cash: d.col2 },
+				{ gubun: '과세 매출�?, tot: d.col3, card: d.col4, cash: d.col5 },
+				{ gubun: '면세 매출�?, tot: d.col6, card: d.col7, cash: d.col8 },
+				{ gubun: '봉사�?, tot: d.col9, card: d.col10, cash: d.col11 }
 			];
 			mainGrid?.setData(mainData);
 
 			const subData = [
-				{ item: '세금계산서 교부금액', amt: d.col12 },
-				{ item: '계산서 교부금액', amt: d.col13 }
+				{ item: '?�금계산??교�?금액', amt: d.col12 },
+				{ item: '계산??교�?금액', amt: d.col13 }
 			];
 			subGrid?.setData(subData);
 		} else {
@@ -178,12 +179,12 @@ async function search() {
 			subGrid?.clearData();
 		}
 
-		vAlert('조회되었습니다.');
-	} catch (e) { vAlertError('조회 실패'); }
+		vAlert('조회?�었?�니??');
+	} catch (e) { vAlertError('조회 ?�패'); }
 }
 
 const initialize = () => {
-	searchForm.TAXUNIT = '000';
+	searchForm.taxunit = '000';
 	searchForm.YY = String(currentYear);
 	searchForm.FMM = currentMonth;
 	searchForm.TMM = currentMonth;
@@ -193,7 +194,7 @@ const initialize = () => {
 
 const handlePrint = () => {
 	const params = new URLSearchParams({
-		TAXUNIT: searchForm.TAXUNIT, YY: searchForm.YY, FMM: searchForm.FMM, TMM: searchForm.TMM, PRTGU: 'Print'
+		taxunit: searchForm.taxunit, YY: searchForm.YY, FMM: searchForm.FMM, TMM: searchForm.TMM, PRTGU: 'Print'
 	}).toString();
 	window.open(`/api/hatx/HATX_140P?${params}`, 'TaxSummaryPrint', 'width=1000,height=800,scrollbars=yes');
 }
@@ -204,10 +205,10 @@ const initGrids = () => {
 		height: "auto",
 		columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
 		columns: [
-			{ title: "구  분", field: "gubun", width: 200, cssClass: "bg-light fw-bold" },
-			{ title: "합  계", field: "tot", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" },
-			{ title: "신용/직불/기명식 직불카드", field: "card", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-			{ title: "현금영수증", field: "cash", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
+			{ title: "�? �?, field: "gubun", width: 200, cssClass: "bg-light fw-bold" },
+			{ title: "?? �?, field: "tot", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold" },
+			{ title: "?�용/직불/기명??직불카드", field: "card", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+			{ title: "?�금?�수�?, field: "cash", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
 		]
 	});
 
@@ -216,8 +217,8 @@ const initGrids = () => {
 		height: "auto",
 		columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
 		columns: [
-			{ title: "항  목", field: "item", width: 300, cssClass: "bg-light fw-bold" },
-			{ title: "금  액", field: "amt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" }
+			{ title: "?? �?, field: "item", width: 300, cssClass: "bg-light fw-bold" },
+			{ title: "�? ??, field: "amt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-primary fw-bold" }
 		]
 	});
 }

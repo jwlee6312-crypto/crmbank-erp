@@ -130,6 +130,8 @@ let mainGrid: Tabulator | null = null
 const initGrids = () => {
   if (!mainGridRef.value) return
 
+
+
   mainGrid = new Tabulator(mainGridRef.value, {
     layout: "fitColumns",
     height: "100%",
@@ -141,9 +143,9 @@ const initGrids = () => {
       { title: "부서명", field: "deptnm", widthGrow: 1, hozAlign: "left" },
       { title: "계정", field: "acct", width: 100, hozAlign: "center" },
       { title: "계정명", field: "acctnm", widthGrow: 1, hozAlign: "left" },
-      { title: "배부전금액", field: "amt_bf", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "배부후금액", field: "amt_af", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-      { title: "차액", field: "amt_diff", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger fw-bold" }
+      { title: "배부전금액", field: "bfamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "배부후금액", field: "afamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "차액", field: "diffamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "text-danger fw-bold" }
     ],
   });
 }

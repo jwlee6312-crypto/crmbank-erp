@@ -86,11 +86,11 @@
               <div class="d-flex flex-column gap-3">
                 <div class="d-flex align-items-center">
                   <span class="erp-label" style="min-width: 100px;">배부전합계</span>
-                  <input :value="Number(resultInfo.amt_bf).toLocaleString()" class="form-control bg-light text-end fw-bold" readonly />
+                  <input :value="Number(resultInfo.bfamt).toLocaleString()" class="form-control bg-light text-end fw-bold" readonly />
                 </div>
                 <div class="d-flex align-items-center">
                   <span class="erp-label" style="min-width: 100px;">배부후합계</span>
-                  <input :value="Number(resultInfo.amt_af).toLocaleString()" class="form-control bg-light text-end fw-bold text-success" readonly />
+                  <input :value="Number(resultInfo.afamt).toLocaleString()" class="form-control bg-light text-end fw-bold text-success" readonly />
                 </div>
               </div>
             </div>
@@ -120,7 +120,7 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const dvdYm = ref('')
 const clsWclsym = ref('')
 const searchForm = reactive({ ym: new Date().toISOString().substring(0, 7) })
-const resultInfo = reactive({ startdt: '-', enddt: '-', amt_bf: '0', amt_af: '0' })
+const resultInfo = reactive({ startdt: '-', enddt: '-', bfamt: '0', afamt: '0' })
 
 const loadInitData = async () => {
 	try {
@@ -147,8 +147,8 @@ const handleExecute = async () => {
 			vAlertError(d.MESSAGE || d.message)
 		} else {
 			Object.assign(resultInfo, {
-				amt_bf: d.amt_BF || d.amt_bf || '0',
-				amt_af: d.amt_AF || d.amt_af || '0',
+				bfamt: d.amt_BF || d.bfamt || '0',
+				afamt: d.amt_AF || d.afamt || '0',
 				enddt: new Date().toLocaleTimeString()
 			})
 			vAlert(d.MESSAGE || d.message || '배부작업이 완료되었습니다.')
@@ -164,7 +164,7 @@ const handleCancel = async () => {
 	try {
 		const res = await api.post('/the/basicInfo/fmf/callFmf2020uStr', { ym, actkind: 'D0' })
 		vAlert(res.data[0].MESSAGE || res.data[0].message || '취소되었습니다.')
-		Object.assign(resultInfo, { startdt: '-', enddt: '-', amt_bf: '0', amt_af: '0' })
+		Object.assign(resultInfo, { startdt: '-', enddt: '-', bfamt: '0', afamt: '0' })
 	} catch (e) { vAlertError('취소 중 오류 발생') }
 }
 

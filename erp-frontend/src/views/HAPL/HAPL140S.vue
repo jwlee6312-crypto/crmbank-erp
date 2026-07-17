@@ -80,6 +80,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useCommonHelp } from '@/composables/useCommonHelp'
@@ -91,7 +92,7 @@ const { modalVisible, modalProps, openHelp } = useCommonHelp()
 
 const currentYear = new Date().getFullYear()
 const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
-const yearOptions = Array.from({ length: 10 }, (_, i) => String(currentYear - i))
+const yearOptions = Array.from({ length: 20 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({
@@ -110,7 +111,7 @@ const initData = async () => {
   try {
     const res = await api.post('/api/hapl/HAPL_110S_INIT', {
       cmpycd: authStore.cmpycd,
-      STDym: currentYear + currentMonth
+      stdym: currentYear + currentMonth
     })
     if (res.data && res.data !== '000000') {
       searchForm.yy = res.data.substring(0, 4)
@@ -128,7 +129,7 @@ const search = async () => {
       actkind: 'D',
       cmpycd: authStore.cmpycd,
       deptcd: searchForm.deptcd,
-      STDym: searchForm.yy + searchForm.mm
+      stdym: searchForm.yy + searchForm.mm
     })
     const departments = resDept.data || []
 
@@ -137,7 +138,7 @@ const search = async () => {
       actkind: 'S',
       cmpycd: authStore.cmpycd,
       deptcd: searchForm.deptcd,
-      STDym: searchForm.yy + searchForm.mm
+      stdym: searchForm.yy + searchForm.mm
     })
     const rawData = resData.data || []
 
@@ -145,27 +146,33 @@ const search = async () => {
     const processedMap = new Map()
     const salesTotalMap = new Map() // 각 부서별 매출액 저장용
 
+
     rawData.forEach((row: any) => {
-      const acctCd = row.col0
+      // 💡 col0 대신 소문자 표준 필드명 사용
+      const acctCd = (row.acctcd || '').toString();
+      if (!acctCd) return;
+
       if (!processedMap.has(acctCd)) {
         processedMap.set(acctCd, {
           acctcd: acctCd,
-          acctnm: row.col1,
-          rstyn: row.col5,
+          acctnm: row.acctnm || '',
+          rstyn: row.rstyn || '',
           total_amt: 0,
           deptAmts: {}
         })
       }
       const acctObj = processedMap.get(acctCd)
-      const deptCd = row.col2
-      const amt = Number(row.col4 || 0)
+      const deptCd = (row.deptcd || '').toString()
+      const amt = Number(row.amt || 0)
 
       if (acctCd === "5100000") { // 매출액 기준
         salesTotalMap.set(deptCd, (salesTotalMap.get(deptCd) || 0) + amt)
         salesTotalMap.set('total', (salesTotalMap.get('total') || 0) + amt)
       }
 
-      acctObj.deptAmts[deptCd] = amt
+      if (deptCd) {
+        acctObj.deptAmts[deptCd] = (acctObj.deptAmts[deptCd] || 0) + amt
+      }
       acctObj.total_amt += amt
     })
 
@@ -178,26 +185,28 @@ const search = async () => {
       let isBold = false
       let indent = 0
 
-      // HAPL110S와 동일한 넘버링/들여쓰기 로직
-      if (code.substring(1, 7) === "000000" || ["1990000", "2980000", "3980000", "3990000"].includes(code)) {
-        dispName = `[ ${name} ]`; isBold = true; indent = 1
-      } else if (code.substring(2, 7) === "00000") {
-        dispName = `${sNUM[i] || i}.${name}`; isBold = true; i++
-      } else if (code.substring(3, 7) === "0000") {
-        dispName = `${j}).${name}`; indent = 1; j++
-      } else if (code.substring(5, 7) === "00") {
-        if (row.rstyn === "Y" || code === "5213000" || code === "5223000") {
-          dispName = name; indent = 3
+      // 넘버링/들여쓰기 로직 (안전한 substring 처리)
+      if (code && code.length >= 7) {
+        if (code.substring(1, 7) === "000000" || ["1990000", "2980000", "3980000", "3990000"].includes(code)) {
+          dispName = `[ ${name} ]`; isBold = true; indent = 1
+        } else if (code.substring(2, 7) === "00000") {
+          dispName = `${sNUM[i] || i}.${name}`; isBold = true; i++
+        } else if (code.substring(3, 7) === "0000") {
+          dispName = `${j}).${name}`; indent = 1; j++
+        } else if (code.substring(5, 7) === "00") {
+          if (row.rstyn === "Y" || code === "5213000" || code === "5223000") {
+            dispName = name; indent = 3
+          } else {
+            dispName = `${k}.${name}`; indent = 2; k++
+          }
         } else {
-          dispName = `${k}.${name}`; indent = 2; k++
+          dispName = name; indent = 3
         }
-      } else {
-        dispName = name; indent = 3
       }
 
       // 리셋 로직
       const nextRow = arr[index + 1]
-      if (nextRow) {
+      if (nextRow && nextRow.acctcd) {
         if (code.substring(0, 3) !== nextRow.acctcd.substring(0, 3)) {
           if (code.substring(0, 2) !== "51") k = 1
         }

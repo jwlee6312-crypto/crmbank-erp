@@ -86,6 +86,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue' // 💡 메시지 표시를 위해 추가
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useCommonHelp } from '@/composables/useCommonHelp'
@@ -97,7 +98,7 @@ const { modalVisible, modalProps, openHelp: commonOpenHelp } = useCommonHelp()
 
 const currentYear = new Date().getFullYear()
 const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
-const yearOptions = Array.from({ length: 10 }, (_, i) => String(currentYear - i))
+const yearOptions = Array.from({ length: 20 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({
@@ -116,25 +117,33 @@ const search = async () => {
   try {
     const res = await api.post('/api/hapl/HAPL_120S_STR', {
       cmpycd: authStore.cmpycd,
-      STDym: searchForm.yy + searchForm.mm,
+      stdym: searchForm.yy + searchForm.mm,
       acctcdfr: searchForm.acctcdfr,
       acctcdto: searchForm.acctcdto
     })
 
-    const data = (res.data || []).map((row: any) => ({
-      BFdeptnm: row.col1,
-      acctcd: row.col2,
-      acctnm: row.col3,
-      AFdeptnm: row.col5,
-      diramt: Number(row.col6 || 0),
-      idiramt: Number(row.col7 || 0),
-      total: Number(row.col6 || 0) + Number(row.col7 || 0),
-      BFdeptcd: row.col0 // 그룹화용
-    }))
+    const data = (res.data || []).map((row: any) => {
+      // 서버에서 내려주는 실제 필드명 (dircost, idircost 등) 반영
+      const diramt = Number(row.dircost || row.DIRCOST || 0);
+      const idiramt = Number(row.idircost || row.IDIRCOST || 0);
+
+      return {
+        bfdeptcd: row.bfdeptcd || row.BFdeptcd || '',
+        bfdeptnm: row.bfdeptnm || row.bfdeptnm || '',
+        acctcd: row.acctcd || row.ACCTCD || '',
+        acctnm: row.acctnm || row.ACCTNM || '',
+        afdeptnm: row.afdeptnm || row.AFdeptnm || '',
+        diramt: diramt,
+        idiramt: idiramt,
+        total: diramt + idiramt
+      }
+    })
 
     mainGrid?.setData(data)
-    vAlert('조회되었습니다.')
-  } catch (e) { vAlertError('조회 실패') }
+    vAlert(`${data.length}건의 배부 내역이 조회되었습니다.`)
+  } catch (e) {
+    vAlertError('조회 중 오류가 발생했습니다.')
+  }
 }
 
 const print = () => {
@@ -157,19 +166,20 @@ const openHelp = (type: string) => {
   }
 }
 
+
 onMounted(() => {
   if (mainGridRef.value) {
     mainGrid = new Tabulator(mainGridRef.value, {
       layout: 'fitColumns', height: '100%',
       columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
-      groupBy: "BFdeptcd",
+      groupBy: "bfdeptcd",
       groupHeader: (value, count, data) => {
-        return `<span class="fw-bold text-dark">${data[0].BFdeptnm}</span> <span class="badge bg-secondary ms-2">${count}건</span>`;
+        return `<span class="fw-bold text-dark">${data[0].bfdeptnm}</span> <span class="badge bg-secondary ms-2">${count}건</span>`;
       },
       columns: [
         { title: "계정과목", field: "acctcd", width: 100, hozAlign: "center" },
         { title: "계정과목 명", field: "acctnm", width: 200, cssClass: 'fw-bold' },
-        { title: "배부후 부서", field: "AFdeptnm", widthGrow: 1 },
+        { title: "배부후 부서", field: "afdeptnm", widthGrow: 1 },
         { title: "직접비", field: "diramt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
         { title: "간접비", field: "idiramt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
         { title: "합 계", field: "total", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "bg-light fw-bold text-primary" }

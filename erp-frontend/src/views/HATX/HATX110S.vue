@@ -1,8 +1,8 @@
 <!--	=============================================================
-	프로그램명	: 세금계산서합계표
-	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 매입/매출 세금계산서의 전자/종이 합계 및 거래처별 집계 현황 조회
+	?�로그램�?: ?�금계산?�합계표
+	?�성?�자	: 2025.02.24
+	?�성??    : AI Assistant
+	?�명        : 매입/매출 ?�금계산?�의 ?�자/종이 ?�계 �?거래처별 집계 ?�황 조회
 	=============================================================
 -->
 
@@ -13,20 +13,20 @@
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-calculator-fill me-2 text-primary" style="font-size: 18px;"></i>
-				세무관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-				<span class="text-primary fw-bolder">세금계산서합계표 (HATX110S)</span>
+				?�무관�?<i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				<span class="text-primary fw-bolder">?�금계산?�합계표 (HATX110S)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
 				<button class="btn-erp btn-print" @click="print">
-					<i class="bi bi-printer"></i> 인쇄
+					<i class="bi bi-printer"></i> ?�쇄
 				</button>
 			</div>
 		</div>
 
-		<!-- 🔍 검색 조건 영역 -->
+		<!-- ?�� 검??조건 ?�역 -->
 		<div class="p-2 pb-0 flex-shrink-0">
 			<div class="card border shadow-sm bg-white overflow-hidden">
 				<div class="card-body p-0">
@@ -38,32 +38,32 @@
 						</colgroup>
 						<tbody>
 							<tr>
-								<th class="bg-light text-center">구    분</th>
+								<th class="bg-light text-center">�?   �?/th>
 								<td>
 									<select v-model="searchForm.GUBUN" class="form-select form-select-sm">
-										<option value="100">매입처</option>
-										<option value="200">매출처</option>
+										<option value="100">매입�?/option>
+										<option value="200">매출�?/option>
 									</select>
 								</td>
-								<th class="bg-light text-center">사 업 장</th>
+								<th class="bg-light text-center">??????/th>
 								<td>
-									<select v-model="searchForm.TAXUNIT" class="form-select form-select-sm">
-										<option value="000">전체</option>
+									<select v-model="searchForm.taxunit" class="form-select form-select-sm">
+										<option value="000">?�체</option>
 										<option v-for="opt in taxUnitOptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
 									</select>
 								</td>
-								<th class="bg-light text-center">기    간</th>
+								<th class="bg-light text-center">�?   �?/th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
 										<select v-model="searchForm.YY" class="form-select form-select-sm" style="width: 90px;">
-											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
+											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}??/option>
 										</select>
 										<select v-model="searchForm.FMM" class="form-select form-select-sm" style="width: 70px;">
-											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
+											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}??/option>
 										</select>
 										<span>~</span>
 										<select v-model="searchForm.TMM" class="form-select form-select-sm" style="width: 70px;">
-											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
+											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}??/option>
 										</select>
 									</div>
 								</td>
@@ -74,23 +74,23 @@
 			</div>
 		</div>
 
-		<!-- 💡 메인 컨텐츠 영역 (상하 분할) -->
+		<!-- ?�� 메인 컨텐�??�역 (?�하 분할) -->
 		<div class="flex-grow-1 overflow-auto p-2 d-flex flex-column gap-2 bg-light">
 
-			<!-- 🅰️ 합계 요약 그리드 (Fixed height) -->
+			<!-- ?���??�계 ?�약 그리??(Fixed height) -->
 			<div class="card border shadow-sm flex-shrink-0 overflow-hidden d-flex flex-column bg-white">
 				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
-					<span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1 text-primary"></i> 세금계산서 총괄 합계</span>
+					<span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-1 text-primary"></i> ?�금계산??총괄 ?�계</span>
 				</div>
 				<div class="card-body p-0 overflow-hidden">
 					<div ref="summaryGridRef" class="tabulator-instance"></div>
 				</div>
 			</div>
 
-			<!-- 🅱️ 거래처별 상세 목록 그리드 (Flexible height) -->
+			<!-- ?���?거래처별 ?�세 목록 그리??(Flexible height) -->
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
 				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
-					<span class="fw-bold small text-dark"><i class="bi bi-list-ul me-1 text-primary"></i> 거래처별 집계 상세</span>
+					<span class="fw-bold small text-dark"><i class="bi bi-list-ul me-1 text-primary"></i> 거래처별 집계 ?�세</span>
 				</div>
 				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
 					<div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
@@ -105,6 +105,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -121,7 +122,7 @@ const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart
 
 const searchForm = reactive({
 	GUBUN: '100',
-	TAXUNIT: '000',
+	taxunit: '000',
 	YY: String(currentYear),
 	FMM: currentMonth,
 	TMM: currentMonth
@@ -144,34 +145,34 @@ const search = async () => {
 		const ymfr = searchForm.YY + searchForm.FMM
 		const ymto = searchForm.YY + searchForm.TMM
 
-		// 1. 합계 정보 조회 (iogbn: 11 for Purchase Sum, 21 for Sales Sum)
+		// 1. ?�계 ?�보 조회 (iogbn: 11 for Purchase Sum, 21 for Sales Sum)
 		const iogbnSum = searchForm.GUBUN === '100' ? '11' : '21'
 		const resSum = await api.post('/api/hatx/HATX_110S_STR', {
 			cmpycd: authStore.cmpycd,
 			iogbn: iogbnSum,
-			taxunit: searchForm.TAXUNIT,
+			taxunit: searchForm.taxunit,
 			ymfr: ymfr,
 			ymto: ymto
 		})
 
 		const rawSum = resSum.data?.[0] || {}
 		const sumData = [
-			{ category: '합계', detail: '전체 합계', count: rawSum.col0, sheets: rawSum.col1, supply: rawSum.col2, tax: rawSum.col3 },
-			{ category: '전자세금계산서', detail: '사업자등록번호 수취분', count: rawSum.col4, sheets: rawSum.col5, supply: rawSum.col6, tax: rawSum.col7 },
-			{ category: '전자세금계산서', detail: '주민등록번호 수취분', count: rawSum.col8, sheets: rawSum.col9, supply: rawSum.col10, tax: rawSum.col11 },
-			{ category: '전자세금계산서', detail: '전자 소계', count: rawSum.col12, sheets: rawSum.col13, supply: rawSum.col14, tax: rawSum.col15 },
-			{ category: '전자 이외', detail: '사업자등록번호 수취분', count: rawSum.col16, sheets: rawSum.col17, supply: rawSum.col18, tax: rawSum.col19 },
-			{ category: '전자 이외', detail: '주민등록번호 수취분', count: rawSum.col20, sheets: rawSum.col21, supply: rawSum.col22, tax: rawSum.col23 },
-			{ category: '전자 이외', detail: '이외 소계', count: rawSum.col24, sheets: rawSum.col25, supply: rawSum.col26, tax: rawSum.col27 }
+			{ category: '?�계', detail: '?�체 ?�계', count: rawSum.col0, sheets: rawSum.col1, supply: rawSum.col2, tax: rawSum.col3 },
+			{ category: '?�자?�금계산??, detail: '?�업?�등록번???�취�?, count: rawSum.col4, sheets: rawSum.col5, supply: rawSum.col6, tax: rawSum.col7 },
+			{ category: '?�자?�금계산??, detail: '주�??�록번호 ?�취�?, count: rawSum.col8, sheets: rawSum.col9, supply: rawSum.col10, tax: rawSum.col11 },
+			{ category: '?�자?�금계산??, detail: '?�자 ?�계', count: rawSum.col12, sheets: rawSum.col13, supply: rawSum.col14, tax: rawSum.col15 },
+			{ category: '?�자 ?�외', detail: '?�업?�등록번???�취�?, count: rawSum.col16, sheets: rawSum.col17, supply: rawSum.col18, tax: rawSum.col19 },
+			{ category: '?�자 ?�외', detail: '주�??�록번호 ?�취�?, count: rawSum.col20, sheets: rawSum.col21, supply: rawSum.col22, tax: rawSum.col23 },
+			{ category: '?�자 ?�외', detail: '?�외 ?�계', count: rawSum.col24, sheets: rawSum.col25, supply: rawSum.col26, tax: rawSum.col27 }
 		]
 		summaryGrid?.setData(sumData)
 
-		// 2. 상세 목록 조회 (iogbn: 12 for Purchase List, 22 for Sales List)
+		// 2. ?�세 목록 조회 (iogbn: 12 for Purchase List, 22 for Sales List)
 		const iogbnList = searchForm.GUBUN === '100' ? '12' : '22'
 		const resList = await api.post('/api/hatx/HATX_110S_STR', {
 			cmpycd: authStore.cmpycd,
 			iogbn: iogbnList,
-			taxunit: searchForm.TAXUNIT,
+			taxunit: searchForm.taxunit,
 			ymfr: ymfr,
 			ymto: ymto
 		})
@@ -187,12 +188,12 @@ const search = async () => {
 		}))
 		mainGrid?.setData(listData)
 
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 중 오류 발생') }
+		vAlert('조회?�었?�니??')
+	} catch (e) { vAlertError('조회 �??�류 발생') }
 }
 
 const print = () => {
-	const params = `TAXUNIT=${searchForm.TAXUNIT}&GUBUN=${searchForm.GUBUN}&YY=${searchForm.YY}&FMM=${searchForm.FMM}&TMM=${searchForm.TMM}&PRTGU=1`
+	const params = `taxunit=${searchForm.taxunit}&GUBUN=${searchForm.GUBUN}&YY=${searchForm.YY}&FMM=${searchForm.FMM}&TMM=${searchForm.TMM}&PRTGU=1`
 	window.open(`/api/hatx/HATX_110P?${params}`, 'TaxInvoiceSummaryPrint', 'width=1000,height=800,scrollbars=yes')
 }
 
@@ -205,12 +206,12 @@ onMounted(() => {
 			height: 'auto',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "대분류", field: "category", width: 150, hozAlign: "center", cssClass: "bg-light fw-bold" },
-				{ title: "상세구분", field: "detail", widthGrow: 1, hozAlign: "left" },
+				{ title: "?�분류", field: "category", width: 150, hozAlign: "center", cssClass: "bg-light fw-bold" },
+				{ title: "?�세구분", field: "detail", widthGrow: 1, hozAlign: "left" },
 				{ title: "처수", field: "count", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
 				{ title: "매수", field: "sheets", width: 80, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "공급가액", field: "supply", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "세액", field: "tax", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
+				{ title: "공급가??, field: "supply", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "?�액", field: "tax", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
 			]
 		})
 	}
@@ -223,15 +224,15 @@ onMounted(() => {
 			columns: [
 				{ title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
 				{
-					title: "사업자등록번호", field: "custno", width: 130, hozAlign: "center",
+					title: "?�업?�등록번??, field: "custno", width: 130, hozAlign: "center",
 					formatter: (cell) => { const v = cell.getValue(); return v && v.length === 10 ? `${v.slice(0,3)}-${v.slice(3,5)}-${v.slice(5)}` : v }
 				},
-				{ title: "상호", field: "custnm", widthGrow: 1, cssClass: "fw-bold text-primary" },
-				{ title: "업태", field: "custkind", width: 120 },
+				{ title: "?�호", field: "custnm", widthGrow: 1, cssClass: "fw-bold text-primary" },
+				{ title: "?�태", field: "custkind", width: 120 },
 				{ title: "종목", field: "custtype", width: 120 },
 				{ title: "매수", field: "sheets", width: 70, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "공급가액", field: "supyamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "세액", field: "vatamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
+				{ title: "공급가??, field: "supyamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "?�액", field: "vatamt", width: 110, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
 			]
 		})
 	}

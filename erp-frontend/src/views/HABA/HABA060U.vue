@@ -1,4 +1,4 @@
-<!--기본정보/조직도관리 [좌우 흐름 시각화 버전 - 이미지 완벽 재현] -->
+<!--기본정보/조직도관리 [좌우 흐름 시각화 표준화 버전] -->
 <template>
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
@@ -7,7 +7,8 @@
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom shadow-sm bg-white py-2 sticky-top flex-shrink-0">
 			<div class="fw-bold ps-3 text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-diagram-3-fill me-2 text-primary" style="font-size: 18px;"></i>
-				기본정보 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				시스템관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				기초관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
 				<span class="text-primary fw-bolder">조직도 관리 (HABA060U)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1 pe-3">
@@ -17,11 +18,12 @@
 			</div>
 		</div>
 
-		<!-- 💡 메인 컨텐츠 영역 -->
+		<!-- 💡 메인 컨텐츠 영역 (좌/우 분할 레이아웃) -->
 		<div class="flex-grow-1 overflow-hidden d-flex gap-2 p-2 bg-light">
 
 			<!-- ⬅️ 좌측: 입력 및 리스트 (60%) -->
 			<div class="d-flex flex-column gap-2 overflow-hidden" style="flex: 1.1; min-width: 0;">
+				<!-- [좌-상] 검색 바 -->
 				<div class="card border-0 shadow-sm flex-shrink-0">
 					<div class="card-body p-2 bg-white rounded">
 						<div class="input-group input-group-sm flex-nowrap">
@@ -32,6 +34,7 @@
 					</div>
 				</div>
 
+				<!-- [좌-중] 상세 입수정 영역 -->
 				<div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
 					<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
 						<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-secondary"></i>부서 상세 정보 관리</div>
@@ -56,8 +59,8 @@
 									<td>
 										<div class="input-group input-group-sm flex-nowrap">
 											<input v-model="formData.updept" type="text" class="form-control bg-light text-center fw-bold" style="max-width: 60px;" readonly />
-											<input v-model="formData.updeptnm" type="text" class="form-control border-start-0" placeholder="검색" @keyup.enter="openDeptPopup" />
-											<button class="btn btn-outline-secondary px-2" @click="openDeptPopup"><i class="bi bi-search"></i></button>
+											<input v-model="formData.updeptnm" type="text" class="form-control border-start-0" placeholder="검색" readonly />
+											<button class="btn btn-outline-secondary px-2" @click="openDeptHelp"><i class="bi bi-search"></i></button>
 										</div>
 									</td>
 									<th>사용여부</th>
@@ -73,9 +76,10 @@
 					</div>
 				</div>
 
+				<!-- [좌-하] 그리드 영역 -->
 				<div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
 					<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-						<div ref="mainGridElement" class="tabulator-instance flex-grow-1"></div>
+						<div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
 					</div>
 				</div>
 			</div>
@@ -114,7 +118,7 @@ import { useFormReset } from '@/composables/useFormReset'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
 
-/** 🚀 [재귀 컴포넌트] 좌우 흐름 조직도 노드 (이미지와 동일한 선 구조 구현) */
+/** 🚀 [재귀 컴포넌트] 좌우 흐름 조직도 노드 */
 const HorizontalTreeNode = defineComponent({
 	props: ['node'],
 	emits: ['select'],
@@ -152,7 +156,7 @@ const formData = reactive({
 })
 
 const allDepts = ref<any[]>([])
-const mainGridElement = ref<HTMLDivElement | null>(null)
+const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 const modalVisible = ref(false)
 const modalProps = reactive<any>({ title: '', path: '', data: {}, columns: [], onConfirm: () => {} })
@@ -180,6 +184,7 @@ async function search() {
 		const processed = (res.data || []).map((i: any) => normalizeKeys(i));
 		allDepts.value = processed;
 		mainGrid?.setData(processed)
+		vAlert('조회되었습니다.')
 	} catch (e) { vAlertError('조회 실패') }
 }
 
@@ -206,7 +211,7 @@ function initialize() {
 	mainGrid?.deselectRow();
 }
 
-function openDeptPopup() {
+function openDeptHelp() {
 	Object.assign(modalProps, {
 		title: '부서 검색', path: '/api/ha00/ha00_00p_str', data: { gubun: 'D0', cmpycd: authstore.cmpycd, gbncd: '', code: '', remark: '' },
 		columns: [{ title: '부서코드', field: 'deptcd', width: 100 }, { title: '부서명', field: 'deptnm', width: 200 }],
@@ -216,14 +221,14 @@ function openDeptPopup() {
 }
 
 onMounted(() => {
-	if (mainGridElement.value) {
-		mainGrid = new Tabulator(mainGridElement.value, {
+	if (mainGridRef.value) {
+		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%', selectable: 1,
 			columnDefaults: { headerSort: false, headerHozAlign: 'center', hozAlign: 'center', vertAlign: 'middle' },
 			columns: [
+				{ title: "No", formatter: "rownum", width: 40 },
 				{ title: '부서코드', field: 'deptcd', width: 90, cssClass: 'fw-bold text-primary border-end' },
-				{ title: '부서명칭', field: 'deptnm', minWidth: 150, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' },
-				{ title: '상위부서', field: 'updeptnm', width: 120, hozAlign: 'left' }
+				{ title: '부서명칭', field: 'deptnm', minWidth: 150, widthGrow: 1, cssClass: 'fw-bold', hozAlign: 'left' }
 			]
 		})
 		mainGrid.on('rowClick', (e, row) => { Object.assign(formData, normalizeKeys(row.getData())); formData.actkind = 'U0' })
@@ -244,7 +249,7 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	position: relative;
-	padding: 8px 0; /* 상하 폭 30% 이상 축소 (기존 15px -> 8px) */
+	padding: 8px 0; /* 상하 폭 최적화 */
 }
 
 /* 부서 박스 디자인 */
@@ -279,16 +284,13 @@ onMounted(() => {
 .org-h-box .dept-code { font-size: 9px; opacity: 0.7; }
 
 /* 🚀 연결선 로직 (이미지 참고 정밀 구현) */
-
-/* 자식 컨테이너 */
 .org-h-children {
 	display: flex;
 	flex-direction: column;
-	padding-left: 40px; /* 연결선 거리 */
+	padding-left: 40px;
 	position: relative;
 }
 
-/* 1. 수평선 (부모에서 자식 묶음으로) */
 .org-h-wrapper:not(.is-leaf) > .org-h-box::after {
 	content: "";
 	position: absolute;
@@ -299,7 +301,6 @@ onMounted(() => {
 	background: #cbd5e1;
 }
 
-/* 2. 수평선 (자식 묶음에서 개별 자식 노드로) */
 .org-h-children > .org-h-wrapper::before {
 	content: "";
 	position: absolute;
@@ -310,18 +311,16 @@ onMounted(() => {
 	background: #cbd5e1;
 }
 
-/* 3. 수직선 (자식들을 이어주는 기둥) */
 .org-h-children::before {
 	content: "";
 	position: absolute;
-	left: 20px; /* 자식 왼쪽선 시작점과 일치 */
-	top: 50%; /* 부모로부터 오는 선 높이 */
+	left: 20px;
+	top: 50%;
 	bottom: 50%;
 	width: 1.5px;
 	background: #cbd5e1;
 }
 
-/* 수직 기둥 확장 로직 */
 .org-h-children > .org-h-wrapper::after {
 	content: "";
 	position: absolute;
@@ -333,11 +332,9 @@ onMounted(() => {
 	z-index: 1;
 }
 
-/* 첫 번째 자식과 마지막 자식의 수직선 처리 */
 .org-h-children > .org-h-wrapper:first-child::after { top: 50%; }
 .org-h-children > .org-h-wrapper:last-child::after { bottom: 50%; }
 
-/* 최상위 노드 왼쪽선 방지 */
 .org-horizontal-container > .org-h-wrapper::before { display: none; }
 
 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }

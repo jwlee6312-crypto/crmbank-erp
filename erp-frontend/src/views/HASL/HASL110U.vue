@@ -409,7 +409,7 @@ const normalizeKeys = (obj: any) => {
         Object.entries(obj).map(([k, v]) => [k.toLowerCase(), v && typeof v === 'string' ? v.trim() : v])
     );
 
-    // 💡 사용자 지시: 조회 시 SUBCD = trim(Rs("CUSTCD")), SUBNM = trim(Rs("CUSTNM")) 로 변환하여 로드
+    // 💡 사용자 지시: 조회 시 SUBCD = trim(Rs("CUSTCD")), SUBNM = trim(Rs("custnm")) 로 변환하여 로드
     const custCd = normalized.custcd || normalized.subcd || normalized.docno2 || normalized.docno9 || '';
     const custNm = normalized.custnm || normalized.subnm || normalized.docnm2 || normalized.docnm4 || normalized.docnm9 || '';
 
@@ -689,7 +689,7 @@ function handleOpenHelp(type: string, target?: any) {
   } else if (type === 'SUB' || type === 'vat_cust') {
       openHelp('CUST', (d) => {
         const res = normalizeKeys(d);
-        // 💡 사용자 지시: CUSTCD/CUSTNM -> SUBCD/SUBNM 로 변환하여 로드
+        // 💡 사용자 지시: CUSTCD/custnm -> SUBCD/SUBNM 로 변환하여 로드
         selectedRow.value.subcd = res.custcd;
         selectedRow.value.subnm = res.custnm;
 

@@ -1,8 +1,8 @@
 <!--
 	=============================================================
-	프로그램명	: 월계표 (HASL520S)
-	작성일자	: 2025.02.24
-	설명        : 지정된 년/월의 차변/대변 합계 및 현금 시재 현황 조회 (HSOD100U 표준 디자인 및 소문자 원칙 적용)
+	?�로그램�?: ?�계??(HASL520S)
+	?�성?�자	: 2025.02.24
+	?�명        : 지?�된 ???�의 차�?/?�변 ?�계 �??�금 ?�재 ?�황 조회 (HSOD100U ?��? ?�자??�??�문???�칙 ?�용)
 	=============================================================
 -->
 
@@ -11,24 +11,24 @@
   <modal_component v-model:visible="modal_visible" :modalProps="modal_props" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
-    <!-- 🚀 1. 상단 액션 바 -->
+    <!-- ?? 1. ?�단 ?�션 �?-->
     <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-calendar-range me-2 text-primary" style="font-size: 18px;"></i>
-        장부관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        <span class="text-primary fw-bolder">월계표 (HASL520S)</span>
+        ?��?관�?<i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        <span class="text-primary fw-bolder">?�계??(HASL520S)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-3">
-        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-init" @click="initialize">초기??/button>
         <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-print" @click="print">인쇄</button>
+        <button class="btn-erp btn-print" @click="print">?�쇄</button>
       </div>
     </div>
 
-    <!-- 💡 2. 메인 컨텐츠 영역 -->
+    <!-- ?�� 2. 메인 컨텐�??�역 -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-      <!-- [상단] 조회 필터 영역 (HSOD100U 표준화) -->
+      <!-- [?�단] 조회 ?�터 ?�역 (HSOD100U ?��??? -->
       <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
         <div class="card-body p-0 bg-white">
           <table class="erp-table-dense" width="100%">
@@ -38,22 +38,22 @@
             </colgroup>
             <tbody>
               <tr>
-                <th class="text-center bg-light border-end">회계년월</th>
+                <th class="text-center bg-light border-end">?�계?�월</th>
                 <td class="border-end px-2">
                   <div class="d-flex align-items-center gap-1">
                     <select v-model="search_form.yy" class="form-select form-select-sm" style="max-width: 100px;" @change="search">
-                      <option v-for="year in year_options" :key="year" :value="year">{{ year }}년</option>
+                      <option v-for="year in year_options" :key="year" :value="year">{{ year }}??/option>
                     </select>
                     <select v-model="search_form.mm" class="form-select form-select-sm" style="max-width: 80px;" @change="search">
-                      <option v-for="month in month_options" :key="month" :value="month">{{ month }}월</option>
+                      <option v-for="month in month_options" :key="month" :value="month">{{ month }}??/option>
                     </select>
                   </div>
                 </td>
                 <th class="text-center bg-light border-end">조회구분</th>
                 <td class="px-2">
                   <select v-model="search_form.actkind" class="form-select form-select-sm" style="max-width: 120px;" @change="search">
-                    <option value="S0">상세내역</option>
-                    <option value="S1">계정요약</option>
+                    <option value="S0">?�세?�역</option>
+                    <option value="S1">계정?�약</option>
                   </select>
                 </td>
               </tr>
@@ -62,17 +62,17 @@
         </div>
       </div>
 
-      <!-- [중앙] 그리드 영역 -->
+      <!-- [중앙] 그리???�역 -->
       <div class="card border shadow-sm flex-grow-1 d-flex flex-column overflow-hidden grid-container-right">
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
           <div ref="main_grid_ref" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
 
-      <!-- [하단] 현금 시재 현황 (HSOD100U 스타일 적용) -->
+      <!-- [?�단] ?�금 ?�재 ?�황 (HSOD100U ?��????�용) -->
       <div class="card border shadow-sm flex-shrink-0 bg-white overflow-hidden">
         <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark text-start">
-          <i class="bi bi-cash-coin me-2 text-success"></i>현금 시재 및 전표 현황
+          <i class="bi bi-cash-coin me-2 text-success"></i>?�금 ?�재 �??�표 ?�황
         </div>
         <div class="card-body p-0">
           <table class="erp-table-dense text-center w-100">
@@ -85,26 +85,26 @@
             <thead>
               <tr class="bg-light border-bottom">
                 <th class="border-end py-1" rowspan="2">구분</th>
-                <th class="border-end py-1" colspan="4">현금 흐름</th>
-                <th class="border-end py-1" rowspan="2">전표건수</th>
+                <th class="border-end py-1" colspan="4">?�금 ?�름</th>
+                <th class="border-end py-1" rowspan="2">?�표건수</th>
                 <th class="py-1" rowspan="2">조회결과</th>
               </tr>
               <tr class="bg-light border-bottom text-muted" style="font-size: 11px;">
-                <th class="border-end py-0">전월잔액</th>
-                <th class="border-end py-0">당월증가</th>
-                <th class="border-end py-0">당월감소</th>
-                <th class="border-end py-0 text-primary fw-bold">당월잔액</th>
+                <th class="border-end py-0">?�월?�액</th>
+                <th class="border-end py-0">?�월증�?</th>
+                <th class="border-end py-0">?�월감소</th>
+                <th class="border-end py-0 text-primary fw-bold">?�월?�액</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th class="bg-light border-end py-2">현금시재</th>
+                <th class="bg-light border-end py-2">?�금?�재</th>
                 <td class="border-end text-end px-2">{{ format_number(summary_data.befo_cash) }}</td>
                 <td class="border-end text-end px-2 text-primary">+ {{ format_number(summary_data.curr_db_cash) }}</td>
                 <td class="border-end text-end px-2 text-danger">- {{ format_number(summary_data.curr_cr_cash) }}</td>
                 <td class="border-end text-end px-2 fw-bold text-primary bg-light-subtle">{{ format_number(summary_data.curr_jan_cash) }}</td>
-                <td class="border-end px-2 fw-bold text-dark">{{ summary_data.slip_cnt }} 건</td>
-                <td class="px-2 text-start text-muted small italic">정상적으로 집계되었습니다.</td>
+                <td class="border-end px-2 fw-bold text-dark">{{ summary_data.slip_cnt }} �?/td>
+                <td class="px-2 text-start text-muted small italic">?�상?�으�?집계?�었?�니??</td>
               </tr>
             </tbody>
           </table>
@@ -137,18 +137,18 @@ const current_year = now.getFullYear()
 
 const current_month = String(now.getMonth() + 1).padStart(2, '0')
 
-// 년도/월 옵션 (현재년도 기준 전후 5년)
+// ?�도/???�션 (?�재?�도 기�? ?�후 5??
 const year_options = Array.from({ length: 11 }, (_, i) => String(current_year - 5 + i)).reverse()
 const month_options = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
-// 🔍 검색 데이터 (소문자 원칙)
+// ?�� 검???�이??(?�문???�칙)
 const search_form = _reactive({
 	yy: String(current_year),
 	mm: current_month,
 	actkind: 'S0'
 })
 
-// 💰 시재 요약 정보 (소문자 원칙)
+// ?�� ?�재 ?�약 ?�보 (?�문???�칙)
 const summary_data = _reactive({
 	befo_cash: 0,
 	curr_db_cash: 0,
@@ -174,18 +174,18 @@ const search = async () => {
 		const data = res.data || []
 
 		if (data.length >= 2) {
-			// Row 0: Cash summary (💡 요청된 알리아스 반영: bjanamt, dbamt, cramt)
+			// Row 0: Cash summary (?�� ?�청???�리?�스 반영: bjanamt, dbamt, cramt)
 			const row0 = Object.fromEntries(Object.entries(data[0]).map(([k, v]) => [k.toLowerCase(), v]))
 			summary_data.befo_cash = Number(row0.bjanamt || 0)
 			summary_data.curr_db_cash = Number(row0.dbamt || 0)
 			summary_data.curr_cr_cash = Number(row0.cramt || 0)
 			summary_data.curr_jan_cash = summary_data.befo_cash + summary_data.curr_db_cash - summary_data.curr_cr_cash
 
-			// Row 1: Slip count (dbamt 필드 사용)
+			// Row 1: Slip count (dbamt ?�드 ?�용)
 			const row1 = Object.fromEntries(Object.entries(data[1]).map(([k, v]) => [k.toLowerCase(), v]))
 			summary_data.slip_cnt = Number(row1.dbamt || 0)
 
-			// Rows 2+: Main details (💡 요청된 알리아스 반영: acctcd, acctnm, dbamt, cramt)
+			// Rows 2+: Main details (?�� ?�청???�리?�스 반영: acctcd, acctnm, dbamt, cramt)
 			const details = data.slice(2).map((row: any) => {
 				const item = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
 				return {
@@ -199,14 +199,14 @@ const search = async () => {
 			})
 
 			main_grid?.setData(details)
-			v_alert('조회되었습니다.')
+			v_alert('조회?�었?�니??')
 		} else {
 			main_grid?.clearData()
 			reset_summary()
-			v_alert('데이터가 존재하지 않습니다.')
+			v_alert('?�이?��? 존재?��? ?�습?�다.')
 		}
 	} catch (e) {
-		v_alert_error('조회 중 오류 발생')
+		v_alert_error('조회 �??�류 발생')
 		reset_summary()
 	}
 }
@@ -245,7 +245,7 @@ const go_account_detail = (acct_cd: string) => {
 	const last_ymd = `${search_form.yy}${search_form.mm}${String(last_day_date.getDate()).padStart(2, '0')}`
 
     const pgmid = 'HASL540S'
-    add_dynamic_route(pgmid, '보조원장', 'HASL')
+    add_dynamic_route(pgmid, '보조?�장', 'HASL')
 
 	router.push({
 		path: `/${pgmid}`,
@@ -261,7 +261,7 @@ _on_mounted(() => {
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{
-					title: "차변 (Debit)", field: "dbamt", widthGrow: 1, hozAlign: "right",
+					title: "차�? (Debit)", field: "dbamt", widthGrow: 1, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					cssClass: "fw-bold"
 				},
@@ -281,7 +281,7 @@ _on_mounted(() => {
 					}
 				},
 				{
-					title: "대변 (Credit)", field: "cramt", widthGrow: 1, hozAlign: "right",
+					title: "?�변 (Credit)", field: "cramt", widthGrow: 1, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					cssClass: "fw-bold"
 				}

@@ -238,14 +238,21 @@ async function fetchConfig() {
 		})
 		if (res.data && res.data.length > 0) {
 			const d = res.data[0]
-			Object.assign(formData, d)
-			if (d.clsymd && d.clsymd.length === 8) {
-				uiDate.yy = d.clsymd.substring(0, 4)
-				uiDate.mm = d.clsymd.substring(4, 6)
-				uiDate.dd = d.clsymd.substring(6, 8)
+			// 대소문자 구분 없이 데이터 매핑
+			Object.keys(d).forEach(key => {
+				formData[key.toLowerCase()] = d[key]
+			})
+
+			const rawClsymd = d.clsymd || d.CLSYMD || ''
+			if (rawClsymd && rawClsymd.length >= 8) {
+				uiDate.yy = rawClsymd.substring(0, 4)
+				uiDate.mm = rawClsymd.substring(4, 6)
+				uiDate.dd = rawClsymd.substring(6, 8)
 			}
+			vAlert('환경설정 정보를 성공적으로 로드했습니다.')
+		} else {
+			vAlert('조회된 설정 정보가 없습니다.')
 		}
-		vAlert('환경설정 정보를 성공적으로 로드했습니다.')
 	} catch (e) { vAlertError('설정 로드 실패') }
 }
 

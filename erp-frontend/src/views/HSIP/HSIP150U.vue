@@ -43,8 +43,8 @@
                 <th class="text-center bg-light">발생부서</th>
                 <td>
                   <div class="input-group input-group-sm w-75">
-                    <input v-model="searchForm.DEPTCD" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                    <input v-model="searchForm.DEPTNM" type="text" class="form-control" placeholder="부서 선택" />
+                    <input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
+                    <input v-model="searchForm.deptnm" type="text" class="form-control" placeholder="부서 선택" />
                     <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
                   </div>
                 </td>
@@ -103,7 +103,7 @@ const { resetForm } = useFormReset()
 const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
-  DEPTCD: authStore.deptcd, DEPTNM: authStore.deptnm,
+  deptcd: authStore.deptcd, deptnm: authStore.deptnm,
   IOYMDFR: firstDay,
   IOYMDTO: today
 })
@@ -116,7 +116,7 @@ const fetchList = async () => {
     const params = {
       ACTKIND: 'S0',
       CMPYCD: authStore.CMPYCD,
-      DEPTCD: searchForm.DEPTCD,
+      deptcd: searchForm.deptcd,
       IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
       IOYMDTO: searchForm.IOYMDTO.replace(/-/g, '')
     }
@@ -140,7 +140,7 @@ const save = async () => {
     for (const item of selected) {
       const slipYmd = item.SLIPYMD || item.slipymd
       const slipNo = item.slipno || item.slipno
-      const uDeptCd = item.UDEPTCD || item.deptcd || searchForm.DEPTCD
+      const uDeptCd = item.udeptcd || item.deptcd || searchForm.deptcd
 
       // 🚀 Step 1. 자동 전표 승인 취소 (ASP: HASL_020U_STR)
       if (autoSlip.value === 'Y') {
@@ -150,7 +150,7 @@ const save = async () => {
           SLIPYMD: slipYmd,
           ACCTYMD: slipYmd,
           slipno: slipNo,
-          DEPTCD: uDeptCd,
+          deptcd: uDeptCd,
           slipkind: '031',
           slipyn: 'Y',
           COFMYN: 'N', // 승인 취소
@@ -164,7 +164,7 @@ const save = async () => {
         CMPYCD: authStore.CMPYCD,
         IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
         IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
-        DEPTCD: uDeptCd,
+        deptcd: uDeptCd,
         SLIPYMD: slipYmd,
         slipno: slipNo,
         UPDEMP: authStore.USERID
@@ -194,7 +194,7 @@ const initialize = () => {
 
 function openHelp(type: string) {
   if (type === 'DEPT') {
-    openCommonHelp('DEPT', (d) => { searchForm.DEPTCD = d.deptcd; searchForm.DEPTNM = d.deptnm })
+    openCommonHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm })
   }
 }
 
@@ -215,7 +215,7 @@ onMounted(async () => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
         { title: "전표번호", field: "slipno", width: 100, cssClass: "fw-bold text-primary" },
-        { title: "부서명", field: "DEPTNM", width: 120 },
+        { title: "부서명", field: "deptnm", width: 120 },
         { title: "비용종류", field: "COSTNM", width: 150 },
         { title: "PO No.", field: "FILENO", width: 180 },
         { title: "정산일", field: "jsanymD", width: 110, formatter: (c) => {

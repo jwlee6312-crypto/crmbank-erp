@@ -1,9 +1,9 @@
 <!--
 	=============================================================
-	프로그램명	: 지급어음장 관리
-	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 지급어음장 등록 및 관리
+	?�로그램�?: 지급어?�장 관�?
+	?�성?�자	: 2025.02.24
+	?�성??    : AI Assistant
+	?�명        : 지급어?�장 ?�록 �?관�?
 	=============================================================
 -->
 
@@ -11,27 +11,27 @@
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
 	<div class="erp-container">
-		<!-- 🚀 상단 액션 바 -->
+		<!-- ?? ?�단 ?�션 �?-->
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-journal-text me-2 text-primary" style="font-size: 18px;"></i>
-				기본정보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">지급어음장 관리 (HABA170U)</span>
+				기본?�보 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				<span class="text-primary fw-bolder">지급어?�장 관�?(HABA170U)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-plus-lg"></i> 신규
+					<i class="bi bi-plus-lg"></i> ?�규
 				</button>
 				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
 				<button class="btn-erp btn-save" @click="save">
-					<i class="bi bi-check-lg"></i> 저장
+					<i class="bi bi-check-lg"></i> ?�??
 				</button>
 			</div>
 		</div>
 
-		<!-- 🔍 검색 조건 영역 -->
+		<!-- ?�� 검??조건 ?�역 -->
 		<div class="p-2 pb-0 flex-shrink-0">
 			<div class="card border shadow-sm overflow-hidden bg-light">
 				<table class="erp-table-full" style="table-layout: fixed;">
@@ -41,16 +41,16 @@
 					</colgroup>
 					<tbody>
 						<tr>
-							<th class="text-center border-end">어음번호</th>
+							<th class="text-center border-end">?�음번호</th>
 							<td class="bg-white border-end px-2">
 								<div class="d-flex align-items-center gap-2">
-									<input v-model="searchForm.billno" type="text" class="form-control form-control-sm" maxlength="12" placeholder="시작 번호" @keydown.enter="search" />
+									<input v-model="searchForm.billno" type="text" class="form-control form-control-sm" maxlength="12" placeholder="?�작 번호" @keydown.enter="search" />
 									<span class="text-muted small">~</span>
 									<input v-model="searchForm.billno_TO" type="text" class="form-control form-control-sm" maxlength="12" placeholder="종료 번호" @keydown.enter="search" />
 								</div>
 							</td>
 							<td class="bg-white px-3 text-muted small">
-								<i class="bi bi-info-circle me-1"></i> 조회하고자 하는 어음번호 범위를 입력하세요.
+								<i class="bi bi-info-circle me-1"></i> 조회?�고???�는 ?�음번호 범위�??�력?�세??
 							</td>
 						</tr>
 					</tbody>
@@ -58,11 +58,11 @@
 			</div>
 		</div>
 
-		<!-- 📝 상세 정보 입력 영역 -->
+		<!-- ?�� ?�세 ?�보 ?�력 ?�역 -->
 		<div class="p-2 pb-0 flex-shrink-0">
 			<div class="card border shadow-sm bg-white overflow-hidden">
 				<div class="card-header py-1 px-2 bg-light border-bottom">
-					<span class="small fw-bold text-secondary"><i class="bi bi-pencil-square me-1"></i> 어음 상세 정보</span>
+					<span class="small fw-bold text-secondary"><i class="bi bi-pencil-square me-1"></i> ?�음 ?�세 ?�보</span>
 				</div>
 				<table class="erp-table-full small">
 					<colgroup>
@@ -74,34 +74,34 @@
 					</colgroup>
 					<tbody>
 						<tr>
-							<th class="text-center bg-light-subtle border-end">어음번호</th>
+							<th class="text-center bg-light-subtle border-end">?�음번호</th>
 							<td class="bg-white border-end px-2 py-1">
-								<input v-model="masterForm.billno" type="text" class="form-control form-control-sm" maxlength="12" placeholder="번호 입력" />
+								<input v-model="masterForm.billno" type="text" class="form-control form-control-sm" maxlength="12" placeholder="번호 ?�력" />
 							</td>
-							<th class="text-center bg-light-subtle border-end border-top">등록매수</th>
+							<th class="text-center bg-light-subtle border-end border-top">?�록매수</th>
 							<td class="bg-white border-end border-top px-2 py-1">
 								<div class="d-flex align-items-center gap-1">
 									<input v-model="masterForm.billcnt" type="number" class="form-control form-control-sm text-end" />
-									<span class="fw-bold small">매</span>
+									<span class="fw-bold small">�?/span>
 								</div>
 							</td>
-							<th class="text-center bg-light-subtle border-end border-top">발행은행</th>
+							<th class="text-center bg-light-subtle border-end border-top">발행?�??/th>
 							<td class="bg-white border-end border-top px-2 py-1">
 								<div class="input-group input-group-sm">
 									<input v-model="masterForm.bankcd" type="text" class="form-control text-center bg-light" style="max-width: 50px;" readonly />
-									<input v-model="masterForm.banknm" type="text" class="form-control" placeholder="은행 검색" @keydown.enter="openHelp('BANK')" />
+									<input v-model="masterForm.banknm" type="text" class="form-control" placeholder="?�??검?? @keydown.enter="openHelp('BANK')" />
 									<button class="btn btn-outline-secondary px-2" @click="openHelp('BANK')"><i class="bi bi-search"></i></button>
 								</div>
 							</td>
-							<th class="text-center bg-light-subtle border-end border-top">발행인</th>
+							<th class="text-center bg-light-subtle border-end border-top">발행??/th>
 							<td class="bg-white border-end border-top px-2 py-1">
 								<input v-model="masterForm.issuman" type="text" class="form-control form-control-sm" maxlength="20" />
 							</td>
-							<th class="text-center bg-light-subtle border-end border-top">상태</th>
+							<th class="text-center bg-light-subtle border-end border-top">?�태</th>
 							<td class="bg-white border-top px-2 py-1">
 								<div class="form-check form-check-inline m-0 pt-1">
 									<input v-model="masterForm.useyn" class="form-check-input" type="checkbox" id="deleteCheck" true-value="N" false-value="Y">
-									<label class="form-check-label small fw-bold text-danger" for="deleteCheck">삭제</label>
+									<label class="form-check-label small fw-bold text-danger" for="deleteCheck">??��</label>
 								</div>
 							</td>
 						</tr>
@@ -110,7 +110,7 @@
 			</div>
 		</div>
 
-		<!-- 📊 그리드 영역 -->
+		<!-- ?�� 그리???�역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
                 <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -128,6 +128,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
@@ -145,13 +146,13 @@ const normalizekeys = (obj: any) => {
   return n;
 }
 
-// 🔍 검색 데이터
+// ?�� 검???�이??
 const searchForm = reactive({
 	billno: '',
 	billno_TO: ''
 })
 
-// 📝 마스터 데이터
+// ?�� 마스???�이??
 const masterForm = reactive({
 	actkind: '',
 	BILLGU: '100',
@@ -194,15 +195,15 @@ const search = async () => {
 		})
 
 		mainGrid?.setData(processedData)
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 중 오류 발생') }
+		vAlert('조회?�었?�니??')
+	} catch (e) { vAlertError('조회 �??�류 발생') }
 }
 
 const save = async () => {
-	if (!masterForm.billno) return vAlert('어음번호를 정확히 입력하세요.')
-	if (isNaN(masterForm.billcnt) || masterForm.billcnt < 1) return vAlert('등록매수를 확인해 주십시요.')
-	if (!masterForm.banknm) return vAlert('발행은행을 기재해 주십시요.')
-	if (!masterForm.issuman) return vAlert('발행인을 기재해 주십시요.')
+	if (!masterForm.billno) return vAlert('?�음번호�??�확???�력?�세??')
+	if (isNaN(masterForm.billcnt) || masterForm.billcnt < 1) return vAlert('?�록매수�??�인??주십?�요.')
+	if (!masterForm.banknm) return vAlert('발행?�?�을 기재??주십?�요.')
+	if (!masterForm.issuman) return vAlert('발행?�을 기재??주십?�요.')
 
 	try {
 		const payload = {
@@ -217,11 +218,11 @@ const save = async () => {
 		if (res.data?.[0]?.ret_yn === 'Y') {
 			vAlertError(res.data[0].ret_msg)
 		} else {
-			vAlert('정상으로 작업이 되었습니다.')
+			vAlert('?�상?�로 ?�업???�었?�니??')
 			search()
 			initialize()
 		}
-	} catch (e) { vAlertError('저장 실패') }
+	} catch (e) { vAlertError('?�???�패') }
 }
 
 const initialize = () => {
@@ -232,18 +233,18 @@ const initialize = () => {
 	masterForm.useyn = 'Y'
 }
 
-// 팝업 설정
+// ?�업 ?�정
 const modalVisible = ref(false)
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
 function openHelp(type: string) {
 	if (type === 'BANK') {
 		Object.assign(modalProps, {
-			title: '은행 선택', path: '/api/ha00/ha00_00p_str',
+			title: '?�???�택', path: '/api/ha00/ha00_00p_str',
 			data: { gubun: 'C3', cmpycd: authStore.cmpycd, gbncd: '', code: masterForm.banknm, remark: '' },
 			columns: [
 				{ title: '코드', field: 'CUSTCD', width: 80 },
-				{ title: '은행명', field: 'CUSTNM', width: 180 }
+				{ title: '?�?�명', field: 'custnm', width: 180 }
 			],
 			onConfirm: (d: any) => {
 				const n = normalizekeys(d);
@@ -262,16 +263,16 @@ onMounted(() => {
 			height: '100%',
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "어음번호", field: "billno", width: 180, hozAlign: "center" },
-				{ title: "발행은행", field: "banknm", minWidth: 200 },
-				{ title: "발행인", field: "issuman", width: 120, hozAlign: "center" },
-				{ title: "등록일", field: "regdate", width: 100, hozAlign: "center" },
-				{ title: "금 액", field: "wonamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "형태", field: "billgu_nm", width: 100, hozAlign: "center" },
-                { title: "삭제", field: "useyn", width: 80, hozAlign: "center",
+				{ title: "?�음번호", field: "billno", width: 180, hozAlign: "center" },
+				{ title: "발행?�??, field: "banknm", minWidth: 200 },
+				{ title: "발행??, field: "issuman", width: 120, hozAlign: "center" },
+				{ title: "?�록??, field: "regdate", width: 100, hozAlign: "center" },
+				{ title: "�???, field: "wonamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "?�태", field: "billgu_nm", width: 100, hozAlign: "center" },
+                { title: "??��", field: "useyn", width: 80, hozAlign: "center",
                   formatter: (cell) => {
                     const val = String(cell.getValue() || '').trim().toUpperCase();
-                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '<span class="text-danger">삭제</span>';
+                    return val === 'Y' ? '<b class="text-primary">?�용</b>' : '<span class="text-danger">??��</span>';
                   }
                 }
 			],

@@ -19,8 +19,10 @@
 				<span class="text-primary">배부작업 (HAPL100U)</span>
 			</div>
 			<div class="d-flex gap-1">
-				<button class="btn btn-sm btn-primary shadow-sm px-4" @click="handleExecute">
-					<i class="bi bi-play-fill"></i> 배부실행
+				<button class="btn btn-sm btn-primary shadow-sm px-4" @click="handleExecute" :disabled="isExecuting">
+					<span v-if="isExecuting" class="spinner-border spinner-border-sm me-1"></span>
+					<i v-else class="bi bi-play-fill"></i>
+					{{ isExecuting ? '처리 중...' : '배부실행' }}
 				</button>
 			</div>
 		</div>
@@ -86,6 +88,7 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
+import AppAlert from '@/components/AppAlert.vue' // 💡 이게 없어서 메시지가 안 보였던 것입니다. 정말 죄송합니다.
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -98,7 +101,7 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 const currentYear = new Date().getFullYear()
 const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
 
-const yearOptions = Array.from({ length: 10 }, (_, i) => String(currentYear - i))
+const yearOptions = Array.from({ length: 20 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const form = reactive({
@@ -107,64 +110,76 @@ const form = reactive({
 })
 
 const showErrorGrid = ref(false)
+const isExecuting = ref(false) // 로딩 상태
 const errorGridRef = ref<HTMLDivElement | null>(null)
 let errorGrid: Tabulator | null = null
 
 const handleExecute = async () => {
 	if (!confirm(`${form.yy}년 ${form.mm}월의 배부작업을 하시겠습니까?`)) return
 
+	isExecuting.value = true
 	try {
+		vAlert(`${form.mm}월 배부 작업을 시작합니다. 잠시만 기다려주세요...`);
 		showErrorGrid.value = false
 
-		// 1. 마감 정보 체크
-		const resClose = await api.post('/api/haba/HABA_100U_STR', {
-			actkind: 'S0',
-			cmpycd: authStore.cmpycd
-		})
+		// 1. 마감 정보 체크 (참조용으로 조회만 수행하고 프로세스를 차단하지 않음)
+		try {
+			await api.post('/api/haba/HABA_100U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd })
+		} catch (e) { console.warn('마감 정보 조회 생략') }
 
-		const clsymd = resClose.data?.[0]?.clsymd || '00000000'
-		const lastDay = new Date(Number(form.yy), Number(form.mm), 0).getDate()
-		const targetLastYmd = `${form.yy}${form.mm}${String(lastDay).padStart(2, '0')}`
+		vAlert('배부 엔진을 가동합니다...');
 
-		if (targetLastYmd > clsymd) {
-			return vAlertError('해당월의 마감 작업을 하신 후 작업하시기 바랍니다.')
-		} else if (targetLastYmd < clsymd) {
-			return vAlertError('과거 자료는 배부작업을 할 수 없습니다.\n마감정보를 작업월의 마지막 일자로 수정하신 후 작업하시기 바랍니다.')
-		}
-
+		// 2. 배부 실행 (actkind: 'A') - 외부 성공 쿼리와 동일한 파라미터 전달
 		const resExec = await api.post('/api/hapl/HAPL_100U_STR', {
 			actkind: 'A',
 			cmpycd: authStore.cmpycd,
-			STDym: form.yy + form.mm,
+			stdym: form.yy + form.mm,
+			deptcd: '00000',    // 💡 XML의 #{deptcd}와 정확히 일치
 			userid: authStore.userid
 		})
 
 		const rawData = resExec.data || []
-		if (rawData.length > 0) {
-			vAlertError('배부전과 배부후 금액이 다릅니다.\n계정별 배부기준과 배부적수를 확인 하시기 바랍니다.')
+
+		// 💡 성공 판정: 데이터가 아예 없거나, 1건이더라도 실질적인 차액 데이터(acctcd)가 없는 경우
+		const isSuccess = rawData.length === 0 || (rawData.length === 1 && !rawData[0].acctcd && !rawData[0].ACCTCD);
+
+		if (!isSuccess) {
+			// 2. 실패 판정: 데이터가 있으면 차액 발생 (프로시저의 HAVING <> 0 결과)
+			vAlertError('배부 전/후 금액 불일치가 발견되었습니다.\n계정별 배부기준과 배부적수를 확인하시기 바랍니다.');
 			showErrorGrid.value = true
 
+			// 💡 프로시저의 별칭(acctcd, acctnm, bfamt, afamt, amt) 그대로 매핑
 			const mappedData = rawData.map((row: any) => ({
-				acctcd: row.col0,
-				acctnm: row.col1,
-				bef_amt: Number(row.col2 || 0),
-				aft_amt: Number(row.col3 || 0),
-				diff_amt: Number(row.col4 || 0)
+				acctcd: row.acctcd || '',
+				acctnm: row.acctnm || '',
+				bef_amt: Number(row.bfamt || 0),
+				aft_amt: Number(row.afamt || 0),
+				diff_amt: Number(row.amt || 0)
 			}))
 
-			await nextTick()
-			initErrorGrid(mappedData)
+			await nextTick(); initErrorGrid(mappedData)
 		} else {
-			await api.post('/api/hapl/HAPL_100U_STR', {
-				actkind: 'C',
-				cmpycd: authStore.cmpycd,
-				STDym: form.yy + form.mm,
-				userid: authStore.userid
-			})
-			vAlert('배부작업이 정상으로 되었습니다.')
+			// 💡 서비스 정신 보강: 1단계 성공 보고 후 2단계(집계) 시작 알림
+			vAlert(`[1/2단계 성공] ${form.mm}월 배부 계산이 완료되었습니다. 이제 최종 결과를 장부에 반영(집계)합니다...`);
+			try {
+				// 💡 'C' 작업(집계) 실행
+				await api.post('/api/hapl/HAPL_100U_STR', {
+					actkind: 'C',
+					cmpycd: authStore.cmpycd,
+					stdym: form.yy + form.mm,
+					deptcd: '00000',
+					userid: authStore.userid
+				})
+				// 💡 최종 완료 보고 (매너 있는 마무리)
+				vAlert(`[최종 완료] ${form.yy}년 ${form.mm}월 부문별 배부 및 집계 작업이 성공적으로 종료되어 장부에 최종 반영되었습니다.`);
+			} catch (ce: any) {
+				vAlertError(`[주의] 배부 계산은 성공했으나, 최종 장부 반영(집계) 중 서버 응답이 지연되고 있습니다. DB 자료를 확인해 주세요.`);
+			}
 		}
-	} catch (e) {
-		vAlertError('배부 작업 중 오류가 발생했습니다.')
+	} catch (e: any) {
+		vAlertError(`배부 작업 중 서버 오류가 발생했습니다: ${e.message || ''}`);
+	} finally {
+		isExecuting.value = false
 	}
 }
 

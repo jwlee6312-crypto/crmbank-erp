@@ -331,8 +331,8 @@ const handleOpenHelp = (type: string, target?: any) => {
       }
     });
     modalVisible.value = true;
-  } else if (type === 'SCUST' || type === 'IDEPT' || type === 'PKUNIT') {
-    const isDept = type === 'IDEPT'; const isPk = type === 'PKUNIT';
+  } else if (type === 'SCUST' || type === 'IDEPT' || type === 'pkunit') {
+    const isDept = type === 'IDEPT'; const isPk = type === 'pkunit';
     Object.assign(modalProps, {
       title: isDept ? '입고부서 선택' : (isPk ? '포장용기 선택' : '매출처 선택'),
       path: '/api/ha00/HA00_00P_STR',

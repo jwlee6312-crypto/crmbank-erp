@@ -119,7 +119,7 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 // [1] 데이터 모델링
 const currentYear = new Date().getFullYear()
 const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
-const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
+const yearOptions = Array.from({ length: 20 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({
@@ -150,14 +150,14 @@ const initGrids = () => {
     },
     columnCalcs: "table",
     columns: [
-      { title: "거래처명", field: "CUSTNM", widthGrow: 1.5, frozen: true, cssClass: "fw-bold text-primary",
+      { title: "거래처명", field: "custnm", widthGrow: 1.5, frozen: true, cssClass: "fw-bold text-primary",
         bottomCalc: () => "합계",
         cellClick: (e, cell) => {
             const d = cell.getData();
             router.push({
                 name: 'HAPL220S',
                 query: {
-                    DEPTCD: searchForm.deptcd,
+                    deptcd: searchForm.deptcd,
                     CUSTCD: d.CUSTCD,
                     YYYY: searchForm.yyyy,
                     FMM: searchForm.fmm,
@@ -254,8 +254,8 @@ const handleOpenHelp = (type: string) => {
 const handlePrint = (prtgu: string) => {
     if (!searchForm.deptcd) return vAlertError('부서를 선택하세요.');
     const params = new URLSearchParams({
-        DEPTCD: searchForm.deptcd,
-        DEPTNM: searchForm.deptnm,
+        deptcd: searchForm.deptcd,
+        deptnm: searchForm.deptnm,
         YMFR: searchForm.yyyy + searchForm.fmm,
         YMTO: searchForm.yyyy + searchForm.tmm,
         ordgbn: searchForm.ordgbn,

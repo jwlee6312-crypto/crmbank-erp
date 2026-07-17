@@ -39,7 +39,7 @@
               <tr>
                 <th class="text-center bg-light required">사업장</th>
                 <td>
-                  <select v-model="searchForm.TAXUNIT" class="form-select form-select-sm ms-1" style="width: 200px;">
+                  <select v-model="searchForm.taxunit" class="form-select form-select-sm ms-1" style="width: 200px;">
                     <option value="000">전체</option>
                     <option v-for="opt in taxUnitOptions" :key="opt.code" :value="opt.code">{{ opt.codenm }}</option>
                   </select>
@@ -237,7 +237,7 @@ const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({
-  TAXUNIT: '000',
+  taxunit: '000',
   YY: String(currentYear),
   FMM: currentMonth,
   TMM: currentMonth
@@ -290,12 +290,12 @@ async function search() {
     const ymto = searchForm.YY + searchForm.TMM;
 
     // 1. 사업장 정보 조회
-    const bizRes = await api.post('/api/haba/HABA_030U_STR', { actkind: 'TX', cmpycd: authStore.cmpycd, unitcd: searchForm.TAXUNIT });
+    const bizRes = await api.post('/api/haba/HABA_030U_STR', { actkind: 'TX', cmpycd: authStore.cmpycd, unitcd: searchForm.taxunit });
     if (bizRes.data?.length) Object.assign(bizInfo, bizRes.data[0]);
 
     // 2. 부가세 합계 데이터 조회 (iogbn '51' - 신고서 메인)
     const res51 = await api.post('/api/hatx/HATX_110S_STR', {
-      cmpycd: authStore.cmpycd, iogbn: '51', taxunit: searchForm.TAXUNIT, ymfr: ymfr, ymto: ymto
+      cmpycd: authStore.cmpycd, iogbn: '51', taxunit: searchForm.taxunit, ymfr: ymfr, ymto: ymto
     });
 
     if (res51.data?.length) {
@@ -325,7 +325,7 @@ async function search() {
 }
 
 const initialize = () => {
-    searchForm.TAXUNIT = '000';
+    searchForm.taxunit = '000';
     searchForm.YY = String(currentYear);
     searchForm.FMM = currentMonth;
     searchForm.TMM = currentMonth;
@@ -333,7 +333,7 @@ const initialize = () => {
 
 const handlePrint = () => {
     const params = new URLSearchParams({
-        TAXUNIT: searchForm.TAXUNIT, YY: searchForm.YY, FMM: searchForm.FMM, TMM: searchForm.TMM, PRTGU: 'Print'
+        taxunit: searchForm.taxunit, YY: searchForm.YY, FMM: searchForm.FMM, TMM: searchForm.TMM, PRTGU: 'Print'
     }).toString();
     window.open(`/api/hatx/HATX_100P?${params}`, 'TaxReportPrint', 'width=1000,height=800,scrollbars=yes');
 }

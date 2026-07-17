@@ -1,8 +1,8 @@
 <!--
 	=============================================================
-	프로그램명	: 고정자산 마스터 관리 (HAFA050U)
-	작성일자	: 2025.02.24
-	설명        : 고정자산 마스터 정보 등록 및 관리 (HAFA010U 표준 로직 이식)
+	?�로그램�?: 고정?�산 마스??관�?(HAFA050U)
+	?�성?�자	: 2025.02.24
+	?�명        : 고정?�산 마스???�보 ?�록 �?관�?(HAFA010U ?��? 로직 ?�식)
 	=============================================================
 -->
 
@@ -10,25 +10,25 @@
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
 	<div class="erp-container d-flex flex-column h-100 bg-white">
-		<!-- 🚀 1. 상단 액션 바 -->
+		<!-- ?? 1. ?�단 ?�션 �?-->
 		<div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
 			<div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-box-seam me-2 text-primary" style="font-size: 18px;"></i>
-				고정자산 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-				기초관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-				<span class="text-primary fw-bolder">고정자산관리 (HAFA050U)</span>
+				고정?�산 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				기초관�?<i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				<span class="text-primary fw-bolder">고정?�산관�?(HAFA050U)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1 pe-3">
-				<button class="btn-erp btn-init" @click="initialize">초기화</button>
+				<button class="btn-erp btn-init" @click="initialize">초기??/button>
 				<button class="btn-erp btn-search" @click="search">조회</button>
-				<button class="btn-erp btn-save" @click="save">저장</button>
+				<button class="btn-erp btn-save" @click="save">?�??/button>
 			</div>
 		</div>
 
-		<!-- 💡 2. 메인 컨텐츠 영역 -->
+		<!-- ?�� 2. 메인 컨텐�??�역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-			<!-- [상단] 조회 필터 영역 -->
+			<!-- [?�단] 조회 ?�터 ?�역 -->
 			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
 				<div class="card-body p-0 bg-white">
 					<table class="erp-table-dense" width="100%">
@@ -42,18 +42,18 @@
 								<td>
 									<div class="input-group input-group-sm" style="width: 300px;">
 										<input v-model="searchForm.acctcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 65px;" readonly />
-										<input v-model="searchForm.acctnm" type="text" class="form-control" @keydown.enter="openHelp('ACCT', 'search')" placeholder="계정 선택" />
+										<input v-model="searchForm.acctnm" type="text" class="form-control" @keydown.enter="openHelp('ACCT', 'search')" placeholder="계정 ?�택" />
 										<button class="btn btn-outline-secondary" @click="openHelp('ACCT', 'search')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
-								<th class="text-center bg-light">기준연월</th>
+								<th class="text-center bg-light">기�??�월</th>
 								<td>
 									<div class="d-flex align-items-center gap-1">
 										<select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;">
-											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
+											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}??/option>
 										</select>
 										<input v-model="searchForm.mm" type="text" class="form-control form-control-sm text-center" style="width: 50px;" maxlength="2" />
-										<span class="small fw-bold ms-1 text-secondary">월 현재</span>
+										<span class="small fw-bold ms-1 text-secondary">???�재</span>
 									</div>
 								</td>
 							</tr>
@@ -62,13 +62,13 @@
 				</div>
 			</div>
 
-			<!-- 📝 3. 입력/상세 정보 영역 -->
+			<!-- ?�� 3. ?�력/?�세 ?�보 ?�역 -->
 			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
 				<div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between">
-					<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>자산 상세 정보 [{{ formData.actkind === 'A' ? '신규' : '수정' }}]</div>
+					<div class="fw-bold small text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>?�산 ?�세 ?�보 [{{ formData.actkind === 'A' ? '?�규' : '?�정' }}]</div>
 					<div class="form-check form-switch m-0">
 						<input v-model="formData.useyn" class="form-check-input" type="checkbox" id="useynCheck050" true-value="N" false-value="Y">
-						<label class="form-check-label text-danger fw-bold small" for="useynCheck050">삭제</label>
+						<label class="form-check-label text-danger fw-bold small" for="useynCheck050">??��</label>
 					</div>
 				</div>
 				<div class="card-body p-0 bg-white">
@@ -80,10 +80,10 @@
 						</colgroup>
 						<tbody>
 							<tr>
-								<th class="bg-light">자산코드</th>
-								<td><input v-model="formData.asetcd" type="text" class="form-control form-control-sm text-center bg-light fw-bold" readonly placeholder="자동부여" /></td>
-								<th class="required bg-light">자산명</th>
-								<td><input v-model="formData.asetnm" type="text" class="form-control form-control-sm" placeholder="자산 명칭 입력" /></td>
+								<th class="bg-light">?�산코드</th>
+								<td><input v-model="formData.asetcd" type="text" class="form-control form-control-sm text-center bg-light fw-bold" readonly placeholder="?�동부?? /></td>
+								<th class="required bg-light">?�산�?/th>
+								<td><input v-model="formData.asetnm" type="text" class="form-control form-control-sm" placeholder="?�산 명칭 ?�력" /></td>
 								<th class="required bg-light">계정과목</th>
 								<td>
 									<div class="input-group input-group-sm">
@@ -94,32 +94,32 @@
 								</td>
 							</tr>
 							<tr>
-								<th class="required bg-light">취득일</th>
+								<th class="required bg-light">취득??/th>
 								<td><input v-model="formData.pchymd" type="date" class="form-control form-control-sm" /></td>
-								<th class="required bg-light">취득수량</th>
+								<th class="required bg-light">취득?�량</th>
 								<td><input v-model="formData.pchqty" type="number" class="form-control form-control-sm text-end" /></td>
-								<th class="required bg-light">취득가액</th>
+								<th class="required bg-light">취득가??/th>
 								<td><input v-model="formattedPchamt" type="text" class="form-control form-control-sm text-end fw-bold text-primary" placeholder="0" @input="e => e.target.value = e.target.value.replace(/[^0-9,]/g, '')" /></td>
 							</tr>
 							<tr>
-								<th class="required bg-light">상각방법</th>
+								<th class="required bg-light">?�각방법</th>
 								<td>
 									<select v-model="formData.dprstype" class="form-select form-select-sm">
 										<option v-for="item in dprstypeOptions" :key="item.codecd" :value="item.codecd">{{ item.codenm }}</option>
 									</select>
 								</td>
-								<th class="required bg-light">내용연수</th>
+								<th class="required bg-light">?�용?�수</th>
 								<td>
 									<div class="input-group input-group-sm">
 										<input v-model="formData.legalyy" type="number" class="form-control form-control-sm text-end" />
 										<button class="btn btn-outline-secondary" @click="openHelp('rate')"><i class="bi bi-list-ul"></i></button>
 									</div>
 								</td>
-								<th class="required bg-light">상각율</th>
+								<th class="required bg-light">?�각??/th>
 								<td>
 									<div class="d-flex gap-1 align-items-center">
 										<input v-model="formData.asetrate" type="number" step="0.001" class="form-control form-control-sm text-end fw-bold" style="width: 100px;" />
-										<span class="small text-muted ms-1">가감:</span>
+										<span class="small text-muted ms-1">가�?</span>
 										<input v-model="formData.GAGAMyy" type="number" class="form-control form-control-sm text-end" style="width: 50px;" />
 									</div>
 								</td>
@@ -131,7 +131,7 @@
 										<option v-for="item in costtypeOptions" :key="item.codecd" :value="item.codecd">{{ item.codenm }}</option>
 									</select>
 								</td>
-								<th class="required bg-light">보유부서</th>
+								<th class="required bg-light">보유부??/th>
 								<td>
 									<div class="input-group input-group-sm">
 										<input v-model="formData.deptcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 65px;" readonly />
@@ -139,13 +139,13 @@
 										<button class="btn btn-outline-secondary" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
-								<th class="bg-light">비 고</th>
-								<td><input v-model="formData.remark" type="text" class="form-control form-control-sm" placeholder="참조 사항 입력" /></td>
+								<th class="bg-light">�?�?/th>
+								<td><input v-model="formData.remark" type="text" class="form-control form-control-sm" placeholder="참조 ?�항 ?�력" /></td>
 							</tr>
 							<tr>
-								<th class="required bg-light">기초가액</th>
+								<th class="required bg-light">기초가??/th>
 								<td><input v-model="formattedBaseamt" type="text" class="form-control form-control-sm text-end" @input="e => e.target.value = e.target.value.replace(/[^0-9,]/g, '')" /></td>
-								<th class="required bg-light">전기상각액</th>
+								<th class="required bg-light">?�기?�각??/th>
 								<td><input v-model="formattedDprssum" type="text" class="form-control form-control-sm text-end" @input="e => e.target.value = e.target.value.replace(/[^0-9,]/g, '')" /></td>
 								<td colspan="2" class="bg-white"></td>
 							</tr>
@@ -154,7 +154,7 @@
 				</div>
 			</div>
 
-			<!-- 📊 4. 그리드 영역 -->
+			<!-- ?�� 4. 그리???�역 -->
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
 				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
 					<div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
@@ -171,6 +171,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import Modal from '@/components/Modal.vue'
@@ -190,7 +191,7 @@ const formData = reactive({ actkind: 'A', asetcd: '', asetnm: '', acctcd: '', ac
 const dprstypeOptions = ref<any[]>([]); const costtypeOptions = ref<any[]>([])
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
-// 데이터 키를 소문자로 변환하는 헬퍼
+// ?�이???��? ?�문?�로 변?�하???�퍼
 const normalizeKeys = (data: any): any => {
   if (!data) return data;
   if (Array.isArray(data)) return data.map(item => normalizeKeys(item));
@@ -200,7 +201,7 @@ const normalizeKeys = (data: any): any => {
   return normalized;
 };
 
-// 공통 코드 데이터 표준 매핑 (codecd, codenm 만 사용)
+// 공통 코드 ?�이???��? 매핑 (codecd, codenm �??�용)
 const mapToStandard = (data: any[]) => {
   return normalizeKeys(data || []).map((i: any) => ({
     codecd: i.codecd || i.code || '',
@@ -208,7 +209,7 @@ const mapToStandard = (data: any[]) => {
   }));
 };
 
-// 금액 천단위 콤마 포맷팅 Computed
+// 금액 천단??콤마 ?�맷??Computed
 const formattedPchamt = computed({
   get: () => {
     if (formData.pchamt === undefined || formData.pchamt === null || formData.pchamt === '') return '';
@@ -254,31 +255,31 @@ const fetchOptions = async () => {
 		]);
 		dprstypeOptions.value = mapToStandard(resD.data);
 		costtypeOptions.value = mapToStandard(resC.data);
-	} catch (e) { console.error('코드 로드 실패:', e) }
+	} catch (e) { console.error('코드 로드 ?�패:', e) }
 }
 
 async function search() {
-	if (!searchForm.acctcd) return vAlertError('계정과목을 선택하세요.')
+	if (!searchForm.acctcd) return vAlertError('계정과목???�택?�세??')
 	try {
 		const res = await api.post('/api/hafa/HAFA_050U_STR', { actkind: 'S', cmpycd: authStore.cmpycd, yy: searchForm.yy, mm: searchForm.mm, acctcd: searchForm.acctcd })
 		const data = normalizeKeys(res.data || []).map((r: any) => ({ ...r, pchymd: r.pchymd ? `${r.pchymd.slice(0,4)}-${r.pchymd.slice(4,6)}-${r.pchymd.slice(6,8)}` : '' }))
-		mainGrid?.setData(data); vAlert('조회되었습니다.'); initialize()
-	} catch (e) { vAlertError('조회 중 오류 발생') }
+		mainGrid?.setData(data); vAlert('조회?�었?�니??'); initialize()
+	} catch (e) { vAlertError('조회 �??�류 발생') }
 }
 
 async function save() {
-	if (!formData.acctcd) return vAlertError('계정과목을 선택하세요.')
-	if (!formData.asetnm) return vAlertError('자산명을 입력하세요.')
+	if (!formData.acctcd) return vAlertError('계정과목???�택?�세??')
+	if (!formData.asetnm) return vAlertError('?�산명을 ?�력?�세??')
 	try {
 		const res = await api.post('/api/hafa/HAFA_050U_STR', { ...formData, cmpycd: authStore.cmpycd, yy: searchForm.yy, mm: searchForm.mm, pchymd: formData.pchymd.replace(/-/g, ''), userid: authStore.userid })
-		if (res.data && res.data[0]?.col0 === 'Y') { vAlertError(res.data[0].col1) } else { vAlert('저장되었습니다.'); search() }
-	} catch (e) { vAlertError('저장 중 오류 발생') }
+		if (res.data && res.data[0]?.col0 === 'Y') { vAlertError(res.data[0].col1) } else { vAlert('?�?�되?�습?�다.'); search() }
+	} catch (e) { vAlertError('?�??�??�류 발생') }
 }
 
 const modalVisible = ref(false); const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 function openHelp(type: string, target?: string) {
 	if (type === 'ACCT') {
-		Object.assign(modalProps, { title: '계정과목 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'A8', cmpycd: authStore.cmpycd, gbncd: '020', code: '' }, columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 200 }],
+		Object.assign(modalProps, { title: '계정과목 ?�택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'A8', cmpycd: authStore.cmpycd, gbncd: '020', code: '' }, columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정�?, field: 'acctnm', width: 200 }],
 			onConfirm: (rawData: any) => {
 				const d = normalizeKeys(rawData);
 				const code = d.acctcd || d.code;
@@ -287,7 +288,7 @@ function openHelp(type: string, target?: string) {
 			}
 		})
 	} else if (type === 'DEPT') {
-		Object.assign(modalProps, { title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: formData.deptnm }, columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+		Object.assign(modalProps, { title: '부???�택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: formData.deptnm }, columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부?�명', field: 'deptnm', width: 180 }],
 			onConfirm: (rawData: any) => {
 				const d = normalizeKeys(rawData);
 				formData.deptcd = d.deptcd || d.code;
@@ -295,7 +296,7 @@ function openHelp(type: string, target?: string) {
 			}
 		})
 	} else if (type === 'rate') {
-		Object.assign(modalProps, { title: '상각율 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'J1', cmpycd: authStore.cmpycd, gbncd: formData.dprstype }, columns: [{ title: '내용연수', field: 'legalyy', width: 100 }, { title: '상각율', field: 'asetrate', width: 100 }],
+		Object.assign(modalProps, { title: '?�각???�택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'J1', cmpycd: authStore.cmpycd, gbncd: formData.dprstype }, columns: [{ title: '?�용?�수', field: 'legalyy', width: 100 }, { title: '?�각??, field: 'asetrate', width: 100 }],
 			onConfirm: (rawData: any) => {
 				const d = normalizeKeys(rawData);
 				formData.legalyy = d.legalyy;
@@ -312,18 +313,18 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%', columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "자산코드", field: "asetcd", width: 100, hozAlign: "center", cssClass: "fw-bold text-primary" },
-				{ title: "자산명", field: "asetnm", minWidth: 180, cssClass: "fw-bold" },
-				{ title: "취득일", field: "pchymd", width: 150, hozAlign: "center" },
-				{ title: "취득가액", field: "pchamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "상각방법", field: "dprstypenm", width: 150, hozAlign: "center" },
-				{ title: "내용연수", field: "legalyy", width: 150, hozAlign: "center" },
-				{ title: "상각율", field: "asetrate", width: 150, hozAlign: "center" },
-				{ title: "보유부서", field: "deptnm", width: 200 },
-                { title: "상태", field: "useyn", width: 80, hozAlign: "center",
+				{ title: "?�산코드", field: "asetcd", width: 100, hozAlign: "center", cssClass: "fw-bold text-primary" },
+				{ title: "?�산�?, field: "asetnm", minWidth: 180, cssClass: "fw-bold" },
+				{ title: "취득??, field: "pchymd", width: 150, hozAlign: "center" },
+				{ title: "취득가??, field: "pchamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+				{ title: "?�각방법", field: "dprstypenm", width: 150, hozAlign: "center" },
+				{ title: "?�용?�수", field: "legalyy", width: 150, hozAlign: "center" },
+				{ title: "?�각??, field: "asetrate", width: 150, hozAlign: "center" },
+				{ title: "보유부??, field: "deptnm", width: 200 },
+                { title: "?�태", field: "useyn", width: 80, hozAlign: "center",
                   formatter: (cell) => {
                     const val = String(cell.getValue() || '').trim().toUpperCase();
-                    return val === 'Y' ? '<b class="text-primary">사용</b>' : '<span class="text-danger">삭제</span>';
+                    return val === 'Y' ? '<b class="text-primary">?�용</b>' : '<span class="text-danger">??��</span>';
                   }
                 }
 			]

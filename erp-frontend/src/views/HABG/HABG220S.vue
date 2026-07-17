@@ -1,8 +1,8 @@
 <!--	=============================================================
-	프로그램명	: 예산상세현황
-	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 부서/과목별 예산 집행 상세 내역 조회
+	?�로그램�?: ?�산?�세?�황
+	?�성?�자	: 2025.02.24
+	?�성??    : AI Assistant
+	?�명        : 부??과목�??�산 집행 ?�세 ?�역 조회
 	=============================================================
 -->
 
@@ -13,23 +13,23 @@
 		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
 			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-list-check me-2 text-primary" style="font-size: 18px;"></i>
-				예산관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">예산상세현황 (HABG220S)</span>
+				?�산관�?<i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+				<span class="text-primary fw-bolder">?�산?�세?�황 (HABG220S)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
 				<button class="btn-erp btn-search" @click="search">
 					<i class="bi bi-search"></i> 조회
 				</button>
 				<button class="btn-erp btn-excel" @click="excel">
-					<i class="bi bi-file-earmark-excel"></i> 엑셀
+					<i class="bi bi-file-earmark-excel"></i> ?��?
 				</button>
 			</div>
 		</div>
 
-		<!-- 💡 메인 컨텐츠 영역 -->
+		<!-- ?�� 메인 컨텐�??�역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-			<!-- 🔍 검색 조건 영역 (HSOD100U 표준 패턴) -->
+			<!-- ?�� 검??조건 ?�역 (HSOD100U ?��? ?�턴) -->
 			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
 				<div class="card-body p-0 bg-white">
 					<table class="erp-table-dense" width="100%">
@@ -40,23 +40,23 @@
 						</colgroup>
 						<tbody>
 							<tr>
-								<th class="text-center bg-light">예산년월</th>
+								<th class="text-center bg-light">?�산?�월</th>
 								<td>
 									<input v-model="searchForm.bugtym" type="month" class="form-control form-control-sm" style="width: 150px;" @change="search" />
 								</td>
-								<th class="text-center bg-light">예산부서</th>
+								<th class="text-center bg-light">?�산부??/th>
 								<td>
 									<div class="input-group input-group-sm" style="width: 220px;">
 										<input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.deptnm" type="text" class="form-control" @keydown.enter="openHelp('DEPT')" placeholder="부서 선택" />
+										<input v-model="searchForm.deptnm" type="text" class="form-control" @keydown.enter="openHelp('DEPT')" placeholder="부???�택" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
-								<th class="text-center bg-light">예산과목</th>
+								<th class="text-center bg-light">?�산과목</th>
 								<td>
 									<div class="input-group input-group-sm" style="width: 220px;">
 										<input v-model="searchForm.bugtcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-										<input v-model="searchForm.bugtnm" type="text" class="form-control" @keydown.enter="openHelp('BUGT')" placeholder="과목 선택" />
+										<input v-model="searchForm.bugtnm" type="text" class="form-control" @keydown.enter="openHelp('BUGT')" placeholder="과목 ?�택" />
 										<button class="btn btn-outline-secondary px-2" @click="openHelp('BUGT')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
@@ -66,7 +66,7 @@
 				</div>
 			</div>
 
-			<!-- 📊 그리드 영역 -->
+			<!-- ?�� 그리???�역 -->
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
 				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
 					<div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
@@ -84,6 +84,7 @@ import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import * as XLSX from 'xlsx'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import Modal from '@/components/Modal.vue'
@@ -120,12 +121,12 @@ const search = async () => {
 		}))
 
 		mainGrid?.setData(data)
-		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 중 오류 발생') }
+		vAlert('조회?�었?�니??')
+	} catch (e) { vAlertError('조회 �??�류 발생') }
 }
 
 const excel = () => {
-	mainGrid?.download("xlsx", `예산상세현황_${searchForm.bugtym}.xlsx`)
+	mainGrid?.download("xlsx", `?�산?�세?�황_${searchForm.bugtym}.xlsx`)
 }
 
 const modalVisible = ref(false)
@@ -134,14 +135,14 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 function openHelp(type: string) {
 	if (type === 'DEPT') {
 		Object.assign(modalProps, {
-			title: '부서 선택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: searchForm.deptnm },
-			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부서명', field: 'deptnm', width: 180 }],
+			title: '부???�택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: searchForm.deptnm },
+			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부?�명', field: 'deptnm', width: 180 }],
 			onConfirm: (d: any) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm }
 		})
 	} else {
 		Object.assign(modalProps, {
-			title: '예산과목 선택', path: '/api/haba/HABA020S_STR', data: { cmpycd: authStore.cmpycd, search: searchForm.bugtnm },
-			columns: [{ title: '코드', field: 'bugtcd', width: 80 }, { title: '과목명', field: 'bugtnm', width: 180 }],
+			title: '?�산과목 ?�택', path: '/api/haba/HABA020S_STR', data: { cmpycd: authStore.cmpycd, search: searchForm.bugtnm },
+			columns: [{ title: '코드', field: 'bugtcd', width: 80 }, { title: '과목�?, field: 'bugtnm', width: 180 }],
 			onConfirm: (d: any) => { searchForm.bugtcd = d.bugtcd; searchForm.bugtnm = d.bugtnm; search() }
 		})
 	}
@@ -155,9 +156,9 @@ onMounted(() => {
 			layout: 'fitColumns',
 			height: '100%',
 			columns: [
-				{ title: "일자", field: "actdate", widthGrow: 1, hozAlign: "center" },
-				{ title: "전표번호", field: "slipno", widthGrow: 1, hozAlign: "center" },
-				{ title: "적요", field: "bigo", widthGrow: 1 },
+				{ title: "?�자", field: "actdate", widthGrow: 1, hozAlign: "center" },
+				{ title: "?�표번호", field: "slipno", widthGrow: 1, hozAlign: "center" },
+				{ title: "?�요", field: "bigo", widthGrow: 1 },
 				{ title: "금액", field: "amt", widthGrow: 1, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" }
 			]
 		})

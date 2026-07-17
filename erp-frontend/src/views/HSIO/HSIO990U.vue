@@ -207,7 +207,7 @@ function initialize() {
 
 function openSlipPrint(row: any) {
   const { slipymd, slipno, hdeptcd } = row
-  const url = `/HASL/HASL_SLIP_PRINT_OUT?SLIPGU=010&SLIPYMD=${slipymd}&SLIPNO=${slipno}&DEPTCD=${hdeptcd || authStore.deptcd}`
+  const url = `/HASL/HASL_SLIP_PRINT_OUT?SLIPGU=010&SLIPYMD=${slipymd}&SLIPNO=${slipno}&deptcd=${hdeptcd || authStore.deptcd}`
   window.open(url, '전표인쇄', 'width=800,height=700,scrollbars=yes')
 }
 

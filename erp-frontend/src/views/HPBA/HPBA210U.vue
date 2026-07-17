@@ -309,9 +309,9 @@ function openHelp(type: string, cell?: any) {
         onConfirm: (d: any) => {
             // 🚀 대소문자 무관하게 매핑 (소문자 원칙 준수)
             const itemcd = d.itemcd || d.ITEMCD || '';
-            const itemnm = d.itemnm || d.ITEMNM || '';
-            const itsize = d.itsize || d.ITSIZE || '';
-            const unit = d.unit || d.UNIT || '';
+            const itemnm = d.itemnm || d.itemnm || '';
+            const itsize = d.itsize || d.itsize || '';
+            const unit = d.unit || d.unit || '';
 
             Object.assign(searchData, { itemcd, itemnm, itsize, unit });
             search();
@@ -328,9 +328,9 @@ function openHelp(type: string, cell?: any) {
             const astkind = d.astkind || d.ASTKIND || '';
             cell.getRow().update({
                 mitemcd: d.itemcd || d.ITEMCD,
-                mitemnm: d.itemnm || d.ITEMNM,
-                mitsize: d.itsize || d.ITSIZE,
-                munit: d.unit || d.UNIT,
+                mitemnm: d.itemnm || d.itemnm,
+                mitsize: d.itsize || d.itsize,
+                munit: d.unit || d.unit,
                 mastkind: astkind
             });
         }

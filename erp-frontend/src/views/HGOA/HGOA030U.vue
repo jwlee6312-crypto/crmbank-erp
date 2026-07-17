@@ -1,9 +1,9 @@
 <!--
 	=============================================================
-	프로그램명	  : 질문 및 답변 등록 (소문자 표준 적용)
-    프로그램 ID	: HGOA030U
-	작성일자	    : 25.03.06
-	작성자	      : AI Assistant
+	?�로그램�?  : 질문 �??��? ?�록 (?�문???��? ?�용)
+    ?�로그램 ID	: HGOA030U
+	?�성?�자	    : 25.03.06
+	?�성??      : AI Assistant
 	=============================================================
 -->
 
@@ -16,10 +16,10 @@
             <div class="card-body p-1 px-3">
                 <div class="row align-items-center g-2">
                     <div class="col-auto">
-                        <span class="badge bg-primary px-2 py-1 small"><i class="bi bi-search me-1"></i>질문 검색</span>
+                        <span class="badge bg-primary px-2 py-1 small"><i class="bi bi-search me-1"></i>질문 검??/span>
                     </div>
                     <div class="col-4">
-                        <input v-model="search_form.question" class="form-control form-control-sm" placeholder="질문 내용을 입력하세요..." @keyup.enter="search" />
+                        <input v-model="search_form.question" class="form-control form-control-sm" placeholder="질문 ?�용???�력?�세??.." @keyup.enter="search" />
                     </div>
                     <div class="col-auto">
                         <button class="btn btn-sm btn-dark px-3 fw-bold" @click="search" style="height: 26px; font-size: 0.8rem;">조회</button>
@@ -29,45 +29,45 @@
         </div>
 
         <div class="row g-1 mb-1 flex-shrink-0">
-            <!-- [좌측] 질문 기본 정보 -->
+            <!-- [좌측] 질문 기본 ?�보 -->
             <div class="col-lg-4 col-md-5">
                 <div class="card shadow-sm border-0 h-100 border-top border-3 border-secondary">
                     <div class="card-header bg-white py-1 fw-bold small border-bottom-0">
-                        <i class="bi bi-info-circle-fill text-secondary me-1"></i>질문 기본 정보
+                        <i class="bi bi-info-circle-fill text-secondary me-1"></i>질문 기본 ?�보
                     </div>
                     <div class="card-body p-2 pt-0">
                         <table class="table table-sm form-table mb-0">
                             <colgroup><col style="width: 30%" /><col style="width: 70%" /></colgroup>
                             <tbody>
                                 <tr>
-                                    <th class="required small">질문내용</th>
+                                    <th class="required small">질문?�용</th>
                                     <td>
-                                        <textarea v-model="mst_form.question" class="form-control form-control-sm shadow-none" rows="3" style="font-size: 0.85rem;" placeholder="질문 문구 입력"></textarea>
+                                        <textarea v-model="mst_form.question" class="form-control form-control-sm shadow-none" rows="3" style="font-size: 0.85rem;" placeholder="질문 문구 ?�력"></textarea>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="small">답변유형</th>
+                                    <th class="small">?��??�형</th>
                                     <td>
                                         <select v-model="mst_form.ans_tp" class="form-select form-select-sm shadow-none" @change="handle_type_change">
-                                            <option value="010">객관식 (선택형)</option>
-                                            <option value="020">주관식 (서술형)</option>
-                                            <option value="030">혼합형 (객관+주관)</option>
+                                            <option value="010">객�???(?�택??</option>
+                                            <option value="020">주�???(?�술??</option>
+                                            <option value="030">?�합??(객�?+주�?)</option>
                                         </select>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="small">정렬순서</th>
+                                    <th class="small">?�렬?�서</th>
                                     <td>
                                         <input v-model="mst_form.dspord" type="text" maxlength="3" class="form-control form-control-sm w-50 shadow-none" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="small">사용여부</th>
+                                    <th class="small">?�용?��?</th>
                                     <td>
                                         <div class="form-check form-switch p-0 ps-5">
                                             <input class="form-check-input ms-0" type="checkbox" v-model="mst_form.useyn" true-value="Y" false-value="N">
                                             <label class="form-check-label small fw-bold ms-2" :class="is_used ? 'text-primary' : 'text-danger'">
-                                                {{ is_used ? '사용함' : '미사용' }}
+                                                {{ is_used ? '?�용?? : '미사?? }}
                                             </label>
                                         </div>
                                     </td>
@@ -78,15 +78,15 @@
                 </div>
             </div>
 
-            <!-- [우측] 답변 상세 구성 -->
+            <!-- [?�측] ?��? ?�세 구성 -->
             <div class="col-lg-8 col-md-7">
                 <div class="card shadow-sm border-0 h-100 border-top border-3 border-primary">
                     <div class="card-header bg-white py-1 fw-bold small d-flex justify-content-between align-items-center border-bottom-0">
-                        <span><i class="bi bi-check-square-fill text-primary me-1"></i>답변 상세 구성</span>
+                        <span><i class="bi bi-check-square-fill text-primary me-1"></i>?��? ?�세 구성</span>
                         <div class="btn-group">
-                            <button class="btn btn-xs btn-outline-primary px-2" @click="initialize">신규</button>
-                            <button class="btn btn-xs btn-primary px-3 fw-bold" @click="save"><i class="bi bi-save me-1"></i>저장</button>
-                            <button class="btn btn-xs btn-outline-danger px-2" @click="delete_item">삭제</button>
+                            <button class="btn btn-xs btn-outline-primary px-2" @click="initialize">?�규</button>
+                            <button class="btn btn-xs btn-primary px-3 fw-bold" @click="save"><i class="bi bi-save me-1"></i>?�??/button>
+                            <button class="btn btn-xs btn-outline-danger px-2" @click="delete_item">??��</button>
                         </div>
                     </div>
                     <div class="card-body p-2 pt-0">
@@ -95,10 +95,10 @@
                                 <thead class="table-light sticky-top">
                                     <tr class="small text-muted">
                                         <th style="width: 40px;">No</th>
-                                        <th>답변 보기 내용 (상담원용 예문)</th>
+                                        <th>?��? 보기 ?�용 (?�담?�용 ?�문)</th>
                                         <th style="width: 60px;">배점</th>
-                                        <th style="width: 60px;">사용</th>
-                                        <th style="width: 80px;">직접입력</th>
+                                        <th style="width: 60px;">?�용</th>
+                                        <th style="width: 80px;">직접?�력</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -106,7 +106,7 @@
                                         <td class="small fw-bold text-secondary">{{ index + 1 }}</td>
                                         <td class="p-0 px-1">
                                             <input v-model="item.ans_cont" class="form-control form-control-sm border-0 bg-transparent py-0 shadow-none"
-                                                   :disabled="mst_form.ans_tp === '020' && index > 0" placeholder="상담 시 노출될 답변 내용 입력" />
+                                                   :disabled="mst_form.ans_tp === '020' && index > 0" placeholder="?�담 ???�출???��? ?�용 ?�력" />
                                         </td>
                                         <td class="p-0">
                                             <input v-model.number="item.ans_point" type="number" class="form-control form-control-sm border-0 bg-transparent text-center py-0 shadow-none"
@@ -123,10 +123,10 @@
             </div>
         </div>
 
-        <!-- 하단 목록 -->
+        <!-- ?�단 목록 -->
         <div class="card shadow-sm border-0 flex-grow-1 overflow-hidden d-flex flex-column">
             <div class="card-header bg-dark text-white py-1 px-3 fw-bold small d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-collection-fill me-2 text-info"></i>질문 및 답변 통합 데이터베이스</span>
+                <span><i class="bi bi-collection-fill me-2 text-info"></i>질문 �??��? ?�합 ?�이?�베?�스</span>
             </div>
             <div class="card-body p-0 bg-white flex-grow-1 position-relative">
                 <div ref="table_ref" class="tabulator-full-height" />
@@ -139,6 +139,7 @@
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 
 const { showAlert, showError, vAlert, vAlertError, alertMessage } = useAlerts()
@@ -152,7 +153,7 @@ const is_used = computed(() => (mst_form.useyn || "").toString().toUpperCase() =
 function create_empty_dtl(ansNo: string) { return { ans_no: ansNo, ans_cont: '', ans_point: 0, useyn: 'Y', essay_yn: 'N' } }
 function reset_dtl() { dtl_list.value = []; for (let i = 1; i <= 8; i++) dtl_list.value.push(create_empty_dtl(String(i).padStart(3, '0'))) }
 
-const handle_type_change = () => { if (mst_form.ans_tp === '020') { reset_dtl(); dtl_list.value[0].ans_cont = '자유 서술형 응답'; dtl_list.value[0].essay_yn = 'Y'; } }
+const handle_type_change = () => { if (mst_form.ans_tp === '020') { reset_dtl(); dtl_list.value[0].ans_cont = '?�유 ?�술???�답'; dtl_list.value[0].essay_yn = 'Y'; } }
 
 const table_ref = ref<HTMLDivElement | null>(null)
 let table_instance: Tabulator | null = null
@@ -164,17 +165,17 @@ function init_table() {
 	if (!table_ref.value) return
     if (table_instance) table_instance.destroy();
 	table_instance = new Tabulator(table_ref.value, {
-		placeholder: '등록된 질문이 없습니다.', layout: "fitColumns", height: "100%", pagination: "local", paginationSize: 20,
+		placeholder: '?�록??질문???�습?�다.', layout: "fitColumns", height: "100%", pagination: "local", paginationSize: 20,
 		columns: [
             { title: "No", formatter: "rownum", hozAlign: "center", width: 50 },
             { title: "질문번호", field: "surv_no", hozAlign: "center", width: 100 },
-            { title: "질문 내용", field: "question", hozAlign: "left", formatter: (cell) => `<div class="fw-bold text-dark py-1">${cell.getValue() || ''}</div>` },
-            { title: "유형", field: "ans_tp", hozAlign: "center", width: 80, formatter: (cell) => cell.getValue() === '010' ? '객관' : cell.getValue() === '020' ? '주관' : '혼합' },
-            { title: "정렬", field: "dspord", hozAlign: "center", width: 60 },
-            { title: "사용", field: "useyn", width: 80, hozAlign: "center",
+            { title: "질문 ?�용", field: "question", hozAlign: "left", formatter: (cell) => `<div class="fw-bold text-dark py-1">${cell.getValue() || ''}</div>` },
+            { title: "?�형", field: "ans_tp", hozAlign: "center", width: 80, formatter: (cell) => cell.getValue() === '010' ? '객�?' : cell.getValue() === '020' ? '주�?' : '?�합' },
+            { title: "?�렬", field: "dspord", hozAlign: "center", width: 60 },
+            { title: "?�용", field: "useyn", width: 80, hozAlign: "center",
               formatter: (cell) => {
                 const val = String(cell.getValue() || '').trim().toUpperCase();
-                return val === 'Y' ? '<b class="text-primary">사용</b>' : '';
+                return val === 'Y' ? '<b class="text-primary">?�용</b>' : '';
               }
             }        ]
 	})
@@ -185,7 +186,7 @@ async function search() {
 	try {
 		const { data } = await api.get('/crm/outbound/surv/mst/search', { params: search_form })
 		table_instance?.setData(data)
-	} catch (e) { vAlertError('조회 실패'); }
+	} catch (e) { vAlertError('조회 ?�패'); }
 }
 
 async function load_detail(data: any) {
@@ -198,11 +199,11 @@ async function load_detail(data: any) {
                 if (idx < 8) dtl_list.value[idx] = d;
             });
         }
-    } catch (e) { vAlertError('상세 조회 실패'); }
+    } catch (e) { vAlertError('?�세 조회 ?�패'); }
 }
 
 async function save() {
-    if (!mst_form.question) return vAlertError('질문 내용을 입력하세요.');
+    if (!mst_form.question) return vAlertError('질문 ?�용???�력?�세??');
     const valid_dtl = dtl_list.value.filter(item => (item.ans_cont || "").trim() !== '');
 
     const payload = {
@@ -212,17 +213,17 @@ async function save() {
 
     try {
         await api.post('/crm/outbound/surv/save', payload);
-        vAlert('저장되었습니다.'); initialize(); search();
-    } catch (e) { vAlertError('저장 실패'); }
+        vAlert('?�?�되?�습?�다.'); initialize(); search();
+    } catch (e) { vAlertError('?�???�패'); }
 }
 
 async function delete_item() {
-    if (!mst_form.surv_no) return vAlertError('대상 선택 필요');
-    if (!confirm('삭제하시겠습니까?')) return;
+    if (!mst_form.surv_no) return vAlertError('?�???�택 ?�요');
+    if (!confirm('??��?�시겠습?�까?')) return;
     try {
         await api.post('/crm/outbound/surv/delete', { surv_no: mst_form.surv_no });
-        vAlert('삭제되었습니다.'); initialize(); search();
-    } catch (e) { vAlertError('삭제 실패'); }
+        vAlert('??��?�었?�니??'); initialize(); search();
+    } catch (e) { vAlertError('??�� ?�패'); }
 }
 
 function initialize() {

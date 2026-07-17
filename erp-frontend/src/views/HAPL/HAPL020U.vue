@@ -77,14 +77,14 @@
                 </td>
                 <th class="required">부문배부</th>
                 <td>
-                  <select v-model="formData.DEPTdivcd" class="form-select">
-                    <option v-for="opt in deptDivOptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
+                  <select v-model="formData.deptdivcd" class="form-select">
+                    <option v-for="opt in deptDivOptions" :key="opt.divcd" :value="opt.divcd">{{ opt.divnm }}</option>
                   </select>
                 </td>
                 <th class="required">품목배부</th>
                 <td>
-                  <select v-model="formData.ITEMdivcd" class="form-select">
-                    <option v-for="opt in itemDivOptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
+                  <select v-model="formData.itemdivcd" class="form-select">
+                    <option v-for="opt in itemDivOptions" :key="opt.divcd" :value="opt.divcd">{{ opt.divnm }}</option>
                   </select>
                 </td>
               </tr>
@@ -121,6 +121,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import * as XLSX from 'xlsx'
+import AppAlert from '@/components/AppAlert.vue'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
@@ -134,7 +135,7 @@ const yearOptions = Array.from({ length: 11 }, (_, i) => String(currentYear - i)
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({ yy: String(currentYear), mm: currentMonth })
-const formData = reactive({ actkind: 'A0', acctcd: '', acctnm: '', DEPTdivcd: '', ITEMdivcd: '', remark: '', useyn: 'Y' })
+const formData = reactive({ actkind: 'A0', acctcd: '', acctnm: '', deptdivcd: '', itemdivcd: '', remark: '', useyn: 'Y' })
 
 const deptDivOptions = ref<any[]>([])
 const itemDivOptions = ref<any[]>([])
@@ -145,37 +146,81 @@ let mainGrid: Tabulator | null = null
 const fetchOptions = async () => {
   try {
     const [resDept, resItem] = await Promise.all([
-      api.post('/api/ha00/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, search: '100' }),
-      api.post('/api/ha00/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, search: '200' })
+      api.post('/api/ha00/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, gbncd: '100' }),
+      api.post('/api/ha00/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, gbncd: '200' })
     ])
-    deptDivOptions.value = resDept.data || []
-    itemDivOptions.value = resItem.data || []
-  } catch (e) { console.error(e) }
+
+    const mapper = (data: any[]) => (data || []).map(i => ({
+      divcd: i.divcd || i.code || '',
+      divnm: i.divnm || i.name || i.cdnm || ''
+    }));
+
+    deptDivOptions.value = mapper(resDept.data)
+    itemDivOptions.value = mapper(resItem.data)
+  } catch (e) { console.error('HAPL020U Options Error:', e) }
 }
 
 const resetForm = () => {
-  Object.assign(formData, { actkind: 'A0', acctcd: '', acctnm: '', DEPTdivcd: deptDivOptions.value[0]?.code || '', ITEMdivcd: itemDivOptions.value[0]?.code || '', remark: '', useyn: 'Y' })
+  Object.assign(formData, {
+    actkind: 'A0', acctcd: '', acctnm: '',
+    deptdivcd: deptDivOptions.value[0]?.divcd || '',
+    itemdivcd: itemDivOptions.value[0]?.divcd || '',
+    remark: '', useyn: 'Y'
+  })
 }
 
 const handleymChange = () => search()
 
 const search = async () => {
   try {
-    const res = await api.post('/api/hapl/HAPL_020U_STR', { actkind: 'S0', cmpycd: authStore.cmpycd, STDym: searchForm.yy + searchForm.mm })
-    mainGrid?.setData(res.data || [])
-    vAlert('조회되었습니다.')
+    const res = await api.post('/api/hapl/HAPL_020U_STR', {
+        actkind: 'S0',
+        cmpycd: authStore.cmpycd,
+        gubun: '020',
+        stdym: searchForm.yy + searchForm.mm,
+        acctcd: '',
+        acctnm: '',
+        deptdivcd: '',
+        deptdivnm: '',
+        itemdivcd: '',
+        itemdivnm: '',
+        remark: '',
+        useyn: ''
+    })
+    mainGrid?.setData(res.data)
+    if (res.data.length > 0) vAlert('조회되었습니다.')
   } catch (e) { vAlertError('조회 중 오류 발생') }
 }
 
 const save = async () => {
-  if (!formData.acctcd) return vAlertError('데이터를 선택하세요.')
+  if (!formData.acctcd) return vAlertError('계정과목을 선택하세요.')
+  if (!confirm('저장하시겠습니까?')) return
+
   try {
-    await api.post('/api/hapl/HAPL_020U_STR', { ...formData, cmpycd: authStore.cmpycd, STDym: searchForm.yy + searchForm.mm, userid: authStore.userid })
-    vAlert('저장되었습니다.'); search();
-  } catch (e) { vAlertError('저장 중 오류 발생') }
+    const res = await api.post('/api/hapl/HAPL_020U_STR', {
+      ...formData,
+      cmpycd: authStore.cmpycd,
+      stdym: (searchForm.yy + searchForm.mm).replace(/-/g, ''),
+      userid: authStore.userid
+    })
+
+    const resData = res.data?.[0] || {}
+    const resCode = String(resData.outym || resData.res || resData.col_0 || '').trim()
+    const resMsg = String(resData.outno || resData.msg || resData.col_1 || '').trim()
+
+    if (resCode === '000000' || resCode === 'N' || resCode === 'ERROR') {
+      vAlertError(resMsg || '저장 오류가 발생했습니다.')
+    } else {
+      vAlert('저장되었습니다.')
+      search()
+    }
+  } catch (e: any) {
+    vAlertError('저장 실패: ' + (e.response?.data?.error || e.message))
+  }
 }
 
 const excel = () => mainGrid?.download("xlsx", `계정별배부기준_${searchForm.yy}${searchForm.mm}.xlsx`)
+
 
 onMounted(() => {
   if (typeof window !== 'undefined') (window as any).XLSX = XLSX
@@ -187,12 +232,20 @@ onMounted(() => {
       columns: [
         { title: "계정과목", field: "acctcd", width: 100, hozAlign: "center" },
         { title: "계정과목 명", field: "acctnm", widthGrow: 1.5, cssClass: 'fw-bold text-primary' },
-        { title: "부문 배부기준", field: "DEPTdivnm", width: 150 },
-        { title: "품목 배부기준", field: "ITEMdivnm", width: 150 },
+        { title: "부문 배부기준", field: "deptdivnm", width: 150 },
+        { title: "품목 배부기준", field: "itemdivnm", width: 150 },
         { title: "비고", field: "remark", widthGrow: 1.5 }
       ]
     })
-    mainGrid.on("rowClick", (e, row) => { Object.assign(formData, row.getData()); formData.actkind = 'U0' })
+
+
+    mainGrid.on("rowClick", (e, row) => {
+        const d = row.getData();
+        Object.assign(formData, d);
+        formData.actkind = 'U0'
+        formData.deptdivcd = d.deptdivcd
+        formData.itemdivcd = d.itemdivcd
+    })
   }
   search()
 })

@@ -132,7 +132,7 @@ const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 
 const searchForm = reactive({
-  deptcd: (route.query.DEPTCD as string) || authStore.deptcd,
+  deptcd: (route.query.deptcd as string) || authStore.deptcd,
   deptnm: '',
   custcd: (route.query.CUSTCD as string) || '',
   custnm: '',
@@ -161,7 +161,7 @@ const initGrids = () => {
     },
     columnCalcs: "table",
     columns: [
-      { title: "품목명", field: "ITEMNM", widthGrow: 1.5, frozen: true, cssClass: "fw-bold text-dark", bottomCalc: () => "합계" },
+      { title: "품목명", field: "itemnm", widthGrow: 1.5, frozen: true, cssClass: "fw-bold text-dark", bottomCalc: () => "합계" },
       { title: "수량", field: "salsqty", hozAlign: "right", width: 80, formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "매출액", field: "salsamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "매출원가", field: "SALSCOST", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
@@ -277,7 +277,7 @@ const handleOpenHelp = (type: string) => {
 const handlePrint = (prtgu: string) => {
     if (!searchForm.deptcd) return vAlertError('부서를 선택하세요.');
     const params = new URLSearchParams({
-        DEPTCD: searchForm.deptcd,
+        deptcd: searchForm.deptcd,
         CUSTCD: searchForm.custcd,
         YMFR: searchForm.yyyy + searchForm.fmm,
         YMTO: searchForm.yyyy + searchForm.tmm,

@@ -1,9 +1,9 @@
 <!--
 	=============================================================
-	프로그램명	  : 설문유형별 질문 매핑 (소문자 표준 적용)
-    프로그램 ID	: HGOA040U
-	작성일자	    : 25.03.06
-	작성자	      : AI Assistant
+	?�로그램�?  : ?�문?�형�?질문 매핑 (?�문???��? ?�용)
+    ?�로그램 ID	: HGOA040U
+	?�성?�자	    : 25.03.06
+	?�성??      : AI Assistant
 	=============================================================
 -->
 
@@ -13,22 +13,22 @@
     <div class="hgo040-wrapper bg-light text-start p-2">
         <div class="d-flex justify-content-between align-items-center mb-1 bg-white p-1 px-3 rounded shadow-sm border border-secondary-subtle">
             <div class="fw-bold text-dark small">
-                <i class="bi bi-diagram-3-fill text-primary me-2"></i>설문유형별 질문 구성 관리
+                <i class="bi bi-diagram-3-fill text-primary me-2"></i>?�문?�형�?질문 구성 관�?
             </div>
             <div class="btn-group shadow-sm">
-                <button class="btn btn-xs btn-outline-secondary px-2" @click="initialize">초기화</button>
+                <button class="btn btn-xs btn-outline-secondary px-2" @click="initialize">초기??/button>
                 <button class="btn btn-xs btn-dark px-3" @click="search_types">조회</button>
-                <button class="btn btn-xs btn-primary px-3 fw-bold" @click="save"><i class="bi bi-save me-1"></i>저장</button>
-                <button class="btn btn-xs btn-outline-danger px-2" @click="delete_mapping">전체삭제</button>
+                <button class="btn btn-xs btn-primary px-3 fw-bold" @click="save"><i class="bi bi-save me-1"></i>?�??/button>
+                <button class="btn btn-xs btn-outline-danger px-2" @click="delete_mapping">?�체??��</button>
             </div>
         </div>
 
         <div class="row g-1 flex-grow-1 content-body overflow-hidden">
-            <!-- [좌측] 설문유형 목록 -->
+            <!-- [좌측] ?�문?�형 목록 -->
             <div class="col-md-3 h-100">
                 <div class="card shadow-sm border-0 h-100 d-flex flex-column border-top border-3 border-dark">
                     <div class="card-header bg-white py-1 fw-bold small border-bottom">
-                        <i class="bi bi-list-task me-1"></i>설문유형 (910)
+                        <i class="bi bi-list-task me-1"></i>?�문?�형 (910)
                     </div>
                     <div class="card-body p-0 bg-white flex-grow-1 position-relative">
                         <div ref="type_list_ref" class="tabulator-custom" />
@@ -36,31 +36,31 @@
                 </div>
             </div>
 
-            <!-- [중앙] 선정된 질문 -->
+            <!-- [중앙] ?�정??질문 -->
             <div class="col-md-4 h-100">
                 <div class="card shadow-sm border-0 h-100 d-flex flex-column border-top border-3 border-primary">
                     <div class="card-header bg-white py-1 fw-bold small border-bottom d-flex justify-content-between align-items-center">
                         <span class="text-truncate">
                             <i class="bi bi-check-circle-fill text-primary me-1"></i>
-                            <span v-if="selected_surv_gb_nm" class="text-primary fw-bold">[{{ selected_surv_gb_nm }}] </span>선정 질문
+                            <span v-if="selected_surv_gb_nm" class="text-primary fw-bold">[{{ selected_surv_gb_nm }}] </span>?�정 질문
                         </span>
                         <span class="badge bg-light text-dark border rounded-pill">{{ selected_count }}</span>
                     </div>
                     <div class="card-body p-0 bg-white flex-grow-1 position-relative">
                         <div ref="selected_table_ref" class="tabulator-custom" />
                         <div class="mapping-control-buttons shadow-sm border rounded bg-white">
-                            <button class="btn btn-sm btn-outline-secondary mb-1" @click="remove_selected" title="선정 취소"><i class="bi bi-chevron-double-right"></i></button>
-                            <button class="btn btn-sm btn-primary" @click="add_from_master" title="질문 추가"><i class="bi bi-chevron-double-left"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary mb-1" @click="remove_selected" title="?�정 취소"><i class="bi bi-chevron-double-right"></i></button>
+                            <button class="btn btn-sm btn-primary" @click="add_from_master" title="질문 추�?"><i class="bi bi-chevron-double-left"></i></button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- [우측] 전체 질문 마스터 -->
+            <!-- [?�측] ?�체 질문 마스??-->
             <div class="col-md-5 h-100">
                 <div class="card shadow-sm border-0 h-100 d-flex flex-column border-top border-3 border-secondary text-start">
                     <div class="card-header bg-white py-1 fw-bold small border-bottom">
-                        <i class="bi bi-database-fill-gear me-1"></i>전체 질문 마스터
+                        <i class="bi bi-database-fill-gear me-1"></i>?�체 질문 마스??
                     </div>
                     <div class="card-body p-0 bg-white flex-grow-1 position-relative">
                         <div ref="total_table_ref" class="tabulator-custom" />
@@ -76,6 +76,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { fetchCrmSelectData } from '@/composables/useFetchSelectData'
 
@@ -110,7 +111,7 @@ function init_tables() {
 		layout: 'fitColumns', selectable: 1, height: '100%',
 		columns: [
             { title: '코드', field: 'codecd', width: 80, hozAlign: 'center' },
-            { title: '유형명', field: 'codenm', hozAlign: 'left' }
+            { title: '?�형�?, field: 'codenm', hozAlign: 'left' }
         ]
 	})
 	type_list_instance.on("rowClick", (e, row) => {
@@ -123,8 +124,8 @@ function init_tables() {
     const q_cols = [
         { formatter: "rowSelection", titleFormatter: "rowSelection", hozAlign: "center", headerSort: false, width: 40 },
         { title: "번호", field: "surv_no", hozAlign: "center", width: 80 },
-        { title: "질문내용", field: "question", hozAlign: "left", formatter: "textarea" },
-        { title: "유형", field: "ans_tp", hozAlign: "center", width: 70, formatter: (c) => c.getValue()==='010'?'객관':'주관' }
+        { title: "질문?�용", field: "question", hozAlign: "left", formatter: "textarea" },
+        { title: "?�형", field: "ans_tp", hozAlign: "center", width: 70, formatter: (c) => c.getValue()==='010'?'객�?':'주�?' }
     ]
 
     if (selected_table_instance) selected_table_instance.destroy();
@@ -144,14 +145,14 @@ async function search_types() {
     try {
         const data = await fetchCrmSelectData('910')
         type_list_instance?.setData(data)
-    } catch (e) { console.error('설문유형 조회 실패') }
+    } catch (e) { console.error('?�문?�형 조회 ?�패') }
 }
 
 async function search_all_questions() {
     try {
         const { data } = await api.get('/crm/outbound/surv/mst/search')
         total_table_instance?.setData(data)
-    } catch (e) { console.error('질문마스터 조회 실패') }
+    } catch (e) { console.error('질문마스??조회 ?�패') }
 }
 
 async function search_selected_questions(surv_gb: string) {
@@ -159,11 +160,11 @@ async function search_selected_questions(surv_gb: string) {
         const { data } = await api.get('/crm/outbound/mapping/list', { params: { surv_gb: surv_gb } })
         selected_table_instance?.setData(data)
         selected_count.value = data.length
-    } catch (e) { console.error('매핑목록 조회 실패') }
+    } catch (e) { console.error('매핑목록 조회 ?�패') }
 }
 
 function add_from_master() {
-    if (!selected_surv_gb.value) return vAlertError('설문유형을 먼저 선택하세요.')
+    if (!selected_surv_gb.value) return vAlertError('?�문?�형??먼�? ?�택?�세??')
     const selected = total_table_instance?.getSelectedData()
     if (!selected || selected.length === 0) return
     const current_data = selected_table_instance?.getData() || []
@@ -182,27 +183,27 @@ function remove_selected() {
 }
 
 async function save() {
-    if (!selected_surv_gb.value) return vAlertError('설문유형을 선택해주세요.')
+    if (!selected_surv_gb.value) return vAlertError('?�문?�형???�택?�주?�요.')
     try {
         const payload = {
             surv_gb: selected_surv_gb.value,
             questions: selected_table_instance?.getData()
         }
         await api.post('/crm/outbound/mapping/save', payload)
-        vAlert('정상적으로 저장되었습니다.')
+        vAlert('?�상?�으�??�?�되?�습?�다.')
         search_selected_questions(selected_surv_gb.value)
-    } catch (e) { vAlertError('저장 실패') }
+    } catch (e) { vAlertError('?�???�패') }
 }
 
 async function delete_mapping() {
-    if (!selected_surv_gb.value) return vAlertError('대상을 선택하세요.')
-    if (!confirm('정말 삭제하시겠습니까?')) return
+    if (!selected_surv_gb.value) return vAlertError('?�?�을 ?�택?�세??')
+    if (!confirm('?�말 ??��?�시겠습?�까?')) return
     try {
         await api.post('/crm/outbound/mapping/delete', { surv_gb: selected_surv_gb.value })
-        vAlert('삭제되었습니다.')
+        vAlert('??��?�었?�니??')
         initialize()
         search_types()
-    } catch (e) { vAlertError('삭제 실패') }
+    } catch (e) { vAlertError('??�� ?�패') }
 }
 
 function initialize() {

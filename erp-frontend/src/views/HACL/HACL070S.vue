@@ -1,8 +1,8 @@
 <!--
 	=============================================================
-	프로그램명	: 손익계산서(프로젝트) (HACL070S)
-	작성일자	: 2025.02.24
-	설명        : HSOD100U 표준 그리드 패턴을 준수하여 프로젝트별 손익계산서 조회
+	?�로그램�?: ?�익계산???�로?�트) (HACL070S)
+	?�성?�자	: 2025.02.24
+	?�명        : HSOD100U ?��? 그리???�턴??준?�하???�로?�트�??�익계산??조회
 	=============================================================
 -->
 
@@ -10,43 +10,43 @@
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
-    <!-- 🚀 1. 상단 액션 바 -->
+    <!-- ?? 1. ?�단 ?�션 �?-->
     <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-graph-up-arrow me-2 text-primary" style="font-size: 18px;"></i>
-        재무제표 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        <span class="text-primary fw-bolder">손익계산서(프로젝트) (HACL070S)</span>
+        ?�무?�표 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">?�익계산???�로?�트) (HACL070S)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-print" @click="print">인쇄</button>
-        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
+        <button class="btn-erp btn-print" @click="print">?�쇄</button>
+        <button class="btn-erp btn-excel" @click="excel">?��?</button>
       </div>
     </div>
 
-    <!-- 🔍 2. 검색 조건 영역 -->
+    <!-- ?�� 2. 검??조건 ?�역 -->
     <div class="p-2 pb-0 flex-shrink-0 bg-light">
       <div class="card border shadow-sm overflow-hidden">
         <div class="card-body p-2 bg-white">
           <div class="d-flex align-items-center gap-3 small">
             <div class="d-flex align-items-center">
-              <span class="erp-label" style="min-width: 70px;"><i class="bi bi-dot text-primary"></i>프로젝트</span>
+              <span class="erp-label" style="min-width: 70px;"><i class="bi bi-dot text-primary"></i>?�로?�트</span>
               <div class="input-group input-group-sm shadow-sm" style="width: 280px;">
                 <input v-model="searchForm.prjcd" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
-                <input v-model="searchForm.prjnm" type="text" class="form-control" @keydown.enter="openHelp('PRJ')" placeholder="프로젝트 선택" />
+                <input v-model="searchForm.prjnm" type="text" class="form-control" @keydown.enter="openHelp('PRJ')" placeholder="?�로?�트 ?�택" />
                 <button class="btn btn-outline-secondary px-2" @click="openHelp('PRJ')"><i class="bi bi-search"></i></button>
               </div>
             </div>
             <div class="d-flex align-items-center">
-              <span class="erp-label" style="min-width: 70px;"><i class="bi bi-dot text-primary"></i>회계일자</span>
+              <span class="erp-label" style="min-width: 70px;"><i class="bi bi-dot text-primary"></i>?�계?�자</span>
               <div class="d-flex align-items-center gap-1">
                 <select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;" @change="search">
-                  <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
+                  <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}??/option>
                 </select>
                 <select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;" @change="search">
                   <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}</option>
                 </select>
-                <span class="ms-1 fw-bold">월 까지</span>
+                <span class="ms-1 fw-bold">??까�?</span>
               </div>
             </div>
           </div>
@@ -54,7 +54,7 @@
       </div>
     </div>
 
-    <!-- 📊 3. 그리드 영역 -->
+    <!-- ?�� 3. 그리???�역 -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column bg-light">
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white rounded-0">
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -72,6 +72,7 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import Modal from '@/components/Modal.vue'
@@ -88,40 +89,40 @@ const searchForm = reactive({ prjcd: '', prjnm: '', yy: "2011", mm: "06" })
 const tableRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
 
-const sNUM = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ', 'Ⅺ', 'Ⅻ']
+const sNUM = ['', '??, '??, '??, '??, '??, '??, '??, '??, '??, '??, '??, '??]
 
 const initGrid = () => {
   if (!tableRef.value) return;
   grid = new Tabulator(tableRef.value, {
     layout: "fitColumns",
     height: "100%",
-    placeholder: "데이터 없음",
+    placeholder: "?�이???�음",
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       {
-        title: "과  목", field: "formatted_nm", widthGrow: 2,
+        title: "�? �?, field: "formatted_nm", widthGrow: 2,
         formatter: "html",
         cssClass: "border-end bg-light fw-bold",
         cellClick: (e, cell) => goDrillDown(cell.getData())
       },
       {
-        title: "전월누계",
+        title: "?�월?�계",
         columns: [
-          { title: "금  액", field: "bamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+          { title: "�? ??, field: "bamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
           { title: "%", field: "brate", width: 60, hozAlign: "center" }
         ]
       },
       {
-        title: "당  월",
+        title: "?? ??,
         columns: [
-          { title: "금  액", field: "camt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-subtle fw-bold" },
+          { title: "�? ??, field: "camt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-subtle fw-bold" },
           { title: "%", field: "crate", width: 60, hozAlign: "center", cssClass: "bg-light-subtle" }
         ]
       },
       {
-        title: "누  계",
+        title: "?? �?,
         columns: [
-          { title: "금  액", field: "tamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+          { title: "�? ??, field: "tamt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
           { title: "%", field: "trate", width: 60, hozAlign: "center" }
         ]
       }
@@ -130,7 +131,7 @@ const initGrid = () => {
 }
 
 const search = async () => {
-  if (!searchForm.prjcd) return vAlertError('프로젝트를 선택하세요.');
+  if (!searchForm.prjcd) return vAlertError('?�로?�트�??�택?�세??');
 
   try {
     const res = await api.post('/api/hacl/HACL_070S_STR', {
@@ -213,8 +214,8 @@ const search = async () => {
     })
 
     grid?.setData(processedData)
-    vAlert('조회되었습니다.')
-  } catch (e) { vAlertError('조회 오류') }
+    vAlert('조회?�었?�니??')
+  } catch (e) { vAlertError('조회 ?�류') }
 }
 
 const goDrillDown = (data: any) => {
@@ -223,7 +224,7 @@ const goDrillDown = (data: any) => {
   window.open(`/api/hacl/HACL_071U?${params}`, 'ProjectCostDetail', 'width=500,height=600,scrollbars=yes')
 }
 
-const excel = () => grid?.download("xlsx", `손익계산서_프로젝트_${searchForm.yy}${searchForm.mm}.xlsx`)
+const excel = () => grid?.download("xlsx", `?�익계산???�로?�트_${searchForm.yy}${searchForm.mm}.xlsx`)
 const print = () => window.open(`/api/hacl/HACL_070P?prjcd=${searchForm.prjcd}&prjnm=${searchForm.prjnm}&yy=${searchForm.yy}&mm=${searchForm.mm}&PRTGU=1`)
 
 const modalVisible = ref(false)
@@ -231,9 +232,9 @@ const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '',
 
 function openHelp(type: string) {
   Object.assign(modalProps, {
-    title: '프로젝트 선택', path: '/api/ha00/HA00_03P_STR', defaultField: 'col1',
+    title: '?�로?�트 ?�택', path: '/api/ha00/HA00_03P_STR', defaultField: 'col1',
     data: { custgbn: '060', cmpycd: authStore.cmpycd, search: searchForm.prjnm },
-    columns: [{ title: '코드', field: 'col0', width: 80 }, { title: '프로젝트명', field: 'col1', width: 250 }],
+    columns: [{ title: '코드', field: 'col0', width: 80 }, { title: '?�로?�트�?, field: 'col1', width: 250 }],
     onConfirm: (d: any) => {
       searchForm.prjcd = d.col0
       searchForm.prjnm = d.col1

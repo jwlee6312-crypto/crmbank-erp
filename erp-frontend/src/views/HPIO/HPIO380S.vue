@@ -221,9 +221,9 @@ const handleOpenHelp = (type: string) => {
     openHelp('ITEM', (d) => {
       // 💡 데이터 필드명이 대소문자 섞여서 올 수 있으므로 유연하게 처리
       const itemcd = d.itemcd || d.ITEMCD;
-      const itemnm = d.itemnm || d.ITEMNM;
-      const itsize = d.itsize || d.ITSIZE;
-      const unit = d.unit || d.UNIT;
+      const itemnm = d.itemnm || d.itemnm;
+      const itsize = d.itsize || d.itsize;
+      const unit = d.unit || d.unit;
       Object.assign(searchData, { mitemcd: itemcd, mitemnm: itemnm, mitsize: itsize, munit: unit });
     }, { gubun: 'I1', title: '자재 선택' });
   }
