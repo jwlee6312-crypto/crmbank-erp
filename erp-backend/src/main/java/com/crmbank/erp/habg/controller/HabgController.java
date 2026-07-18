@@ -72,7 +72,7 @@ public class HabgController {
                         row.put(colName.toLowerCase(), val == null ? "" : val);
                         values.add(val == null ? "" : val);
                     }
-                    row.put("returnKeyValue", values); 
+                    row.put("returnkeyvalue", values); // 💡 시스템 표준에 맞춰 소문자로 지정
                     return row;
                 });
                 log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
@@ -98,11 +98,30 @@ public class HabgController {
             if (result == null || result.isEmpty()) {
                 result = List.of(Map.of("res", "OK"));
             }
-            return ResponseEntity.ok(result);
+            
+            // 🚀 모든 결과를 소문자로 강제 변환하여 프론트엔드 표준 준수
+            return ResponseEntity.ok(convertToLowerCaseKeys(result));
+
         } catch (Exception e) {
             log.error("❌ [habg] executeProcedure Error ({}): {}", proc, e.getMessage());
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    /**
+     * Map의 모든 Key를 소문자로 변환하여 일관성 보장
+     */
+    private List<Map<String, Object>> convertToLowerCaseKeys(List<Map<String, Object>> list) {
+        if (list == null) return new ArrayList<>();
+        List<Map<String, Object>> newList = new ArrayList<>();
+        for (Map<String, Object> map : list) {
+            Map<String, Object> newMap = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                newMap.put(entry.getKey().toLowerCase(), entry.getValue());
+            }
+            newList.add(newMap);
+        }
+        return newList;
     }
 
     private void injectSession(Map<String, Object> params, HttpSession session) {

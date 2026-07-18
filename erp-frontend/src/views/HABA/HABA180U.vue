@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 거래처관리 (haba180u)
 	작성일자	: 2025.03.14
-	설명        : 거래처 정보 관리 (완전 소문자 원칙 적용 및 네비게이션 대응)
+	설명        : 거래처 정보 상세 관리 (완전 소문자 원칙 적용 및 네비게이션 대응)
 	=============================================================
 -->
 
@@ -212,12 +212,12 @@ const masterdata = reactive<any>({
 
 const uistdymd = computed({
   get: () => masterdata.stdymd ? `${masterdata.stdymd.substring(0, 4)}-${masterdata.stdymd.substring(4, 6)}-${masterdata.stdymd.substring(6, 8)}` : '',
-  set: (v) => masterdata.stdymd = v.replace(/-/g, '')
+  set: (v) => masterdata.stdymd = (v || '').replace(/-/g, '')
 })
 
 const uiclsymd = computed({
   get: () => masterdata.clsymd ? `${masterdata.clsymd.substring(0, 4)}-${masterdata.clsymd.substring(4, 6)}-${masterdata.clsymd.substring(6, 8)}` : '',
-  set: (v) => masterdata.clsymd = v.replace(/-/g, '')
+  set: (v) => masterdata.clsymd = (v || '').replace(/-/g, '')
 })
 
 const options = reactive<any>({ custgbn: [], status: [], iogbn: [] })
@@ -300,7 +300,7 @@ const initialize = () => {
   resetform(masterdata)
   Object.assign(masterdata, {
     actkind: 'i0', cmpycd: authstore.cmpycd, custgbn: '010', iogbn: '010', status: '010',
-    useyn: 'y', stdymd: today.replace(/-/g, ''), clsymd: '99991231', singrd: 'A', elcyn: 'n', userid: authstore.userid
+    useyn: 'Y', stdymd: today.replace(/-/g, ''), clsymd: '99991231', singrd: 'A', elcyn: 'N', userid: authstore.userid
   })
 }
 
@@ -359,5 +359,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; font-size: 12px; }
 :deep(.tabulator-row:hover) { background-color: #f0f7ff !important; cursor: pointer; }
 </style>

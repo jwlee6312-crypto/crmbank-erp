@@ -1,8 +1,8 @@
 <!--
 	=============================================================
-	?�로그램�?: ?�익계산???�월) (HACL050S)
-	?�성?�자	: 2025.02.24
-	?�명        : HSOD100U ?��? 그리???�턴 ?�용 (?�료 깨짐 방�? �??�렬 최적??
+	프로그램명	: 손익계산서(이월) (HACL050S)
+	작성일자	: 2025.02.24
+	설명        : HSOD100U 표준 그리드 패턴 적용 (이월 손익 상세 조회)
 	=============================================================
 -->
 
@@ -10,35 +10,35 @@
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
-    <!-- ?? 1. ?�단 ?�션 �?-->
+    <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-graph-up me-2 text-primary" style="font-size: 18px;"></i>
-        ?�무?�표 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        <span class="text-primary fw-bolder">?�익계산???�월) (HACL050S)</span>
+        재무제표 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">손익계산서(이월) (HACL050S)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-print" @click="print">?�쇄</button>
-        <button class="btn-erp btn-excel" @click="excel">?��?</button>
+        <button class="btn-erp btn-print" @click="print">인쇄</button>
+        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
       </div>
     </div>
 
-    <!-- ?�� 2. 검??조건 ?�역 -->
+    <!-- 🔍 2. 조회 조건 영역 -->
     <div class="p-2 pb-0 flex-shrink-0 bg-light">
       <div class="card border shadow-sm overflow-hidden">
         <div class="card-body p-2 bg-white">
           <div class="d-flex align-items-center gap-3 small">
             <div class="d-flex align-items-center">
-              <span class="erp-label" style="min-width: 70px;"><i class="bi bi-dot text-primary"></i>?�계?�자</span>
+              <span class="erp-label" style="min-width: 70px;"><i class="bi bi-dot text-primary"></i>회계일자</span>
               <div class="d-flex align-items-center gap-1">
                 <select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;" @change="search">
-                  <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}??/option>
+                  <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
                 </select>
                 <select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;" @change="search">
                   <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}</option>
                 </select>
-                <span class="ms-1 fw-bold">??까�?</span>
+                <span class="ms-1 fw-bold">월 까지</span>
               </div>
             </div>
           </div>
@@ -46,7 +46,7 @@
       </div>
     </div>
 
-    <!-- ?�� 3. 그리???�역 (HSOD100U ?��?) -->
+    <!-- 📊 3. 그리드 영역 (HSOD100U 표준) -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column bg-light">
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white rounded-0">
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -77,39 +77,39 @@ const searchForm = reactive({ yy: "2011", mm: "06" })
 const tableRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
 
-const sNUM = ['', '??, '??, '??, '??, '??, '??, '??, '??, '??, '??]
+const sNUM = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ']
 
 const initGrid = () => {
   if (!tableRef.value) return;
   grid = new Tabulator(tableRef.value, {
     layout: "fitColumns",
     height: "100%",
-    placeholder: "?�이???�음",
+    placeholder: "데이터 없음",
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       {
-        title: "�? �?, field: "formatted_nm", widthGrow: 1.8,
+        title: "과 목", field: "formatted_nm", widthGrow: 1.8,
         formatter: "html",
         cssClass: "border-end bg-light fw-bold"
       },
       {
-        title: "?�월?�계",
+        title: "전월누계",
         columns: [
-          { title: "�? ??, field: "bamt", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+          { title: "금 액", field: "bamt", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
           { title: "%", field: "brate", width: 60, hozAlign: "center" }
         ]
       },
       {
-        title: "?? ??,
+        title: "당 월",
         columns: [
-          { title: "�? ??, field: "camt", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-subtle fw-bold" },
+          { title: "금 액", field: "camt", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-light-subtle fw-bold" },
           { title: "%", field: "crate", width: 60, hozAlign: "center", cssClass: "bg-light-subtle" }
         ]
       },
       {
-        title: "?? �?,
+        title: "당기누계",
         columns: [
-          { title: "�? ??, field: "tamt", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+          { title: "금 액", field: "tamt", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
           { title: "%", field: "trate", width: 60, hozAlign: "center" }
         ]
       }
@@ -125,14 +125,9 @@ const search = async () => {
     });
 
     const rawData = res.data || []
-    const normalizedData = rawData.map((r: any) => {
-      const row: any = {}
-      for (const key in r) { row[key.toLowerCase()] = r[key] }
-      return row
-    })
 
     let i = 1, j = 1, k = 1
-    const processedData = normalizedData.map((row: any, idx: number) => {
+    const processedData = rawData.map((row: any, idx: number) => {
       const acctcd = String(row.acctcd || '').trim()
       const acctnm = String(row.acctnm || '')
       const bamtl = Number(row.bamtl || 0), bamtr = Number(row.bamtr || 0)
@@ -180,7 +175,7 @@ const search = async () => {
         spaces = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
       }
 
-      const next = normalizedData[idx + 1]
+      const next = rawData[idx + 1]
       if (next) {
         const nCd = String(next.acctcd || '').trim()
         if (acctcd.substring(0, 3) !== nCd.substring(0, 3)) { if (acctcd.substring(0, 2) !== "51") k = 1 }
@@ -199,11 +194,11 @@ const search = async () => {
     })
 
     grid?.setData(processedData)
-    vAlert('조회?�었?�니??')
-  } catch (e) { vAlertError('조회 ?�류') }
+    vAlert('조회되었습니다.')
+  } catch (e) { vAlertError('조회 실패') }
 }
 
-const excel = () => grid?.download("xlsx", `?�익계산???�월_${searchForm.yy}${searchForm.mm}.xlsx`)
+const excel = () => grid?.download("xlsx", `손익계산서_이월_${searchForm.yy}${searchForm.mm}.xlsx`)
 const print = () => window.open(`/api/hacl/HACL_050P?yy=${searchForm.yy}&mm=${searchForm.mm}&PRTGU=1`)
 
 onMounted(() => {

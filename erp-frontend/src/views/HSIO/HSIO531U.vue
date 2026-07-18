@@ -336,7 +336,7 @@ async function issueSlip() {
       vAlert('정상적으로 발행되었습니다.')
 
       // 전표 인쇄 팝업 (ASP 로직 반영)
-      const printUrl = `../HASL/HASL_SLIP_PRINT_OUT.asp?slipgu=010&SLIPYMD=${slipymd}&slipno=${slipno}&deptcd=${registerData.deptcd}`
+      const printUrl = `../HASL/HASL_SLIP_PRINT_OUT.asp?slipgu=010&slipymd=${slipymd}&slipno=${slipno}&deptcd=${registerData.deptcd}`
       window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
 
       search()

@@ -131,7 +131,7 @@ const save = async () => {
   try {
     // 🔄 선택된 각 항목에 대해 순차적으로 프로시저 호출 (ASP 패턴)
     for (const item of selected) {
-      const slipYmd = (item.SLIPYMD || item.slipymd || '').replace(/-/g, '')
+      const slipYmd = (item.slipymd || item.slipymd || '').replace(/-/g, '')
       const sendYn = item.SENDYN || item.sendyn
 
       // 💡 ASP 로직: 전표일자가 있고 더존 전송(SENDYN)이 안된 경우만 실행
@@ -142,7 +142,7 @@ const save = async () => {
           IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
           IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
           deptcd: item.udeptcd || item.deptcd || searchForm.deptcd,
-          SLIPYMD: slipYmd,
+          slipymd: slipYmd,
           slipno: item.slipno || item.slipno,
           UPDEMP: authStore.USERID
         }
@@ -185,7 +185,7 @@ onMounted(() => {
       columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
       columns: [
         { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 60, hozAlign: "center" },
-        { title: "전표일자", field: "SLIPYMD", width: 110, formatter: (c) => {
+        { title: "전표일자", field: "slipymd", width: 110, formatter: (c) => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
         { title: "전표번호", field: "slipno", width: 100, cssClass: "fw-bold text-primary" },

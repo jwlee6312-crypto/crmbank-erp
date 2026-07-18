@@ -177,7 +177,7 @@ const save = async () => {
         CUSTCD: item.CUSTCD,
         taxunit: item.taxunit || '10',
         vattype: item.vattype || '10',
-        SLIPYMD: formData.PUBYMD.replace(/-/g, ''),
+        slipymd: formData.PUBYMD.replace(/-/g, ''),
         slipkind: slipKind,
         Hdeptcd: item.deptcd || authStore.deptcd,
         BUSINESS: formData.FILENO + "-" + (item.BIGO || ''),

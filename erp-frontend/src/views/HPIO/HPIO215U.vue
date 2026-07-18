@@ -212,11 +212,11 @@ const saveData = async () => {
     try {
         const res = await api.post('/api/product/pdorder/save', changes);
         const out = res.data[0];
-        if (out.result === 'OK' || out.RESULT === 'OK') {
-            vAlert(out.msg || out.MSG || '저장되었습니다.');
+        if (out.result === 'OK') {
+            vAlert(out.msg || '저장되었습니다.');
             search();
         }
-        else { vAlertError(out.msg || out.MSG || '저장 실패'); }
+        else { vAlertError(out.msg || '저장 실패'); }
     } catch (e) { vAlertError('처리 중 오류 발생') }
 }
 

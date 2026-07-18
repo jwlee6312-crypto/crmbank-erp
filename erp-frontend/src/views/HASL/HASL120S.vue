@@ -1,8 +1,7 @@
 <!--
 	=============================================================
-	프로그램명	: 전표조회
+	프로그램명	: 전표조회 (HASL120S)
 	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
 	설명        : 회계 전표 상세 내역 조회 및 검색
 	=============================================================
 -->
@@ -143,9 +142,13 @@ const search = async () => {
 			slipamt_f: searchForm.slipamt_f,
 			slipamt_t: searchForm.slipamt_t
 		})
-		mainGrid?.setData(res.data || [])
+
+		const data = (res.data || []).map((row: any) => {
+			return Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
+		})
+		mainGrid?.setData(data)
 		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 중 오류 발생') }
+	} catch (e) { vAlertError('조회 실패') }
 }
 
 const initialize = () => {
@@ -193,7 +196,6 @@ const go_to_slip = (slipkey: string) => {
 	if (!slipkey) return;
 	let ymd = ""; let no = "";
 
-	// 💡 전표번호 (20260601-001) 분리 처리
 	if (slipkey.includes('-')) {
 		const parts = slipkey.split('-');
 		ymd = parts[0]; no = parts[1];
@@ -201,7 +203,6 @@ const go_to_slip = (slipkey: string) => {
 		ymd = slipkey.substring(0, 8); no = slipkey.substring(8);
 	} else return;
 
-	// 💡 시스템 라우팅 규칙(dynamicRoute.ts)에 따라 경로는 '/HASL110U'입니다.
 	const pgmid = 'HASL110U'
 	add_dynamic_route(pgmid, '경리전표등록', 'HASL')
 
@@ -226,7 +227,7 @@ onMounted(() => {
 			paginationCounter: "rows",
 			columnDefaults: {
 				headerSort: false,
-				hozAlign: 'right', // 🚀 기본값 우측 정렬
+				hozAlign: 'right',
 				vertAlign: "middle"
 			},
 			columns: [
@@ -235,7 +236,6 @@ onMounted(() => {
 					formatter: (cell) => {
 						const value = cell.getValue();
 						if (!value) return "";
-						// 💡 중복 방지: 이전 행과 전표번호가 같으면 표시 안 함
 						const prevrow = cell.getRow().getPrevRow();
 						if (prevrow && prevrow.getData().slipno === value) {
 							return "";
@@ -243,11 +243,11 @@ onMounted(() => {
 						return `<span class="text-primary cursor-pointer text-decoration-underline">${value}</span>`;
 					},
 					cellClick: (e, cell) => {
-						const value = cell.getData().slipno; // 표시 안 된 행이라도 실제 데이터에서 가져옴
+						const value = cell.getData().slipno;
 						if(value) go_to_slip(String(value));
 					}
 				},
-				{ title: "행번호", field: "srowno", width: 65, hozAlign: "center" },
+				{ title: "순번", field: "srowno", width: 65, hozAlign: "center" },
 				{ title: "계정코드", field: "acctcd", width: 80, hozAlign: "center" },
 				{ title: "계정명", field: "acctnm", width: 150, hozAlign: "left" },
 				{ title: "적요", field: "descnm", minWidth: 200, hozAlign: "left" },
@@ -264,9 +264,6 @@ onMounted(() => {
 
 <style scoped>
 .tabulator-full-height { width: 100% !important; background-color: #fff; border-bottom: 3px solid #005a9f !important; }
-</style>
-
-<style scoped>
 .erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
 .cursor-pointer { cursor: pointer; }
 </style>

@@ -1,8 +1,9 @@
-<!--	=============================================================
-	프로그램명	: 계정별 배부기준관리
+<!--
+	=============================================================
+	프로그램명	: 계정별 배부기준관리 (HAPL020U)
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 계정과목별 부문 및 품목 배부기준 설정 관리 (HSOD 표준 적용)
+	설명        : 계정과목별 부문 및 품목 배부기준 설정 관리
 	=============================================================
 -->
 
@@ -176,20 +177,20 @@ const search = async () => {
     const res = await api.post('/api/hapl/HAPL_020U_STR', {
         actkind: 'S0',
         cmpycd: authStore.cmpycd,
-        gubun: '020',
         stdym: searchForm.yy + searchForm.mm,
-        acctcd: '',
-        acctnm: '',
-        deptdivcd: '',
-        deptdivnm: '',
-        itemdivcd: '',
-        itemdivnm: '',
-        remark: '',
-        useyn: ''
+        userid: authStore.userid
     })
-    mainGrid?.setData(res.data)
-    if (res.data.length > 0) vAlert('조회되었습니다.')
-  } catch (e) { vAlertError('조회 중 오류 발생') }
+
+    const rawData = res.data || []
+    const normalizedData = rawData.map((row: any) => {
+      const n: any = {};
+      Object.keys(row).forEach(k => n[k.toLowerCase()] = row[k]);
+      return n;
+    })
+
+    mainGrid?.setData(normalizedData)
+    if (normalizedData.length > 0) vAlert('조회되었습니다.')
+  } catch (e) { vAlertError('조회 실패') }
 }
 
 const save = async () => {
@@ -205,8 +206,8 @@ const save = async () => {
     })
 
     const resData = res.data?.[0] || {}
-    const resCode = String(resData.outym || resData.res || resData.col_0 || '').trim()
-    const resMsg = String(resData.outno || resData.msg || resData.col_1 || '').trim()
+    const resCode = String(resData.res || resData.result || resData.col_0 || '').trim()
+    const resMsg = String(resData.msg || resData.message || resData.col_1 || '').trim()
 
     if (resCode === '000000' || resCode === 'N' || resCode === 'ERROR') {
       vAlertError(resMsg || '저장 오류가 발생했습니다.')
@@ -215,7 +216,7 @@ const save = async () => {
       search()
     }
   } catch (e: any) {
-    vAlertError('저장 실패: ' + (e.response?.data?.error || e.message))
+    vAlertError('저장 실패')
   }
 }
 
@@ -243,10 +244,12 @@ onMounted(() => {
         const d = row.getData();
         Object.assign(formData, d);
         formData.actkind = 'U0'
-        formData.deptdivcd = d.deptdivcd
-        formData.itemdivcd = d.itemdivcd
     })
   }
   search()
 })
 </script>
+
+<style scoped>
+.tabulator-instance { width: 100% !important; background-color: #fff; }
+</style>

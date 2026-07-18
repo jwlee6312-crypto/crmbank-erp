@@ -1,34 +1,34 @@
 <!--
 	=============================================================
-	?�로그램�?: ?�계??(HASL510S)
-	?�성?�자	: 2025.02.24
-	?�명        : 지?�된 ?�계?�자??차�?/?�변 ?�계 �??�금 ?�재 ?�황 조회 (HSOD100U ?��? ?�자??�??�문???�칙 ?�용)
+	프로그램명	: 일계표 (HASL510S)
+	작성일자	: 2025.02.24
+	설명        : 지정된 회계일자의 차변/대변 합계 및 현금 현재 현황 조회
 	=============================================================
 -->
 
 <template>
-  <app_alert :show="show_alert" :error="show_error" :message="alert_message" />
-  <modal_component v-model:visible="modal_visible" :modalProps="modal_props" />
+  <AppAlert :show="show_alert" :error="show_error" :message="alert_message" />
+  <Modal v-model:visible="modal_visible" :modalProps="modal_props" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
-    <!-- ?? 1. ?�단 ?�션 �?-->
+    <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-calendar-check me-2 text-primary" style="font-size: 18px;"></i>
-        ?��?관�?<i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-        <span class="text-primary fw-bolder">?�계??(HASL510S)</span>
+        장부관리 <i class="bi bi-chevron-right mx-2 small opacity-50"></i>
+        <span class="text-primary fw-bolder">일계표 (HASL510S)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-3">
-        <button class="btn-erp btn-init" @click="initialize">초기??/button>
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-print" @click="print">?�쇄</button>
+        <button class="btn-erp btn-print" @click="print">인쇄</button>
       </div>
     </div>
 
-    <!-- ?�� 2. 메인 컨텐�??�역 -->
+    <!-- 💡 2. 메인 컨텐츠 영역 -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-      <!-- [?�단] 조회 ?�터 ?�역 (HSOD100U ?��??? -->
+      <!-- [상단] 조회 필터 영역 -->
       <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
         <div class="card-body p-0 bg-white">
           <table class="erp-table-dense" width="100%">
@@ -38,18 +38,18 @@
             </colgroup>
             <tbody>
               <tr>
-                <th class="text-center bg-light border-end">?�계?�자</th>
+                <th class="text-center bg-light border-end">회계일자</th>
                 <td class="border-end px-2">
                   <div class="d-flex align-items-center gap-1">
                     <input v-model="search_form.ymd" type="date" class="form-control form-control-sm" style="max-width: 150px;" @change="search" />
-                    <span class="small fw-bold text-secondary">기�?</span>
+                    <span class="small fw-bold text-secondary">기준</span>
                   </div>
                 </td>
                 <th class="text-center bg-light border-end">조회구분</th>
                 <td class="px-2">
                   <select v-model="search_form.actkind" class="form-select form-select-sm" style="max-width: 120px;" @change="search">
-                    <option value="S0">?�세?�역</option>
-                    <option value="S1">계정?�약</option>
+                    <option value="S0">상세내역</option>
+                    <option value="S1">계정집약</option>
                   </select>
                 </td>
               </tr>
@@ -58,17 +58,17 @@
         </div>
       </div>
 
-      <!-- [중앙] 그리???�역 -->
+      <!-- [중앙] 그리드 영역 -->
       <div class="card border shadow-sm flex-grow-1 d-flex flex-column overflow-hidden grid-container-right">
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
           <div ref="main_grid_ref" class="tabulator-instance flex-grow-1"></div>
         </div>
       </div>
 
-      <!-- [?�단] ?�금 ?�재 ?�황 (HSOD100U ?��????�용) -->
+      <!-- [하단] 현금 현재 현황 -->
       <div class="card border shadow-sm flex-shrink-0 bg-white overflow-hidden">
         <div class="card-header bg-white py-1 px-3 border-bottom fw-bold small text-dark">
-          <i class="bi bi-cash-coin me-2 text-success"></i>?�금 ?�재 �??�표 ?�황
+          <i class="bi bi-cash-coin me-2 text-success"></i>현금 현재 및 전표 현황
         </div>
         <div class="card-body p-0">
           <table class="erp-table-dense text-center w-100">
@@ -81,26 +81,26 @@
             <thead>
               <tr class="bg-light border-bottom">
                 <th class="border-end py-1" rowspan="2">구분</th>
-                <th class="border-end py-1" colspan="4">?�금 ?�름</th>
-                <th class="border-end py-1" rowspan="2">?�표건수</th>
+                <th class="border-end py-1" colspan="4">현금 흐름</th>
+                <th class="border-end py-1" rowspan="2">전표건수</th>
                 <th class="py-1" rowspan="2">조회결과</th>
               </tr>
               <tr class="bg-light border-bottom text-muted" style="font-size: 11px;">
-                <th class="border-end py-0">?�일?�액</th>
-                <th class="border-end py-0">?�일증�?</th>
-                <th class="border-end py-0">?�일감소</th>
-                <th class="border-end py-0 text-primary">?�재?�액</th>
+                <th class="border-end py-0">전일잔액</th>
+                <th class="border-end py-0">금일증가</th>
+                <th class="border-end py-0">금일감소</th>
+                <th class="border-end py-0 text-primary">현재잔액</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th class="bg-light border-end py-2">?�금?�재</th>
+                <th class="bg-light border-end py-2">현금현재</th>
                 <td class="border-end text-end px-2">{{ format_number(summary_data.befo_cash) }}</td>
                 <td class="border-end text-end px-2 text-primary">+ {{ format_number(summary_data.curr_db_cash) }}</td>
                 <td class="border-end text-end px-2 text-danger">- {{ format_number(summary_data.curr_cr_cash) }}</td>
                 <td class="border-end text-end px-2 fw-bold text-primary bg-light-subtle">{{ format_number(summary_data.curr_jan_cash) }}</td>
-                <td class="border-end px-2 fw-bold text-dark">{{ summary_data.slip_cnt }} �?/td>
-                <td class="px-2 text-start text-muted small italic">?�상?�으�?집계?�었?�니??</td>
+                <td class="border-end px-2 fw-bold text-dark">{{ summary_data.slip_cnt }} 건</td>
+                <td class="px-2 text-start text-muted small italic">정상적으로 집계되었습니다.</td>
               </tr>
             </tbody>
           </table>
@@ -119,8 +119,8 @@ import { api } from '@/utils/axios'
 import { useAuthStore as use_auth_store } from '@/stores/authStore'
 import { useFormReset as use_form_reset } from '@/composables/useFormReset'
 import { useRouter as use_router } from 'vue-router'
-import app_alert from '@/components/AppAlert.vue'
-import modal_component from '@/components/Modal.vue'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
 
 const auth_store = use_auth_store()
 const router = use_router()
@@ -129,13 +129,11 @@ const { resetForm: reset_form } = use_form_reset()
 
 const today = new Date().toISOString().substring(0, 10)
 
-// ?�� 검???�이??(?�문???�칙)
 const search_form = _reactive({
 	ymd: today,
 	actkind: 'S0'
 })
 
-// ?�� ?�재 ?�약 ?�보 (?�문???�칙)
 const summary_data = _reactive({
 	befo_cash: 0,
 	curr_db_cash: 0,
@@ -147,7 +145,6 @@ const summary_data = _reactive({
 const main_grid_ref = _ref<HTMLDivElement | null>(null)
 let main_grid: tabulator | null = null
 
-// ?�업 ?�정??(?�요???�용)
 const modal_visible = _ref(false)
 const modal_props = _reactive<any>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
@@ -162,18 +159,15 @@ const search = async () => {
 		const data = res.data || []
 
 		if (data.length >= 2) {
-			// Row 0: Cash summary (?�� ?�청???�리?�스 반영: acctcd, acctnm, dbamt, cramt, bjanamt)
 			const row0 = data[0]
 			summary_data.befo_cash = Number(row0.bjanamt || 0)
 			summary_data.curr_db_cash = Number(row0.dbamt || 0)
 			summary_data.curr_cr_cash = Number(row0.cramt || 0)
 			summary_data.curr_jan_cash = summary_data.befo_cash + summary_data.curr_db_cash - summary_data.curr_cr_cash
 
-			// Row 1: Slip count (dbamt ?�드 ?�용)
 			const row1 = data[1]
 			summary_data.slip_cnt = Number(row1.dbamt || 0)
 
-			// Rows 2+: Main details (acctcd, acctnm, dbamt, cramt)
 			const details = data.slice(2).map((row: any) => ({
 				...row,
 				dbamt: Number(row.dbamt || 0),
@@ -182,14 +176,14 @@ const search = async () => {
 			}))
 
 			main_grid?.setData(details)
-			v_alert('조회?�었?�니??')
+			v_alert('조회되었습니다.')
 		} else {
 			main_grid?.clearData()
 			reset_summary()
-			v_alert('?�이?��? 존재?��? ?�습?�다.')
+			v_alert('데이터가 존재하지 않습니다.')
 		}
 	} catch (e) {
-		v_alert_error('조회 �??�류 발생')
+		v_alert_error('조회 중 오류 발생')
 		reset_summary()
 	}
 }
@@ -235,7 +229,7 @@ _on_mounted(() => {
 			columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
 				{
-					title: "차�? (Debit)", field: "dbamt", widthGrow: 1, hozAlign: "right",
+					title: "차변 (Debit)", field: "dbamt", widthGrow: 1, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					cssClass: "fw-bold"
 				},
@@ -255,7 +249,7 @@ _on_mounted(() => {
 					}
 				},
 				{
-					title: "?�변 (Credit)", field: "cramt", widthGrow: 1, hozAlign: "right",
+					title: "대변 (Credit)", field: "cramt", widthGrow: 1, hozAlign: "right",
 					formatter: "money", formatterParams: { precision: 0 },
 					cssClass: "fw-bold"
 				}

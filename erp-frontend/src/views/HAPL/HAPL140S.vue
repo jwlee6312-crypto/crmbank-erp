@@ -1,8 +1,9 @@
-<!--	=============================================================
-	프로그램명	: 부서별 손익계산서
+<!--
+	=============================================================
+	프로그램명	: 부서별 손익계산서 (HAPL140S)
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 부서별 월차 손익 현황 가로 비교 조회 (동적 컬럼 구성)
+	설명        : 부서별 월차 손익 현황 가로 비교 조회
 	=============================================================
 -->
 
@@ -37,7 +38,7 @@
             </colgroup>
             <tbody>
               <tr>
-                <th class="required">부&nbsp;&nbsp;&nbsp;&nbsp;서</th>
+                <th class="required">부서</th>
                 <td>
                   <div class="input-group input-group-sm flex-nowrap" style="max-width: 350px;">
                     <input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
@@ -97,7 +98,7 @@ const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart
 
 const searchForm = reactive({
   yy: String(currentYear),
-    mm: currentMonth,
+  mm: currentMonth,
   deptcd: authStore.deptcd,
   deptnm: authStore.deptnm
 })
@@ -113,9 +114,10 @@ const initData = async () => {
       cmpycd: authStore.cmpycd,
       stdym: currentYear + currentMonth
     })
-    if (res.data && res.data !== '000000') {
-      searchForm.yy = res.data.substring(0, 4)
-      searchForm.mm = res.data.substring(4, 6)
+    const data = res.data?.[0]?.acctym || '000000'
+    if (data !== '000000') {
+      searchForm.yy = data.substring(0, 4)
+      searchForm.mm = data.substring(4, 6)
     }
   } catch (e) { console.error('초기화 실패') }
 }
@@ -124,7 +126,6 @@ const search = async () => {
   if (!searchForm.deptcd) return vAlertError('부서를 선택하세요.')
 
   try {
-    // 1. 부서 목록 조회 (actkind: 'D')
     const resDept = await api.post('/api/hapl/HAPL_140S_STR', {
       actkind: 'D',
       cmpycd: authStore.cmpycd,
@@ -133,7 +134,6 @@ const search = async () => {
     })
     const departments = resDept.data || []
 
-    // 2. 메인 데이터 조회 (actkind: 'S')
     const resData = await api.post('/api/hapl/HAPL_140S_STR', {
       actkind: 'S',
       cmpycd: authStore.cmpycd,
@@ -142,13 +142,10 @@ const search = async () => {
     })
     const rawData = resData.data || []
 
-    // 3. 데이터 가공 (계정별로 부서 데이터 플래닝)
     const processedMap = new Map()
-    const salesTotalMap = new Map() // 각 부서별 매출액 저장용
-
+    const salesTotalMap = new Map()
 
     rawData.forEach((row: any) => {
-      // 💡 col0 대신 소문자 표준 필드명 사용
       const acctCd = (row.acctcd || '').toString();
       if (!acctCd) return;
 
@@ -165,7 +162,7 @@ const search = async () => {
       const deptCd = (row.deptcd || '').toString()
       const amt = Number(row.amt || 0)
 
-      if (acctCd === "5100000") { // 매출액 기준
+      if (acctCd === "5100000") {
         salesTotalMap.set(deptCd, (salesTotalMap.get(deptCd) || 0) + amt)
         salesTotalMap.set('total', (salesTotalMap.get('total') || 0) + amt)
       }
@@ -185,7 +182,6 @@ const search = async () => {
       let isBold = false
       let indent = 0
 
-      // 넘버링/들여쓰기 로직 (안전한 substring 처리)
       if (code && code.length >= 7) {
         if (code.substring(1, 7) === "000000" || ["1990000", "2980000", "3980000", "3990000"].includes(code)) {
           dispName = `[ ${name} ]`; isBold = true; indent = 1
@@ -204,7 +200,6 @@ const search = async () => {
         }
       }
 
-      // 리셋 로직
       const nextRow = arr[index + 1]
       if (nextRow && nextRow.acctcd) {
         if (code.substring(0, 3) !== nextRow.acctcd.substring(0, 3)) {
@@ -232,7 +227,6 @@ const search = async () => {
       return rowResult
     })
 
-    // 4. 컬럼 정의 동적 생성
     const columns: any[] = [
       {
         title: "과 목", field: "DISP_NM", width: 220, frozen: true,
@@ -267,7 +261,7 @@ const search = async () => {
 }
 
 const print = () => {
-  const params = `deptcd=${searchForm.deptcd}&deptnm=${searchForm.deptnm}&yy=${searchForm.yy}.mm=${searchForm.mm}&PRTGU=1`
+  const params = `deptcd=${searchForm.deptcd}&deptnm=${searchForm.deptnm}&yy=${searchForm.yy}&mm=${searchForm.mm}&PRTGU=1`
   window.open(`/api/hapl/HAPL_140P?${params}`, 'DeptProfitLossPrint', 'width=1200,height=800,scrollbars=yes')
 }
 

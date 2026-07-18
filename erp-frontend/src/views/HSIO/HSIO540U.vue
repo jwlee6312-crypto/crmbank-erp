@@ -268,7 +268,7 @@ onMounted(async () => {
 				{ title: "전표번호", field: "slip_full", width: 160, cssClass: "fw-bold text-primary",
 				  formatter: (cell) => {
 					  const d = cell.getData();
-                      const slipymd = d.slipymd || d.SLIPYMD;
+                      const slipymd = d.slipymd || d.slipymd;
                       const slipno = d.slipno || d.slipno;
 					  return slipymd && slipno ? `${slipymd}-${slipno}` : '';
 				  }

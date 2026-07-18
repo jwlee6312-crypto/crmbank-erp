@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.mapping.BoundSql;
-import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +13,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
+/**
+ * [HPBA] 생산기준 통합 컨트롤러 (사용자 정의 최종 표준형)
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/hpba")
@@ -28,116 +31,128 @@ public class HpbaController {
 
     @Transactional(rollbackFor = Exception.class)
     @PostMapping("/{procedure}")
-    public ResponseEntity<?> executeProcedure(
-            @PathVariable String procedure,
-            @RequestBody Map<String, Object> params,
-            HttpSession session) {
-        
-        if (session.getAttribute("user_session") == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        injectSession(params, session);
+    public ResponseEntity<?> executeProcedure(@PathVariable String procedure, @RequestBody Map<String, Object> params, HttpSession session) {
         String proc = procedure.toUpperCase();
-        String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
+        UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user == null) return ResponseEntity.status(401).build();
 
         try {
-            fillMissingParameters(proc, params);
-            log.info("🚀 [hpba] 실행 요청: {}", proc);
-            
-            List<Map<String, Object>> result;
-            if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
-                String positionalSql = buildPositionalSql(proc, params);
-                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+            params.put("cmpycd", user.getCmpycd());
+            params.put("userid", user.getUserid());
 
-                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    List<Object> values = new ArrayList<>();
-                    int colCount = rs.getMetaData().getColumnCount();
-                    for (int i = 1; i <= colCount; i++) {
-                        Object val = rs.getObject(i);
-                        String colName = rs.getMetaData().getColumnLabel(i); 
-                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
-                        row.put(colName.toLowerCase(), val == null ? "" : val);
-                        values.add(val == null ? "" : val);
+            List<Map<String, Object>> resultList = new ArrayList<>();
+
+            if (params.get("items") instanceof List<?> items) {
+                for (Object itemObj : items) {
+                    if (itemObj instanceof Map<?, ?> item) {
+                        Map<String, Object> p = new HashMap<>(params);
+                        p.putAll((Map<String, Object>) item);
+                        p.remove("items");
+                        resultList.addAll(executeInternal(proc, p));
                     }
-                    row.put("returnKeyValue", values); 
-                    return row;
-                });
-                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
-            } else {
-                switch (proc) {
-                    case "HPBA_100U_STR": result = hpbaMapper.HPBA_100U_STR(params); break;
-                    case "HPBA_130U_STR": result = hpbaMapper.HPBA_130U_STR(params); break;
-                    case "HPBA_200U_STR": result = hpbaMapper.HPBA_200U_STR(params); break;
-                    case "HPBA_210U_STR": result = hpbaMapper.HPBA_210U_STR(params); break;
-                    case "HPBA_800U_STR": result = hpbaMapper.HPBA_800U_STR(params); break;
-                    case "HPBA_810U_STR": result = hpbaMapper.HPBA_810U_STR(params); break;
-                    case "HPBA_820U_STR": result = hpbaMapper.HPBA_820U_STR(params); break;
-                    case "HPBA_830U_STR": result = hpbaMapper.HPBA_830U_STR(params); break;
-                    case "HPBA_840U_STR": result = hpbaMapper.HPBA_840U_STR(params); break;
-                    case "HPBA_900U_STR": result = hpbaMapper.HPBA_900U_STR(params); break;
-                    default:
-                        return ResponseEntity.notFound().build();
                 }
+            } else {
+                resultList = executeInternal(proc, params);
             }
 
-            if (result == null || result.isEmpty()) {
-                result = List.of(Map.of("res", "OK"));
-            }
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(convertToLowerCaseKeys(resultList));
+
         } catch (Exception e) {
-            log.error("❌ [hpba] executeProcedure Error ({}): {}", proc, e.getMessage());
+            log.error("❌ [HPBA] {} Error: {}", proc, e.getMessage());
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 
-    private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user != null) {
-            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
-                params.put("cmpycd", user.getCmpycd());
-            }
-            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
-                params.put("userid", user.getUserid());
-            }
-            params.put("updemp", user.getUserid());
+    private List<Map<String, Object>> executeInternal(String proc, Map<String, Object> params) {
+        String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase().trim();
+
+        // 💡 표준: 쓰기 액션(A, U, D, DR) 및 집계(C)인 경우 무결성 수신을 위해 직접 실행 및 로깅
+        if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U") || actkind.startsWith("D") || actkind.equals("DR") || actkind.equals("C"))) {
+            return executeDirectSql(proc, params);
+        }
+
+        // 💡 사용자 정의 표준: 명시적인 Switch-Case 호출
+        List<Map<String, Object>> result;
+        switch (proc) {
+            case "HPBA_100U_STR": result = hpbaMapper.HPBA_100U_STR(params); break;
+            case "HPBA_130U_STR": result = hpbaMapper.HPBA_130U_STR(params); break;
+            case "HPBA_200U_STR": result = hpbaMapper.HPBA_200U_STR(params); break;
+            case "HPBA_210U_STR": result = hpbaMapper.HPBA_210U_STR(params); break;
+            case "HPBA_800U_STR": result = hpbaMapper.HPBA_800U_STR(params); break;
+            case "HPBA_810U_STR": result = hpbaMapper.HPBA_810U_STR(params); break;
+            case "HPBA_820U_STR": result = hpbaMapper.HPBA_820U_STR(params); break;
+            case "HPBA_830U_STR": result = hpbaMapper.HPBA_830U_STR(params); break;
+            case "HPBA_840U_STR": result = hpbaMapper.HPBA_840U_STR(params); break;
+            case "HPBA_900U_STR": result = hpbaMapper.HPBA_900U_STR(params); break;
+            default:
+                result = invokeMapper(proc, params);
+                if (result == null) result = executeDirectSql(proc, params);
+                break;
+        }
+        return result != null ? result : new ArrayList<>();
+    }
+
+    private List<Map<String, Object>> invokeMapper(String proc, Map<String, Object> params) {
+        try {
+            Method method = HpbaMapper.class.getMethod(proc, Map.class);
+            return (List<Map<String, Object>>) method.invoke(hpbaMapper, params);
+        } catch (NoSuchMethodException e) {
+            return null;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    private void fillMissingParameters(String proc, Map<String, Object> params) {
+    private List<Map<String, Object>> executeDirectSql(String proc, Map<String, Object> params) {
+        String sql = buildPositionalSql(proc, params);
+        log.info("==>  Direct Executing: {}", sql);
         try {
-            String statementId = "com.crmbank.erp.hpba.mapper.HpbaMapper." + proc;
-            if (!sqlSession.getConfiguration().hasStatement(statementId)) return;
-            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
-            BoundSql boundSql = ms.getBoundSql(params);
-
-            for (ParameterMapping pm : boundSql.getParameterMappings()) {
-                String prop = pm.getProperty();
-                if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
-                    String cleanProp = prop.trim();
-                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
-                        params.put(cleanProp, "");
-                    }
-                    if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
+            return jdbcTemplate.query(sql, (rs, rowNum) -> {
+                Map<String, Object> row = new LinkedHashMap<>();
+                int colCount = rs.getMetaData().getColumnCount();
+                for (int k = 1; k <= colCount; k++) {
+                    String label = rs.getMetaData().getColumnLabel(k).toLowerCase();
+                    row.put(label, rs.getObject(k) == null ? "" : rs.getObject(k));
                 }
+                return row;
+            });
+        } catch (Exception e) {
+            if (e.getMessage() != null && (e.getMessage().contains("No ResultSet") || e.getMessage().contains("did not return a result set"))) {
+                return new ArrayList<>();
             }
-        } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
+            throw e;
+        }
     }
 
     private String buildPositionalSql(String proc, Map<String, Object> params) {
         try {
-            String statementId = "com.crmbank.erp.hpba.mapper.HpbaMapper." + proc;
+            String statementId = HpbaMapper.class.getName() + "." + proc;
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
-            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
-            BoundSql boundSql = ms.getBoundSql(params);
+            BoundSql boundSql = sqlSession.getConfiguration().getMappedStatement(statementId).getBoundSql(params);
             List<String> values = new ArrayList<>();
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
-                Object val = params.get(pm.getProperty().trim());
-                if (val == null) values.add("''");
-                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+                String prop = pm.getProperty().trim();
+                Object val = params.get(prop);
+                if (val == null) {
+                    if ("etc".equalsIgnoreCase(prop)) val = params.get("deptcd");
+                    else if ("deptcd".equalsIgnoreCase(prop)) val = params.get("etc");
+                }
+                values.add(val == null ? "''" : "'" + val.toString().replace("'", "''").trim() + "'");
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }
+    }
+
+    private List<Map<String, Object>> convertToLowerCaseKeys(List<Map<String, Object>> list) {
+        if (list == null) return new ArrayList<>();
+        List<Map<String, Object>> newList = new ArrayList<>();
+        for (Map<String, Object> map : list) {
+            Map<String, Object> newMap = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                newMap.put(entry.getKey().toLowerCase(), entry.getValue());
+            }
+            newList.add(newMap);
+        }
+        return newList;
     }
 }

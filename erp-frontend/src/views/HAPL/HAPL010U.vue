@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 배부기준관리 (HAPL010U)
 	작성일자	: 2025.02.24
-	설명        : 부문별/품목별 배부기준 및 구성비 관리 (표준화 로깅 및 Numeric 에러 방지 적용)
+	설명        : 부문별/품목별 배부기준 및 구성비 관리
 	=============================================================
 -->
 
@@ -159,7 +159,6 @@ const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
 const resetForm = () => {
-  console.log('🔄 [HAPL010U] 폼 초기화')
   Object.assign(formData, { actkind: 'A0', divgbn: searchForm.divgbn, divcd: '', divnm: '', rate1: 0, rate2: 0, rate3: 0, remark: '', dspord: 0, useyn: 'Y' })
 }
 
@@ -167,7 +166,6 @@ const handleSearchChange = () => { search(); resetForm() }
 
 const search = async () => {
   try {
-    console.log('🔍 [HAPL010U] 조회 시작 (gubun: 020)')
     const params = {
       actkind: 'S0',
       cmpycd: authStore.cmpycd,
@@ -185,7 +183,6 @@ const search = async () => {
     }
 
     const res = await api.post('/api/hapl/HAPL_010U_STR', params)
-    console.log('🎯 [HAPL010U] 조회 응답 건수:', res.data?.length || 0)
 
     const data = (res.data || []).map((row: any) => {
       const n: any = {};
@@ -206,7 +203,6 @@ const search = async () => {
     mainGrid?.setData(data)
     vAlert('조회되었습니다.')
   } catch (e) {
-    console.error('❌ [HAPL010U] 조회 실패:', e)
     vAlertError('조회 중 오류가 발생했습니다.')
   }
 }
@@ -235,7 +231,7 @@ const save = async () => {
     })
 
     const resData = res.data?.[0] || {}
-    const resCode = String(resData.outym || resData.res || resData.col_0 || '').trim()
+    const resCode = String(resData.outym || resData.res || resData.col_0 || resData.result || '').trim()
     const resMsg = String(resData.outno || resData.msg || resData.col_1 || '').trim()
 
     if (resCode === '000000' || resCode === 'N' || resCode === 'ERROR') {
@@ -245,7 +241,7 @@ const save = async () => {
       search(); resetForm();
     }
   } catch (e: any) {
-    vAlertError('저장 실패: ' + (e.response?.data?.error || e.message))
+    vAlertError('저장 실패')
   }
 }
 
@@ -255,7 +251,6 @@ const exportExcel = () => {
 }
 
 onMounted(() => {
-  console.log('🚀 [HAPL010U] 마운트 완료')
   if (mainGridRef.value) {
     mainGrid = new Tabulator(mainGridRef.value, {
       layout: 'fitColumns', height: '100%',
@@ -278,7 +273,6 @@ onMounted(() => {
     })
     mainGrid.on("rowClick", (e, row) => {
       const d = row.getData();
-      console.log('🖱️ [HAPL010U] 행 선택:', d)
       Object.assign(formData, d);
       formData.actkind = 'U0'
     })

@@ -1,8 +1,8 @@
-<!--	=============================================================
-	프로그램명	: 월차 손익계산서
+<!--
+	=============================================================
+	프로그램명	: 월차 손익계산서 (HAPL110S)
 	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
-	설명        : 부서별 월차 손익 현황 조회 (전월/당월/누계 비교)
+	설명        : 부서별 월차 손익 현황 조회
 	=============================================================
 -->
 
@@ -37,7 +37,7 @@
             </colgroup>
             <tbody>
               <tr>
-                <th class="required">부&nbsp;&nbsp;&nbsp;&nbsp;서</th>
+                <th class="required">부서</th>
                 <td>
                   <div class="input-group input-group-sm flex-nowrap" style="max-width: 350px;">
                     <input v-model="searchForm.deptcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
@@ -80,7 +80,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
-import AppAlert from '@/components/AppAlert.vue' // 💡 메시지 표시를 위해 추가
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useCommonHelp } from '@/composables/useCommonHelp'
@@ -135,17 +135,16 @@ const search = async () => {
     let i = 1, j = 1, k = 1
 
     const processedData = rawData.map((row: any, index: number) => {
-      // 대소문자 구분 없이 필드 읽기
-      const code = (row.acctcd || row.ACCTCD || '').toString();
-      const name = row.acctnm || row.ACCTNM || '';
-      const rstyn = row.rstyn || row.RSTYN || '';
-      const salestot_b = Number(row.salestot_b || row.SALESTOT_B || 0)
-      const salestot_c = Number(row.salestot_c || row.SALESTOT_C || 0)
-      const salestot_t = Number(row.salestot_t || row.SALESTOT_T || 0)
+      const code = (row.acctcd || '').toString();
+      const name = row.acctnm || '';
+      const rstyn = row.rstyn || '';
+      const salestot_b = Number(row.salestot_b || 0)
+      const salestot_c = Number(row.salestot_c || 0)
+      const salestot_t = Number(row.salestot_t || 0)
 
-      const bAmt = Number(row.bamt_l || row.BAMT_L || 0) !== 0 ? Number(row.bamt_l || row.BAMT_L) : Number(row.bamt_r || row.BAMT_R || 0)
-      const cAmt = Number(row.camt_l || row.CAMT_L || 0) !== 0 ? Number(row.camt_l || row.CAMT_L) : Number(row.camt_r || row.CAMT_R || 0)
-      const tAmt = Number(row.tamt_l || row.TAMT_L || 0) !== 0 ? Number(row.tamt_l || row.TAMT_L) : Number(row.tamt_r || row.TAMT_R || 0)
+      const bAmt = Number(row.bamt_l || 0) !== 0 ? Number(row.bamt_l) : Number(row.bamt_r || 0)
+      const cAmt = Number(row.camt_l || 0) !== 0 ? Number(row.camt_l) : Number(row.camt_r || 0)
+      const tAmt = Number(row.tamt_l || 0) !== 0 ? Number(row.tamt_l) : Number(row.tamt_r || 0)
 
       let dispName = name
       let isBold = false
@@ -169,10 +168,9 @@ const search = async () => {
         }
       }
 
-      // 넘버링 리셋 로직 (안전한 필드 참조)
       const nextRow = rawData[index + 1]
       if (nextRow) {
-        const nextCode = (nextRow.acctcd || nextRow.ACCTCD || '').toString()
+        const nextCode = (nextRow.acctcd || '').toString()
         if (code.substring(0, 3) !== nextCode.substring(0, 3)) {
           if (code.substring(0, 2) !== "51") k = 1
         }
@@ -196,11 +194,11 @@ const search = async () => {
 
     mainGrid?.setData(processedData)
     vAlert('조회되었습니다.')
-  } catch (e) { vAlertError('조회 오류') }
+  } catch (e) { vAlertError('조회 실패') }
 }
 
 const print = () => {
-  const params = `deptcd=${searchForm.deptcd}&deptnm=${searchForm.deptnm}&yy=${searchForm.yy}.mm=${searchForm.mm}&PRTGU=1`
+  const params = `deptcd=${searchForm.deptcd}&deptnm=${searchForm.deptnm}&yy=${searchForm.yy}&mm=${searchForm.mm}&PRTGU=1`
   window.open(`/api/hapl/HAPL_110P?${params}`, 'ProfitLossPrint', 'width=1000,height=800,scrollbars=yes')
 }
 

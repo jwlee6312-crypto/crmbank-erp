@@ -1,395 +1,122 @@
 <!--
 	=============================================================
-	?�로그램�?: 지불등�?(HAFN610U)
-	?�성?�자	: 2025.02.24
-	?�성??    : AI Assistant
-	?�명        : 거래처별 미�?�??�역???�??지�?처리 �??�표 ?�성 (?�문???�칙 �?HSOD100U ?�자???�용)
+	프로그램명	: 자금수지등록(은행) (HAFN610U)
+	작성일자	: 2025.02.24
+	설명        : 은행 계좌별 입출금 내역 등록 및 자금 수지 관리
 	=============================================================
 -->
 
 <template>
-	<app_alert :show="show_alert" :error="show_error" :message="alert_message" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="erp-container d-flex flex-column h-100 bg-white">
-		<!-- ?? 1. ?�단 ?�션 �?-->
-		<div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom bg-white py-2 px-3 sticky-top shadow-sm">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-wallet2 me-2 text-primary" style="font-size: 18px;"></i>
-				?�금관�?<i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">지불등�?(hafn610u)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">초기??/button>
-				<button class="btn-erp btn-search" @click="search">조회</button>
-				<button class="btn-erp btn-save" @click="save" :disabled="!can_save">지불확??/button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-bank me-2 text-primary" style="font-size: 18px;"></i>
+        자금관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">자금수지등록(은행) (HAFN610U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-save" @click="save">저장</button>
+      </div>
+    </div>
 
-		<!-- ?�� 2. 메인 컨텐�??�역 -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 100px" /><col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light required">수지일자</th>
+                <td class="px-3 py-1">
+                    <input v-model="searchForm.jsanymd" type="date" class="form-control form-control-sm" style="width: 150px;" @change="search" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-			<!-- [?�단] 조회 ?�터 ?�역 (HSOD100U ?��??? -->
-			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
-				<div class="card-body p-0 bg-white">
-					<table class="erp-table-dense" style="table-layout: fixed;">
-						<colgroup>
-							<col style="width: 100px;" /><col style="width: 300px;" />
-							<col style="width: 100px;" /><col />
-						</colgroup>
-						<tbody>
-							<tr>
-								<th class="text-center bg-light border-end">지불처</th>
-								<td class="bg-white border-end px-2">
-									<div class="input-group input-group-sm">
-										<input v-model="search_form.custcd" type="text" class="form-control text-center bg-light" style="max-width: 70px;" readonly />
-										<input v-model="search_form.custnm" type="text" class="form-control" placeholder="거래�?검?? @keydown.enter="open_help('SEARCH_CUST')" />
-										<button class="btn btn-outline-secondary px-2" @click="open_help('SEARCH_CUST')"><i class="bi bi-search"></i></button>
-									</div>
-								</td>
-								<th class="text-center bg-light border-end">기�??�자</th>
-								<td class="bg-white px-2">
-									<input v-model="search_form.todt" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-
-			<!-- [중간] 지�?마스???�보 ?�역 (HSOD100U ?��??? -->
-			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
-				<div class="card-body p-0 bg-white">
-					<table class="erp-table-dense w-100">
-						<colgroup>
-							<col style="width: 110px;" /><col />
-							<col style="width: 110px;" /><col />
-							<col style="width: 110px;" /><col />
-						</colgroup>
-						<tbody>
-							<tr>
-								<th class="bg-light text-center border-end">지불일</th>
-								<td class="border-end px-2">
-									<input v-model="voucher_form.payymd" type="date" class="form-control form-control-sm" />
-								</td>
-								<th class="bg-light text-center border-end text-primary fw-bold">?�수�?/th>
-								<td class="border-end px-2">
-									<input v-model="voucher_form.jiamt" type="number" class="form-control form-control-sm text-end" />
-								</td>
-								<th class="bg-light text-center border-end text-danger fw-bold">가?�세</th>
-								<td class="px-2">
-									<input v-model="voucher_form.gaamt" type="number" class="form-control form-control-sm text-end" />
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-
-			<!-- [?�단 그리??1] 지�??�??(미�?�??�역) -->
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white" style="flex-basis: 40%;">
-				<div class="card-header py-1 px-3 bg-white d-flex justify-content-between align-items-center border-bottom">
-					<span class="fw-bold small text-dark"><i class="bi bi-list-task me-2 text-primary"></i>1. 지�??�??(미�?�??�역)</span>
-					<span class="badge bg-primary">지�??�??총액: {{ format_money(total_target_pay_amt) }}</span>
-				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-					<div ref="target_grid_ref" class="tabulator-instance flex-grow-1"></div>
-				</div>
-			</div>
-
-			<!-- [?�단 그리??2] 지�?방법 -->
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-header py-1 px-3 bg-white d-flex justify-content-between align-items-center border-bottom text-dark">
-					<div class="d-flex gap-4 align-items-center">
-						<span class="fw-bold small"><i class="bi bi-credit-card-2-back me-2 text-success"></i>2. 지�?방법 (출금/?�음 ??</span>
-					</div>
-					<div class="d-flex gap-2 align-items-center">
-						<span class="badge" :class="is_balanced ? 'bg-success' : 'bg-danger'">
-							차액: {{ format_money(difference) }}
-						</span>
-						<button class="btn btn-xs btn-outline-primary py-0 fw-bold" @click="add_method_row">+ 방법추�?</button>
-					</div>
-				</div>
-				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-					<div ref="method_grid_ref" class="tabulator-instance flex-grow-1"></div>
-				</div>
-				<div class="card-footer p-0 border-top bg-dark text-white">
-					<table class="table table-sm table-dark table-bordered mb-0 text-end fw-bold" style="font-size: 11px;">
-						<tbody>
-							<tr>
-								<td class="text-center" style="width: 25%;">지불�???미�?�??�수�???</td>
-								<td style="width: 20%;" class="text-info">{{ format_money(total_required_amt) }}</td>
-								<td class="text-center" style="width: 20%;">지불수???�계</td>
-								<td style="width: 20%;" class="text-warning">{{ format_money(total_method_pay_amt) }}</td>
-								<td class="text-center" style="width: 15%;">?�급�?발생: {{ format_money(prepayment_amt) }}</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<modal_component v-model:visible="modal_visible" :modalProps="modal_props" />
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>은행 입출금 목록</span>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" style="font-size: 11px;">+ 행추가</button>
+          </div>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref as _ref, reactive as _reactive, onMounted as _on_mounted, computed as _computed } from 'vue'
-import { TabulatorFull as tabulator } from 'tabulator-tables'
+import { ref, reactive, onMounted, nextTick } from 'vue'
+import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import { useAlerts as use_alerts } from '@/composables/useAlerts'
+import AppAlert from '@/components/AppAlert.vue'
+import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
-import { useAuthStore as use_auth_store } from '@/stores/authStore'
-import { useFormReset as use_form_reset } from '@/composables/useFormReset'
-import app_alert from '@/components/AppAlert.vue'
-import modal_component from '@/components/Modal.vue'
-import type { ModalProps as modal_props_type } from '@/types/modal'
+import { useAuthStore } from '@/stores/authStore'
 
-const auth_store = use_auth_store()
-const { showAlert: show_alert, showError: show_error, alertMessage: alert_message, vAlert: v_alert, vAlertError: v_alert_error } = use_alerts()
-const { resetForm: reset_form } = use_form_reset()
+const authStore = useAuthStore()
+const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
-const today = new Date().toISOString().substring(0, 10)
-const first_day = today.substring(0, 8) + '01'
+const searchForm = reactive({ jsanymd: new Date().toISOString().substring(0, 10) })
+const mainGridRef = ref<HTMLDivElement | null>(null)
+let mainGrid: Tabulator | null = null
 
-// ?�� ?�짜 ?�맷 ?�퍼
-const format_ymd = (v: string) => (v && v.length === 8) ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v
-
-// ?�� 검??�?마스???�이??(?�문???�칙)
-const search_form = _reactive({
-	todt: today,
-	custcd: '',
-	custnm: ''
-})
-
-const voucher_form = _reactive({
-	deptcd: auth_store.deptcd,
-	deptnm: auth_store.deptnm,
-	payymd: today,
-	jiamt: 0,
-	gaamt: 0,
-	clsymd: '00000000'
-})
-
-const target_grid_ref = _ref<HTMLDivElement | null>(null)
-const method_grid_ref = _ref<HTMLDivElement | null>(null)
-let target_grid: tabulator | null = null
-let method_grid: tabulator | null = null
-
-const total_target_pay_amt = _ref(0)
-const total_method_pay_amt = _ref(0)
-
-const total_required_amt = _computed(() => {
-	return total_target_pay_amt.value + Number(voucher_form.jiamt || 0) + Number(voucher_form.gaamt || 0)
-})
-
-const difference = _computed(() => total_required_amt.value - total_method_pay_amt.value)
-const is_balanced = _computed(() => difference.value === 0)
-const prepayment_amt = _computed(() => difference.value < 0 ? Math.abs(difference.value) : 0)
-
-const can_save = _computed(() => {
-	return search_form.custcd && total_target_pay_amt.value > 0 && total_method_pay_amt.value > 0
-})
-
-const format_money = (val: any) => Number(val || 0).toLocaleString()
+const initGrid = () => {
+  if (!mainGridRef.value) return
+  mainGrid = new Tabulator(mainGridRef.value, {
+    layout: "fitColumns", height: "100%", placeholder: "내역 없음",
+    columnDefaults: { headerSort: false, headerHozAlign: "center", vertAlign: "middle" },
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
+      { title: "은행명", field: "banknm", width: 150, editor: "input" },
+      { title: "입금액", field: "inamt", width: 130, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "출금액", field: "outamt", width: 130, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "적요", field: "remark", widthGrow: 1, editor: "input" },
+      { title: "삭제", width: 40, hozAlign: "center", formatter: (c) => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => cell.getRow().delete() }
+    ]
+  })
+}
 
 const search = async () => {
-	if (!search_form.custcd) return v_alert('거래처�? ?�택?�십?�오.')
-
-	try {
-		const res_target = await api.post('/api/hafn/HAFN_610U_STR', {
-			actkind: 'S0',
-			cmpycd: auth_store.cmpycd,
-			fromdt: first_day.replace(/-/g, ''),
-			todt: search_form.todt.replace(/-/g, ''),
-			custcd: search_form.custcd
-		})
-
-		const target_data = (res_target.data || []).map((row: any) => {
-            const item = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
-            return {
-                ...item,
-                slip_key: `${item.col0}-${item.col1}-${item.col2}`,
-                unpaid_amt: Number(item.upyamt || 0),
-                paid_amt: Number(item.payamt || 0),
-                jan_amt: Number(item.janamt || 0),
-                select: true,
-                input_pay_amt: Number(item.janamt || 0)
-            }
-        })
-		target_grid?.setData(target_data)
-		update_target_total()
-
-		const res_bills = await api.post('/api/hafn/HAFN_610U_STR', { actkind: 'S1', cmpycd: auth_store.cmpycd })
-		const method_data = (res_bills.data || []).map((row: any) => {
-            const item = Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
-            return {
-                select: false,
-                acctnm: '받을?�음',
-                cpaycndt: item.cpaycndt,
-                mgtno: item.billno,
-                custnm: item.custnm,
-                custcd: item.custcd,
-                remark: `${search_form.custnm} ?�상�?지�?,
-                amount: Number(item.billamt || 0),
-                fixed: true,
-                cmgtgbn: '050',
-                cacctcd: '1120',
-                csubgbn: '010'
-            }
-        })
-		method_grid?.setData(method_data)
-		update_method_total()
-
-	} catch (e) { v_alert_error('조회 ?�패') }
-}
-
-const update_target_total = () => {
-	const data = target_grid?.getData() || []
-	total_target_pay_amt.value = data.filter((r: any) => r.select).reduce((sum, r) => sum + Number(r.input_pay_amt || 0), 0)
-}
-
-const update_method_total = () => {
-	const data = method_grid?.getData() || []
-	total_method_pay_amt.value = data.filter((r: any) => r.select).reduce((sum, r) => sum + Number(r.amount || 0), 0)
+  try {
+    const res = await api.post('/api/hafn/HAFN_610U_STR', {
+      cmpycd: authStore.cmpycd,
+      jsanymd: searchForm.jsanymd.replace(/-/g, '')
+    })
+    mainGrid?.setData(res.data || [])
+  } catch (e) { vAlertError('조회 실패') }
 }
 
 const save = async () => {
-	if (!is_balanced.value && prepayment_amt.value === 0) return v_alert('금액 차액??발생?�습?�다.')
-	if (!confirm('지�??�정 처리�??�시겠습?�까?')) return
-
-	try {
-		const selected_targets = target_grid?.getData().filter((r: any) => r.select) || []
-		const selected_methods = method_grid?.getData().filter((r: any) => r.select) || []
-
-		const details = []
-		selected_targets.forEach(row => {
-			details.push({ upkind: 'A', dbcr: 'D', acctcd: row.acctcd, remark: `${search_form.custnm} ?�상�?지�?, amount: row.input_pay_amt, custcd: search_form.custcd, sslipno: `${row.slipymd}${row.slipno}${row.srowno}` })
-		})
-		if (voucher_form.jiamt > 0) details.push({ upkind: 'A', dbcr: 'D', acctcd: '6355', remark: '?�금?�수�?, amount: voucher_form.jiamt, custcd: search_form.custcd })
-		if (voucher_form.gaamt > 0) details.push({ upkind: 'A', dbcr: 'D', acctcd: '6250', remark: '가?�세', amount: voucher_form.gaamt, custcd: search_form.custcd })
-
-		selected_methods.forEach(row => {
-			details.push({ upkind: 'A', dbcr: 'C', acctcd: row.cacctcd, remark: row.remark, amount: row.amount, mgtno: row.mgtno, custcd: row.custcd || search_form.custcd })
-		})
-		if (prepayment_amt.value > 0) details.push({ upkind: 'A', dbcr: 'D', acctcd: '1265', remark: '?�급�?발생', amount: prepayment_amt.value, custcd: search_form.custcd })
-
-		const payload = {
-			actkind: 'A',
-			master: { cmpycd: auth_store.cmpycd, slipymd: voucher_form.payymd.replace(/-/g, ''), acctymd: voucher_form.payymd.replace(/-/g, ''), deptcd: voucher_form.deptcd, business: `${search_form.custnm} 지불건`, slipgu: '010' },
-			details: details
-		}
-
-		const res = await api.post('/api/hasl/HASL_010U_SAVE', payload)
-		v_alert('?�공?�으�?처리?�었?�니??')
-		if (res.data.slipno) window.open(`/api/hasl/HASL_SLIP_PRINT?slipgu=010&slipymd=${payload.master.slipymd}&slipno=${res.data.slipno}&deptcd=${voucher_form.deptcd}`)
-		initialize()
-	} catch (e) { v_alert_error('?�???�패') }
+  const data = mainGrid?.getData() || []
+  try {
+    await api.post('/api/hafn/HAFN_610U_SAVE', {
+      jsanymd: searchForm.jsanymd.replace(/-/g, ''),
+      list: data
+    })
+    vAlert('저장되었습니다.')
+    search()
+  } catch (e) { vAlertError('저장 실패') }
 }
 
-const initialize = () => {
-	reset_form(search_form); reset_form(voucher_form);
-	search_form.todt = today; voucher_form.payymd = today;
-	target_grid?.clearData(); method_grid?.clearData();
-	total_target_pay_amt.value = 0; total_method_pay_amt.value = 0;
-}
+const addRow = () => mainGrid?.addRow({ inamt: 0, outamt: 0, remark: "" }, true)
+const initialize = () => { searchForm.jsanymd = new Date().toISOString().substring(0, 10); mainGrid?.clearData(); search() }
 
-const add_method_row = () => {
-	method_grid?.addRow({ select: true, acctnm: '', mgtno: '', custnm: search_form.custnm, remark: `${search_form.custnm} 지�?, amount: difference.value > 0 ? difference.value : 0, fixed: false, csubgbn: '' })
-}
-
-const modal_visible = _ref(false)
-const modal_props = _reactive<modal_props_type>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-function open_help(type: string, cell?: any) {
-	if (type === 'SEARCH_CUST') {
-		Object.assign(modal_props, {
-			title: '거래�??�택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'c4', cmpycd: auth_store.cmpycd, gbncd: '', code: search_form.custnm },
-			columns: [{ title: '코드', field: 'custcd', width: 80 }, { title: '거래처명', field: 'custnm', width: 180 }],
-			onConfirm: (d: any) => { const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v])); search_form.custcd = item.custcd; search_form.custnm = item.custnm; search() }
-		})
-	} else if (type === 'DEPT') {
-		Object.assign(modal_props, {
-			title: '부???�택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'D0', cmpycd: auth_store.cmpycd, search: voucher_form.deptnm },
-			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부?�명', field: 'deptnm', width: 180 }],
-			onConfirm: (d: any) => { const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v])); voucher_form.deptcd = item.deptcd; voucher_form.deptnm = item.deptnm }
-		})
-	} else if (type === 'METHOD_ACCT') {
-		Object.assign(modal_props, {
-			title: '계정 ?�택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'E1', cmpycd: auth_store.cmpycd, search: '300' },
-			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정�?, field: 'paygbnm', width: 180 }],
-			onConfirm: (d: any) => {
-				const row = cell.getRow().getData(); const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v]))
-				row.cacctcd = item.acctcd; row.acctnm = item.paygbnm; row.cmgtgbn = item.typemgt; row.csubgbn = item.typesub;
-				cell.getRow().update(row)
-			}
-		})
-	} else if (type === 'METHOD_CUST') {
-		const row = cell.getRow().getData(); const is_bank = row.csubgbn === '020'
-		const is_cust = row.csubgbn === '010'
-		Object.assign(modal_props, {
-			title: is_bank ? '?�???�택' : '거래�??�택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: is_cust ? 'c4' : (is_bank ? 'C3' : 'C0'), cmpycd: auth_store.cmpycd, gbncd: is_cust ? '' : undefined, code: '' },
-			columns: [{ title: '코드', field: is_bank ? 'bankcd' : 'custcd', width: 80 }, { title: '명칭', field: is_bank ? 'banknm' : 'custnm', width: 180 }],
-			onConfirm: (d: any) => {
-				const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v]))
-				row.custcd = is_bank ? item.bankcd : item.custcd; row.custnm = is_bank ? item.banknm : item.custnm
-				cell.getRow().update(row)
-			}
-		})
-	} else if (type === 'MGTNO') {
-        const row = cell.getRow().getData()
-        Object.assign(modal_props, {
-            title: '관리번???�택', path: '/api/ha00/HA00_00P_STR',
-            data: { gubun: 'M0', cmpycd: auth_store.cmpycd, gbncd: row.cmgtgbn, search: '', remark: row.cacctcd },
-            columns: [{ title: '관리번??, field: 'mgtno', width: 120 }, { title: '관리명�?, field: 'mgtnm', width: 180 }],
-            onConfirm: (d: any) => { const item = Object.fromEntries(Object.entries(d).map(([k, v]) => [k.toLowerCase(), v])); row.mgtno = item.mgtno; cell.getRow().update(row) }
-        })
-    }
-	modal_visible.value = true
-}
-
-_on_mounted(() => {
-	if (target_grid_ref.value) {
-		target_grid = new tabulator(target_grid_ref.value, {
-			layout: 'fitColumns', height: '100%', columnDefaults: { headerSort: false, vertAlign: "middle" },
-			columns: [
-				{ title: "?�택", field: "select", width: 40, hozAlign: "center", formatter: "tickCross", editor: true, cellClick: (e, cell) => { cell.setValue(!cell.getValue()); update_target_total() } },
-				{ title: "?�표번호", field: "slip_key", width: 150, hozAlign: "center" },
-				{ title: "?�요", field: "remark", minWidth: 200 },
-				{ title: "?�청??, field: "reqymd", width: 150, hozAlign: "center", formatter: (c) => format_ymd(c.getValue()) },
-				{ title: "?�액", field: "jan_amt", width: 150, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-				{ title: "지불액", field: "input_pay_amt", width: 150, hozAlign: "right", editor: "input", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-warning-subtle" }
-			]
-		})
-		target_grid.on("cellEdited", update_target_total)
-	}
-
-	if (method_grid_ref.value) {
-		method_grid = new tabulator(method_grid_ref.value, {
-			layout: 'fitColumns', height: '100%', columnDefaults: { headerSort: false, vertAlign: "middle" },
-			columns: [
-				{ title: "?�택", field: "select", width: 40, hozAlign: "center", formatter: "tickCross", editor: true, cellClick: (e, cell) => { cell.setValue(!cell.getValue()); update_method_total() } },
-				{ title: "계정과목", field: "acctnm", width: 200, cellClick: (e, cell) => { if(!cell.getData().fixed) open_help('METHOD_ACCT', cell) }, cssClass: "cursor-pointer" },
-				{ title: "관리번??, field: "mgtno", width: 150, editor: "input", cellClick: (e, cell) => open_help('MGTNO', cell), cssClass: "cursor-pointer" },
-				{ title: "거래�?, field: "custnm", width: 250, cellClick: (e, cell) => open_help('METHOD_CUST', cell), cssClass: "cursor-pointer" },
-				{ title: "?�요", field: "remark", minWidth: 250, editor: "input" },
-				{ title: "금액", field: "amount", width: 150, hozAlign: "right", editor: "input", formatter: "money", formatterParams: { precision: 0 }, cssClass: "bg-info-subtle" },
-				{ title: "", width: 40, formatter: (c) => c.getData().fixed ? "" : "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => { if(!cell.getData().fixed) cell.getRow().delete(); update_method_total() } }
-			]
-		})
-		method_grid.on("cellEdited", update_method_total)
-	}
-})
+onMounted(() => { nextTick(() => { initGrid(); search() }) })
 </script>
 
 <style scoped>
-.erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
-.bg-warning-subtle { background-color: #fffcf0 !important; }
-.bg-info-subtle { background-color: #f0f7ff !important; }
-.btn-xs { padding: 1px 5px; font-size: 11px; }
-.cursor-pointer { cursor: pointer; }
 .tabulator-instance { width: 100% !important; background-color: #fff; }
 </style>

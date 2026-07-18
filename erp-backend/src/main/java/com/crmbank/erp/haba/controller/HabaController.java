@@ -86,6 +86,7 @@ public class HabaController {
                 log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
             } else {
                 switch (proc) {
+                    case "HABA_YYYY_S": result = habaMapper.HABA_YYYY_S(params); break;
                     case "HABA_010U_STR": result = habaMapper.HABA_010U_STR(params); break;
                     case "HABA_020U_STR": result = habaMapper.HABA_020U_STR(params); break;
                     case "HABA_021U_STR": result = habaMapper.HABA_021U_STR(params); break;

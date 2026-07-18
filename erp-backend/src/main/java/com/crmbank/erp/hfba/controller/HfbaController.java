@@ -61,7 +61,7 @@ public class HfbaController {
                         row.put(colName.toLowerCase(), val == null ? "" : val);
                         values.add(val == null ? "" : val);
                     }
-                    row.put("returnKeyValue", values); 
+                    row.put("returnkeyvalue", values); 
                     return row;
                 });
                 log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
@@ -86,11 +86,24 @@ public class HfbaController {
             if (result == null || result.isEmpty()) {
                 result = List.of(Map.of("res", "OK"));
             }
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(convertToLowerCaseKeys(result));
         } catch (Exception e) {
             log.error("❌ [hfba] executeProcedure Error ({}): {}", proc, e.getMessage());
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    private List<Map<String, Object>> convertToLowerCaseKeys(List<Map<String, Object>> list) {
+        if (list == null) return new ArrayList<>();
+        List<Map<String, Object>> newList = new ArrayList<>();
+        for (Map<String, Object> map : list) {
+            Map<String, Object> newMap = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                newMap.put(entry.getKey().toLowerCase(), entry.getValue());
+            }
+            newList.add(newMap);
+        }
+        return newList;
     }
 
     private void injectSession(Map<String, Object> params, HttpSession session) {

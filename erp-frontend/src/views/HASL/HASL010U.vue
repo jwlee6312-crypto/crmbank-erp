@@ -1,14 +1,14 @@
 <!--
 	=============================================================
-	프로그램명	: 현업전표등록 (hasl010u)
-	작성일자	: 2025.03.14
-	설명        : 실무 부서용 회계 전표 관리 (완전 소문자 원칙 적용)
+	프로그램명	: 현업전표등록 (HASL010U)
+	작성일자	: 2025.02.24
+	설명        : 실무 부서용 회계 전표 관리
 	=============================================================
 -->
 
 <template>
-  <appalert :show="showalert" :error="showerror" :message="alertmessage" />
-  <modal v-model:visible="modalvisible" :modalprops="modalprops" />
+  <AppAlert :show="showalert" :error="showerror" :message="alertmessage" />
+  <Modal v-model:visible="modalvisible" :modalProps="modalprops" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
@@ -16,7 +16,7 @@
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-journal-plus me-2 text-primary" style="font-size: 18px;"></i>
         전표관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        <span class="text-primary fw-bolder">현업전표등록 (hasl010u)</span>
+        <span class="text-primary fw-bolder">현업전표등록 (HASL010U)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-2">
         <button class="btn-erp btn-init" @click="initialize">초기화</button>
@@ -134,11 +134,10 @@
             <div class="card border shadow-sm flex-shrink-0 d-flex flex-column bg-white overflow-hidden side-panel-wrapper" style="width: 440px;" v-if="selectedrow">
               <div class="card-header py-2 px-3 bg-secondary text-white small fw-bold d-flex justify-content-between align-items-center">
                  <span><i class="bi bi-gear-fill me-2"></i>상세 관리항목 설정</span>
-                 <span class="badge" :class="String(selectedrow.dbcr || '').trim().toLowerCase() === 'D' ? 'bg-primary' : 'bg-danger'">{{ String(selectedrow.dbcr || '').trim().toLowerCase() === 'D' ? '차변' : '대변' }}</span>
+                 <span class="badge" :class="String(selectedrow.dbcr || '').trim().toLowerCase() === 'd' ? 'bg-primary' : 'bg-danger'">{{ String(selectedrow.dbcr || '').trim().toLowerCase() === 'd' ? '차변' : '대변' }}</span>
               </div>
               <div class="card-body p-0 overflow-auto custom-scrollbar flex-grow-1 bg-light">
 
-                 <!-- 💡 선택 계정 정보 헤더 -->
                  <div class="p-2 bg-white border-bottom d-flex align-items-center gap-2 small sticky-top">
                     <span class="badge bg-light text-dark border px-2 py-1">{{ selectedrow.acctcd }}</span>
                     <b class="text-primary">{{ selectedrow.acctnm || '계정 미선택' }}</b>
@@ -152,7 +151,7 @@
                         <!-- [1] 접대비 상세 (typeacct: 100) -->
                         <template v-if="String(selectedrow.typeacct || '').trim() === '100'">
                             <tr>
-                                <th class="bg-light border-bottom text-end pe-3 required">유&nbsp;&nbsp;&nbsp;&nbsp;형</th>
+                                <th class="bg-light border-bottom text-end pe-3 required">유형</th>
                                 <td class="border-bottom">
                                     <select v-model="selectedrow.docno3" class="form-select form-select-sm border-0">
                                         <option v-for="opt in enttypeoptions" :key="opt.code" :value="opt.code">{{ opt.name }}</option>
@@ -172,7 +171,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th class="bg-light border-bottom text-end pe-3 text-primary">상&nbsp;&nbsp;&nbsp;&nbsp;호</th>
+                                <th class="bg-light border-bottom text-end pe-3 text-primary">상호</th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
                                         <input v-model="selectedrow.docno4" class="form-control border-0" placeholder="상호명 직접입력 또는 검색" />
@@ -181,7 +180,7 @@
                                 </td>
                             </tr>
                             <tr v-if="String(selectedrow.docno3 || '').trim() === '01'">
-                                <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카&nbsp;&nbsp;&nbsp;&nbsp;드</th>
+                                <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카드</th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
                                         <input v-model="selectedrow.docno4" class="form-control border-0 text-primary" placeholder="카드번호 도움창 선택" />
@@ -190,13 +189,13 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">접&nbsp;대&nbsp;비</th>
+                                <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">접대비</th>
                                 <td class="border-bottom">
                                     <input v-model="selectedrow.docno8" type="number" class="form-control form-control-sm border-0 text-end fw-bold" placeholder="0" />
                                 </td>
                             </tr>
                             <tr>
-                                <th class="bg-light border-bottom text-end pe-3">봉&nbsp;사&nbsp;료</th>
+                                <th class="bg-light border-bottom text-end pe-3">봉사료</th>
                                 <td class="border-bottom">
                                     <input v-model="selectedrow.docno9" type="number" class="form-control form-control-sm border-0 text-end" placeholder="0" />
                                 </td>
@@ -207,7 +206,7 @@
                         <template v-else-if="String(selectedrow.typeacct || '').trim() === '090'">
                             <template v-if="String(selectedrow.typedc || '').trim().toLowerCase() === String(selectedrow.dbcr || '').trim().toLowerCase()">
                                 <tr>
-                                    <th class="bg-light border-bottom text-end pe-3 required">사&nbsp;업&nbsp;장</th>
+                                    <th class="bg-light border-bottom text-end pe-3 required">사업장</th>
                                     <td class="border-bottom">
                                         <select v-model="selectedrow.docno1" class="form-select form-select-sm border-0">
                                             <option value="">사업장 선택</option>
@@ -216,7 +215,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="bg-light border-bottom text-end pe-3 required">유&nbsp;&nbsp;&nbsp;&nbsp;형</th>
+                                    <th class="bg-light border-bottom text-end pe-3 required">유형</th>
                                     <td class="border-bottom">
                                         <select v-model="selectedrow.docno3" class="form-select form-select-sm border-0">
                                             <option value="">유형 선택</option>
@@ -225,7 +224,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="bg-light border-bottom text-end pe-3 required">거&nbsp;래&nbsp;처</th>
+                                    <th class="bg-light border-bottom text-end pe-3 required">거래처</th>
                                     <td class="border-bottom">
                                         <div class="input-group input-group-sm">
                                             <input v-model="selectedrow.docno2nm" class="form-control border-0" readonly placeholder="거래처 도움창 선택" />
@@ -234,25 +233,25 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="bg-light border-bottom text-end pe-3 required">발&nbsp;행&nbsp;일</th>
+                                    <th class="bg-light border-bottom text-end pe-3 required">발행일</th>
                                     <td class="border-bottom">
                                         <input v-model="selectedrow.docno6" type="date" class="form-control form-control-sm border-0" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">공&nbsp;급&nbsp;가</th>
+                                    <th class="bg-light border-bottom text-end pe-3 fw-bold text-primary">공급가</th>
                                     <td class="border-bottom">
                                         <input v-model="selectedrow.docno8" type="number" class="form-control form-control-sm border-0 text-end fw-bold" @input="calcvat" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="bg-light border-bottom text-end pe-3 fw-bold text-danger">부&nbsp;가&nbsp;세</th>
+                                    <th class="bg-light border-bottom text-end pe-3 fw-bold text-danger">부가세</th>
                                     <td class="border-bottom">
                                         <input v-model="selectedrow.docno9" type="number" class="form-control form-control-sm border-0 text-end fw-bold" />
                                     </td>
                                 </tr>
-                                <tr v-if="String(selectedrow.dbcr || '').trim().toLowerCase() === 'D'">
-                                    <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카&nbsp;&nbsp;&nbsp;&nbsp;드</th>
+                                <tr v-if="String(selectedrow.dbcr || '').trim().toLowerCase() === 'd'">
+                                    <th class="bg-light border-bottom text-end pe-3 text-primary fw-bold">카드</th>
                                     <td class="border-bottom">
                                         <div class="input-group input-group-sm">
                                             <input v-model="selectedrow.docno4" class="form-control border-0 text-primary" placeholder="카드번호 선택" />
@@ -274,7 +273,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="(String(selectedrow.typeacct || '').trim() === '050' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'D') || (String(selectedrow.typeacct || '').trim() === '060' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'C')">
+                            <tr v-if="(String(selectedrow.typeacct || '').trim() === '050' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'd') || (String(selectedrow.typeacct || '').trim() === '060' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'c')">
                                 <th class="bg-light border-bottom text-end pe-3">지급/수취처</th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
@@ -283,7 +282,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="(String(selectedrow.typeacct || '').trim() === '050' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'D') || (String(selectedrow.typeacct || '').trim() === '060' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'C')">
+                            <tr v-if="(String(selectedrow.typeacct || '').trim() === '050' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'd') || (String(selectedrow.typeacct || '').trim() === '060' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'c')">
                                 <th class="bg-light border-bottom text-end pe-3">만기일자</th>
                                 <td class="border-bottom">
                                     <input v-model="selectedrow.docno7" type="date" class="form-control form-control-sm border-0" />
@@ -332,7 +331,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="String(selectedrow.typebugt || '').trim() > '000' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'D'">
+                            <tr v-if="String(selectedrow.typebugt || '').trim() > '000' && String(selectedrow.dbcr || '').trim().toLowerCase() === 'd'">
                                 <th class="bg-light border-bottom text-end pe-3">예산과목</th>
                                 <td class="border-bottom">
                                     <div class="input-group input-group-sm">
@@ -346,17 +345,15 @@
                  </table>
               </div>
 
-              <!-- 💡 하단 액션 영역 -->
               <div class="card-footer bg-white p-2 border-top">
                  <div class="d-flex flex-column gap-1">
                     <button class="btn btn-xs btn-primary w-100 py-1 fw-bold shadow-sm" @click="updateautoremark(true)">
-                        <i class="bi bi-magic me-1"></i> 적요 자동 조합 (표준 포맷 적용)
+                        <i class="bi bi-magic me-1"></i> 적요 자동 조합
                     </button>
                  </div>
               </div>
             </div>
 
-            <!-- 미선택 안내 -->
             <div class="card border shadow-sm flex-shrink-0 d-flex align-items-center justify-content-center bg-white" style="width: 440px;" v-else>
                <div class="text-center opacity-30">
                   <i class="bi bi-cursor-fill mb-2" style="font-size: 2rem;"></i>
@@ -381,38 +378,23 @@ import { useAuthStore } from '@/stores/authStore'
 import { useFormReset } from '@/composables/useFormReset'
 import { useCommonHelp } from '@/composables/useCommonHelp'
 import { getDate } from '@/composables/useDate'
-import { useRoute } from 'vue-router'
-import appalert from '@/components/AppAlert.vue'
-import modal from '@/components/Modal.vue'
+import AppAlert from '@/components/AppAlert.vue'
+import Modal from '@/components/Modal.vue'
 import DateForm from '@/components/DateForm.vue'
 
 const authstore = useAuthStore()
-const route = useRoute()
 const { firstDay, today } = getDate()
 const { showAlert: showalert, showError: showerror, alertMessage: alertmessage, vAlert: valert, vAlertError: valerterror } = useAlerts()
 const { resetForm: resetform } = useFormReset()
 const { modalVisible: modalvisible, modalProps: modalprops, openHelp: commonopenhelp } = useCommonHelp()
 
-// [0] 💡 데이터 키 정규화 헬퍼 (완전 소문화)
 const normalizekeys = (obj: any) => {
     if (!obj) return obj;
-    const n = Object.fromEntries(
-        Object.entries(obj).map(([k, v]) => [k.toLowerCase(), v && typeof v === 'string' ? v.trim() : v])
-    );
-    if (n.custcd) n.subcd = n.custcd;
-    if (n.custnm) n.subnm = n.custnm;
-    if (!n.docno2nm) n.docno2nm = n.docnm2 || n.custnm || '';
-    if (!n.docno4) n.docno4 = n.docnm4 || n.custnm || '';
-    if (!n.docno9nm) n.docno9nm = n.docnm9 || n.custnm || '';
-    ['docno6', 'docno7', 'payymd'].forEach(key => {
-        if (n[key] && n[key].length === 8 && !n[key].includes('-')) {
-            const v = n[key]; n[key] = `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}`;
-        }
-    });
+    const n: any = {};
+    Object.keys(obj).forEach(k => n[k.toLowerCase()] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k]);
     return n;
 };
 
-// [1] 데이터 모델링
 const searchparams = reactive({ fromdt: firstDay, todt: today, business: '' })
 const masterform = reactive<any>({
   cmpycd: authstore.cmpycd, deptcd: authstore.deptcd, deptnm: authstore.deptnm,
@@ -427,7 +409,6 @@ let grid2: Tabulator | null = null
 const selectedrow = ref<any>(null)
 let activecomponent: any = null
 
-// 옵션 데이터
 const purchasevatoptions = ref<any[]>([]); const salesvatoptions = ref<any[]>([])
 const bizplaceoptions = ref<any[]>([]);
 const enttypeoptions = [{code:'01', name:'카드'}, {code:'02', name:'현금'}, {code:'03', name:'세금계산서'}]
@@ -435,20 +416,18 @@ const enttypeoptions = [{code:'01', name:'카드'}, {code:'02', name:'현금'}, 
 const dynamicvatoptions = computed(() => {
   if (!selectedrow.value) return []
   const dbcr = String(selectedrow.value.dbcr || '').trim().toLowerCase();
-  return dbcr === 'D' ? purchasevatoptions.value : salesvatoptions.value
+  return dbcr === 'd' ? purchasevatoptions.value : salesvatoptions.value
 })
 
 const totaldebit = ref(0); const totalcredit = ref(0)
 const balance = computed(() => totaldebit.value - totalcredit.value)
 const formatmoney = (val: any) => Number(val || 0).toLocaleString()
 
-// 💡 행 상태 변경 감지
 const updateRowStatus = (row: any) => {
     const d = row.getData();
     if (d._state === 'EXIST' && !d._status) row.update({ _status: '수정' });
 }
 
-// 💡 실시간 동기화 (사이드 패널 -> 그리드)
 watch(selectedrow, (newval) => {
     if (newval && activecomponent) {
         activecomponent.update(newval);
@@ -481,7 +460,6 @@ function syncremarktorows() {
     });
 }
 
-// [2] 그리드 초기화
 const initgrids = () => {
   grid1 = new Tabulator(sliplistgridref.value!, {
     layout: "fitColumns", height: "100%", placeholder: "데이터 없음",
@@ -517,7 +495,7 @@ const initgrids = () => {
       { title: "차/대", field: "dbcr", width: 70, hozAlign: "center", editor: "list", editorParams: { values: { "d": "차변", "c": "대변" } },
         formatter: (c) => {
             const v = String(c.getValue() || '').trim().toLowerCase();
-            return v === 'D' ? '<b class="text-primary">차변</b>' : (v === 'C' ? '<b class="text-danger">대변</b>' : v);
+            return v === 'd' ? '<b class="text-primary">차변</b>' : (v === 'c' ? '<b class="text-danger">대변</b>' : v);
         }
       },
       { title: "계정과목", field: "acctnm", width: 160, cellClick: (e, cell) => handleopenhelp('acct', cell.getRow()), cssClass: "cursor-pointer text-primary fw-bold" },
@@ -537,15 +515,14 @@ const initgrids = () => {
 
 const updatetotals = () => {
   const data = grid2?.getData() || []
-  totaldebit.value = data.reduce((s, r: any) => s + (String(r.dbcr || '').trim().toLowerCase() === 'D' ? Number(r.amount || 0) : 0), 0)
-  totalcredit.value = data.reduce((s, r: any) => s + (String(r.dbcr || '').trim().toLowerCase() === 'C' ? Number(r.amount || 0) : 0), 0)
+  totaldebit.value = data.reduce((s, r: any) => s + (String(r.dbcr || '').trim().toLowerCase() === 'd' ? Number(r.amount || 0) : 0), 0)
+  totalcredit.value = data.reduce((s, r: any) => s + (String(r.dbcr || '').trim().toLowerCase() === 'c' ? Number(r.amount || 0) : 0), 0)
 }
 
 async function searchslips() {
   try {
-    const res = await api.post('/api/hasl/hasl_010u_str', { actkind: 'f', cmpycd: authstore.cmpycd, fromdt: searchparams.fromdt.replace(/-/g, ''), todt: searchparams.todt.replace(/-/g, ''), keyword: searchparams.business });
-    const list = (res.data || []).map((item: any) => normalizekeys(item));
-    grid1?.setData(list);
+    const res = await api.post('/api/hasl/HASL_010U_STR', { actkind: 'F', cmpycd: authstore.cmpycd, fromdt: searchparams.fromdt.replace(/-/g, ''), todt: searchparams.todt.replace(/-/g, ''), keyword: searchparams.business });
+    grid1?.setData((res.data || []).map(i => normalizekeys(i)));
   } catch (e) { valerterror('조회 실패'); }
 }
 
@@ -556,12 +533,12 @@ async function fetchdetail(row: any) {
     const d = masterform.slipymd; masterform.slipymd = `${d.substring(0,4)}-${d.substring(4,6)}-${d.substring(6,8)}`;
   }
   try {
-    const resd = await api.post('/api/hasl/hasl_011u_str', { actkind: 'S', cmpycd: authstore.cmpycd, slipymd: String(masterform.slipymd).replace(/-/g,''), slipno: masterform.slipno });
+    const resd = await api.post('/api/hasl/HASL_011U_STR', { actkind: 'S', cmpycd: authstore.cmpycd, slipymd: String(masterform.slipymd).replace(/-/g,''), slipno: masterform.slipno });
     const details = (resd.data || []).map((ri: any) => {
         const d = normalizekeys(ri);
         return {
             ...d,
-            dbcr: (d.dbcr || (Number(d.dbamt || 0) > 0 ? 'D' : 'C')).toLowerCase().trim(),
+            dbcr: (d.dbcr || (Number(d.dbamt || 0) > 0 ? 'd' : 'c')).toLowerCase().trim(),
             amount: Number(d.dbamt || 0) > 0 ? d.dbamt : d.cramt,
             _state: 'EXIST', _status: ''
         };
@@ -617,24 +594,16 @@ async function save() {
       master: { ...masterform, slipymd: masterform.slipymd.replace(/-/g, ''), acctymd: masterform.acctymd.replace(/-/g, '') },
       details: allData.map(d => {
         const item = normalizekeys(d);
-        ['docno6', 'docno7', 'payymd'].forEach(key => { if (item[key]) item[key] = item[key].replace(/-/g, ''); });
-
-        let dtlUpkind = item.upkind;
-        if (item._status === '입력') dtlUpkind = 'A';
-        else if (item._status === '삭제') dtlUpkind = 'D';
-        else if (item._status === '수정') dtlUpkind = 'U';
-        else dtlUpkind = masterform.slipno ? 'U' : 'A'; // 기본값
-
         return {
             ...item,
             custcd: item.subcd,
             dbamt: String(item.dbcr).toLowerCase() === 'd' ? (item.amount || 0) : 0,
             cramt: String(item.dbcr).toLowerCase() === 'c' ? (item.amount || 0) : 0,
-            upkind: dtlUpkind
+            upkind: item._status === '입력' ? 'A' : (item._status === '삭제' ? 'D' : 'U')
         };
       })
     };
-    await api.post('/api/hasl/hasl_010u_save', payload); valert('저장되었습니다.'); searchslips();
+    await api.post('/api/hasl/HASL_010U_SAVE', payload); valert('저장되었습니다.'); searchslips();
   } catch (e) { valerterror('저장 실패'); }
 }
 
@@ -665,16 +634,16 @@ const handlerowaction = (row: any) => {
 async function deletedata() {
   if (!confirm('정말 삭제하시겠습니까?')) return;
   try {
-    await api.post('/api/hasl/hasl_010u_save', { actkind: 'D', master: { ...masterform, slipymd: masterform.slipymd.replace(/-/g, '') }, details: [] });
+    await api.post('/api/hasl/HASL_010U_SAVE', { actkind: 'D', master: { ...masterform, slipymd: masterform.slipymd.replace(/-/g, '') }, details: [] });
     valert('삭제되었습니다.'); initialize(); searchslips();
   } catch (e) { valerterror('삭제 실패'); }
 }
 
-onMounted(async () => {
-  api.post('/api/ha00/ha00_00p_str', { gubun: 'e0', gbncd: '120' }).then(r => { purchasevatoptions.value = (r.data || []).map((i: any) => normalizekeys(i)); });
-  api.post('/api/ha00/ha00_00p_str', { gubun: 'e0', gbncd: '130' }).then(r => { salesvatoptions.value = (r.data || []).map((i: any) => normalizekeys(i)); });
-  api.post('/api/ha00/ha00_00p_str', { gubun: 'sa', cmpycd: authstore.cmpycd }).then(r => {
-    bizplaceoptions.value = (r.data || []).map((i: any) => { const n = normalizekeys(i); return { code: n.taxunit || n.code || '', name: n.unitnm || n.codenm || '' }; });
+onMounted(() => {
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '120' }).then(r => { purchasevatoptions.value = (r.data || []).map(i => normalizekeys(i)); });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'E0', gbncd: '130' }).then(r => { salesvatoptions.value = (r.data || []).map(i => normalizekeys(i)); });
+  api.post('/api/ha00/HA00_00P_STR', { gubun: 'SA', cmpycd: authstore.cmpycd }).then(r => {
+    bizplaceoptions.value = (r.data || []).map(i => { const n = normalizekeys(i); return { code: n.taxunit || n.code || '', name: n.unitnm || n.codenm || '' }; });
   });
   nextTick(() => { initgrids(); searchslips(); });
 })
@@ -682,9 +651,7 @@ onMounted(async () => {
 
 <style scoped>
 .tabulator-instance { width: 100% !important; background-color: #fff; }
-.bg-light-yellow { background-color: #fffdf0 !important; }
 .side-detail-table th { padding: 2px 10px !important; font-size: 12px; font-weight: 600; color: #555; background-color: #f8f9fa; border-right: 1px solid #eee; border-bottom: 1px solid #eee !important; white-space: nowrap; height: 25px; }
 .side-detail-table td { padding: 1px 6px !important; border-bottom: 1px solid #eee !important; }
-.side-detail-table .form-control-sm, .side-detail-table .form-select-sm { height: 22px; padding: 0 6px; font-size: 12px; border: 1px solid #ced4da; border-radius: 2px; }
 .side-detail-table th.required::after { content: " *"; color: #dc3545; }
 </style>

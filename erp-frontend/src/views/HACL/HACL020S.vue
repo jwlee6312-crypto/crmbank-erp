@@ -1,8 +1,8 @@
 <!--
 	=============================================================
-	?�로그램�?: ?�차�?조표 (HACL020S)
-	?�성?�자	: 2025.02.24
-	?�명        : HSOD100U ?��? 그리???�의�?준?�하???�차�?조표 조회
+	프로그램명	: 대차대조표 (HACL020S)
+	작성일자	: 2025.02.24
+	설명        : HSOD100U 표준 그리드 정의를 준수하는 대차대조표 조회
 	=============================================================
 -->
 
@@ -10,35 +10,35 @@
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
-    <!-- ?? 1. ?�단 ?�션 �?-->
+    <!-- 🚀 1. 상단 액션 바 -->
     <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
       <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
         <i class="bi bi-file-earmark-spreadsheet me-2 text-primary" style="font-size: 18px;"></i>
-        ?�무?�표 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-        <span class="text-primary fw-bolder">?�차�?조표 (HACL020S)</span>
+        재무제표 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">대차대조표 (HACL020S)</span>
       </div>
       <div class="btn-group-erp d-flex gap-1 pe-3">
         <button class="btn-erp btn-search" @click="search">조회</button>
-        <button class="btn-erp btn-print" @click="print">?�쇄</button>
-        <button class="btn-erp btn-excel" @click="excel">?��?</button>
+        <button class="btn-erp btn-print" @click="print">인쇄</button>
+        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
       </div>
     </div>
 
-    <!-- ?�� 2. 검??조건 ?�역 -->
+    <!-- 🔍 2. 조회 조건 영역 -->
     <div class="p-2 pb-0 flex-shrink-0 bg-light">
       <div class="card border shadow-sm overflow-hidden">
         <div class="card-body p-2 bg-white">
           <div class="d-flex align-items-center gap-3 small">
             <div class="d-flex align-items-center">
-              <span class="erp-label" style="min-width: 70px;"><i class="bi bi-dot text-primary"></i>?�계?�자</span>
+              <span class="erp-label" style="min-width: 70px;"><i class="bi bi-dot text-primary"></i>회계일자</span>
               <div class="d-flex align-items-center gap-1">
                 <select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;" @change="search">
-                  <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}??/option>
+                  <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}년</option>
                 </select>
                 <select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;" @change="search">
                   <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}</option>
                 </select>
-                <span class="ms-1 fw-bold">???�재</span>
+                <span class="ms-1 fw-bold">월 현재</span>
               </div>
             </div>
           </div>
@@ -46,7 +46,7 @@
       </div>
     </div>
 
-    <!-- ?�� 3. 그리???�역 (HSOD100U ?��? ?�턴) -->
+    <!-- 📊 3. 그리드 영역 (HSOD100U 표준 패턴) -->
     <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column bg-light">
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
@@ -78,34 +78,34 @@ const searchForm = reactive({ yy: "2011", mm: "06" })
 const tableRef = ref<HTMLDivElement | null>(null)
 let grid: Tabulator | null = null
 
-const sNUM = ['', '??, '??, '??, '??, '??, '??, '??, '??, '??]
+const sNUM = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ']
 
 const initGrid = () => {
   if (!tableRef.value) return;
   grid = new Tabulator(tableRef.value, {
     layout: "fitColumns",
     height: "100%",
-    placeholder: "?�이???�음",
+    placeholder: "데이터 없음",
     columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
     columns: [
       {
-        title: "�? �?, field: "formatted_nm", widthGrow: 2,
+        title: "과 목", field: "formatted_nm", widthGrow: 2,
         formatter: "html",
         cssClass: "border-end bg-light fw-bold"
       },
       {
-        title: "??     �?,
+        title: "당 기",
         columns: [
-          { title: "�? ??, field: "camtl", width: 160, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
-          { title: "?? �?, field: "camtr", width: 160, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold border-start bg-light-subtle" },
+          { title: "금 액", field: "camtl", width: 160, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+          { title: "합 계", field: "camtr", width: 160, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold border-start bg-light-subtle" },
           { title: "%", field: "rate", width: 70, hozAlign: "center" }
         ]
       },
       {
-        title: "??     �?,
+        title: "전 기",
         columns: [
-          { title: "�? ??, field: "bamtl", width: 160, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "border-start" },
-          { title: "?? �?, field: "bamtr", width: 160, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold border-start bg-light-subtle" },
+          { title: "금 액", field: "bamtl", width: 160, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "border-start" },
+          { title: "합 계", field: "bamtr", width: 160, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, cssClass: "fw-bold border-start bg-light-subtle" },
           { title: "%", field: "rate_b", width: 70, hozAlign: "center", cssClass: "border-start" }
         ]
       }
@@ -121,15 +121,9 @@ const search = async () => {
     });
 
     const rawData = res.data || []
-    const normalizedData = rawData.map((r: any) => {
-      const row: any = {}
-      for (const key in r) { row[key.toLowerCase()] = r[key] }
-      return row
-    })
 
     let i = 1, j = 1, k = 1
-    const processedData = normalizedData.map((row: any, idx: number) => {
-      // Aliases: acctcd, acctnm, camtl, camtr, bamtl, bamtr, rstyn, assettot, assettotb
+    const processedData = rawData.map((row: any, idx: number) => {
       const acctcd = String(row.acctcd || '').trim()
       const acctnm = String(row.acctnm || '')
       const camtl = Number(row.camtl || 0), camtr = Number(row.camtr || 0)
@@ -157,7 +151,7 @@ const search = async () => {
         spaces = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
       }
 
-      const next = normalizedData[idx + 1]
+      const next = rawData[idx + 1]
       if (next) {
         const nCd = String(next.acctcd || '').trim()
         if (acctcd.substring(0, 3) !== nCd.substring(0, 3)) k = 1
@@ -169,14 +163,12 @@ const search = async () => {
     })
 
     grid?.setData(processedData)
-    vAlert('조회?�었?�니??')
-  } catch (e) { vAlertError('조회 �??�류 발생') }
+    vAlert('조회되었습니다.')
+  } catch (e) { vAlertError('조회 실패') }
 }
 
-const excel = () => grid?.download("xlsx", `?�차�?조표_${searchForm.yy}${searchForm.mm}.xlsx`)
+const excel = () => grid?.download("xlsx", `대차대조표_${searchForm.yy}${searchForm.mm}.xlsx`)
 const print = () => window.open(`/api/hacl/HACL_020P?yy=${searchForm.yy}&mm=${searchForm.mm}&PRTGU=1`)
-
-const excel = () => grid?.download("xlsx", `?�차�?조표_${searchForm.yy}_${searchForm.mm}.xlsx`)
 
 onMounted(() => {
   if (typeof window !== 'undefined') (window as any).XLSX = XLSX

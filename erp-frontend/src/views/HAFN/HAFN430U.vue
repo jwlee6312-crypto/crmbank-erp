@@ -1,322 +1,125 @@
 <!--
 	=============================================================
-	?�로그램�?: 받을?�음?�표발행
-	?�성?�자	: 2025.02.24
-	?�성??    : AI Assistant
-	?�명        : 만기 받을?�음??조회?�여 ?�금 ?�표�??�동?�로 ?�성
+	프로그램명	: 자금계획등록 (HAFN430U)
+	작성일자	: 2025.02.24
+	설명        : 특정 일자의 입금/출금 자금 계획 수동 등록 및 관리
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="erp-container">
-		<!-- ?? ?�단 ?�션 �?-->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-journal-arrow-up me-2 text-primary" style="font-size: 18px;"></i>
-				?�금관�?<i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">받을?�음?�표발행 (HAFN430U)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기??
-				</button>
-				<button class="btn-erp btn-search" @click="search">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-save" @click="save" :disabled="selectedRows.length === 0">
-					<i class="bi bi-check-lg"></i> ?�표발행
-				</button>
-			</div>
-		</div>
+  <div class="erp-container d-flex flex-column h-100 bg-white">
+    <div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
+      <div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-pencil-square me-2 text-primary" style="font-size: 18px;"></i>
+        자금관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">자금계획등록 (HAFN430U)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-save" @click="save">저장</button>
+      </div>
+    </div>
 
-		<!-- ?�� 검??�?마스???�보 ?�력 ?�역 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm overflow-hidden bg-light">
-				<table class="erp-table-full" style="table-layout: fixed;">
-					<colgroup>
-						<col style="width: 100px;" /><col />
-						<col style="width: 100px;" /><col />
-					</colgroup>
-					<tbody>
-						<tr>
-							<th class="text-center border-end">만기??범위</th>
-							<td class="bg-white border-end">
-								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.ymd_fr" type="date" class="form-control form-control-sm" />
-									<span class="text-muted">~</span>
-									<input v-model="searchForm.ymd_to" type="date" class="form-control form-control-sm" />
-								</div>
-							</td>
-							<th class="text-center border-end">발행부??/th>
-							<td class="bg-white">
-								<div class="input-group input-group-sm">
-									<input v-model="voucherForm.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="voucherForm.deptnm" type="text" class="form-control" @keydown.enter="openHelp('DEPT')" />
-									<button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
-								</div>
-							</td>
-						</tr>
-						<tr>
-							<th class="text-center border-end border-top">?�금계정</th>
-							<td class="bg-white border-top border-end">
-								<div class="input-group input-group-sm">
-									<input v-model="voucherForm.acctcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-									<input v-model="voucherForm.acctnm" type="text" class="form-control" @keydown.enter="openHelp('ACCT')" />
-									<button class="btn btn-outline-secondary px-2" @click="openHelp('ACCT')"><i class="bi bi-search"></i></button>
-								</div>
-							</td>
-							<th class="text-center border-end border-top">?�금구좌</th>
-							<td class="bg-white border-top">
-								<div class="input-group input-group-sm">
-									<input v-model="voucherForm.mgtno" type="text" class="form-control" placeholder="계정 ?�택 ??조회" @keydown.enter="openHelp('MGT')" />
-									<button class="btn btn-outline-secondary px-2" @click="openHelp('MGT')"><i class="bi bi-search"></i></button>
-								</div>
-							</td>
-						</tr>
-						<tr>
-							<th class="text-center border-end border-top bg-info-subtle">발행?�자</th>
-							<td class="bg-white border-top border-end">
-								<input v-model="voucherForm.slipymd" type="date" class="form-control form-control-sm border-info shadow-sm" style="max-width: 150px;" />
-							</td>
-							<th class="text-center border-end border-top bg-warning-subtle">�??�금??/th>
-							<td class="bg-white border-top px-2 fw-bold text-primary">
-								{{ formatMoney(totalSelectedAmount) }} ??
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+    <div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
+      <div class="card border shadow-sm flex-shrink-0 overflow-hidden">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-dense" width="100%">
+            <colgroup>
+                <col style="width: 100px" /><col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="text-center bg-light required">계획일자</th>
+                <td class="px-3 py-1">
+                    <input v-model="searchForm.plnymd" type="date" class="form-control form-control-sm" style="width: 150px;" @change="search" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-		<!-- ?�� ?�???�음 그리??-->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-				<div class="card-header py-1 px-2 bg-light d-flex justify-content-between align-items-center border-bottom text-secondary">
-					<span class="fw-bold small"><i class="bi bi-list-check me-1"></i> 발행 ?�??받을?�음 리스??(체크?�여 ?�택)</span>
-				</div>
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                </div>
-			</div>
-		</div>
-	</div>
-
-	<Modal v-model:visible="modalVisible" :modalProps="modalProps" />
+      <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
+        <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+          <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>자금 계획 목록</span>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" @click="addRow" style="font-size: 11px;">+ 행추가</button>
+          </div>
+        </div>
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import { useAlerts } from '@/composables/useAlerts'
 import AppAlert from '@/components/AppAlert.vue'
+import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
-import { useFormReset } from '@/composables/useFormReset'
-import Modal from '@/components/Modal.vue'
-import type { ModalProps } from '@/types/modal'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
-const { resetForm } = useFormReset()
 
-const now = new Date()
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
-const today = now.toISOString().substring(0, 10)
-
-// ?�� 검??조건
-const searchForm = reactive({
-	ymd_fr: firstDay,
-	ymd_to: today
-})
-
-// ?�� ?�표 발행 ?�보
-const voucherForm = reactive({
-	deptcd: authStore.deptcd,
-	deptnm: authStore.deptnm,
-	slipymd: today,
-	acctcd: '',
-	acctnm: '',
-	mgtno: '',
-	mgtnm: '',
-	custgbn: ''
-})
-
+const searchForm = reactive({ plnymd: new Date().toISOString().substring(0, 10) })
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
-const selectedRows = ref<any[]>([])
 
-const totalSelectedAmount = computed(() => {
-	return selectedRows.value.reduce((acc, row) => acc + (Number(row.billamt) || 0), 0)
-})
-
-const formatMoney = (val: any) => Number(val || 0).toLocaleString()
-const formatYmd = (v: string) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v
+const initGrid = () => {
+  if (!mainGridRef.value) return
+  mainGrid = new Tabulator(mainGridRef.value, {
+    layout: "fitColumns", height: "100%", placeholder: "계획 없음",
+    columnDefaults: { headerSort: false, headerHozAlign: "center", vertAlign: "middle" },
+    columns: [
+      { title: "No", formatter: "rownum", width: 40, hozAlign: "center" },
+      { title: "구분", field: "inoutgbn", width: 90, editor: "list", editorParams: { values: { "1": "입금", "2": "출금" } }, formatter: (c) => c.getValue() === "1" ? "입금" : "출금" },
+      { title: "계정과목", field: "acctnm", width: 150, editor: "input" },
+      { title: "금액", field: "plnamt", width: 130, hozAlign: "right", editor: "number", formatter: "money", formatterParams: { precision: 0 } },
+      { title: "적요", field: "remark", widthGrow: 1, editor: "input" },
+      { title: "삭제", width: 40, hozAlign: "center", formatter: (c) => "<i class='bi bi-trash text-danger'></i>", cellClick: (e, cell) => cell.getRow().delete() }
+    ]
+  })
+}
 
 const search = async () => {
-	try {
-		const res = await api.post('/api/hafn/HAFN_430S_STR', {
-			cmpycd: authStore.cmpycd,
-			ymd_fr: searchForm.ymd_fr.replace(/-/g, ''),
-			ymd_to: searchForm.ymd_to.replace(/-/g, '')
-		})
-
-		const data = (res.data || []).map((row: any) => ({
-			...row,
-			endymd_f: formatYmd(row.endymd),
-			stdymd_f: formatYmd(row.stdymd),
-			billamt: Number(row.billamt || 0)
-		}))
-
-		mainGrid?.setData(data)
-		selectedRows.value = []
-		vAlert('조회?�었?�니??')
-	} catch (e) { vAlertError('조회 �??�류 발생') }
+  try {
+    const res = await api.post('/api/hafn/HAFN_430S_STR', {
+      cmpycd: authStore.cmpycd,
+      plnymd: searchForm.plnymd.replace(/-/g, '')
+    })
+    mainGrid?.setData(res.data || [])
+  } catch (e) { vAlertError('조회 실패') }
 }
 
 const save = async () => {
-	if (!voucherForm.deptcd) return vAlert('발행부?��? ?�택?�십?�오.')
-	if (!voucherForm.acctcd) return vAlert('?�금계정???�택?�십?�오.')
-	if (!voucherForm.mgtno) return vAlert('?�금구좌�??�택?�십?�오.')
-	if (selectedRows.value.length === 0) return vAlert('발행???�음???�택?�십?�오.')
-
-	if (!confirm(`${selectedRows.value.length}건의 ?�음???�???�표�?발행?�시겠습?�까?`)) return
-
-	try {
-		// 분개 ?�이??구성
-		const details = []
-
-		// 1. 차�?: ?�금계정 (보통?�금 ??
-		details.push({
-			upkind: 'A',
-			dbcr: 'D',
-			acctcd: voucherForm.acctcd,
-			acctnm: voucherForm.acctnm,
-			remark: '만기받을?�음 금액 ?�금',
-			amount: totalSelectedAmount.value,
-			usedeptcd: voucherForm.deptcd,
-			usedeptnm: voucherForm.deptnm,
-			mgtno: voucherForm.mgtno
-		})
-
-		// 2. ?�변: ?�택???�음??
-		selectedRows.value.forEach(row => {
-			details.push({
-				upkind: 'A',
-				dbcr: 'C',
-				acctcd: row.acctcd, // ?�음계정
-				acctnm: '받을?�음',
-				remark: `만기 받을?�음 ?�금(${row.billno}:${row.endymd_f})`,
-				amount: row.billamt,
-				usedeptcd: voucherForm.deptcd,
-				usedeptnm: voucherForm.deptnm,
-				custcd: row.custcd,
-				subnm: row.custnm,
-				mgtno: row.billno,
-				typeacct: '050' // 받을?�음 ?�형
-			})
-		})
-
-		const payload = {
-			actkind: 'A',
-			MASTER: {
-				cmpycd: authStore.cmpycd,
-				slipymd: voucherForm.slipymd.replace(/-/g, ''),
-				acctymd: voucherForm.slipymd.replace(/-/g, ''), // 발행?�자?� ?�계?�자 ?�일 처리
-				deptcd: voucherForm.deptcd,
-				business: '만기 받을?�음 ?�금 �?,
-				slipgu: '010'
-			},
-			DETAILS: details
-		}
-
-		const res = await api.post('/api/hasl/HASL_010U_SAVE', payload)
-		vAlert('?�표가 발행?�었?�니??')
-
-		// 발행???�표 ?�쇄 ?�업
-		if (res.data && res.data.slipno) {
-			window.open(`/api/hasl/HASL_SLIP_PRINT?slipgu=010&slipymd=${payload.MASTER.slipymd}&slipno=${res.data.slipno}&deptcd=${voucherForm.deptcd}`)
-		}
-
-		search()
-	} catch (e) { vAlertError('?�표 발행 �??�류가 발생?�습?�다.') }
+  const data = mainGrid?.getData() || []
+  try {
+    await api.post('/api/hafn/HAFN_430U_STR', {
+      actkind: 'A0',
+      cmpycd: authStore.cmpycd,
+      plnymd: searchForm.plnymd.replace(/-/g, ''),
+      items: data,
+      userid: authStore.userid
+    })
+    vAlert('저장되었습니다.')
+    search()
+  } catch (e) { vAlertError('저장 실패') }
 }
 
-const initialize = () => {
-	resetForm(searchForm)
-	searchForm.ymd_fr = firstDay
-	searchForm.ymd_to = today
-	voucherForm.acctcd = ''
-	voucherForm.acctnm = ''
-	voucherForm.mgtno = ''
-	mainGrid?.clearData()
-	selectedRows.value = []
-}
+const addRow = () => mainGrid?.addRow({ inoutgbn: "1", plnamt: 0, remark: "" }, true)
+const initialize = () => { searchForm.plnymd = new Date().toISOString().substring(0, 10); mainGrid?.clearData(); search() }
 
-// ?�업 ?�정
-const modalVisible = ref(false)
-const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
-
-function openHelp(type: string) {
-	if (type === 'ACCT') {
-		Object.assign(modalProps, {
-			title: '계정과목 ?�택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'A0', cmpycd: authStore.cmpycd, search: voucherForm.acctnm },
-			columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정�?, field: 'acctnm', width: 180 }],
-			onConfirm: (d: any) => {
-				voucherForm.acctcd = d.acctcd;
-				voucherForm.acctnm = d.acctnm;
-				voucherForm.mgtno = '';
-			}
-		})
-	} else if (type === 'DEPT') {
-		Object.assign(modalProps, {
-			title: '부???�택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'D0', cmpycd: authStore.cmpycd, code: voucherForm.deptnm },
-			columns: [{ title: '코드', field: 'deptcd', width: 80 }, { title: '부?�명', field: 'deptnm', width: 180 }],
-			onConfirm: (d: any) => { voucherForm.deptcd = d.deptcd; voucherForm.deptnm = d.deptnm }
-		})
-	} else if (type === 'MGT') {
-		if (!voucherForm.acctcd) return vAlert('?�금계정??먼�? ?�택?�십?�오.')
-		Object.assign(modalProps, {
-			title: '구좌번호 ?�택', path: '/api/ha00/HA00_00P_STR',
-			data: { gubun: 'M0', gbncd: '010', cmpycd: authStore.cmpycd, code: '', remark: voucherForm.acctcd },
-			columns: [{ title: '관리번??, field: 'mgtno', width: 150 }, { title: '구좌�?, field: 'mgtnm', width: 150 }],
-			onConfirm: (d: any) => { voucherForm.mgtno = d.mgtno; voucherForm.mgtnm = d.mgtnm }
-		})
-	}
-	modalVisible.value = true
-}
-
-onMounted(() => {
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns',
-			height: '100%',
-			selectable: true,
-			columnDefaults: { headerSort: false, vertAlign: "middle" },
-			columns: [
-				{ formatter: "rowSelection", titleFormatter: "rowSelection", hozAlign: "center", headerHozAlign: "center", width: 50 },
-				{ title: "만기??, field: "endymd_f", hozAlign: "center", width: 150 },
-				{ title: "?�음번호", field: "billno", hozAlign: "center", width: 180 },
-				{ title: "발행?�??, field: "issubank", width: 200 },
-				{ title: "발행??, field: "issuman", width: 150 },
-				{ title: "발행??, field: "stdymd_f", hozAlign: "center", width: 150 },
-				{ title: "받�?거래�?, field: "custnm", minWidth: 250 },
-				{ title: "금액", field: "billamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, width: 150, cssClass: "fw-bold" }
-			],
-		})
-
-		mainGrid.on("rowSelectionChanged", (data) => {
-			selectedRows.value = data
-		})
-	}
-})
+onMounted(() => { nextTick(() => { initGrid(); search() }) })
 </script>
 
 <style scoped>
-.erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
-.btn-xs { padding: 1px 5px; font-size: 11px; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
 </style>

@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 품목별 손익현황 (HAPL220S)
 	작성일자	: 2025.02.24
-	설명        : 부서/거래처별 품목별 매출, 원가, 판관비 및 이익 현황 조회 (HSOD100U 표준 UI 적용)
+	설명        : 부서/거래처별 품목별 매출, 원가, 판관비 및 이익 현황 조회
 	=============================================================
 -->
 
@@ -41,7 +41,7 @@
             </colgroup>
             <tbody>
               <tr>
-                <th class="text-center bg-light required">부&nbsp;&nbsp;&nbsp;&nbsp;서</th>
+                <th class="text-center bg-light required">부서</th>
                 <td>
                   <div class="input-group input-group-sm">
                     <input v-model="searchForm.deptnm" class="form-control" placeholder="부서 선택" readonly @click="handleOpenHelp('DEPT')" />
@@ -78,7 +78,7 @@
                 </td>
               </tr>
               <tr>
-                <th class="text-center bg-light">거&nbsp;래&nbsp;처</th>
+                <th class="text-center bg-light">거래처</th>
                 <td>
                   <div class="input-group input-group-sm">
                     <input v-model="searchForm.custnm" class="form-control" placeholder="전체 거래처" readonly @click="handleOpenHelp('CUST')" />
@@ -134,16 +134,22 @@ const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart
 const searchForm = reactive({
   deptcd: (route.query.deptcd as string) || authStore.deptcd,
   deptnm: '',
-  custcd: (route.query.CUSTCD as string) || '',
+  custcd: (route.query.custcd as string) || '',
   custnm: '',
-  yyyy: (route.query.YYYY as string) || String(currentYear),
-  fmm: (route.query.FMM as string) || currentMonth,
-  tmm: (route.query.TMM as string) || currentMonth,
+  yyyy: (route.query.yyyy as string) || String(currentYear),
+  fmm: (route.query.fmm as string) || currentMonth,
+  tmm: (route.query.tmm as string) || currentMonth,
   ordgbn: '00'
 })
 
 const mainGridRef = ref<HTMLElement | null>(null)
 let mainGrid: Tabulator | null = null
+
+const normalizekeys = (row: any) => {
+  const n: any = {};
+  Object.keys(row).forEach(k => n[k.toLowerCase()] = row[k]);
+  return n;
+}
 
 // [2] 그리드 초기화
 const initGrids = () => {
@@ -156,7 +162,7 @@ const initGrids = () => {
     columnDefaults: {
       headerHozAlign: 'center',
       headerSort: false,
-      hozAlign: 'right', // 🚀 기본값 우측 정렬
+      hozAlign: 'right',
       vertAlign: 'middle'
     },
     columnCalcs: "table",
@@ -164,43 +170,34 @@ const initGrids = () => {
       { title: "품목명", field: "itemnm", widthGrow: 1.5, frozen: true, cssClass: "fw-bold text-dark", bottomCalc: () => "합계" },
       { title: "수량", field: "salsqty", hozAlign: "right", width: 80, formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
       { title: "매출액", field: "salsamt", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
-      { title: "매출원가", field: "SALSCOST", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
-      { title: "매총이익", field: "MPROFIT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "bg-light-blue" },
-      { title: "이익율(%)", field: "M_RATE", hozAlign: "right", width: 80,
+      { title: "매출원가", field: "salscost", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+      { title: "매총이익", field: "mprofit", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "bg-light-blue" },
+      { title: "이익율(%)", field: "m_rate", hozAlign: "right", width: 80,
         formatter: (c) => Number(c.getValue() || 0).toFixed(2) + '%',
         bottomCalc: (values, data) => {
             const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.salsamt) || 0), 0);
-            const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.MPROFIT) || 0), 0);
+            const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.mprofit) || 0), 0);
             return sumAmt === 0 ? '0.00%' : ((sumProfit / sumAmt) * 100).toFixed(2) + '%';
         }
       },
-      { title: "판관비", field: "ADMIN_COST", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 },
-        mutatorData: (v, d) => Number(d.DPCOST || 0) + Number(d.IPCOST || 0),
+      { title: "판관비", field: "admin_cost", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 },
         bottomCalc: "sum"
       },
-      { title: "영업이익", field: "YYPROFIT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "bg-light-green" },
-      { title: "이익율(%)", field: "Y_RATE", hozAlign: "right", width: 80,
+      { title: "영업이익", field: "yyprofit", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "bg-light-green" },
+      { title: "이익율(%)", field: "y_rate", hozAlign: "right", width: 80,
         formatter: (c) => Number(c.getValue() || 0).toFixed(2) + '%',
         bottomCalc: (values, data) => {
             const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.salsamt) || 0), 0);
-            const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.YYPROFIT) || 0), 0);
+            const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.yyprofit) || 0), 0);
             return sumAmt === 0 ? '0.00%' : ((sumProfit / sumAmt) * 100).toFixed(2) + '%';
         }
       },
-      { title: "영업외수익", field: "NON_OP_INC", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 },
-        mutatorData: (v, d) => Number(d.DYPROFIT || 0) + Number(d.IYPROFIT || 0),
-        bottomCalc: "sum"
-      },
-      { title: "영업외비용", field: "NON_OP_EXP", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 },
-        mutatorData: (v, d) => Number(d.DYCOST || 0) + Number(d.IYCOST || 0),
-        bottomCalc: "sum"
-      },
-      { title: "경상이익", field: "GPROFIT", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "text-primary fw-bold bg-light" },
-      { title: "이익율(%)", field: "G_RATE", hozAlign: "right", width: 80,
+      { title: "경상이익", field: "gprofit", hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum", cssClass: "text-primary fw-bold bg-light" },
+      { title: "이익율(%)", field: "g_rate", hozAlign: "right", width: 80,
         formatter: (c) => Number(c.getValue() || 0).toFixed(2) + '%',
         bottomCalc: (values, data) => {
             const sumAmt = data.reduce((a: any, b: any) => a + (Number(b.salsamt) || 0), 0);
-            const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.GPROFIT) || 0), 0);
+            const sumProfit = data.reduce((a: any, b: any) => a + (Number(b.gprofit) || 0), 0);
             return sumAmt === 0 ? '0.00%' : ((sumProfit / sumAmt) * 100).toFixed(2) + '%';
         }
       }
@@ -234,12 +231,16 @@ async function search() {
       ordgbn: searchForm.ordgbn
     });
 
-    const list = (res.data || []).map((i: any) => ({
-        ...i,
-        M_RATE: i.salsamt ? (i.MPROFIT / i.salsamt * 100) : 0,
-        Y_RATE: i.salsamt ? (i.YYPROFIT / i.salsamt * 100) : 0,
-        G_RATE: i.salsamt ? (i.GPROFIT / i.salsamt * 100) : 0
-    }));
+    const list = (res.data || []).map((row: any) => {
+        const i = normalizekeys(row);
+        return {
+            ...i,
+            admin_cost: Number(i.dpcost || 0) + Number(i.ipcost || 0),
+            m_rate: i.salsamt ? (i.mprofit / i.salsamt * 100) : 0,
+            y_rate: i.salsamt ? (i.yyprofit / i.salsamt * 100) : 0,
+            g_rate: i.salsamt ? (i.gprofit / i.salsamt * 100) : 0
+        };
+    });
 
     mainGrid?.setData(list);
     vAlert('조회되었습니다.');
@@ -278,11 +279,11 @@ const handlePrint = (prtgu: string) => {
     if (!searchForm.deptcd) return vAlertError('부서를 선택하세요.');
     const params = new URLSearchParams({
         deptcd: searchForm.deptcd,
-        CUSTCD: searchForm.custcd,
-        YMFR: searchForm.yyyy + searchForm.fmm,
-        YMTO: searchForm.yyyy + searchForm.tmm,
+        custcd: searchForm.custcd,
+        ymfr: searchForm.yyyy + searchForm.fmm,
+        ymto: searchForm.yyyy + searchForm.tmm,
         ordgbn: searchForm.ordgbn,
-        PRTGU: prtgu
+        prtgu: prtgu
     }).toString();
     window.open(`/api/hapl/HAPL_220P?${params}`, 'ItemProfitPrint', 'width=1000,height=800,scrollbars=yes');
 }

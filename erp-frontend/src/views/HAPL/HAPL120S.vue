@@ -1,7 +1,9 @@
-<!--	=============================================================
-	프로그램명	: 배부현황	작성일자	: 2025.02.24
+<!--
+	=============================================================
+	프로그램명	: 배부현황 (HAPL120S)
+	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 부서/계정별 비용 배부 상세 내역 조회 (직접비/간접비 현황)
+	설명        : 부서/계정별 비용 배부 상세 내역 조회
 	=============================================================
 -->
 
@@ -86,7 +88,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
-import AppAlert from '@/components/AppAlert.vue' // 💡 메시지 표시를 위해 추가
+import AppAlert from '@/components/AppAlert.vue'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useCommonHelp } from '@/composables/useCommonHelp'
@@ -123,16 +125,15 @@ const search = async () => {
     })
 
     const data = (res.data || []).map((row: any) => {
-      // 서버에서 내려주는 실제 필드명 (dircost, idircost 등) 반영
       const diramt = Number(row.dircost || row.DIRCOST || 0);
       const idiramt = Number(row.idircost || row.IDIRCOST || 0);
 
       return {
-        bfdeptcd: row.bfdeptcd || row.BFdeptcd || '',
-        bfdeptnm: row.bfdeptnm || row.bfdeptnm || '',
-        acctcd: row.acctcd || row.ACCTCD || '',
-        acctnm: row.acctnm || row.ACCTNM || '',
-        afdeptnm: row.afdeptnm || row.AFdeptnm || '',
+        bfdeptcd: row.bfdeptcd || '',
+        bfdeptnm: row.bfdeptnm || '',
+        acctcd: row.acctcd || '',
+        acctnm: row.acctnm || '',
+        afdeptnm: row.afdeptnm || '',
         diramt: diramt,
         idiramt: idiramt,
         total: diramt + idiramt
@@ -140,9 +141,9 @@ const search = async () => {
     })
 
     mainGrid?.setData(data)
-    vAlert(`${data.length}건의 배부 내역이 조회되었습니다.`)
+    vAlert('조회되었습니다.')
   } catch (e) {
-    vAlertError('조회 중 오류가 발생했습니다.')
+    vAlertError('조회 실패')
   }
 }
 
@@ -161,8 +162,6 @@ const openHelp = (type: string) => {
       if (type === 'ACCT_FR') { searchForm.acctcdfr = d.acctcd; searchForm.acctcdfrnm = d.acctnm }
       else { searchForm.acctcdto = d.acctcd; searchForm.acctcdtonm = d.acctnm }
     })
-  } else if (type === 'DEPT') {
-    commonOpenHelp('DEPT', (d) => { /* 부서 선택 처리 필요시 */ })
   }
 }
 

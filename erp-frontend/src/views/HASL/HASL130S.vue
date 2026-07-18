@@ -1,9 +1,9 @@
 <!--
 	=============================================================
-	프로그램명	: 분개장(전체)
+	프로그램명	: 분개장(전체) (HASL130S)
 	작성일자	: 2025.02.24
 	작성자	    : AI Assistant
-	설명        : 회계 전표의 분개 내역을 전표별로 그룹화하여 조회 및 출력
+	설명        : 회계 전표의 분개 내역을 전표별로 그룹화하여 조회
 	=============================================================
 -->
 
@@ -77,7 +77,7 @@
 		<!-- 📊 그리드 영역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column" style="min-height: 0;">
                   <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
                 </div>
 			</div>
@@ -110,7 +110,6 @@ const now = new Date()
 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
 const today = now.toISOString().substring(0, 10)
 
-// 🔍 검색 데이터
 const searchForm = reactive({
 	fromdt: firstDay,
 	todt: today,
@@ -123,6 +122,12 @@ const searchForm = reactive({
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
+const normalizekeys = (row: any) => {
+  const n: any = {};
+  Object.keys(row).forEach(k => n[k.toLowerCase()] = row[k]);
+  return n;
+}
+
 const search = async () => {
 	try {
 		const res = await api.post('/api/hasl/HASL_130S_STR', {
@@ -133,13 +138,12 @@ const search = async () => {
 			acctcd2: searchForm.acctcd2
 		})
 
-		// 데이터 전처리: 세부내역 문자열 생성 및 숫자 변환
-		const processedData = (res.data || []).map((row: any) => {
-			// ASP 소스의 TEMP 문자열 생성 로직 반영
+		const processedData = (res.data || []).map((rowItem: any) => {
+            const row = normalizekeys(rowItem);
 			let details = []
 			const fields = [7, 5, 6, 11, 12, 10, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26]
 			fields.forEach(idx => {
-				const val = row['COL' + idx] || row[Object.keys(row)[idx]] // 컬럼 인덱스나 키 대응
+				const val = row['col' + idx];
 				if (val && String(val).trim() !== '' && String(val).trim() !== '00000000') {
 					details.push(String(val).trim())
 				}
@@ -147,21 +151,21 @@ const search = async () => {
 
 			return {
 				...row,
-				slipno: row.col0 || row.slipno,
-				srowno: row.col1 || row.srowno,
-				acctymd: row.col2 || row.acctymd,
-				acctnm: row.col3 || row.acctnm,
-				acctcd: row.col4 || row.acctcd,
-				remark: row.col13 || row.remark,
-				dbamt: Number(row.col8 || row.dbamt || 0),
-				cramt: Number(row.COL9 || row.cramt || 0),
+				slipno: row.col0,
+				srowno: row.col1,
+				acctymd: row.col2,
+				acctnm: row.col3,
+				acctcd: row.col4,
+				remark: row.col13,
+				dbamt: Number(row.col8 || 0),
+				cramt: Number(row.col9 || 0),
 				detail_str: details.join(' | ')
 			}
 		})
 
 		mainGrid?.setData(processedData)
 		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 중 오류 발생') }
+	} catch (e) { vAlertError('조회 실패') }
 }
 
 const initialize = () => {
@@ -171,16 +175,12 @@ const initialize = () => {
 	mainGrid?.clearData()
 }
 
-const excel = () => {
-	mainGrid?.download("xlsx", `분개장_${today}.xlsx`)
-}
-
+const excel = () => mainGrid?.download("xlsx", `분개장_${today}.xlsx`)
 const print = () => {
 	const params = `fromdt=${searchForm.fromdt}&todt=${searchForm.todt}&acctcd1=${searchForm.acctcd1}&acctcd2=${searchForm.acctcd2}`
 	window.open(`/api/hasl/HASL_130P?${params}`, 'JournalPrint', 'width=800,height=800,scrollbars=yes')
 }
 
-// 팝업 설정
 const modalVisible = ref(false)
 const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 
@@ -198,13 +198,9 @@ function openHelp(type: string) {
 	modalVisible.value = true
 }
 
-/**
- * 🚀 전표 이동
- */
 const go_to_slip = (slipkey: string) => {
 	if (!slipkey) return;
 	let ymd = ""; let no = "";
-
 	if (slipkey.includes('-')) {
 		const parts = slipkey.split('-');
 		ymd = parts[0]; no = parts[1];
@@ -214,14 +210,9 @@ const go_to_slip = (slipkey: string) => {
 
 	const pgmid = 'HASL110U'
 	add_dynamic_route(pgmid, '경리전표등록', 'HASL')
-
 	router.push({
 		path: `/${pgmid}`,
-		query: {
-			slipymd: ymd,
-			slipno: no,
-			deptcd: authStore.deptcd
-		}
+		query: { slipymd: ymd, slipno: no, deptcd: authStore.deptcd }
 	})
 }
 
@@ -234,7 +225,7 @@ onMounted(() => {
 			paginationSize: 50,
 			paginationSizeSelector: [20, 50, 100, 500],
 			paginationCounter: "rows",
-			groupBy: "slipno", // 전표번호로 그룹핑
+			groupBy: "slipno",
 			groupHeader: function(value, count, data, group) {
 				return `<span class="text-primary fw-bold cursor-pointer" onclick="window.dispatchEvent(new CustomEvent('go-slip', {detail: '${value}'}))">전표번호: ${value}</span> <span class="ms-3 small text-muted">(${count}개 항목)</span>`
 			},
@@ -246,9 +237,7 @@ onMounted(() => {
 						const value = cell.getValue();
 						if (!value) return "";
 						const prevrow = cell.getRow().getPrevRow();
-						if (prevrow && prevrow.getData().slipno === value) {
-							return "";
-						}
+						if (prevrow && prevrow.getData().slipno === value) return "";
 						return `<span class="text-primary cursor-pointer text-decoration-underline">${value}</span>`;
 					},
 					cellClick: (e, cell) => {
@@ -256,7 +245,7 @@ onMounted(() => {
 						if(value) go_to_slip(String(value));
 					}
 				},
-				{ title: "행번호", field: "srowno", width: 65 },
+				{ title: "순번", field: "srowno", width: 65, hozAlign: "center" },
 				{ title: "계정코드", field: "acctcd", width: 90, hozAlign: "center" },
 				{ title: "계정명", field: "acctnm", width: 150 },
 				{
@@ -273,18 +262,9 @@ onMounted(() => {
 						return v && v.length === 8 ? `${v.substring(2, 4)}.${v.substring(4, 6)}.${v.substring(6, 8)}` : v
 					}
 				},
-				{
-					title: "차변", field: "dbamt", width: 120, hozAlign: "right",
-					formatter: "money", formatterParams: { precision: 0 },
-					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
-				},
-				{
-					title: "대변", field: "cramt", width: 120, hozAlign: "right",
-					formatter: "money", formatterParams: { precision: 0 },
-					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
-				}
-			],
-			groupClosedShowTableOnEmpty: true,
+				{ title: "차변", field: "dbamt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" },
+				{ title: "대변", field: "cramt", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 }, bottomCalc: "sum" }
+			]
 		})
 
 		window.addEventListener('go-slip', ((e: CustomEvent) => {
@@ -297,7 +277,5 @@ onMounted(() => {
 <style scoped>
 .erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
 :deep(.tabulator-group) { background-color: #f8f9fa !important; border-top: 1px solid #dee2e6 !important; }
-:deep(.tabulator-group-handle) { display: none; }
-:deep(.tabulator-cell) { height: auto !important; padding-top: 4px !important; padding-bottom: 4px !important; }
 .cursor-pointer { cursor: pointer; }
 </style>

@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 품목별 배부적수 등록 (HAPL050U)
 	작성일자	: 2025.02.24
-	설명        : 부서별/품목별 원가 배부 적수 관리 (HSOD100U 표준 UI 적용)
+	설명        : 부서별/품목별 원가 배부 적수 관리
 	=============================================================
 -->
 
@@ -106,11 +106,9 @@ import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
-import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 
 const authStore = useAuthStore()
-const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
 // [1] 데이터 모델링
@@ -134,6 +132,12 @@ const mainGridRef = ref<HTMLElement | null>(null)
 let deptGrid: Tabulator | null = null
 let mainGrid: Tabulator | null = null
 
+const normalizekeys = (row: any) => {
+  const n: any = {};
+  Object.keys(row).forEach(k => n[k.toLowerCase()] = row[k]);
+  return n;
+}
+
 // [2] 그리드 초기화
 const initGrids = () => {
   deptGrid = new Tabulator(deptGridRef.value!, {
@@ -145,7 +149,7 @@ const initGrids = () => {
     ],
   });
   deptGrid.on("rowClick", (e, row) => {
-    const d = row.getData();
+    const d = normalizekeys(row.getData());
     selectedDept.code = d.deptcd;
     selectedDept.nm = d.deptnm;
     fetchItems();
@@ -180,7 +184,10 @@ const initGrids = () => {
 const loadInitData = async () => {
   try {
     const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'SB', cmpycd: authStore.cmpycd, gbncd: '200', code: '200' });
-    divideOptions.value = (res.data || []).map((i: any) => ({ code: i.divcd, cdnm: i.divnm  }));
+    divideOptions.value = (res.data || []).map((i: any) => {
+      const n = normalizekeys(i);
+      return { code: n.divcd, cdnm: n.divnm };
+    });
     if (divideOptions.value.length > 0) searchForm.divcd = divideOptions.value[0].code;
   } catch (e) { console.error(e) }
 }
@@ -189,12 +196,11 @@ const searchDepts = async () => {
   try {
     const ym = searchForm.yy + searchForm.mm;
     const res = await api.post('/api/hapl/HAPL_050U_STR', { actkind: 'S1', cmpycd: authStore.cmpycd, iogbn: '200', yymm: ym });
-    deptGrid?.setData(res.data || []);
+    deptGrid?.setData((res.data || []).map(r => normalizekeys(r)));
     mainGrid?.clearData(); selectedDept.code = ''; selectedDept.nm = '';
 
-    // 마감 여부 체크
-    const clsRes = await api.post('/api/hapl/HAPL_050U_CHECK_CLOSE', { cmpycd: authStore.cmpycd, yymm: ym });
-    updYn.value = clsRes.data?.updyn || 'Y';
+    const clsRes = await api.post('/api/hapl/HAPL_100U_STR', { actkind: 'CHECK_CLOSE', cmpycd: authStore.cmpycd, stdym: ym });
+    updYn.value = clsRes.data?.[0]?.updyn || 'Y';
     vAlert('조회되었습니다.');
   } catch (e) { vAlertError('조회 실패') }
 }
@@ -205,7 +211,10 @@ const fetchItems = async () => {
     const res = await api.post('/api/hapl/HAPL_050U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '020', yymm: ym, divcd: searchForm.divcd, deptcd: selectedDept.code
     });
-    mainGrid?.setData((res.data || []).map((i: any) => ({ ...i, _status: '' })));
+    mainGrid?.setData((res.data || []).map((i: any) => {
+      const n = normalizekeys(i);
+      return { ...n, _status: '' };
+    }));
   } catch (e) { vAlertError('품목 조회 실패') }
 }
 
@@ -225,7 +234,7 @@ const generateWeights = async () => {
     try {
         const ym = searchForm.yy + searchForm.mm;
         await api.post('/api/hapl/HAPL_050U_STR', {
-            actkind: 'DR', cmpycd: authStore.cmpycd, gubun: '020', yymm: ym, divcd: searchForm.divcd, deptcd: selectedDept.code
+            actkind: 'DR', cmpycd: authStore.cmpycd, gubun: '020', yymm: ym, divcd: searchForm.divcd, deptcd: selectedDept.code, userid: authStore.userid
         });
         vAlert('배부적수가 생성되었습니다.'); fetchItems();
     } catch (e) { vAlertError('생성 실패') }
@@ -248,31 +257,29 @@ const save = async () => {
       divcd: searchForm.divcd,
       deptcd: selectedDept.code,
       items: details.map((row: any) => ({
-        custcd: row.custcd || row.CUSTCD,
-        user_id: row.userid || row.USERID,
-        itemcd: row.itemcd || row.ITEMCD,
-        itsize: row.itsize || row.itsize || '',
-        unit: row.unit || row.unit || '',
-        itemnm: row.itemnm || row.itemnm || '',
-        divrate1: Number(row.divrate1 || row.divrate1 || 0),
+        custcd: row.custcd,
+        itemcd: row.itemcd,
+        itsize: row.itsize || '',
+        unit: row.unit || '',
+        itemnm: row.itemnm || '',
+        divrate1: Number(row.divrate1 || 0),
         divrate2: 0,
         divrate3: 0
-      }))
+      })),
+      userid: authStore.userid
     })
 
-    const resData = res.data?.[0] || {}
-    const resCode = String(resData.outym || resData.col_0 || resData.res || '').trim()
-    const resMsg = String(resData.outno || resData.col_1 || resData.msg || '').trim()
+    const resData = normalizekeys(res.data?.[0] || {})
+    const resCode = String(resData.res || resData.result || resData.outym || '').trim()
 
     if (resCode === '000000' || resCode === 'N') {
-      vAlertError(resMsg || '저장 중 오류가 발생했습니다.')
+      vAlertError('저장 실패');
     } else {
       vAlert('저장되었습니다.')
       fetchItems()
     }
   } catch (e: any) {
-    const errorMsg = e.response?.data?.error || e.message || '저장 실패'
-    vAlertError(errorMsg)
+    vAlertError('저장 오류')
   }
 }
 

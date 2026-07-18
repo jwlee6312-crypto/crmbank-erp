@@ -1,8 +1,7 @@
 <!--
 	=============================================================
-	프로그램명	: 전표확정작업
+	프로그램명	: 전표확정작업 (HASL020U)
 	작성일자	: 2025.02.24
-	작성자	    : AI Assistant
 	설명        : 미확정 전표를 조회하여 회계일자 지정 및 확정 처리
 	=============================================================
 -->
@@ -19,15 +18,9 @@
 				<span class="text-primary fw-bolder">전표확정작업 (HASL020U)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기화
-				</button>
-				<button class="btn-erp btn-search" @click="fetchSlips">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-save" @click="save">
-					<i class="bi bi-check-lg"></i> 저장
-				</button>
+				<button class="btn-erp btn-init" @click="initialize">초기화</button>
+				<button class="btn-erp btn-search" @click="fetchSlips">조회</button>
+				<button class="btn-erp btn-save" @click="save">저장</button>
 			</div>
 		</div>
 
@@ -156,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -177,7 +170,6 @@ const now = new Date()
 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
 const today = now.toISOString().substring(0, 10)
 
-// 🔍 검색 데이터
 const searchForm = reactive({
 	fromdt: firstDay,
 	todt: today,
@@ -187,7 +179,6 @@ const searchForm = reactive({
 	slipyn: 'N'
 })
 
-// 📝 마스터 데이터
 const masterForm = reactive({
 	slipymd: '',
 	slipno: '',
@@ -208,7 +199,6 @@ let mainGrid: Tabulator | null = null
 
 const formatMoney = (val: any) => Number(val || 0).toLocaleString()
 
-// 초기 정보 조회 (마감일, 전표종류)
 const loadInitData = async () => {
 	try {
 		const resCls = await api.post('/api/ha00/HA00_010S_STR', { gubun: 'P1', cmpycd: authStore.cmpycd })
@@ -232,24 +222,23 @@ const fetchSlips = async () => {
 			slipkind: searchForm.slipkind,
 			slipyn: searchForm.slipyn
 		})
-		// 🚀 데이터 키를 소문자로 정규화
-		const normalizedData = (res.data || []).map((row: any) => {
+		const data = (res.data || []).map((row: any) => {
 			return Object.fromEntries(Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]))
 		})
-		mainGrid?.setData(normalizedData)
+		mainGrid?.setData(data)
 		vAlert('조회되었습니다.')
-	} catch (e) { vAlertError('조회 중 오류 발생') }
+	} catch (e) { vAlertError('조회 실패') }
 }
 
 const save = async () => {
 	if (!masterForm.slipno) return vAlert('처리할 전표를 선택하십시오.')
 	const acctYmdRaw = masterForm.acctymd.replace(/-/g, '')
 	if (acctYmdRaw <= masterForm.clsymd) {
-		return vAlert('회계 마감된 일자입니다. 마감일 이후로 설정하십시오.')
+		return vAlert('회계 마감된 일자입니다.')
 	}
 	if (searchForm.slipyn === 'N' && masterForm.cofmyn) {
 		if (masterForm.dbamt !== masterForm.cramt) {
-			return vAlert('전표의 차대 금액이 일치하지 않습니다.')
+			return vAlert('차대 금액이 일치하지 않습니다.')
 		}
 	}
 	try {
@@ -263,7 +252,6 @@ const save = async () => {
 			cofmyn: masterForm.cofmyn ? 'Y' : 'N',
 			slipkind: searchForm.slipkind,
 			slipyn: searchForm.slipyn,
-			usernm: authStore.usernm,
 			userid: authStore.userid
 		})
 		vAlert('저장되었습니다.')
@@ -278,7 +266,6 @@ const initialize = () => {
 	searchForm.slipkind = '000'
 	searchForm.slipyn = 'N'
 
-	// 마스터 정보 명시적 초기화 (undefined 방지)
 	masterForm.slipymd = ''
 	masterForm.slipno = ''
 	masterForm.empnm = ''
@@ -320,13 +307,11 @@ onMounted(() => {
 	loadInitData()
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns',
-			height: '100%',
-			selectable: true, // 🚀 프로젝트 표준: 선택 가능 설정
+			layout: 'fitColumns', height: '100%', selectable: 1,
 			columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle" },
 			columns: [
 				{
-					title: "전표번호", field: "slip_key", width: 150,
+					title: "전표번호", field: "slip_no_full", width: 150,
 					formatter: (cell) => {
 						const d = cell.getData()
 						if (!d.slipymd || !d.slipno) return ''
@@ -348,11 +333,8 @@ onMounted(() => {
 			]
 		})
 
-		// 🚀 프로젝트 표준: .on('rowClick', ...) 방식으로 이벤트 처리
 		mainGrid.on("rowClick", (e, row) => {
 			const d = row.getData()
-
-			// 상세 정보 할당
 			masterForm.slipno = d.slipno || ''
 			masterForm.empnm = d.empnm || ''
 			masterForm.dbamt = Number(d.dbamt || 0)
@@ -360,15 +342,11 @@ onMounted(() => {
 			masterForm.remark = d.remark || ''
 			masterForm.deptcd = d.deptcd || ''
 			masterForm.deptnm = d.deptnm || ''
-
-			// 전표일자 포맷팅 (YYYYMMDD -> YYYY-MM-DD)
 			if (d.slipymd && d.slipymd.length === 8) {
 				masterForm.slipymd = `${d.slipymd.substring(0, 4)}-${d.slipymd.substring(4, 6)}-${d.slipymd.substring(6, 8)}`
 			} else {
 				masterForm.slipymd = d.slipymd || ''
 			}
-
-			// 회계일자 및 확정여부 처리
 			if (d.acctymd && d.acctymd !== '00000000' && d.acctymd.length === 8) {
 				masterForm.acctymd = `${d.acctymd.substring(0, 4)}-${d.acctymd.substring(4, 6)}-${d.acctymd.substring(6, 8)}`
 				masterForm.cofmyn = true
@@ -379,6 +357,6 @@ onMounted(() => {
 		})
 	}
 })
-
-
 </script>
+
+<style scoped></style>

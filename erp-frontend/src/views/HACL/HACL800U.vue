@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 월 마감작업 (HACL800U)
 	작성일자	: 2025.02.24
-	설명        : 회계 월 마감 처리 및 오류 전표 검증 (HSCL100U 표준 UI 적용)
+	설명        : 회계 월 마감 처리 및 오류 전표 검증
 	=============================================================
 -->
 
@@ -65,7 +65,7 @@
             <ul class="mb-0 ps-3 text-muted d-flex flex-column gap-1">
               <li>당월 전표입력이 완료되었으면 마감작업을 하시기 바랍니다.</li>
               <li>마감작업 이후에는 해당월의 전표를 입력하거나 수정할 수 없습니다.</li>
-              <li>전표입력이 필요한 경우 <span class="text-primary fw-bold">기본정보 > 마감/결제라인관리</span>에서 마감정보를 조정하십시오.</li>
+              <li>전표입력이 필요한 경우 <span class="text-primary fw-bold">기본정보 > 마감관리</span>에서 마감정보를 조정하십시오.</li>
             </ul>
           </div>
         </div>
@@ -82,7 +82,7 @@
         </div>
       </div>
 
-      <!-- [하단] 회계 원가대체 규칙 안내 (그리드가 없을 때만 표시) -->
+      <!-- [하단] 회계 원가대체 규칙 안내 -->
       <div v-else class="card border shadow-sm flex-shrink-0">
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center">
             <span class="fw-bold small text-dark"><i class="bi bi-journal-text me-2 text-primary"></i>결산 시 원가대체 분개 규칙</span>
@@ -144,7 +144,6 @@ const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
 const now = new Date()
 const currentYear = now.getFullYear()
-
 const currentMonth = String(now.getMonth() + 1).padStart(2, '0')
 
 const formData = reactive({
@@ -170,10 +169,10 @@ const initGrid = () => {
       { title: "전표번호", field: "slip_no_full", width: 150, hozAlign: "center", cssClass: "fw-bold text-primary",
         cellClick: (e, cell) => {
             const d = cell.getData();
-            router.push({ name: 'HASL110U', query: { slipymd: d.SLIPYMD, slipno: d.slipno } });
+            router.push({ name: 'HASL110U', query: { slipymd: d.slipymd, slipno: d.slipno } });
         }
       },
-      { title: "적 요", field: "REMARK", widthGrow: 2, hozAlign: "left" },
+      { title: "적 요", field: "remark", widthGrow: 2, hozAlign: "left" },
       { title: "차 변", field: "amt_dr", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
       { title: "대 변", field: "amt_cr", width: 140, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } }
     ]
@@ -200,17 +199,17 @@ async function executeClosing() {
         vAlert(resultMsg)
       } else if (resultCode > '000') {
         vAlertError('이상이 있는 전표가 있습니다. 수정하신 후 재 작업하시기 바랍니다.')
-        errorList.value = res.data.map((i: any) => {
-            const vals = Object.values(i);
+        errorList.value = res.data.map((row: any) => {
             return {
-                SLIPYMD: vals[0],
-                slipno: vals[1],
-                slip_no_full: `${vals[0]}-${vals[1]}`,
-                REMARK: vals[2],
-                amt_dr: vals[3],
-                amt_cr: vals[4]
+                slipymd: row.slipymd || '',
+                slipno: row.slipno || '',
+                slip_no_full: `${row.slipymd || ''}-${row.slipno || ''}`,
+                remark: row.remark || '',
+                amt_dr: Number(row.dbamt || 0),
+                amt_cr: Number(row.cramt || 0)
             }
         })
+
         await nextTick()
         initGrid()
       } else {

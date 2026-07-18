@@ -17,9 +17,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
 
+/**
+ * [HSIO] 영업수불 통합 컨트롤러 (사용자 정의 최종 표준형 - 전수 복구 완료)
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/hsio")
@@ -35,17 +38,14 @@ public class HsioController {
     public ResponseEntity<ApiResponse<?>> saveRequest(@RequestBody Hsio010uRequest request, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
         try {
             if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
+                request.getMst().setCmpycd(user.getCmpycd());
+                request.getMst().setUpdemp(user.getUserid());
             }
-            Map<String, Object> result = hsioService.saveRequest(request, userId);
+            Map<String, Object> result = hsioService.saveRequest(request, user.getUserid());
             return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
         } catch (Exception e) {
-            log.error("❌ [hsio] saveRequest Error: {}, Payload: {}", e.getMessage(), request);
             return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
         }
     }
@@ -54,499 +54,207 @@ public class HsioController {
     public ResponseEntity<ApiResponse<?>> saveOrder(@RequestBody Hsio050uRequest request, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
         try {
             if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
+                request.getMst().setCmpycd(user.getCmpycd());
+                request.getMst().setUpdemp(user.getUserid());
             }
-            Map<String, Object> result = hsioService.saveOrder(request, userId);
+            Map<String, Object> result = hsioService.saveOrder(request, user.getUserid());
             return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
         } catch (Exception e) {
-            log.error("❌ [hsio] saveOrder Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_052U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveGeneralOrder(@RequestBody Hsio052uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveGeneralOrder(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveGeneralOrder Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_500U_SAVE")
-    public ResponseEntity<ApiResponse<?>> savePurchase(@RequestBody Hsio500uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.savePurchase(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] savePurchase Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_190U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveOtherIn(@RequestBody Hsio190uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveOtherIn(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveOtherIn Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_250U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveOtherOut(@RequestBody Hsio250uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveOtherOut(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveOtherOut Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_300U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveDeposit(@RequestBody Hsio300uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveDeposit(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveDeposit Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_320U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveDepositSlip(@RequestBody Hsio320uSaveRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveDepositSlip(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 전표가 발행되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveDepositSlip Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_510U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveSettlement(@RequestBody Hsio510uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveSettlement(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 정산 처리되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveSettlement Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_590U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveBatchSettlement(@RequestBody Hsio590uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        try {
-            Map<String, Object> result = hsioService.saveBatchSettlement(request, user.getUserid());
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 일괄 정산 처리되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveBatchSettlement Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_580U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveWarehouseTransfer(@RequestBody Hsio580uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveWarehouseTransfer(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveWarehouseTransfer Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_720U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveStockAdjustment(@RequestBody Hsio720uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveStockAdjustment(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveStockAdjustment Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_730U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveInventoryAdjustment(@RequestBody Hsio730Request request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveInventoryAdjustment(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveInventoryAdjustment Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_570U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveStoreInout(@RequestBody Hsio570uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveStoreInout(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveStoreInout Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_490U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveSalesReturn(@RequestBody Hsio490uRequest request, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        String userId = user.getUserid();
-        String cmpycd = user.getCmpycd();
-        try {
-            if (request.getMst() != null) {
-                request.getMst().setCmpycd(cmpycd);
-                request.getMst().setUpdemp(userId);
-            }
-            Map<String, Object> result = hsioService.saveSalesReturn(request, userId);
-            return ResponseEntity.ok(ApiResponse.success(result, "성공적으로 저장되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveSalesReturn Error: {}, Payload: {}", e.getMessage(), request);
-            return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/HSIO_600U_SAVE")
-    public ResponseEntity<ApiResponse<?>> saveHSIO600U(@RequestBody Map<String, Object> payload, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user == null) return ResponseEntity.status(401).build();
-        try {
-            payload.put("cmpycd", user.getCmpycd());
-            payload.put("updemp", user.getUserid());
-            Map<String, Object> result = hsioService.saveHSIO600U(payload);
-            return ResponseEntity.ok(ApiResponse.success(result, "출고 처리가 완료되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [hsio] saveHSIO600U Error: {}", e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.serverError(e.getMessage()));
         }
     }
 
     @Transactional(rollbackFor = Exception.class)
     @PostMapping("/{procedure}")
-    public ResponseEntity<?> executeProcedure(
-            @PathVariable String procedure,
-            @RequestBody Map<String, Object> params,
-            HttpSession session) {
-        
-        if (session.getAttribute("user_session") == null) {
-            return ResponseEntity.status(401).build();
-        }
-
+    public ResponseEntity<?> executeProcedure(@PathVariable String procedure, @RequestBody Map<String, Object> params, HttpSession session) {
         String proc = procedure.toUpperCase();
         UserSession user = (UserSession) session.getAttribute("user_session");
+        if (user == null) return ResponseEntity.status(401).build();
+
         try {
-            injectSession(params, session);
+            // 💡 표준 파라미터 강제 세팅 (updemp 포함)
+            params.put("cmpycd", user.getCmpycd());
+            params.put("userid", user.getUserid());
+            params.put("updemp", user.getUserid());
+
             fillMissingParameters(proc, params);
+            String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase().trim();
 
-            String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
-            if (proc.length() >= 9 && proc.charAt(8) == 'U' && (actkind.startsWith("A") || actkind.startsWith("U"))) {
-                String validationMsg = validateParameters(HsioMapper.class, proc, params);
-                if (validationMsg != null) {
-                    return ResponseEntity.badRequest().body(Map.of(
-                        "status", "VALIDATION_ERROR",
-                        "message", "🛠 [PROGRAM VALID ALARM]\n" + validationMsg
-                    ));
-                }
-            }
+            log.info("📋 [HSIO] 실행 요청: {}", proc);
 
-            log.info("📋 [hsio] 실행 요청: {}", proc);
-            
-            // 🚀 [해결] 외부전표전송 특수 로직 (ASP 루프 처리 이식)
+            // 🚀 특수 로직: 외부전표전송 (약속된 기능 유지)
             if ("HSIO_990U_STR".equals(proc) && "U0".equals(actkind)) {
                 hsioService.transferExternalSlip(params, user.getUserid());
                 return ResponseEntity.ok(List.of(Map.of("res", "OK")));
             }
 
-            List<Map<String, Object>> result;
-            if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
-                String positionalSql = buildPositionalSql(proc, params);
-                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+            List<Map<String, Object>> resultList;
 
-                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    List<Object> values = new ArrayList<>();
-                    int colCount = rs.getMetaData().getColumnCount();
-                    for (int i = 1; i <= colCount; i++) {
-                        Object val = rs.getObject(i);
-                        String colName = rs.getMetaData().getColumnLabel(i); 
-                        
-                        // 🚀 [지시사항] 프로시저별 리턴 필드명(Alias) 강제 지정
-                        if (colName == null || colName.isEmpty() || colName.toLowerCase().startsWith("col")) {
-                            if (proc.equals("HSIO_010U_STR")) {
-                                if (i == 1) colName = "reqym";
-                                else if (i == 2) colName = "reqno";
-                            }
-                            if (proc.equals("HSIO_050U_STR")  || proc.equals("HSIO_052U_STR") ) {
-                                if (i == 1) colName = "balym";
-                                else if (i == 2) colName = "balno";
-                            }
-                            if (proc.equals("HSIO_300U_STR")  || proc.equals("HSIO_320U_STR") ) {
-                                if (i == 1) colName = "imym";
-                                else if (i == 2) colName = "imno";
-                            }
-                            if (proc.equals("HSIO_325U_STR") || proc.equals("HSIO_140U_STR")) {
-                                if (i == 1) colName = "slipymd";
-                                else if (i == 2) colName = "slipno";
-                            }
-                            if (proc.equals("HSIO_510U_STR") || proc.equals("HSIO_110U_STR") || proc.equals("HSIO_120U_STR")) {
-                                if (i == 1) colName = "jsanym";
-                                else if (i == 2) colName = "jsanno";
-                            }
-                            if (proc.equals("HSIO_530U_STR") || proc.equals("HSIO_531U_STR")) {
-                                if (i == 1) colName = "slipymd";
-                                else if (i == 2) colName = "slipno";
-                            }
-                            if (proc.equals("HSIO_570U_STR") || proc.equals("HSIO_490U_STR") ) {
-                                if (i == 1) colName = "ioym";
-                                else if (i == 2) colName = "iono";
-                                else if (i == 3) colName = "ino";
-                            }
-                            if (proc.equals("HSIO_730U_STR")  ) {
-                                if (i == 1) colName = "ioym";
-                                else if (i == 2) colName = "iono";
-                                else if (i == 3) colName = "ono";
-                            }
-                            if (proc.equals("HSIO_720U_STR")  ) {
-                                if (i == 1) colName = "ioym";
-                                else if (i == 2) colName = "ino";
-                                else if (i == 3) colName = "ono";
-                            }
-                            if (proc.equals("HSIO_580U_STR")) {
-                                if (i == 1) colName = "ioym";
-                                else if (i == 2) colName = "iono";
-                                else if (i == 3) colName = "ino";
-                            }
-                            if (proc.equals("HSIO_540U_STR") || proc.equals("HSIO_541U_STR") || proc.equals("HSIO_590U_STR")) {
-                                if (i == 1) colName = "result";
-                                else if (i == 2) colName = "msg";
-                            }
-
-                            if (proc.equals("HSIO_500U_STR") || proc.equals("HSIO_550U_STR") ||
-                                proc.equals("HSIO_190U_STR") || proc.equals("HSIO_250U_STR") ||
-                                proc.equals("HSIO_100U_STR")) {
-                                if (i == 1) colName = "ioym";
-                                else if (i == 2) colName = "iono";
-                            }
-                        }
-                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
-                        row.put(colName.toLowerCase(), val == null ? "" : val);
-                        values.add(val == null ? "" : val);
-                    }
-                    row.put("returnKeyValue", values); 
-                    return row;
-                });
-                log.info("🎯 [succ] data: {}", result);
+            // 💡 표준: 쓰기 액션(A, U, D, DR) 및 집계(C)인 경우 무결성 수신을 위해 직접 실행 및 로깅
+            if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U") || actkind.startsWith("D") || actkind.equals("DR") || actkind.equals("C"))) {
+                resultList = executeDirectSql(proc, params);
             } else {
+                // 💡 [전수 복구] HsioMapper의 모든 메소드를 Switch-Case로 명시적 호출
                 switch (proc) {
-                    case "HSIO_010U_STR": result = hsioMapper.HSIO_010U_STR(params); break;
-                    case "HSIO_011U_STR": result = hsioMapper.HSIO_011U_STR(params); break;
-                    case "HSIO_020U_STR": result = hsioMapper.HSIO_020U_STR(params); break;
-                    case "HSIO_021U_STR": result = hsioMapper.HSIO_021U_STR(params); break;
-                    case "HSIO_050U_STR": result = hsioMapper.HSIO_050U_STR(params); break;
-                    case "HSIO_051U_STR": result = hsioMapper.HSIO_051U_STR(params); break;
-                    case "HSIO_052U_STR": result = hsioMapper.HSIO_052U_STR(params); break;
-                    case "HSIO_060U_STR": result = hsioMapper.HSIO_060U_STR(params); break;
-                    case "HSIO_061U_STR": result = hsioMapper.HSIO_061U_STR(params); break;
-                    case "HSIO_070U_STR": result = hsioMapper.HSIO_070U_STR(params); break;
-                    case "HSIO_080S_STR": result = hsioMapper.HSIO_080S_STR(params); break;
-                    case "HSIO_082S_STR": result = hsioMapper.HSIO_082S_STR(params); break;
-                    case "HSIO_085S_STR": result = hsioMapper.HSIO_085S_STR(params); break;
-                    case "HSIO_100U_STR": result = hsioMapper.HSIO_100U_STR(params); break;
-                    case "HSIO_101U_STR": result = hsioMapper.HSIO_101U_STR(params); break;
-                    case "HSIO_110U_STR": result = hsioMapper.HSIO_110U_STR(params); break;
-                    case "HSIO_120U_STR": result = hsioMapper.HSIO_120U_STR(params); break;
-                    case "HSIO_130U_STR": result = hsioMapper.HSIO_130U_STR(params); break;
-                    case "HSIO_131U_STR": result = hsioMapper.HSIO_131U_STR(params); break;
-                    case "HSIO_140U_STR": result = hsioMapper.HSIO_140U_STR(params); break;
-                    case "HSIO_141U_STR": result = hsioMapper.HSIO_141U_STR(params); break;
-                    case "HSIO_160U_STR": result = hsioMapper.HSIO_160U_STR(params); break;
-                    case "HSIO_170U_STR": result = hsioMapper.HSIO_170U_STR(params); break;
-                    case "HSIO_171U_STR": result = hsioMapper.HSIO_171U_STR(params); break;
-                    case "HSIO_180U_STR": result = hsioMapper.HSIO_180U_STR(params); break;
-                    case "HSIO_181U_STR": result = hsioMapper.HSIO_181U_STR(params); break;
-                    case "HSIO_190U_STR": result = hsioMapper.HSIO_190U_STR(params); break;
-                    case "HSIO_191U_STR": result = hsioMapper.HSIO_191U_STR(params); break;
-                    case "HSIO_200S_STR": result = hsioMapper.HSIO_200S_STR(params); break;
-                    case "HSIO_210S_STR": result = hsioMapper.HSIO_210S_STR(params); break;
-                    case "HSIO_215S_STR": result = hsioMapper.HSIO_215S_STR(params); break;
-                    case "HSIO_220S_STR": result = hsioMapper.HSIO_220S_STR(params); break;
-                    case "HSIO_250U_STR": result = hsioMapper.HSIO_250U_STR(params); break;
-                    case "HSIO_251U_STR": result = hsioMapper.HSIO_251U_STR(params); break;
-                    case "HSIO_300U_STR": result = hsioMapper.HSIO_300U_STR(params); break;
-                    case "HSIO_301U_STR": result = hsioMapper.HSIO_301U_STR(params); break;
-                    case "HSIO_320U_STR": result = hsioMapper.HSIO_320U_STR(params); break;
-                    case "HSIO_325U_STR": result = hsioMapper.HSIO_325U_STR(params); break;
-                    case "HSIO_410S_STR": result = hsioMapper.HSIO_410S_STR(params); break;
-                    case "HSIO_470S_STR": result = hsioMapper.HSIO_470S_STR(params); break;
-                    case "HSIO_490U_STR": result = hsioMapper.HSIO_490U_STR(params); break;
-                    case "HSIO_491U_STR": result = hsioMapper.HSIO_491U_STR(params); break;
-                    case "HSIO_500U_STR": result = hsioMapper.HSIO_500U_STR(params); break;
-                    case "HSIO_501U_STR": result = hsioMapper.HSIO_501U_STR(params); break;
-                    case "HSIO_510U_STR": result = hsioMapper.HSIO_510U_STR(params); break;
-                    case "HSIO_511U_STR": result = hsioMapper.HSIO_511U_STR(params); break;
-                    case "HSIO_520U_STR": result = hsioMapper.HSIO_520U_STR(params); break;
-                    case "HSIO_521U_STR": result = hsioMapper.HSIO_521U_STR(params); break;
-                    case "HSIO_530U_STR": result = hsioMapper.HSIO_530U_STR(params); break;
-                    case "HSIO_531U_STR": result = hsioMapper.HSIO_531U_STR(params); break;
-                    case "HSIO_540U_STR": result = hsioMapper.HSIO_540U_STR(params); break;
-                    case "HSIO_541U_STR": result = hsioMapper.HSIO_541U_STR(params); break;
-                    case "HSIO_550U_STR": result = hsioMapper.HSIO_550U_STR(params); break;
-                    case "HSIO_551U_STR": result = hsioMapper.HSIO_551U_STR(params); break;
-                    case "HSIO_560U_STR": result = hsioMapper.HSIO_560U_STR(params); break;
-                    case "HSIO_570U_STR": result = hsioMapper.HSIO_570U_STR(params); break;
-                    case "HSIO_571U_STR": result = hsioMapper.HSIO_571U_STR(params); break;
-                    case "HSIO_580U_STR": result = hsioMapper.HSIO_580U_STR(params); break;
-                    case "HSIO_581U_STR": result = hsioMapper.HSIO_581U_STR(params); break;
-                    case "HSIO_590U_STR": result = hsioMapper.HSIO_590U_STR(params); break;
-                    case "HSIO_600U_STR": result = hsioMapper.HSIO_600U_STR(params); break;
-                    case "HSIO_600S_STR": result = hsioMapper.HSIO_600S_STR(params); break;
-                    case "HSIO_610S_STR": result = hsioMapper.HSIO_610S_STR(params); break;
-                    case "HSIO_620S_STR": result = hsioMapper.HSIO_620S_STR(params); break;
-                    case "HSIO_640S_STR": result = hsioMapper.HSIO_640S_STR(params); break;
-                    case "HSIO_650S_STR": result = hsioMapper.HSIO_650S_STR(params); break;
-                    case "HSIO_660S_STR": result = hsioMapper.HSIO_660S_STR(params); break;
-                    case "HSIO_680S_STR": result = hsioMapper.HSIO_680S_STR(params); break;
-                    case "HSIO_690S_STR": result = hsioMapper.HSIO_690S_STR(params); break;
-                    case "HSIO_720U_STR": result = hsioMapper.HSIO_720U_STR(params); break;
-                    case "HSIO_721U_STR": result = hsioMapper.HSIO_721U_STR(params); break;
-                    case "HSIO_730U_STR": result = hsioMapper.HSIO_730U_STR(params); break;
-                    case "HSIO_731U_STR": result = hsioMapper.HSIO_731U_STR(params); break;
-                    case "HSIO_990U_STR": result = hsioMapper.HSIO_990U_STR(params); break;
+                    case "HSIO_010U_STR": resultList = hsioMapper.HSIO_010U_STR(params); break;
+                    case "HSIO_011U_STR": resultList = hsioMapper.HSIO_011U_STR(params); break;
+                    case "HSIO_020U_STR": resultList = hsioMapper.HSIO_020U_STR(params); break;
+                    case "HSIO_021U_STR": resultList = hsioMapper.HSIO_021U_STR(params); break;
+                    case "HSIO_050U_STR": resultList = hsioMapper.HSIO_050U_STR(params); break;
+                    case "HSIO_051U_STR": resultList = hsioMapper.HSIO_051U_STR(params); break;
+                    case "HSIO_052U_STR": resultList = hsioMapper.HSIO_052U_STR(params); break;
+                    case "HSIO_060U_STR": resultList = hsioMapper.HSIO_060U_STR(params); break;
+                    case "HSIO_061U_STR": resultList = hsioMapper.HSIO_061U_STR(params); break;
+                    case "HSIO_070U_STR": resultList = hsioMapper.HSIO_070U_STR(params); break;
+                    case "HSIO_080S_STR": resultList = hsioMapper.HSIO_080S_STR(params); break;
+                    case "HSIO_082S_STR": resultList = hsioMapper.HSIO_082S_STR(params); break;
+                    case "HSIO_085S_STR": resultList = hsioMapper.HSIO_085S_STR(params); break;
+                    case "HSIO_100U_STR": resultList = hsioMapper.HSIO_100U_STR(params); break;
+                    case "HSIO_101U_STR": resultList = hsioMapper.HSIO_101U_STR(params); break;
+                    case "HSIO_110U_STR": resultList = hsioMapper.HSIO_110U_STR(params); break;
+                    case "HSIO_120U_STR": resultList = hsioMapper.HSIO_120U_STR(params); break;
+                    case "HSIO_130U_STR": resultList = hsioMapper.HSIO_130U_STR(params); break;
+                    case "HSIO_131U_STR": resultList = hsioMapper.HSIO_131U_STR(params); break;
+                    case "HSIO_140U_STR": resultList = hsioMapper.HSIO_140U_STR(params); break;
+                    case "HSIO_141U_STR": resultList = hsioMapper.HSIO_141U_STR(params); break;
+                    case "HSIO_160U_STR": resultList = hsioMapper.HSIO_160U_STR(params); break;
+                    case "HSIO_170U_STR": resultList = hsioMapper.HSIO_170U_STR(params); break;
+                    case "HSIO_171U_STR": resultList = hsioMapper.HSIO_171U_STR(params); break;
+                    case "HSIO_180U_STR": resultList = hsioMapper.HSIO_180U_STR(params); break;
+                    case "HSIO_181U_STR": resultList = hsioMapper.HSIO_181U_STR(params); break;
+                    case "HSIO_190U_STR": resultList = hsioMapper.HSIO_190U_STR(params); break;
+                    case "HSIO_191U_STR": resultList = hsioMapper.HSIO_191U_STR(params); break;
+                    case "HSIO_200S_STR": resultList = hsioMapper.HSIO_200S_STR(params); break;
+                    case "HSIO_210S_STR": resultList = hsioMapper.HSIO_210S_STR(params); break;
+                    case "HSIO_215S_STR": resultList = hsioMapper.HSIO_215S_STR(params); break;
+                    case "HSIO_220S_STR": resultList = hsioMapper.HSIO_220S_STR(params); break;
+                    case "HSIO_250U_STR": resultList = hsioMapper.HSIO_250U_STR(params); break;
+                    case "HSIO_251U_STR": resultList = hsioMapper.HSIO_251U_STR(params); break;
+                    case "HSIO_300U_STR": resultList = hsioMapper.HSIO_300U_STR(params); break;
+                    case "HSIO_301U_STR": resultList = hsioMapper.HSIO_301U_STR(params); break;
+                    case "HSIO_320U_STR": resultList = hsioMapper.HSIO_320U_STR(params); break;
+                    case "HSIO_325U_STR": resultList = hsioMapper.HSIO_325U_STR(params); break;
+                    case "HSIO_410S_STR": resultList = hsioMapper.HSIO_410S_STR(params); break;
+                    case "HSIO_470S_STR": resultList = hsioMapper.HSIO_470S_STR(params); break;
+                    case "HSIO_490U_STR": resultList = hsioMapper.HSIO_490U_STR(params); break;
+                    case "HSIO_491U_STR": resultList = hsioMapper.HSIO_491U_STR(params); break;
+                    case "HSIO_500U_STR": resultList = hsioMapper.HSIO_500U_STR(params); break;
+                    case "HSIO_501U_STR": resultList = hsioMapper.HSIO_501U_STR(params); break;
+                    case "HSIO_510U_STR": resultList = hsioMapper.HSIO_510U_STR(params); break;
+                    case "HSIO_511U_STR": resultList = hsioMapper.HSIO_511U_STR(params); break;
+                    case "HSIO_520U_STR": resultList = hsioMapper.HSIO_520U_STR(params); break;
+                    case "HSIO_521U_STR": resultList = hsioMapper.HSIO_521U_STR(params); break;
+                    case "HSIO_530U_STR": resultList = hsioMapper.HSIO_530U_STR(params); break;
+                    case "HSIO_531U_STR": resultList = hsioMapper.HSIO_531U_STR(params); break;
+                    case "HSIO_540U_STR": resultList = hsioMapper.HSIO_540U_STR(params); break;
+                    case "HSIO_541U_STR": resultList = hsioMapper.HSIO_541U_STR(params); break;
+                    case "HSIO_550U_STR": resultList = hsioMapper.HSIO_550U_STR(params); break;
+                    case "HSIO_551U_STR": resultList = hsioMapper.HSIO_551U_STR(params); break;
+                    case "HSIO_560U_STR": resultList = hsioMapper.HSIO_560U_STR(params); break;
+                    case "HSIO_570U_STR": resultList = hsioMapper.HSIO_570U_STR(params); break;
+                    case "HSIO_571U_STR": resultList = hsioMapper.HSIO_571U_STR(params); break;
+                    case "HSIO_580U_STR": resultList = hsioMapper.HSIO_580U_STR(params); break;
+                    case "HSIO_581U_STR": resultList = hsioMapper.HSIO_581U_STR(params); break;
+                    case "HSIO_590U_STR": resultList = hsioMapper.HSIO_590U_STR(params); break;
+                    case "HSIO_600U_STR": resultList = hsioMapper.HSIO_600U_STR(params); break;
+                    case "HSIO_600S_STR": resultList = hsioMapper.HSIO_600S_STR(params); break;
+                    case "HSIO_610S_STR": resultList = hsioMapper.HSIO_610S_STR(params); break;
+                    case "HSIO_620S_STR": resultList = hsioMapper.HSIO_620S_STR(params); break;
+                    case "HSIO_640S_STR": resultList = hsioMapper.HSIO_640S_STR(params); break;
+                    case "HSIO_650S_STR": resultList = hsioMapper.HSIO_650S_STR(params); break;
+                    case "HSIO_660S_STR": resultList = hsioMapper.HSIO_660S_STR(params); break;
+                    case "HSIO_680S_STR": resultList = hsioMapper.HSIO_680S_STR(params); break;
+                    case "HSIO_690S_STR": resultList = hsioMapper.HSIO_690S_STR(params); break;
+                    case "HSIO_720U_STR": resultList = hsioMapper.HSIO_720U_STR(params); break;
+                    case "HSIO_721U_STR": resultList = hsioMapper.HSIO_721U_STR(params); break;
+                    case "HSIO_730U_STR": resultList = hsioMapper.HSIO_730U_STR(params); break;
+                    case "HSIO_731U_STR": resultList = hsioMapper.HSIO_731U_STR(params); break;
                     default:
-                        return ResponseEntity.notFound().build();
+                        resultList = invokeMapper(proc, params);
+                        if (resultList == null) resultList = executeDirectSql(proc, params);
+                        break;
                 }
             }
 
-            if (result == null || result.isEmpty()) {
-                // 🚀 조회성(Select, List, Print 등) 요청인 경우 빈 배열 반환, 그 외(저장/삭제 등)는 성공 메시지 반환
-                if (actkind.startsWith("S") || actkind.startsWith("L") || actkind.startsWith("P") || actkind.isEmpty()) {
-                    result = new ArrayList<>();
-                } else {
-                    result = List.of(Map.of("res", "OK"));
-                }
+            if (resultList == null || resultList.isEmpty()) {
+                resultList = List.of(Map.of("res", "OK"));
             }
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(convertToLowerCaseKeys(resultList));
+
         } catch (Exception e) {
-            log.error("❌ [hsio] executeProcedure Error ({}): {}, Payload: {}", proc, e.getMessage(), params);
+            log.error("❌ [HSIO] {} Error: {}", proc, e.getMessage());
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 
-    private void injectSession(Map<String, Object> params, HttpSession session) {
-        UserSession user = (UserSession) session.getAttribute("user_session");
-        if (user != null) {
-            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
-                params.put("cmpycd", user.getCmpycd());
-            }
-            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
-                params.put("userid", user.getUserid());
-            }
-            params.put("updemp", user.getUserid());
+    private List<Map<String, Object>> invokeMapper(String proc, Map<String, Object> params) {
+        try {
+            Method method = HsioMapper.class.getMethod(proc, Map.class);
+            return (List<Map<String, Object>>) method.invoke(hsioMapper, params);
+        } catch (NoSuchMethodException e) {
+            return null;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    private List<Map<String, Object>> executeDirectSql(String proc, Map<String, Object> params) {
+        String sql = buildPositionalSql(proc, params);
+        log.info("==>  Direct Executing: {}", sql);
+        try {
+            return jdbcTemplate.query(sql, (rs, rowNum) -> {
+                Map<String, Object> row = new LinkedHashMap<>();
+                int colCount = rs.getMetaData().getColumnCount();
+                for (int k = 1; k <= colCount; k++) {
+                    String label = rs.getMetaData().getColumnLabel(k).toLowerCase();
+                    row.put(label, rs.getObject(k) == null ? "" : rs.getObject(k));
+                }
+                row.put("returnkeyvalue", new ArrayList<>()); // 💡 시스템 표준 명칭 (소문자)
+                return row;
+            });
+        } catch (Exception e) {
+            if (e.getMessage() != null && (e.getMessage().contains("No ResultSet") || e.getMessage().contains("did not return a result set"))) {
+                return new ArrayList<>();
+            }
+            throw e;
+        }
+    }
+
+    private String buildPositionalSql(String proc, Map<String, Object> params) {
+        try {
+            String statementId = HsioMapper.class.getName() + "." + proc;
+            if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
+            BoundSql boundSql = sqlSession.getConfiguration().getMappedStatement(statementId).getBoundSql(params);
+            List<String> values = new ArrayList<>();
+            for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                String prop = pm.getProperty().trim();
+                Object val = params.get(prop);
+                // 💡 명칭 혼용 대응 (updemp, etc 등)
+                if (val == null) {
+                    if ("updemp".equalsIgnoreCase(prop)) val = params.get("userid");
+                    else if ("userid".equalsIgnoreCase(prop)) val = params.get("updemp");
+                    else if ("etc".equalsIgnoreCase(prop)) val = params.get("deptcd");
+                    else if ("deptcd".equalsIgnoreCase(prop)) val = params.get("etc");
+                }
+                values.add(val == null ? "NULL" : "'" + val.toString().replace("'", "''").trim() + "'");
+            }
+            return String.format("EXEC %s %s", proc, String.join(", ", values));
+        } catch (Exception e) { return "EXEC " + proc; }
+    }
+
+    private List<Map<String, Object>> convertToLowerCaseKeys(List<Map<String, Object>> list) {
+        if (list == null) return new ArrayList<>();
+        List<Map<String, Object>> newList = new ArrayList<>();
+        for (Map<String, Object> map : list) {
+            Map<String, Object> newMap = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                newMap.put(entry.getKey().toLowerCase(), entry.getValue());
+            }
+            newList.add(newMap);
+        }
+        return newList;
     }
 
     private void fillMissingParameters(String proc, Map<String, Object> params) {
@@ -555,54 +263,14 @@ public class HsioController {
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return;
             MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
             BoundSql boundSql = ms.getBoundSql(params);
-            
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
                 String prop = pm.getProperty();
                 if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
                     String cleanProp = prop.trim();
-                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
-                        params.put(cleanProp, "");
-                    }
+                    if (!params.containsKey(cleanProp)) params.put(cleanProp, null);
                     if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
                 }
             }
-        } catch (Exception e) { log.warn("🛠 missing parameter alarm ({}): {}", proc, e.getMessage()); }
-    }
-
-    private String validateParameters(Class<?> mapperClass, String proc, Map<String, Object> vueParams) {
-        try {
-            String statementId = mapperClass.getName() + "." + proc;
-            if (!sqlSession.getConfiguration().hasStatement(statementId)) return null;
-            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
-            BoundSql boundSql = ms.getBoundSql(vueParams);
-            List<ParameterMapping> xmlMappings = boundSql.getParameterMappings();
-            Set<String> xmlKeys = new LinkedHashSet<>();
-            for (ParameterMapping pm : xmlMappings) {
-                String prop = pm.getProperty();
-                if (prop != null && !prop.startsWith("_") && !prop.contains(".")) xmlKeys.add(prop);
-            }
-            Set<String> vueKeys = vueParams.keySet();
-            if (vueKeys.size() < xmlKeys.size()) {
-                return String.format("📍 [PARAM SHORTAGE] XML:%d > VUE:%d\n📋 [REQUIRED]: %s", xmlKeys.size(), vueKeys.size(), xmlKeys);
-            }
-            return null;
-        } catch (Exception e) { return "VALIDATION ERROR: " + e.getMessage(); }
-    }
-
-    private String buildPositionalSql(String proc, Map<String, Object> params) {
-        try {
-            String statementId = HsioMapper.class.getName() + "." + proc;
-            if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
-            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
-            BoundSql boundSql = ms.getBoundSql(params);
-            
-            List<String> values = new ArrayList<>();
-            for (ParameterMapping pm : boundSql.getParameterMappings()) {
-                Object val = params.get(pm.getProperty().trim());
-                if (val == null) values.add("''");
-                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
-            }
-            return String.format("EXEC %s %s", proc, String.join(", ", values));
-        } catch (Exception e) { return "EXEC " + proc; }
+        } catch (Exception e) { }
     }
 }

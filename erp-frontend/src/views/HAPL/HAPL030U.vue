@@ -1,8 +1,8 @@
 <!--
 	=============================================================
 	프로그램명	: 배부적수관리 (HAPL030U)
-	작성일자	: 2025.03.14
-	설명        : 부서별 배부 적수 및 배부율 관리 (A0 단일 액션 및 정밀 매핑 적용)
+	작성일자	: 2025.02.24
+	설명        : 부서별 배부 적수 및 배부율 관리
 	=============================================================
 -->
 
@@ -137,7 +137,7 @@ const search = async () => {
   try {
     const res = await api.post('/api/hapl/HAPL_030U_STR', {
       actkind: 'S1', cmpycd: authStore.cmpycd, gubun: '020', stdym: searchForm.yy + searchForm.mm,
-      divcd: searchForm.divcd, deptcd: '', bdeptcd: '', divrate1: 0, divrate2: 0, divrate3: 0, remark: '', useyn: '', userid: ''
+      divcd: searchForm.divcd, userid: authStore.userid
     })
 
     const data = res.data || []
@@ -164,7 +164,7 @@ const selectDept = async (dept: any) => {
 
     const res = await api.post('/api/hapl/HAPL_030U_STR', {
       actkind: 'S0', cmpycd: authStore.cmpycd, gubun: '020', stdym: searchForm.yy + searchForm.mm,
-      divcd: searchForm.divcd, deptcd: dept.deptcd, bdeptcd: '', divrate1: 0, divrate2: 0, divrate3: 0, remark: '', useyn: '', userid: ''
+      divcd: searchForm.divcd, deptcd: dept.deptcd, userid: authStore.userid
     })
 
     const list = res.data || []
@@ -202,8 +202,7 @@ const handleGenerateFactors = async () => {
   try {
     const res = await api.post('/api/hapl/HAPL_030U_STR', {
         actkind: 'DR', cmpycd: authStore.cmpycd, gubun: '020', stdym: searchForm.yy + searchForm.mm,
-        divcd: searchForm.divcd, deptcd: selectedDeptCD.value, bdeptcd: '',
-        divrate1: 0, divrate2: 0, divrate3: 0, remark: '', useyn: 'Y', userid: authStore.userid
+        divcd: searchForm.divcd, deptcd: selectedDeptCD.value, userid: authStore.userid
     })
     vAlert('생성 및 저장이 완료되었습니다.');
     selectDept({ deptcd: selectedDeptCD.value, deptnm: selectedDeptNM.value })
@@ -221,9 +220,9 @@ const handleBatchSave = async () => {
     const res = await api.post('/api/hapl/HAPL_030U_STR', {
       actkind: 'A0',
       cmpycd: authStore.cmpycd, gubun: '020', stdym: (searchForm.yy + searchForm.mm).replace(/-/g, ''),
-      divcd: searchForm.divcd, deptcd: selectedDeptCD.value, // 6번째 파라미터(@iTdeptcd)
+      divcd: searchForm.divcd, deptcd: selectedDeptCD.value,
       items: modified.map((it: any) => ({
-        bdeptcd: it.deptcd, // 🚀 7번째 파라미터(@ideptcd)로 정확히 매핑
+        bdeptcd: it.deptcd,
         divrate1: Number(it.divrate1 || 0), divrate2: Number(it.divrate2 || 0), divrate3: Number(it.divrate3 || 0),
         remark: (it.remark || '').trim(), useyn: it._status === 'D' ? 'N' : 'Y'
       })),
@@ -231,8 +230,8 @@ const handleBatchSave = async () => {
     })
 
     const resData = (res.data && res.data[0]) ? res.data[0] : {}
-    const resultStatus = (resData.RESULT || resData.result || '').toUpperCase();
-    const resultMsg = resData.MSG || resData.msg || resData.outno || '저장 오류';
+    const resultStatus = String(resData.res || resData.result || '').toUpperCase();
+    const resultMsg = resData.msg || resData.message || '저장 오류';
 
     if (resultStatus === 'OK') {
       vAlert('성공적으로 저장되었습니다.');

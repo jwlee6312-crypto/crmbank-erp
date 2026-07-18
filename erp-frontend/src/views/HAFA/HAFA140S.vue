@@ -1,8 +1,9 @@
-<!--	=============================================================
-	?�로그램�?: ?�별 감�??�각명세??(HAFA140S)
-	?�성?�자	: 2025.02.24
-	?�성??    : AI Assistant
-	?�명        : 계정과목�?개별 ?�산???�별 감�??�각 ?�황 조회 (?�리?�스 매핑 �?집계 콤마 ?�용)
+<!--
+	=============================================================
+	프로그램명: 월별 감가상각명세서 (HAFA140S)
+	작성일자	: 2025.03.14
+	작성자    : AI Assistant
+	설명        : 계정과목별 개별 자산의 월별 감가상각 현황 조회
 	=============================================================
 -->
 
@@ -10,25 +11,25 @@
 	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
 	<div class="erp-container d-flex flex-column h-100 bg-white">
-		<!-- ?? 1. ?�단 ?�션 �?-->
+		<!-- 🚀 1. 상단 액션 바 -->
 		<div class="erp-header d-flex justify-content-between align-items-center flex-shrink-0 border-bottom">
 			<div class="fw-bold ps-1 text-dark d-flex align-items-center" style="font-size: 14px;">
 				<i class="bi bi-calendar-range me-2 text-primary" style="font-size: 18px;"></i>
-				고정?�산 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-				?�각?�황 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
-				<span class="text-primary fw-bolder">?�별 감�??�각명세??(HAFA140S)</span>
+				고정자산 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				상각현황 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+				<span class="text-primary fw-bolder">월별 감가상각명세서(HAFA140S)</span>
 			</div>
 			<div class="btn-group-erp d-flex gap-1 pe-3">
 				<button class="btn-erp btn-search" @click="search">조회</button>
-				<button class="btn-erp btn-print" @click="print">?�쇄</button>
-				<button class="btn-erp btn-excel" @click="excel">?��?</button>
+				<button class="btn-erp btn-print" @click="print">인쇄</button>
+				<button class="btn-erp btn-excel" @click="excel">엑셀</button>
 			</div>
 		</div>
 
-		<!-- ?�� 2. 메인 컨텐�??�역 -->
+		<!-- 💡 2. 메인 컨텐츠 영역 -->
 		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column gap-2 bg-light main-content-wrapper">
 
-			<!-- [?�단] 조회 ?�터 ?�역 -->
+			<!-- [상단] 조회 필터 영역 -->
 			<div class="card border shadow-sm flex-shrink-0 overflow-hidden">
 				<div class="card-body p-0 bg-white">
 					<table class="erp-table-dense" width="100%">
@@ -40,22 +41,22 @@
 							<tr>
 								<th class="text-center bg-light">계정과목</th>
 								<td>
-									<div class="input-group input-group-sm" style="width: 300px;">
+									<div class="input-group input-group-sm px-2" style="width: 300px;">
 										<input v-model="searchForm.acctcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 65px;" readonly />
-										<input v-model="searchForm.acctnm" type="text" class="form-control" @keydown.enter="openHelp('ACCT')" placeholder="계정 ?�택" />
+										<input v-model="searchForm.acctnm" type="text" class="form-control" @keydown.enter="openHelp('ACCT')" placeholder="계정 선택" />
 										<button class="btn btn-outline-secondary" @click="openHelp('ACCT')"><i class="bi bi-search"></i></button>
 									</div>
 								</td>
-								<th class="text-center bg-light">기�??�월</th>
+								<th class="text-center bg-light">기준년월</th>
 								<td>
-									<div class="d-flex align-items-center gap-1">
+									<div class="d-flex align-items-center gap-1 px-2">
 										<select v-model="searchForm.yy" class="form-select form-select-sm" style="width: 100px;" @change="updateHeader">
-											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}??/option>
+											<option v-for="y in yearOptions" :key="y" :value="y">{{ y }}년</option>
 										</select>
 										<select v-model="searchForm.mm" class="form-select form-select-sm" style="width: 80px;" @change="updateHeader">
-											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}??/option>
+											<option v-for="m in monthOptions" :key="m" :value="m">{{ m }}월</option>
 										</select>
-										<span class="small fw-bold ms-1 text-secondary">?�재</span>
+										<span class="small fw-bold ms-1 text-secondary">현재</span>
 									</div>
 								</td>
 							</tr>
@@ -64,7 +65,7 @@
 				</div>
 			</div>
 
-			<!-- ?�� 3. 그리???�역 -->
+			<!-- 📊 3. 그리드 영역 -->
 			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
 				<div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
 					<div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
@@ -77,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
@@ -92,8 +93,7 @@ const authStore = useAuthStore()
 const tabStore = useTabStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
-//const currentYear = new Date().getFullYear()
-const currentYear = 2011
+const currentYear = new Date().getFullYear()
 const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
 const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
 const monthOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
@@ -102,7 +102,7 @@ const searchForm = reactive({ acctcd: '', acctnm: '', yy: String(currentYear), m
 const monthTitles = ref<string[]>(Array(12).fill(''))
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
 
-// ?�이???��? ?�문?�로 ?�규??
+// 데이터 키 표준화 (소문자 원칙)
 const normalizeKeys = (data: any): any => {
   if (!data) return data;
   if (Array.isArray(data)) return data.map(item => normalizeKeys(item));
@@ -118,15 +118,13 @@ const updateHeader = async () => {
 		if (res.data && res.data[0]) {
 			const header = normalizeKeys(res.data[0]);
 			monthTitles.value = Array.from({ length: 12 }, (_, i) => {
-                // ?�더 ?�보??m01, m02... ?�는 col0, col1... ?????�??가?�하?�록 처리
                 const keyM = 'm' + String(i + 1).padStart(2, '0');
                 const keyC = 'col' + i;
 				const val = header[keyM] || header[keyC] || '';
-                return val ? val.substring(4, 6) + '?? : `${i + 1}??
+                return val ? val.substring(4, 6) + '월' : `${i + 1}월`
 			})
 			if (mainGrid) {
 				const columns = mainGrid.getColumns()
-				// ?�산코드, ?�산�??�후??12�???컬럼 ?�목 ?�데?�트
 				monthTitles.value.forEach((title, i) => { if(columns[i + 2]) columns[i + 2].updateDefinition({ title }) })
 			}
 		}
@@ -134,7 +132,7 @@ const updateHeader = async () => {
 }
 
 async function search() {
-	if (!searchForm.acctcd) return vAlertError('계정과목???�택?�세??')
+	if (!searchForm.acctcd) return vAlertError('계정과목을 선택하세요.')
 	try {
 		await updateHeader()
 		const res = await api.post('/api/hafa/HAFA_140S_STR', { cmpycd: authStore.cmpycd, baseym: searchForm.yy + searchForm.mm, acctcd: searchForm.acctcd })
@@ -150,17 +148,22 @@ async function search() {
                 acctcd: searchForm.acctcd
             }
 		})
-		mainGrid?.setData(data); vAlert('조회?�었?�니??')
-	} catch (e) { vAlertError('조회 �??�류 발생') }
+		mainGrid?.setData(data);
+        vAlert('조회되었습니다.')
+	} catch (e) { vAlertError('조회 중 오류 발생') }
 }
 
-function excel() { mainGrid?.download("xlsx", `?�별감�??�각명세??${searchForm.acctnm}_${searchForm.yy}${searchForm.mm}.xlsx`) }
+function excel() { mainGrid?.download("xlsx", `월별감가상각명세서_${searchForm.acctnm}_${searchForm.yy}${searchForm.mm}.xlsx`) }
 function print() { const params = `yy=${searchForm.yy}&mm=${searchForm.mm}&acctcd=${searchForm.acctcd}&acctnm=${searchForm.acctnm}&PRTGU=1`; window.open(`/api/hafa/HAFA_140P?${params}`, 'MonthlyDepreciation', 'width=1000,height=800,scrollbars=yes') }
 
 const modalVisible = ref(false); const modalProps = reactive<ModalProps>({ title: '', path: '', defaultField: '', columns: [], data: {}, onConfirm: () => {}, type: 'table' })
 function openHelp(type: string) {
 	if (type === 'ACCT') {
-		Object.assign(modalProps, { title: '계정과목 ?�택', path: '/api/ha00/HA00_00P_STR', data: { gubun: 'A8', cmpycd: authStore.cmpycd, gbncd: '020', code: '' }, columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정�?, field: 'acctnm', width: 200 }],
+		Object.assign(modalProps, {
+            title: '계정과목 선택',
+            path: '/api/ha00/HA00_00P_STR',
+            data: { gubun: 'A8', cmpycd: authStore.cmpycd, gbncd: '020', code: '' },
+            columns: [{ title: '코드', field: 'acctcd', width: 80 }, { title: '계정명', field: 'acctnm', width: 200 }],
 			onConfirm: (rawData: any) => {
                 const d = normalizeKeys(rawData);
                 searchForm.acctcd = d.acctcd || d.code;
@@ -175,7 +178,7 @@ function openHelp(type: string) {
 onMounted(() => {
 	if (mainGridRef.value) {
 		const monthCols = Array.from({ length: 12 }, (_, i) => ({
-            title: `${i + 1}??,
+            title: `${i + 1}월`,
             field: `m${String(i + 1).padStart(2, '0')}`,
             width: 100,
             hozAlign: "right",
@@ -188,11 +191,11 @@ onMounted(() => {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%', columnDefaults: { headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: "?�산코드", field: "asetcd", width: 80, hozAlign: "center", frozen: true, cssClass: "text-primary fw-bold" },
-				{ title: "?�산�?, field: "asetnm", minWidth: 150, frozen: true, cssClass: "fw-bold" },
+				{ title: "자산코드", field: "asetcd", width: 80, hozAlign: "center", frozen: true, cssClass: "text-primary fw-bold" },
+				{ title: "자산명", field: "asetnm", minWidth: 150, frozen: true, cssClass: "fw-bold" },
 				...monthCols,
 				{
-                    title: "??�?,
+                    title: "합계",
                     field: "total",
                     width: 110,
                     hozAlign: "right",

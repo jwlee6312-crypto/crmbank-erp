@@ -1,179 +1,109 @@
 <!--
 	=============================================================
-	?�로그램�?: 지급어?�명?�서
-	?�성?�자	: 2025.02.24
-	?�성??    : AI Assistant
-	?�명        : 만기?�자�?지급어?�의 ?�세 ?�역 �??�액 ?�황 조회
+	프로그램명	: 수지현황(계정별) (HAFN510S)
+	작성일자	: 2025.02.24
+	설명        : 기간별/계정별 자금 입금 및 출금 상세 수지 현황 조회
 	=============================================================
 -->
 
 <template>
-	<AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
+  <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
 
-	<div class="erp-container">
-		<!-- ?? ?�단 ?�션 �?-->
-		<div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
-			<div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
-				<i class="bi bi-file-earmark-check me-2 text-primary" style="font-size: 18px;"></i>
-				?�금관�?<i class="bi bi-chevron-right mx-2 small opacity-50"></i>
-				<span class="text-primary fw-bolder">지급어?�명?�서 (HAFN510S)</span>
-			</div>
-			<div class="btn-group-erp d-flex gap-1">
-				<button class="btn-erp btn-init" @click="initialize">
-					<i class="bi bi-arrow-clockwise"></i> 초기??
-				</button>
-				<button class="btn-erp btn-search" @click="search">
-					<i class="bi bi-search"></i> 조회
-				</button>
-				<button class="btn-erp btn-print" @click="print">
-					<i class="bi bi-printer"></i> ?�쇄
-				</button>
-				<button class="btn-erp btn-excel" @click="excel">
-					<i class="bi bi-file-earmark-excel"></i> ?��?
-				</button>
-			</div>
-		</div>
+  <div class="erp-container">
+    <div class="erp-header d-flex justify-content-between align-items-center border-bottom bg-white py-2 px-3 sticky-top shadow-sm flex-shrink-0">
+      <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px;">
+        <i class="bi bi-graph-up-arrow me-2 text-primary" style="font-size: 18px;"></i>
+        자금관리 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
+        <span class="text-primary fw-bolder">수지현황(계정별) (HAFN510S)</span>
+      </div>
+      <div class="btn-group-erp d-flex gap-1">
+        <button class="btn-erp btn-search" @click="search">조회</button>
+        <button class="btn-erp btn-excel" @click="excel">엑셀</button>
+      </div>
+    </div>
 
-		<!-- ?�� 검??조건 ?�역 -->
-		<div class="p-2 pb-0 flex-shrink-0">
-			<div class="card border shadow-sm overflow-hidden bg-light">
-				<table class="erp-table-full" style="table-layout: fixed;">
-					<colgroup>
-						<col style="width: 100px;" /><col />
-					</colgroup>
-					<tbody>
-						<tr>
-							<th class="text-center border-end">만기??범위</th>
-							<td class="bg-white">
-								<div class="d-flex align-items-center gap-1">
-									<input v-model="searchForm.ymd_fr" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
-									<span class="text-muted">~</span>
-									<input v-model="searchForm.ymd_to" type="date" class="form-control form-control-sm" style="max-width: 150px;" />
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+    <div class="flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3 bg-light">
+      <div class="card border-0 shadow-sm overflow-hidden flex-shrink-0">
+        <div class="card-body p-0 bg-white">
+          <table class="erp-table-full border-0">
+            <colgroup>
+              <col style="width: 150px;" /><col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th class="required">조회기간</th>
+                <td class="d-flex align-items-center gap-1 border-0" style="height: 32px;">
+                    <input v-model="searchForm.fromdt" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                    <span class="text-muted">~</span>
+                    <input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 150px;" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-		<!-- ?�� 그리???�역 -->
-		<div class="flex-grow-1 overflow-hidden p-2 d-flex flex-column">
-			<div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column bg-white">
-                <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
-                  <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
-                </div>
-			</div>
-		</div>
-	</div>
+      <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-column">
+        <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
+          <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import { useAlerts } from '@/composables/useAlerts'
 import AppAlert from '@/components/AppAlert.vue'
+import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
-import { useFormReset } from '@/composables/useFormReset'
+import { getDate } from '@/composables/useDate'
 
 const authStore = useAuthStore()
+const { firstDay, today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
-const { resetForm } = useFormReset()
 
-const now = new Date()
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0, 10)
-const today = now.toISOString().substring(0, 10)
-
-// ?�� 검??조건
-const searchForm = reactive({
-	ymd_fr: firstDay,
-	ymd_to: today
-})
-
+const searchForm = reactive({ fromdt: firstDay, todt: today })
 const mainGridRef = ref<HTMLDivElement | null>(null)
 let mainGrid: Tabulator | null = null
 
-const formatYmdShort = (v: string) => v && v.length === 8 ? `${v.substring(0, 4)}-${v.substring(4, 6)}-${v.substring(6, 8)}` : v
-
 const search = async () => {
-	try {
-		const res = await api.post('/api/hafn/HAFN_510S_STR', {
-			cmpycd: authStore.cmpycd,
-			ymd_fr: searchForm.ymd_fr.replace(/-/g, ''),
-			ymd_to: searchForm.ymd_to.replace(/-/g, '')
-		})
-
-		const data = (res.data || []).map((row: any) => ({
-			dueymd: formatYmdShort(row.endymd),
-			billno: row.billno,
-			issubank: row.banknm,
-			issuman: row.issuman,
-			stdymd: formatYmdShort(row.stdymd),
-			custnm: row.custnm,
-			billtype: row.billtype_nm,
-			billamt: Number(row.billamt || 0)
-		}))
-
-		mainGrid?.setData(data)
-		vAlert('조회?�었?�니??')
-	} catch (e) { vAlertError('조회 ?�패') }
+  try {
+    const res = await api.post('/api/hafn/HAFN_510S_STR', {
+      cmpycd: authStore.cmpycd,
+      fromdt: searchForm.fromdt.replace(/-/g, ''),
+      todt: searchForm.todt.replace(/-/g, '')
+    })
+    mainGrid?.setData(res.data || [])
+    vAlert('조회되었습니다.')
+  } catch (e) { vAlertError('조회 실패') }
 }
 
-const initialize = () => {
-	resetForm(searchForm)
-	searchForm.ymd_fr = firstDay
-	searchForm.ymd_to = today
-	mainGrid?.clearData()
-}
-
-const excel = () => mainGrid?.download("xlsx", `지급어?�명?�서_${today}.xlsx`)
-
-const print = () => {
-	const params = `ymd_fr=${searchForm.ymd_fr}&ymd_to=${searchForm.ymd_to}`
-	window.open(`/api/hafn/HAFN_510P?${params}`, 'NotesPayablePrint', 'width=1000,height=800,scrollbars=yes')
-}
+const excel = () => mainGrid?.download("xlsx", `계정별수지현황_${searchForm.fromdt}_${searchForm.todt}.xlsx`)
 
 onMounted(() => {
-	if (mainGridRef.value) {
-		mainGrid = new Tabulator(mainGridRef.value, {
-			layout: 'fitColumns',
-			height: '100%',
-			groupBy: "dueymd", // 만기?�별 그룹??
-			groupHeader: function(value, count, data, group) {
-				const sumamt = data.reduce((acc, curr) => acc + curr.billamt, 0)
-				return `
-					<div class="d-flex justify-content-between w-100 pe-4">
-						<span class="fw-bold text-dark">만기?? ${value}</span>
-						<div class="small fw-bold">
-							<span class="mx-2 text-muted">?�계: ${sumamt.toLocaleString()}??(${count}�?</span>
-						</div>
-					</div>
-				`
-			},
-			columnDefaults: { headerSort: false, vertAlign: "middle" },
-			columns: [
-				{ title: "?�음번호", field: "billno", hozAlign: "center", width: 200 },
-				{ title: "발행?�??, field: "issubank", width: 200 },
-				{ title: "발행??, field: "issuman", hozAlign: "center", width: 150 },
-				{ title: "발행??, field: "stdymd", hozAlign: "center", width: 150 },
-				{ title: "지급거?�처", field: "custnm", minWidth: 250 },
-				{ title: "?�태", field: "billtype", hozAlign: "center", width: 150 },
-				{
-					title: "금액", field: "billamt", hozAlign: "right",
-					formatter: "money", formatterParams: { precision: 0 },
-					width: 150, cssClass: "fw-bold",
-					bottomCalc: "sum", bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0 }
-				}
-			]
-		})
-	}
+  if (mainGridRef.value) {
+    mainGrid = new Tabulator(mainGridRef.value, {
+      layout: 'fitColumns', height: '100%',
+      columnDefaults: { headerSort: false, headerHozAlign: "center", vertAlign: "middle" },
+      columns: [
+        { title: "계정과목", field: "acctnm", width: 150, hozAlign: "left", frozen: true },
+        { title: "일자", field: "plnymd", width: 110, hozAlign: "center", formatter: (c) => {
+            const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
+        }},
+        { title: "입금액", field: "inamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "출금액", field: "outamt", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0 } },
+        { title: "적요", field: "remark", widthGrow: 1, hozAlign: "left" }
+      ]
+    })
+  }
+  nextTick(search)
 })
 </script>
 
 <style scoped>
-.erp-label { min-width: 80px; font-weight: 500; font-size: 13px; }
-:deep(.tabulator-group) { background-color: #f0f4f8 !important; border-top: 1px solid #d1d9e6 !important; }
-:deep(.tabulator-group-handle) { display: none; }
+.tabulator-instance { width: 100% !important; background-color: #fff; }
 </style>

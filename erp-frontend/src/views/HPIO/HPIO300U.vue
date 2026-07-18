@@ -484,10 +484,10 @@ const savePerformance = async () => {
         useyn: item._status === '삭제' ? 'N' : 'Y'
       })
       const out = res.data?.[0];
-      if (out?.RET_YN === 'Y' || out?.RESULT === 'Y') {
-          return vAlertError(out?.MSG || '처리 중 오류가 발생했습니다.');
+      if (out?.ret_yn === 'Y' || out?.result === 'Y') {
+          return vAlertError(out?.msg || '처리 중 오류가 발생했습니다.');
       }
-      const returnedId = out?.RESULT || out?.PRODID || out?.prodid;
+      const returnedId = out?.result || out?.prodid;
       if (actkind === 'A0' && returnedId) {
           const prodidInt = parseInt(returnedId);
           item.prodid = prodidInt;
@@ -523,7 +523,7 @@ const saveMaterials = async () => {
         updemp: authStore.userid,
         useyn: item._status === '삭제' ? 'N' : 'Y'
       })
-      if (res.data?.[0]?.RESULT === 'Y') return vAlertError(res.data[0].MSG);
+      if (res.data?.[0]?.result === 'Y') return vAlertError(res.data[0].msg);
     }
     vAlert('자재 정보가 저장되었습니다.'); fetchMaterialData(selectedProduct)
   } catch (e) { vAlertError('자재 저장 실패') }

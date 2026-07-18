@@ -2,7 +2,7 @@
 	=============================================================
 	프로그램명	: 품목별 배부작업 (HAPL200U)
 	작성일자	: 2025.02.24
-	설명        : 품목별 제조원가 배부 실행 및 검증 (HSOD100U 표준 UI 적용)
+	설명        : 품목별 제조원가 배부 실행 및 검증
 	=============================================================
 -->
 
@@ -67,7 +67,7 @@
                 </div>
                 <div class="d-flex align-items-center">
                     <i class="bi bi-check2-circle me-2 text-success fw-bold"></i>
-                    <span>2. 기본정보 > 마감/결제라인관리의 마감정보와 작업월의 말일자가 일치해야 만 배부작업이 가능합니다.</span>
+                    <span>2. 기본정보 > 마감관리의 마감정보와 작업월의 말일자가 일치해야 만 배부작업이 가능합니다.</span>
                 </div>
                 <div class="d-flex align-items-center">
                     <i class="bi bi-check2-circle me-2 text-success fw-bold"></i>
@@ -77,7 +77,7 @@
         </div>
       </div>
 
-      <!-- [하단] 결과 그리드 (차액 발생 시 표시) -->
+      <!-- [하단] 결과 그리드 -->
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
           <span class="fw-bold small text-dark">
@@ -102,14 +102,11 @@ import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
 import { useAlerts } from '@/composables/useAlerts'
 import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
-import { getDate } from '@/composables/useDate'
 import AppAlert from '@/components/AppAlert.vue'
 
 const authStore = useAuthStore()
-const { today } = getDate()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
 
-// [1] 데이터 모델링
 const currentYear = new Date().getFullYear()
 const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0')
 const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i))
@@ -126,11 +123,8 @@ const hasError = ref(false)
 const mainGridRef = ref<HTMLElement | null>(null)
 let mainGrid: Tabulator | null = null
 
-// [2] 그리드 초기화
 const initGrids = () => {
   if (!mainGridRef.value) return
-
-
 
   mainGrid = new Tabulator(mainGridRef.value, {
     layout: "fitColumns",
@@ -150,10 +144,9 @@ const initGrids = () => {
   });
 }
 
-// [3] 비즈니스 로직
 const loadClsInfo = async () => {
   try {
-    const res = await api.get('/api/hp00/HP00_000S_STR', { params: { gubun: 'CL', cmpycd: authStore.cmpycd } })
+    const res = await api.post('/api/ha00/HA00_00P_STR', { gubun: 'CL', cmpycd: authStore.cmpycd })
     if (res.data?.length > 0) {
       clsInfo.wclsym = res.data[0].wclsym || ''
     }
@@ -162,8 +155,6 @@ const loadClsInfo = async () => {
 
 const handleExecute = async () => {
     const ym = searchForm.yy + searchForm.mm
-
-    // 💡 1단계: 배부 작업 실행 및 검증 (actkind: 'A')
     if (!confirm(`${searchForm.yy}년 ${searchForm.mm}월의 배부작업을 하시겠습니까?`)) return
 
     try {
@@ -173,29 +164,25 @@ const handleExecute = async () => {
         const res = await api.post('/api/hapl/HAPL_200U_STR', {
             actkind: 'A',
             cmpycd: authStore.cmpycd,
-            yymm: ym,
+            stdym: ym,
             userid: authStore.userid
         });
 
-        // 💡 ASP 로직: 결과가 있으면 배부 전/후 금액이 다른 에러 상황
         if (res.data && res.data.length > 0) {
             hasError.value = true;
             mainGrid?.setData(res.data);
-            vAlertError('배부 전과 배부 후 금액이 다릅니다. 계정별 배부기준과 배부적수를 확인하세요.');
+            vAlertError('배부 전/후 금액이 다릅니다. 기준 데이터를 확인하세요.');
         } else {
-            // 💡 2단계: 집계 작업 실행 (actkind: 'C')
             await api.post('/api/hapl/HAPL_200U_STR', {
                 actkind: 'C',
                 cmpycd: authStore.cmpycd,
-                yymm: ym,
+                stdym: ym,
                 userid: authStore.userid
             });
             vAlert('배부 및 집계 작업이 정상적으로 완료되었습니다.');
         }
     } catch (e: any) {
-        // 백엔드에서 던진 예외 처리 (마감일 미일치 등)
-        const msg = e.response?.data?.message || '작업 중 오류가 발생했습니다.';
-        vAlertError(msg);
+        vAlertError('작업 중 오류 발생');
     }
 }
 
@@ -204,7 +191,6 @@ const initialize = () => {
     searchForm.mm = currentMonth;
     hasError.value = false;
     mainGrid?.clearData();
-    loadClsInfo();
 }
 
 onMounted(() => {
@@ -217,5 +203,4 @@ onMounted(() => {
 
 <style scoped>
 .tabulator-instance { width: 100% !important; background-color: #fff; }
-.grid-container-right { border-bottom: 3px solid #005a9f !important; }
 </style>
