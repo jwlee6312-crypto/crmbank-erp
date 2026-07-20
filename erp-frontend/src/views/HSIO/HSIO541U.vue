@@ -244,50 +244,29 @@ async function deleteSlips() {
   if (!confirm('선택한 전표를 삭제하시겠습니까?')) return
 
   try {
-    for (const item of selected) {
-      const slipymd = item.slipymd
-      const slipno = item.slipno
-      const deptcd = item.deptcd
-
-      // 1. 자동전표 여부 확인 후 확정 취소 (ASP: HASL_020U_STR 'A0')
-      if (autoslip.value === 'Y') {
-          await api.post('/api/hasl/HASL_020U_STR', {
-              actkind: 'A0',
-              cmpycd: authStore.cmpycd,
-              slipymd: slipymd,
-              acctymd: slipymd,
-              slipno: slipno,
-              deptcd: deptcd,
-              slipkind: '040',
-              slipyn: 'Y',
-              cofmyn: 'N',
-              empnm: authStore.usernm,
-              updemp: authStore.userid
-          })
-      }
-
-      // 2. 정산 내역 전표 정보 삭제 (ASP: HSIO_541U_STR 'D0')
-      const res = await api.post('/api/hsio/HSIO_541U_STR', {
-        actkind: 'D0',
+    const payload = {
         cmpycd: authStore.cmpycd,
-        iogbn: '200',
         fromdt: searchdata.fromdt,
         todt: searchdata.todt,
-        deptcd: deptcd,
-        slipymd: slipymd,
-        slipno: slipno,
-        userid: authStore.userid
-      })
-
-      const resData = res.data?.[0]
-      if (resData && (resData.result === 'Y' || resData.erryn === 'Y' || resData.RESULT === 'Y' || resData.ERRYN === 'Y')) {
-          throw new Error(resData.msg || resData.MSG || '전표 삭제 중 업무 오류 발생')
-      }
+        autoSlip: autoslip.value,
+        items: selected.map(item => ({
+            slipymd: item.slipymd,
+            slipno: item.slipno,
+            deptcd: item.deptcd
+        }))
     }
-    vAlert('정상적으로 작업이 되었습니다.')
-    search()
+
+    const res = await api.post('/api/hsio/HSIO_541U_CANCEL', payload)
+    const { res: status } = res.data.data
+
+    if (status === 'OK') {
+        vAlert('정상적으로 처리되었습니다.')
+        search()
+    } else {
+        vAlertError('전표 삭제 중 오류가 발생했습니다.')
+    }
   } catch (e: any) {
-      vAlertError(e.message || '전표 삭제 중 오류 발생')
+      vAlertError(e.response?.data?.message || e.message || '전표 삭제 중 오류 발생')
   }
 }
 

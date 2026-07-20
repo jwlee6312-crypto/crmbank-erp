@@ -222,6 +222,10 @@ async function handleGenerateSlip() {
                 slipymd: form_02.slipymd.replace(/-/g, ''),
                 deptcd: form_02.deptcd,
                 updemp: authStore.userid,
+                empnm: authStore.usernm,
+                fromdt: form_01.fromdt.replace(/-/g, ''),
+                todt: form_01.todt.replace(/-/g, ''),
+                salsemp: form_01.salsemp,
                 imsum: selectedSum.value
             },
             dtl: selectedRows.map(r => ({

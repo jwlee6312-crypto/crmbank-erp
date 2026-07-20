@@ -38,7 +38,7 @@
 
     <select id="HSIP_121U_STR" resultType="java.util.LinkedHashMap">
         exec hsip_121u_str #{actkind}, #{cmpycd}, #{fileno}, #{shipseq}, #{passseq},
-        #{prowno}, #{itemcd}, #{itsize}, #{unit}, #{gqty}, #{qty}, #{amt},
+        #{srowno}, #{itemcd}, #{itsize}, #{unit}, #{gqty}, #{qty}, #{amt},
         #{ioym}, #{iono}, #{iorowno}, #{updemp}
     </select>
 
@@ -47,8 +47,10 @@
     </select>
 
     <select id="HSIP_130U_STR" resultType="java.util.LinkedHashMap">
-        exec hsip_130u_str #{actkind}, #{cmpycd}, #{fileno}, #{docno}, #{deptcd}, #{pubymd}, #{bigo}, #{updemp}
+        exec hsip_130u_str #{actkind}, #{cmpycd}, #{fromdt}, #{todt}, #{deptnm},
+        #{fileno}, #{docno}, #{deptcd}, #{pubymd}, #{bigo}, #{updemp}
     </select>
+
 
     <select id="HSIP_131U_STR" resultType="java.util.LinkedHashMap">
         exec hsip_131u_str #{actkind}, #{cmpycd}, #{fileno}, #{docno}, #{rowno}, #{costcd},

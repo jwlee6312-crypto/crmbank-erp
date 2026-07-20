@@ -3,6 +3,8 @@ package com.crmbank.erp.hasl.controller;
 import com.crmbank.erp.comm.dto.ApiResponse;
 import com.crmbank.erp.comm.dto.UserSession;
 import com.crmbank.erp.hasl.mapper.HaslMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class HaslController {
     private final HaslMapper haslMapper;
     private final SqlSession sqlSession;
     private final JdbcTemplate jdbcTemplate;
+    private final ObjectMapper objectMapper;
 
     @Transactional(rollbackFor = Exception.class)
     @PostMapping("/{procedure}")
@@ -169,15 +172,20 @@ public class HaslController {
 
     private String buildPositionalSql(String proc, Map<String, Object> params) {
         try {
+            // 💡 [주의] 이 부분만 해당 컨트롤러의 매퍼 클래스명으로 수정하세요 (예: HsodMapper.class)
             String statementId = HaslMapper.class.getName() + "." + proc;
+
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
-            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
-            BoundSql boundSql = ms.getBoundSql(params);
+            BoundSql boundSql = sqlSession.getConfiguration().getMappedStatement(statementId).getBoundSql(params);
             List<String> values = new ArrayList<>();
+
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                // XML에 정의된 #{이름}과 100% 일치하는 값만 추출 (VUE 순서 상관없음)
                 Object val = params.get(pm.getProperty().trim());
-                if (val == null) values.add("''");
-                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+
+                // NULL/공백 치환 및 유니코드(N) 처리하여 왜곡 차단
+                String valStr = (val == null || "null".equals(String.valueOf(val))) ? "''" : "N'" + val.toString().replace("'", "''").trim() + "'";
+                values.add(valStr);
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }
@@ -185,9 +193,9 @@ public class HaslController {
 
     private List<String> modernTokenize(String query) {
         if (query == null || query.trim().isEmpty()) return List.of();
-        String cleaned = query.replaceAll("[\\.,\\?\\!\\(\\)\\[\\]]", " ")
-                             .replaceAll("[0-9]", "")
-                             .replaceAll("원", "")
+        String cleaned = query.replaceAll("[.,?!()\\[\\]]", " ")
+                             .replaceAll("\\d", "")
+                             .replace("원", "")
                              .replaceAll("\\s+", " ").trim();
         String particleregex = "(은|는|이|가|을|를|과|와|로|으로|에서|에게|의|도|만|까지|부터|하고|했다|하며|하였다|했으며|하였습니다|하였으며|이다|입니다|습니까|니까|함|했고|있다|았다|었다|들과|들의|같이)$";
         Pattern pattern = Pattern.compile(particleregex);
@@ -197,16 +205,23 @@ public class HaslController {
                     while(!prev.equals(curr)) { prev = curr; curr = pattern.matcher(curr).replaceAll(""); }
                     return curr;
                 })
-                .filter(word -> word.length() >= 1)
+                .filter(word -> !word.isEmpty())
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    private String extractFirstValue(List<Map<String, Object>> result) {
+        if (result == null || result.isEmpty()) return "";
+        Map<String, Object> firstRow = result.getFirst();
+        if (firstRow == null || firstRow.isEmpty()) return "";
+        return String.valueOf(firstRow.values().iterator().next()).trim();
     }
 
     @Transactional
     public ResponseEntity<ApiResponse<?>> saveSlip010(Map<String, Object> payload, HttpSession session) {
         try {
-            Map<String, Object> master = (Map<String, Object>) payload.get("master");
-            List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
+            Map<String, Object> master = objectMapper.convertValue(payload.get("master"), new TypeReference<>() {});
+            List<Map<String, Object>> details = objectMapper.convertValue(payload.get("details"), new TypeReference<>() {});
             String actkind = String.valueOf(payload.getOrDefault("actkind", "A")).toUpperCase();
 
             injectSession(master, session);
@@ -224,12 +239,11 @@ public class HaslController {
             if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
             
             // 💡 결과셋에서 slipno 추출 (첫번째 행의 첫번째 컬럼)
-            Map<String, Object> firstRow = masterresult.get(0);
-            List<Object> mstValues = new ArrayList<>(firstRow.values());
-            String slipno = String.valueOf(mstValues.get(0)).trim();
+            String slipno = extractFirstValue(masterresult);
             
             // 💡 에러 체크 (마스터 SP가 실패 시 000000 등을 반환하는 경우 대비)
             if ("000000".equals(slipno)) {
+                Map<String, Object> firstRow = masterresult.getFirst();
                 String msg = firstRow.containsKey("msg") ? String.valueOf(firstRow.get("msg")) : "저장 중 오류가 발생했습니다.";
                 throw new RuntimeException(msg);
             }
@@ -261,8 +275,8 @@ public class HaslController {
     @Transactional
     public ResponseEntity<ApiResponse<?>> saveSlip110(Map<String, Object> payload, HttpSession session) {
         try {
-            Map<String, Object> master = (Map<String, Object>) payload.get("master");
-            List<Map<String, Object>> details = (List<Map<String, Object>>) payload.get("details");
+            Map<String, Object> master = objectMapper.convertValue(payload.get("master"), new TypeReference<>() {});
+            List<Map<String, Object>> details = objectMapper.convertValue(payload.get("details"), new TypeReference<>() {});
             String actkind = (String) payload.get("actkind");
             injectSession(master, session);
             master.put("actkind", actkind);
@@ -278,11 +292,12 @@ public class HaslController {
 
             if (masterresult.isEmpty()) throw new RuntimeException("마스터 저장 실패");
             
-            List<Object> mstValues = new ArrayList<>(masterresult.get(0).values());
-            String status = String.valueOf(mstValues.get(0)).trim();
-            if ("000000".equals(status)) throw new RuntimeException(String.valueOf(mstValues.get(1)));
+            String slipno = extractFirstValue(masterresult);
+            if ("000000".equals(slipno)) {
+                List<Object> mstValues = new ArrayList<>(masterresult.getFirst().values());
+                throw new RuntimeException(String.valueOf(mstValues.get(1)));
+            }
 
-            String slipno = String.valueOf(mstValues.get(0));
             String slipymd = String.valueOf(master.get("slipymd"));
 
             if (details != null) {

@@ -19,5 +19,7 @@ public class Hasl010u {
     private String empnm;
     private String slipgu;
     private String business;
+    private String salsemp;
+    private String imsum;
     private String updemp;
 }

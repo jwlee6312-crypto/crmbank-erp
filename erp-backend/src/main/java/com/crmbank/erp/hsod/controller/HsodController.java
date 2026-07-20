@@ -184,15 +184,20 @@ public class HsodController {
 
     private String buildPositionalSql(String proc, Map<String, Object> params) {
         try {
+            // 💡 [주의] 이 부분만 해당 컨트롤러의 매퍼 클래스명으로 수정하세요 (예: HsodMapper.class)
             String statementId = HsodMapper.class.getName() + "." + proc;
+
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
-            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
-            BoundSql boundSql = ms.getBoundSql(params);
+            BoundSql boundSql = sqlSession.getConfiguration().getMappedStatement(statementId).getBoundSql(params);
             List<String> values = new ArrayList<>();
+
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                // XML에 정의된 #{이름}과 100% 일치하는 값만 추출 (VUE 순서 상관없음)
                 Object val = params.get(pm.getProperty().trim());
-                if (val == null) values.add("''");
-                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+
+                // NULL/공백 치환 및 유니코드(N) 처리하여 왜곡 차단
+                String valStr = (val == null || "null".equals(String.valueOf(val))) ? "''" : "N'" + val.toString().replace("'", "''").trim() + "'";
+                values.add(valStr);
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }

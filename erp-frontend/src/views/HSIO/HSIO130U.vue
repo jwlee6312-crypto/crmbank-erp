@@ -233,76 +233,48 @@ async function fetchList() {
 }
 
 /**
- * 🚀 저장 로직 (ASP 패턴 기반 순차 저장 - 소문자 통일)
+ * 🚀 전표 발행 로직 (통합 백엔드 서비스 방식 - HSIP140U 표준 모델 준수)
  */
 async function save() {
-  const items = grid?.getSelectedData() || [] // 체크된 행 데이터만 즉시 가져옴
+  const selectedItems = grid?.getSelectedData() || []
 
-  if (!items || items.length === 0) return vAlertError('전표 발행할 항목을 선택하세요.')
+  if (selectedItems.length === 0) return vAlertError('전표 발행할 항목을 선택하세요.')
   if (formData.cardyn === 'Y' && !formData.cardno) return vAlertError('카드번호를 입력하세요.')
   if (!confirm('선택한 항목들에 대해 매입전표를 발행하시겠습니까?')) return
 
+  const payload = {
+    mst: {
+      pubymd: formData.pubymd,
+      deptcd: formData.deptcd,
+      cmpycd: authStore.cmpycd,
+      usernm: authStore.usernm,
+      cardyn: formData.cardyn,
+      cardno: formData.cardno,
+      fromdt: searchForm.fromdt,
+      todt: searchForm.todt,
+      taxunit: formData.taxunit,
+      vattype: formData.vattype
+    },
+    items: selectedItems.map(item => ({
+      jsanym: item.jsanym,
+      jsanno: item.jsanno,
+      jsanymd: item.jsanymd,
+      spyamt: item.spyamt,
+      vatamt: item.vatamt,
+      custcd: item.custcd,
+      deptcd: item.deptcd
+    }))
+  }
+
   try {
-    // 1. 자동전표 설정 체크 (ASP: HA00_010S_STR 'P1')
-    const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'p1' })
-    const autoslip = resset.data?.[0]?.slipyn || 'N'
-    const slipymd = formData.pubymd.replace(/-/g, '')
-    const acctymd = (autoslip === 'Y' || autoslip === 'Y') ? slipymd : ''
-    const business = slipymd.substring(0, 4) + "년 " + slipymd.substring(4, 6) + "월 매입 건"
-
-    // 2. 전표 MASTER 생성 (ASP: HASL_010U_STR)
-
-
-    const resmst = await api.post('/api/hasl/HASL_010U_STR', {
-        actkind: 'A',
-        cmpycd: authStore.cmpycd,
-        slipymd: slipymd,
-        slipno: '',
-        acctymd: acctymd,
-        deptcd: formData.deptcd,
-        empnm: authStore.usernm,
-        slipkind: '030',
-        business: business,
-        updemp: authStore.userid
-    })
-
-    const slipno = resmst.data?.[0]?.slipno
-    if (!slipno || slipno === '000000') throw new Error('전표 마스터 생성 실패')
-
-    // 3. 정산 내역 루프 돌며 전표번호 업데이트 (ASP: HSIO_130U_STR)
-    for (const item of items) {
-        const detailparams = {
-            actkind: 'U0',
-            cmpycd: authStore.cmpycd,
-            iogbn: '100',
-            fromdt: searchForm.fromdt.replace(/-/g, ''),
-            todt: searchForm.todt.replace(/-/g, ''),
-            deptcd: item.deptcd || item.deptcd || formData.deptcd,
-            jsanym: item.jsanym,
-            jsanno: item.jsanno,
-            jsanymd: (item.jsanymd || '').replace(/-/g, ''),
-            spyamt: String(item.spyamt || item.spyamt || '0').replace(/,/g, ''),
-            vatamt: String(item.vatamt || item.vatamt || '0').replace(/,/g, ''),
-            custcd: item.custcd,
-            taxunit: formData.taxunit,
-            vattype: formData.vattype,
-            slipymd: slipymd,
-            slipno: slipno,
-            cardyn: formData.cardyn,
-            cardno: formData.cardno,
-            updemp: authStore.userid
-        }
-        const resdetail = await api.post('/api/hsio/HSIO_130U_STR', detailparams)
-        const resdata = resdetail.data?.[0]
-        if (resdata && (resdata.status === 'Y' || resdata.erryn === 'Y' || resdata.status === 'Y' || resdata.erryn === 'Y')) {
-            throw new Error(resdata.msg || '상세 내역 저장 중 오류 발생')
-        }
+    const res = await api.post('/api/hsio/HSIO_130U_SAVE', payload)
+    if (res.data) {
+      vAlert('매입전표가 성공적으로 발행되었습니다.')
+      fetchList()
+      initialize()
     }
-
-    vAlert('정상적으로 전표 발행이 완료되었습니다.')
-    fetchList(); initialize();
   } catch (e: any) {
-    vAlertError(e.message || '오류 발생')
+    vAlertError('발행 실패: ' + (e.response?.data?.message || e.message))
   }
 }
 

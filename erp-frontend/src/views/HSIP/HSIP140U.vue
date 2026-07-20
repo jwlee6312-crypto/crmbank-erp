@@ -185,7 +185,7 @@ const searchForm = reactive({
   todt: today
 })
 
-const vatForm = reactive({ taxunit: '000', custcd: '', custnm: '', vattype: '000', vatamt: 0 })
+const vatForm = reactive({ taxunit: '100', custcd: '', custnm: '', vattype: '010', vatamt: 0 })
 const payInfo = reactive({ deptcd: authStore.deptcd, deptnm: authStore.deptnm, payymd: today })
 
 const taxUnitOptions = ref<any[]>([]); const vatTypeOptions = ref<any[]>([])
@@ -225,32 +225,63 @@ const handleGenerateSlip = async () => {
   if (Math.abs(targetWithVat - totalPayAmt.value) > 1) return vAlertError('지불대상금액과 지불합계가 일치하지 않습니다.')
 
   if (!confirm('전표를 발행하시겠습니까?')) return
-  const slipymd = payInfo.payymd.replace(/-/g, '')
-  try {
-    const resmst = await api.post('/api/hasl/HASL_010U_STR', { actkind: 'A', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: '', acctymd: slipymd, deptcd: payInfo.deptcd, empnm: authStore.usernm, slipkind: '031', business: `${slipymd.substring(0, 4)}년 ${slipymd.substring(4, 6)}월 수입비용 대체`, userid: authStore.userid })
-    const slipno = resmst.data?.[0]?.slipno
-    if (!slipno || slipno === '000000') throw new Error('전표 생성 실패')
 
-    // [차변] 매입처(vatForm.custcd) 연결
-    for (const item of selectedCosts) {
-      await api.post('/api/hasl/HASL_011U_STR', { actkind: 'A', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: slipno, srowno: '', acctymd: slipymd, acctcd: '1365', sdeptcd: item.deptcd || payInfo.deptcd, custcd: vatForm.custcd, fileno: item.fileno, costamt: item.costamt, bigo: (item.bigo || item.costnm) + "(" + item.fileno + ")", userid: authStore.userid })
-      await api.post('/api/hsip/HSIP_140U_STR', { actkind: 'U0', cmpycd: authStore.cmpycd, qdeptcd: searchForm.deptcd, fromdt: searchForm.fromdt.replace(/-/g, ''), todt: searchForm.todt.replace(/-/g, ''), fileno: item.fileno, docno: item.docno, crowno: item.crowno, slipymd: slipymd, slipno: slipno, userid: authStore.userid })
+  const payload = {
+    mst: {
+      payymd: payInfo.payymd,
+      deptcd: payInfo.deptcd,
+      cmpycd: authStore.cmpycd,
+      usernm: authStore.usernm,
+      fromdt: searchForm.fromdt,
+      todt: searchForm.todt,
+      search_deptcd: searchForm.deptcd,
+      targetTotalAmt: targetTotalAmt.value
+    },
+    vat: {
+      taxunit: vatForm.taxunit,
+      custcd: vatForm.custcd,
+      vattype: vatForm.vattype,
+      vatamt: vatForm.vatamt
+    },
+    costs: selectedCosts.map(item => ({
+      fileno: item.fileno,
+      docno: item.docno,
+      crowno: item.crowno,
+      costamt: item.costamt,
+      costnm: item.costnm,
+      bigo: item.bigo,
+      deptcd: item.deptcd
+    })),
+    payments: selectedPayments.map(p => ({
+      acctcd: p.acctcd,
+      payamt: p.payamt,
+      bankcd: p.bankcd,
+      custcd: p.custcd,
+      mgtno: p.mgtno,
+      remark: p.remark
+    }))
+  }
+
+  try {
+    const res = await api.post('/api/hsip/HSIP_140U_SAVE', payload)
+    if (res.data) {
+      vAlert('전표가 발행되었습니다.')
+      fetchUnissuedList()
+      initialize()
     }
-    if (vatForm.vattype !== '000') {
-      const vt = vatForm.vattype.split('|')[0]
-      await api.post('/api/hasl/HASL_011U_STR', { actkind: 'A', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: slipno, srowno: '', acctymd: '', acctcd: '1275', sdeptcd: payInfo.deptcd, custcd: vatForm.custcd, fileno: selectedCosts[0].fileno, costamt: vatForm.vatamt, bigo: '부가세 대체', taxunit: vatForm.taxunit, custcd2: vatForm.custcd, taxtype: vt, slipymd2: slipymd, supyamt: targetTotalAmt.value, vatamt: vatForm.vatamt, userid: authStore.userid })
-    }
-    // [대변] 지불처/은행 연결 (상식적으로 bankcd 또는 custcd를 DB의 custcd 필드로 전달)
-    for (const p of selectedPayments) {
-      const creditorCode = p.bankcd || p.custcd || '';
-      await api.post('/api/hasl/HASL_011U_STR', { actkind: 'A', cmpycd: authStore.cmpycd, slipymd: slipymd, slipno: slipno, srowno: '', acctymd: slipymd, acctcd: p.acctcd, sdeptcd: payInfo.deptcd, custcd: creditorCode, mgtno: p.mgtno || '', wonamt: 0, payamt: p.payamt, bigo: p.remark, userid: authStore.userid })
-    }
-    vAlert('전표가 발행되었습니다.'); fetchUnissuedList(); initialize();
-  } catch (e: any) { vAlertError(e.message) }
+  } catch (e: any) {
+    vAlertError('발행 실패: ' + (e.response?.data?.message || e.message))
+  }
 }
 
 const initialize = () => {
-  resetForm(searchForm); Object.assign(vatForm, { taxunit: '000', custcd: '', custnm: '', vattype: '000', vatamt: 0 }); Object.assign(payInfo, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, payymd: today });
+  resetForm(searchForm);
+  searchForm.fromdt = firstDay;
+  searchForm.todt = today;
+  searchForm.deptcd = authStore.deptcd;
+  searchForm.deptnm = authStore.deptnm;
+  Object.assign(vatForm, { taxunit: '100', custcd: '', custnm: '', vattype: '010', vatamt: 0 });
+  Object.assign(payInfo, { deptcd: authStore.deptcd, deptnm: authStore.deptnm, payymd: today });
   mainGrid?.clearData(); targetTotalAmt.value = 0; totalPayAmt.value = 0; payGrid?.setData([]);
 }
 

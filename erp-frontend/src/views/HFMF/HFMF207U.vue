@@ -2,13 +2,13 @@
 	=============================================================
 	프로그램명	: 공정별제조비용 조정 (HFMF207U)
 	작성일자	: 2025.02.24
-	설명        : 공정별 제조비용 조정 관리 (HSOD100U 표준 그리드 적용)
+	설명        : 공정별 제조비용 조정 관리 (HSOD100U 표준 디자인 및 인터셉터 표준화 적용)
 	=============================================================
 -->
 
 <template>
   <AppAlert :show="showAlert" :error="showError" :message="alertMessage" />
-  <Modal v-model:visible="showModal" :modalProps="modalProps" />
+  <Modal v-model:visible="modalVisible" :modalProps="modalProps" />
 
   <div class="erp-container d-flex flex-column h-100 bg-white">
     <!-- 🚀 1. 상단 액션 바 -->
@@ -19,8 +19,8 @@
         원가결산 <i class="bi bi-chevron-right mx-1 small opacity-50"></i>
         <span class="text-primary fw-bolder">공정제조비용관리 (HFMF207U)</span>
       </div>
-      <div class="btn-group-erp d-flex gap-1 pe-2">
-        <button class="btn-erp btn-init" @click="handleResetForm">초기화</button>
+      <div class="btn-group-erp d-flex gap-1 pe-3">
+        <button class="btn-erp btn-init" @click="initialize">초기화</button>
         <button class="btn-erp btn-search" @click="handleSearch">조회</button>
         <button class="btn-erp btn-save" @click="save">저장</button>
         <button class="btn-erp btn-delete" @click="deleteData" :disabled="!selectedRowCount">삭제</button>
@@ -35,13 +35,13 @@
         <div class="card-body p-0 bg-white">
           <table class="erp-table-dense" width="100%">
             <colgroup>
-                <col style="width: 10%" /><col style="width: 25%" />
-                <col style="width: 10%" /><col style="width: 25%" />
-                <col style="width: 30%" />
+                <col style="width: 10%" /><col style="width: 30%" />
+                <col style="width: 10%" /><col style="width: 30%" />
+                <col style="width: 20%" />
             </colgroup>
             <tbody>
               <tr>
-                <th class="text-center bg-light required">년 월</th>
+                <th class="text-center bg-light required">조회년월</th>
                 <td>
                   <input v-model="searchForm.ym" type="month" class="form-control form-control-sm" style="max-width: 150px;" @change="handleSearch" />
                 </td>
@@ -64,6 +64,9 @@
       <div class="card border shadow-sm flex-grow-1 overflow-hidden d-flex flex-column grid-container-right">
         <div class="card-header bg-white py-1 px-3 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
           <span class="fw-bold small text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>공정별 비용 조정 목록</span>
+          <div class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>조정액 입력 후 저장 버튼을 클릭하세요.
+          </div>
         </div>
         <div class="card-body p-0 flex-grow-1 bg-white overflow-hidden d-flex flex-column">
           <div ref="mainGridRef" class="tabulator-instance flex-grow-1"></div>
@@ -78,14 +81,18 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css'
-import { useAlerts } from '@/composables/useAlerts'
-import { api } from '@/utils/axios'
 import AppAlert from '@/components/AppAlert.vue'
 import Modal from '@/components/Modal.vue'
+import { useAlerts } from '@/composables/useAlerts'
+import { api } from '@/utils/axios'
 import { useAuthStore } from '@/stores/authStore'
+import { useFormReset } from '@/composables/useFormReset'
+import { useCommonHelp } from '@/composables/useCommonHelp'
 
 const authStore = useAuthStore()
 const { showAlert, showError, alertMessage, vAlert, vAlertError } = useAlerts()
+const { resetForm } = useFormReset()
+const { modalVisible, modalProps } = useCommonHelp()
 
 const clsInfo = reactive({ wclsym: '' })
 const acctOptions = ref<any[]>([])
@@ -97,8 +104,6 @@ const searchForm = reactive({
 const mainGridRef = ref<HTMLElement | null>(null)
 let mainGrid: Tabulator | null = null
 const selectedRowCount = ref(0)
-const showModal = ref(false)
-const modalProps = ref<any>({})
 
 const loadInitData = async () => {
 	try {
@@ -110,16 +115,19 @@ const loadInitData = async () => {
             clsInfo.wclsym = cls.data[0].wclsym || cls.data[0].codecd || ''
         }
 		acctOptions.value = (accts.data || []).map((item: any) => ({
-			acct: String(item.acct || item.acct || '').trim(),
-			acctnm: String(item.acctnm || item.acctnm || '').trim()
+			acct: String(item.acct || '').trim(),
+			acctnm: String(item.acctnm || '').trim()
 		}))
 		if (acctOptions.value.length > 0) searchForm.acct = acctOptions.value[0].acct
 	} catch (e) { vAlertError('기초 데이터 로드 실패') }
 }
 
-const handleResetForm = () => {
-    mainGrid?.clearData()
-    selectedRowCount.value = 0
+const initialize = () => {
+  resetForm(searchForm)
+  searchForm.ym = new Date().toISOString().substring(0, 7)
+  if (acctOptions.value.length > 0) searchForm.acct = acctOptions.value[0].acct
+  mainGrid?.clearData()
+  selectedRowCount.value = 0
 }
 
 const handleSearch = async () => {
@@ -176,14 +184,13 @@ const deleteData = async () => {
 	} catch (e) { vAlertError('삭제 실패') }
 }
 
-onMounted(async () => {
-	await loadInitData()
+const initGrid = () => {
 	if (mainGridRef.value) {
 		mainGrid = new Tabulator(mainGridRef.value, {
 			layout: 'fitColumns', height: '100%', selectable: true,
 			columnDefaults: { headerHozAlign: 'center', headerSort: false, vertAlign: "middle" },
 			columns: [
-				{ title: '', field: '_sel', width: 40, formatter: 'rowSelection', titleFormatter: 'rowSelection' },
+				{ title: "선택", width: 40, hozAlign: "center", formatter: "rowSelection", titleFormatter: "rowSelection" },
                 { title: "상태", field: "_status", width: 60, hozAlign: "center", formatter: (c) => {
                     const v = c.getValue();
                     if (v === '수정') return '<span class="badge bg-warning text-dark">수정</span>';
@@ -199,7 +206,10 @@ onMounted(async () => {
 				{
 					title: '조정액', field: 'adstamt',
 					hozAlign: 'right', editor: 'number', formatter: 'money', formatterParams: { precision: 0 }, cssClass: 'bg-light-yellow',
-                    cellEdited: (cell) => cell.getRow().update({ _status: '수정' }).then(() => cell.getRow().select())
+                    cellEdited: (cell) => {
+                      cell.getRow().update({ _status: '수정' });
+                      cell.getRow().select();
+                    }
 				},
 				{
 					title: '합계', field: 'tot_amt',
@@ -209,9 +219,16 @@ onMounted(async () => {
 				}
 			]
 		})
-        mainGrid.on('rowSelectionChanged', (data) => selectedRowCount.value = data.length)
+    mainGrid.on('rowSelectionChanged', (data) => selectedRowCount.value = data.length)
 	}
-	handleSearch()
+}
+
+onMounted(async () => {
+	await loadInitData()
+	nextTick(() => {
+    initGrid()
+    handleSearch()
+  })
 })
 </script>
 

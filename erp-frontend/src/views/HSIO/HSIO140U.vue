@@ -45,6 +45,12 @@
             <input v-model="searchForm.todt" type="date" class="form-control form-control-sm" style="width: 140px;" />
           </div>
         </div>
+        <div class="ms-auto d-flex align-items-center gap-2 bg-white border rounded px-2 py-1 shadow-sm">
+          <div class="form-check form-switch mb-0">
+            <input v-model="autoSlip" class="form-check-input" type="checkbox" id="autoSlipCheck" true-value="Y" false-value="N">
+            <label class="form-check-label small fw-bold text-primary" for="autoSlipCheck">자동전표취소</label>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -90,6 +96,7 @@ const searchForm = reactive<any>({
   todt: now.toISOString().substring(0, 10)
 })
 
+const autoSlip = ref('N')
 // 마감일 정보
 const clsInfo = reactive({ clsymd: '', sclsym: '' })
 const mainGridRef = ref<HTMLDivElement | null>(null);
@@ -120,32 +127,37 @@ async function fetchList() {
 }
 
 async function handleCancel() {
-  const items = grid?.getData().filter((r: any) => r.procyn === true)
-  if (!items || items.length === 0) return vAlertError('취소할 전표를 선택하세요.')
+  const items = grid?.getSelectedData() || []
+  if (items.length === 0) return vAlertError('취소할 전표를 선택하세요.')
 
   for (const item of items) {
-    if (item.cfmyn === 'Y') return vAlertError(`확정처리된 전표입니다. 취소할 수 없습니다. [전표:${item.slipymd}-${item.slipno}]`);
+    if (item.cfmyn === 'Y' && autoSlip.value === 'N') return vAlertError(`확정처리된 전표입니다. 자동전표취소를 선택하거나 확정취소 후 작업하세요. [전표:${item.slipymd}-${item.slipno}]`);
     const slipYm = String(item.jsanymd || '').substring(0, 6);
     if (clsInfo.sclsym && slipYm <= clsInfo.sclsym) return vAlertError(`영업정보가 마감되었습니다. [전표:${item.slipymd}-${item.slipno}]`);
     if (item.jsanymd <= clsInfo.clsymd) return vAlertError(`회계정보가 마감되었습니다. [전표:${item.slipymd}-${item.slipno}]`);
   }
 
-  if (!confirm('선택한 전표들을 취소하시겠습니까?')) return
+  if (!confirm(`선택한 ${items.length}건의 전표를 취소하시겠습니까?`)) return
 
   try {
-    const res = await api.post('/api/hsio/HSIO_140U_STR', {
-        actkind: 'D0',
+    const res = await api.post('/api/hsio/HSIO_140U_CANCEL', {
         cmpycd: authStore.cmpycd,
-        items: items,
-        userid: authStore.userid
+        fromdt: searchForm.fromdt,
+        todt: searchForm.todt,
+        autoSlip: autoSlip.value,
+        items: items.map(item => ({
+          slipymd: item.slipymd,
+          slipno: item.slipno,
+          deptcd: item.deptcd
+        }))
     })
-    if (res.data?.[0]?.ERRYN === 'N') {
+    if (res.data?.status === 'SUCCESS' || res.data?.res === 'OK') {
         vAlert('정상적으로 취소되었습니다.');
         fetchList();
     } else {
-        vAlertError(res.data?.[0]?.MSG || '취소 실패');
+        vAlertError(res.data?.message || '취소 실패');
     }
-  } catch (e) { vAlertError('오류 발생') }
+  } catch (e: any) { vAlertError(e.response?.data?.message || '오류 발생') }
 }
 
 const handleOpenHelp = (type: string) => {
@@ -159,8 +171,9 @@ const handleOpenHelp = (type: string) => {
 
 const toggleAllRows = () => {
   const rows = grid?.getRows(); if (!rows) return
-  const allSelected = rows.every(r => r.getData().procyn === true)
-  rows.forEach(r => r.update({ procyn: allSelected ? null : true }))
+  const selectedRows = grid?.getSelectedRows();
+  if (rows.length === selectedRows?.length) grid?.deselectRow();
+  else grid?.selectRow();
 }
 
 function initialize() {
@@ -179,10 +192,10 @@ onMounted(async () => {
   await fetchClosingInfo();
   if (mainGridRef.value) {
     grid = new Tabulator(mainGridRef.value, {
-      layout: 'fitColumns', height: '100%',
-      columnDefaults: { headerSort: false, headerHozAlign: "center" },
+      layout: 'fitColumns', height: '100%', selectable: true,
+      columnDefaults: { headerSort: false, headerHozAlign: "center", vertAlign: "middle" },
       columns: [
-        { title: '선택', field: 'procyn', hozAlign: 'center', width: 60, formatter: 'tickCross', formatterParams: { crossElement: false }, editor: true, cellClick: (e, cell) => cell.setValue(cell.getValue() === true ? null : true) },
+        { title: '선택', width: 50, hozAlign: 'center', formatter: 'rowSelection', titleFormatter: 'rowSelection', headerSort: false },
         { title: '전표번호', field: 'slipno_full', width: 150, hozAlign: 'center', cssClass: 'fw-bold text-primary cursor-pointer',
           mutatorData: (v, d) => d.slipymd && d.slipno ? `${d.slipymd}-${d.slipno}` : '',
           cellClick: (e, cell) => {

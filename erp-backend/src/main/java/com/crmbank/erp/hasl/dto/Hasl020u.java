@@ -17,5 +17,6 @@ public class Hasl020u {
     private String slipyn;
     private String cofmyn;
     private String cofmemp;
+    private String empnm;
     private String updemp;
 }

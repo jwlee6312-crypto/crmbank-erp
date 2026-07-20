@@ -59,6 +59,12 @@
 										<span class="text-muted">~</span>
 										<input v-model="searchForm.todt" type="date" class="form-control form-control-sm" />
 									</div>
+                                    <div class="ms-auto d-flex align-items-center gap-2 bg-white border rounded px-2 py-1 shadow-sm">
+                                      <div class="form-check form-switch mb-0">
+                                        <input v-model="autoSlip" class="form-check-input" type="checkbox" id="autoSlipCheck" true-value="Y" false-value="N">
+                                        <label class="form-check-label small fw-bold text-primary" for="autoSlipCheck">자동전표취소</label>
+                                      </div>
+                                    </div>
 								</div>
 							</td>
 						</tr>
@@ -109,6 +115,7 @@ const searchForm = reactive({
 	todt: new Date().toISOString().substring(0, 10)
 })
 
+const autoSlip = ref('N')
 const closingInfo = reactive({ clsymd: '', sclsym: '' })
 const activeItemCount = ref(0)
 const totals = reactive({ sum: 0 })
@@ -148,63 +155,28 @@ const handleCancelSlip = async () => {
 
 	if (!confirm('선택한 전표를 삭제(취소) 하시겠습니까?')) return
 	try {
-        // 1. 자동전표 여부 확인 (gbn: 'p1')
-        const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
-        const autoslip = (resset.data?.[0]?.slipyn || 'N').toLowerCase()
+        const payload = {
+            cmpycd: authStore.cmpycd,
+            fromdt: searchForm.fromdt,
+            todt: searchForm.todt,
+            autoSlip: autoSlip.value,
+            items: selected.map(item => ({
+                slipymd: item.slipymd,
+                slipno: item.slipno,
+                deptcd: item.deptcd
+            }))
+        }
 
-		for (const item of selected) {
-            const slipymd = (item.slipymd || '').replace(/-/g, '')
-            const slipno = item.slipno
-            const deptcd = item.deptcd
-            const cfmyn = item.cfmyn || item.CFMYN || 'N'
+        const res = await api.post('/api/hsio/HSIO_540U_CANCEL', payload)
 
-            if (!slipymd || slipymd === '00000000') continue;
-
-            // 🚀 확정된 전표(CFMYN='Y')는 취소 불가 처리
-            if (cfmyn === 'Y') {
-                throw new Error(`이미 확정된 전표(${slipymd}-${slipno})는 취소할 수 없습니다.`)
-            }
-
-            // 2. 자동전표인 경우 확정 취소 (ASP: HASL_020U_STR 'A0')
-            if (autoslip === 'Y') {
-                await api.post('/api/hasl/HASL_020U_STR', {
-                    actkind: 'A0',
-                    cmpycd: authStore.cmpycd,
-                    slipymd: slipymd,
-                    acctymd: slipymd,
-                    slipno: slipno,
-                    deptcd: deptcd,
-                    slipkind: '040',
-                    slipyn: 'Y',
-                    cofmyn: 'N',
-                    empnm: authStore.usernm,
-                    updemp: authStore.userid
-                })
-            }
-
-            // 3. 정산 내역 전표 정보 삭제 (ASP: HSIO_540U_STR 'D0')
-			const res = await api.post('/api/hsio/HSIO_540U_STR', {
-				actkind: 'D0',
-				cmpycd: authStore.cmpycd,
-                iogbn: '200',
-				fromdt: searchForm.fromdt.replace(/-/g, ''),
-				todt: searchForm.todt.replace(/-/g, ''),
-                deptcd: deptcd,
-                slipymd: slipymd,
-                slipno: slipno,
-				userid: authStore.userid
-			})
-
-            const resData = res.data?.[0]
-            if (resData && (resData.result === 'Y' || resData.erryn === 'Y' || resData.RESULT === 'Y' || resData.ERRYN === 'Y')) {
-                throw new Error(resData.msg || resData.MSG || '전표 취소 중 업무 오류 발생')
-            }
-		}
-
-		vAlert('정상적으로 처리되었습니다.')
-		fetchIssuedList()
+        if (res.data?.status === 'SUCCESS' || res.data?.res === 'OK') {
+            vAlert('정상적으로 처리되었습니다.')
+            fetchIssuedList()
+        } else {
+            vAlertError(res.data?.message || '취소 실패')
+        }
 	} catch (e: any) {
-        vAlertError(e.message || '취소 실패')
+        vAlertError(e.response?.data?.message || e.message || '오류 발생')
     }
 }
 

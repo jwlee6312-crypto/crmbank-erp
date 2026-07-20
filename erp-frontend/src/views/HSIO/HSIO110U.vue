@@ -89,11 +89,12 @@
                         <input v-model="formData.custnm" type="text" class="form-control bg-light" readonly />
                       </div>
                     </td>
-                    <th class="bg-light text-center">입고부서</th>
+                    <th class="required bg-light text-center">입고부서</th>
                     <td>
                       <div class="input-group input-group-sm">
-                        <input v-model="formData.deptcd" type="text" class="form-control text-center bg-light" style="max-width: 60px;" readonly />
-                        <input v-model="formData.deptnm" type="text" class="form-control bg-light" readonly />
+                        <input v-model="formData.deptcd" type="text" class="form-control text-center bg-light fw-bold" style="max-width: 60px;" readonly />
+                        <input v-model="formData.deptnm" type="text" class="form-control" readonly />
+                        <button class="btn btn-outline-secondary px-2" @click="openHelp('DEPT')"><i class="bi bi-search"></i></button>
                       </div>
                     </td>
                   </tr>
@@ -228,7 +229,7 @@ async function fetchDetail(row: any) {
       todt: searchForm.todt.replace(/-/g, '')
     })
 
-    // itemGrid?.setData(res.data || [])
+    console.log(res.data)
     itemGrid?.setData(res.data.map((i: any) => ({
     ...i,
     ioymd: i.salsymd,
@@ -292,8 +293,24 @@ function initialize() {
   Object.assign(formData, { cmpycd: authStore.cmpycd, pubymd: today, vattype: '010' });
 }
 
-function openHelp(type: string) {
-  if (type === 'DEPT_search') openCommonHelp('DEPT', (d) => { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm });
+const openHelp = (type: string) => {
+  if (type === 'S_DEPT' || type === 'DEPT') {
+    Object.assign(modalProps, {
+      title: '부서 선택',
+      path: '/api/ha00/HA00_00P_STR',
+      defaultField: 'deptnm',
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' },
+      columns: [
+        { title: '코드', field: 'deptcd', width: 80, hozAlign: 'center' },
+        { title: '부서명', field: 'deptnm', width: 200 }
+      ],
+      onConfirm: (d: any) => {
+        if (type === 'S_DEPT') { searchForm.deptcd = d.deptcd; searchForm.deptnm = d.deptnm; }
+        else { formData.deptcd = d.deptcd; formData.deptnm = d.deptnm; }
+      }
+    });
+    modalVisible.value = true;
+  }
 }
 
 onMounted(async () => {

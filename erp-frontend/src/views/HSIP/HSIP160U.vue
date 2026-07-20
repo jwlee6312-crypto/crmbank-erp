@@ -247,11 +247,17 @@ onMounted(() => {
       columnDefaults: { headerSort: false, headerHozAlign: 'center', vertAlign: 'middle' },
       groupBy: 'itemcd',
       groupHeader: (value, count, data) => {
-        return `<span class='fw-bold text-primary'>${data[0].itemnm}</span> <span class='ms-2 small opacity-75'>[${data[0].itsize} | ${data[0].unit} | 입고:${data[0].inqty}]</span>`
+        const f = new Intl.NumberFormat();
+        const sum = data.reduce((acc, cur) => acc + (Number(cur.costamt) || 0), 0);
+        return `<span class='fw-bold text-primary'>${data[0].itemnm}</span>
+                <span class='ms-2 small opacity-75'>[${data[0].itsize} | ${data[0].unit} | 입고:${f.format(data[0].inqty || 0)}]</span>
+                <span class='ms-3 fw-bold text-danger'> (계: ${f.format(sum)})</span>`
       },
       columns: [
         { title: '비용종류', field: 'costnm', minWidth: 150, hozAlign: 'left', cssClass: 'ps-4' },
-        { title: '금액', field: 'costamt', width: 130, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 }, bottomCalc: 'sum' },
+        { title: '금액', field: 'costamt', width: 130, hozAlign: 'right', formatter: 'money', formatterParams: { precision: 0 },
+          bottomCalc: 'sum', bottomCalcFormatter: 'money', bottomCalcFormatterParams: { precision: 0 }
+        },
         { title: '배부기준', field: 'divnm', width: 120, hozAlign: 'center' }
       ]
     })

@@ -248,7 +248,7 @@ const initialize = () => {
 
 const printReport = (prtgu: string) => {
 	if (!searchForm.acctcd || !searchForm.custcd) return vAlertError('조회 조건을 완료하십시오.')
-	const url = `/api/hasl/HASL_550P?ACCTCD=${searchForm.acctcd}&ACCTNM=${searchForm.acctnm}&CUSTCD=${searchForm.custcd}&custnm=${searchForm.custnm}&FRYMD=${searchForm.fromdt.replace(/-/g, '')}&TOYMD=${searchForm.todt.replace(/-/g, '')}&PRTGU=${prtgu}`
+	const url = `/api/hasl/HASL_550P?ACCTCD=${searchForm.acctcd}&ACCTNM=${searchForm.acctnm}&custcd=${searchForm.custcd}&custnm=${searchForm.custnm}&FRYMD=${searchForm.fromdt.replace(/-/g, '')}&TOYMD=${searchForm.todt.replace(/-/g, '')}&PRTGU=${prtgu}`
 	window.open(url, 'ledger_print', 'width=800,height=800,scrollbars=yes')
 }
 

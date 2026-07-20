@@ -48,8 +48,9 @@
         exec fmf2150r_str #{cmpycd}, #{yymm}, #{deptcd}
     </select>
     <!--12 제품별 제조원가 현황-->
+
     <select id="FMF2160R_STR" resultType="java.util.LinkedHashMap">
-        exec fmf2160r_str #{cmpycd}, #{yymm}, #{itemcd}
+        exec fmf2160r_str #{cmpycd}, #{yymm}, #{costcd}, #{jasancd}, #{mmgbn}
     </select>
     <!--13 외주가공 제조원가 현황 (ID 중복 수정) -->
     <select id="FMF2180R_STR" resultType="java.util.LinkedHashMap">

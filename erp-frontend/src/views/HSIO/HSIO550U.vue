@@ -264,7 +264,7 @@ const fetchDetails = async (row: any) => {
         custcd: masterData.custcd || '', deptcd: '', ioym: '', iono: '', ioymd: '', iotype: '',
         whcd: searchParam.whcd || '', area: '',
         userid: authStore.userid || '', trnemp: '', trancd: '',
-        addres: '', remark: '', cfmyn: '', totsum: 0,
+        address: '', remark: '', cfmyn: '', totsum: 0,
         updemp: authStore.userid || ''
     });
     const detailData = (res.data || []).map((i: any) => ({

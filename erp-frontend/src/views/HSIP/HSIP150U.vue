@@ -50,7 +50,7 @@
                 </td>
                 <th class="text-center bg-light">발생일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <DateForm v-model:fromdt="searchForm.IOYMDFR" v-model:todt="searchForm.IOYMDTO" />
+                  <DateForm v-model:fromdt="searchForm.ioymdfr" v-model:todt="searchForm.ioymdto" />
                 </td>
               </tr>
             </tbody>
@@ -104,8 +104,8 @@ const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  IOYMDFR: firstDay,
-  IOYMDTO: today
+  ioymdfr: firstDay,
+  ioymdto: today
 })
 
 const autoSlip = ref('N')
@@ -114,11 +114,11 @@ const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | 
 const fetchList = async () => {
   try {
     const params = {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
       deptcd: searchForm.deptcd,
-      IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
-      IOYMDTO: searchForm.IOYMDTO.replace(/-/g, '')
+      fromdt: searchForm.ioymdfr.replace(/-/g, ''),
+      todt: searchForm.ioymdto.replace(/-/g, '')
     }
     const res = await api.post('/api/hsip/HSIP_150U_STR', params)
     mainGrid?.setData(res.data || [])
@@ -127,63 +127,34 @@ const fetchList = async () => {
 }
 
 /**
- * 🚀 전표 취소 로직 (ASP 루프 패턴 완벽 이식)
+ * 🚀 전표 취소 로직 (통합 백엔드 서비스 방식)
  */
 const save = async () => {
   const selected = mainGrid?.getSelectedData()
   if (!selected || selected.length === 0) return vAlertError('취소할 항목을 선택하세요.')
 
-  if (!confirm('선택한 항목들의 전표를 취소하시겠습니까?')) return
+  if (!confirm(`선택한 ${selected.length}건의 전표를 일괄 취소하시겠습니까?`)) return
+
+  const payload = {
+    cmpycd: authStore.cmpycd,
+    fromdt: searchForm.ioymdfr,
+    todt: searchForm.ioymdto,
+    autoSlip: autoSlip.value,
+    items: selected.map(item => ({
+      slipymd: item.slipymd,
+      slipno: item.slipno,
+      deptcd: item.udeptcd || item.deptcd
+    }))
+  }
 
   try {
-    // 🔄 선택된 각 항목에 대해 순차적으로 프로시저 호출 (ASP 패턴)
-    for (const item of selected) {
-      const slipYmd = item.slipymd || item.slipymd
-      const slipNo = item.slipno || item.slipno
-      const uDeptCd = item.udeptcd || item.deptcd || searchForm.deptcd
-
-      // 🚀 Step 1. 자동 전표 승인 취소 (ASP: HASL_020U_STR)
-      if (autoSlip.value === 'Y') {
-        await api.post('/api/hasl/HASL_020U_STR', {
-          ACTKIND: 'A0',
-          CMPYCD: authStore.CMPYCD,
-          slipymd: slipYmd,
-          ACCTYMD: slipYmd,
-          slipno: slipNo,
-          deptcd: uDeptCd,
-          slipkind: '031',
-          slipyn: 'Y',
-          COFMYN: 'N', // 승인 취소
-          UPDEMP: authStore.USERID
-        })
-      }
-
-      // 🚀 Step 2. 수입전표 취소 처리 (ASP: HSIP_150U_STR 'D0')
-      const params = {
-        ACTKIND: 'D0',
-        CMPYCD: authStore.CMPYCD,
-        IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
-        IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
-        deptcd: uDeptCd,
-        slipymd: slipYmd,
-        slipno: slipNo,
-        UPDEMP: authStore.USERID
-      }
-
-      const res = await api.post('/api/hsip/HSIP_150U_STR', params)
-      const resData = res.data?.[0]
-
-      // ASP: if RTRIM(rs(0)) = "Y" then (에러 발생 시 중단)
-      if (resData && (resData.ERRYN === 'Y' || resData.STATUS === 'Y')) {
-        throw new Error(resData.MSG || '취소 처리 중 업무 오류가 발생했습니다.')
-      }
+    const res = await api.post('/api/hsip/HSIP_150U_CANCEL', payload)
+    if (res.data) {
+      vAlert('전표 취소가 성공적으로 완료되었습니다.')
+      fetchList()
     }
-
-    vAlert('정상적으로 전표 취소 작업이 완료되었습니다.')
-    fetchList()
   } catch (e: any) {
-    console.error('Cancellation error:', e)
-    vAlertError(e.message || '취소 실패')
+    vAlertError('취소 실패: ' + (e.response?.data?.message || e.message))
   }
 }
 
@@ -201,7 +172,7 @@ function openHelp(type: string) {
 onMounted(async () => {
   // 전표 환경 설정 체크 (ASP: HA00_010S_STR 'P1')
   try {
-    const resSet = await api.post('/api/ha00/HA00_010S_STR', { CMPYCD: authStore.CMPYCD, gbn: 'P1' })
+    const resSet = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gbn: 'P1' })
     if (resSet.data?.length > 0) autoSlip.value = resSet.data[0].slipyn || 'N'
   } catch (e) {}
 
@@ -215,14 +186,10 @@ onMounted(async () => {
             const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
         }},
         { title: "전표번호", field: "slipno", width: 100, cssClass: "fw-bold text-primary" },
-        { title: "부서명", field: "deptnm", width: 120 },
-        { title: "비용종류", field: "COSTNM", width: 150 },
-        { title: "PO No.", field: "FILENO", width: 180 },
-        { title: "정산일", field: "jsanymD", width: 110, formatter: (c) => {
-            const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
-        }},
-        { title: "비용금액", field: "spyamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
-        { title: "상세 적요", field: "BIGO", minWidth: 200, widthGrow: 1, hozAlign: "left" }
+        { title: "부서명", field: "deptnm", width: 250 },
+        { title: "거래처", field: "custnm", width: 250 },
+        { title: "비용금액", field: "costamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
+        { title: "비고", field: "bigo", minWidth: 200, widthGrow: 1, hozAlign: "left" }
       ]
     })
   }

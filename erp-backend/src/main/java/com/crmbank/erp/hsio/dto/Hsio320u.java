@@ -12,6 +12,7 @@ public class Hsio320u {
     private String deptcd;
     private String imymdfr;
     private String imymdto;
+    private String salsemp;
     private String userid;
     private String imym;
     private String imno;

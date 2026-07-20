@@ -210,84 +210,44 @@ const handleGenerateSlip = async () => {
 
 	if (!confirm('전표를 발행하시겠습니까?')) return
 	try {
-        // 1. 자동전표 여부 확인 (gbn: 'p1')
-        const resset = await api.post('/api/ha00/HA00_010S_STR', { cmpycd: authStore.cmpycd, gubun: 'p1' })
-        const autoslip = (resset.data?.[0]?.slipyn || 'N').toLowerCase()
-        const acctymd = autoslip === 'Y' ? slipymd : ''
-        const business = `${slipymd.substring(0, 4)}년 ${slipymd.substring(4, 6)}월 상품 매출 건`
+		const payload = {
+			mst: {
+				slipymd: slipForm.slipymd,
+				cmpycd: authStore.cmpycd,
+				deptcd: formData.deptcd,
+				usernm: authStore.usernm,
+				fromdt: searchForm.fromdt,
+				todt: searchForm.todt
+			},
+			items: selected.map(item => ({
+				udeptcd: item.udeptcd, // ASP의 UDEPTCD 대응
+				deptcd: item.deptcd,
+				jsanym: item.jsanym,
+				jsanno: item.jsanno,
+				jsanymd: item.jsanymd,
+				spyamt: item.spyamt,
+				vatamt: item.vatamt,
+				custcd: item.custcd,
+				taxunit: item.taxunit,
+				vattype: item.vattype
+			}))
+		}
 
-        // 2. 전표 마스터 생성 (ASP: HASL_010U_STR 'A')
-		const resmst = await api.post('/api/hasl/HASL_010U_STR', {
-			actkind: 'A',
-			cmpycd: authStore.cmpycd,
-			slipymd: slipymd,
-            slipno: '',
-            acctymd: acctymd,
-			deptcd: formData.deptcd,
-            empnm: authStore.usernm,
-			slipgu: '040',
-            business: business,
-			updemp: authStore.userid
-		})
+		const res = await api.post('/api/hsio/HSIO_530U_SAVE', payload)
+		const { slipno, res: status } = res.data.data
 
-        const slipno = resmst.data?.[0]?.slipno
-        if (!slipno || slipno === '000000') throw new Error('전표 마스터 생성 실패')
-
-        // 3. 정산 내역 순차 업데이트 (ASP: HSIO_530U_STR 'U0')
-        for (const item of selected) {
-            const params = {
-                actkind: 'U0',
-                cmpycd: authStore.cmpycd,
-                iogbn: '200',
-                fromdt: searchForm.fromdt.replace(/-/g, ''),
-                todt: searchForm.todt.replace(/-/g, ''),
-                deptcd: item.deptcd || item.deptcd || formData.deptcd,
-                jsanym: item.jsanym,
-                jsanno: item.jsanno,
-                jsanymd: (item.jsanymd || item.jsanymd || '').replace(/-/g, ''),
-                spyamt: String(item.spyamt || '0').replace(/,/g, ''),
-                vatamt: String(item.vatamt || '0').replace(/,/g, ''),
-                custcd: item.custcd,
-                taxunit: item.taxunit,
-                vattype: item.vattype,
-                slipymd: slipymd,
-                slipno: slipno,
-                updemp: authStore.userid
-            }
-            const resdet = await api.post('/api/hsio/HSIO_530U_STR', params)
-            const resdata = resdet.data?.[0]
-            if (resdata && (resdata.status === 'Y' || resdata.erryn === 'Y' || resdata.STATUS === 'Y' || resdata.ERRYN === 'Y')) {
-                throw new Error(resdata.msg || resdata.MSG || '정산 내역 처리 중 업무 오류 발생')
-            }
-        }
-
-        // 4. 자동전표 확정 (autoslip === 'Y')
-        if (autoslip === 'Y') {
-            await api.post('/api/hasl/HASL_020U_STR', {
-                actkind: 'A0',
-                cmpycd: authStore.cmpycd,
-                slipymd: slipymd,
-                acctymd: acctymd,
-                slipno: slipno,
-                deptcd: formData.deptcd,
-                slipkind: '040',
-                slipyn: 'N',
-                cofmyn: 'Y',
-                empnm: authStore.usernm,
-                updemp: authStore.userid
-            })
-        }
-
-		vAlert('전표가 발행되었습니다.')
-
-        // 전표 인쇄 팝업 (ASP 로직 반영)
-        const printUrl = `../HASL/HASL_SLIP_PRINT.asp?slipgu=010&slipymd=${slipymd}&slipno=${slipno}&deptcd=${formData.deptcd}`
-        window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
-
-		fetchUnissuedList()
+		if (status === 'OK') {
+			vAlert('전표가 발행되었습니다.')
+			// 전표 인쇄 팝업
+			const printUrl = `../HASL/HASL_SLIP_PRINT.asp?slipgu=010&slipymd=${slipymd}&slipno=${slipno}&deptcd=${formData.deptcd}`
+			window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
+			fetchUnissuedList()
+		} else {
+			vAlertError('발행 처리 중 오류가 발생했습니다.')
+		}
 	} catch (e: any) {
-        vAlertError(e.message || '발행 실패')
-    }
+		vAlertError(e.response?.data?.message || e.message || '발행 실패')
+	}
 }
 
 const toggleAllRows = () => {

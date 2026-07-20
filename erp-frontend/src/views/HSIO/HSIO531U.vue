@@ -272,79 +272,43 @@ async function issueSlip() {
   try {
     const slipymd = registerData.slipymd
     const business = `${slipymd.substring(0, 4)}년 ${slipymd.substring(4, 6)}월 매출 건`
-    const fromdt = searchData.fromdt
-    const todt = searchData.todt
 
-    // 1. 전표 마스터 발행 (A0) - ASP 패턴: A0로 먼저 번호를 땀
-    const mRes = await api.post('/api/hsio/HSIO_531U_STR', {
-      actkind: 'A0',
-      cmpycd: authStore.cmpycd,
-      iogbn: '200',
-      fromdt: fromdt,
-      todt: todt,
-      deptcd: '', // 마스터 발행 시에는 빈값
-      jsanym: '',
-      jsanno: '',
-      jsanymd: '',
-      spyamt: '0',
-      vatamt: '0',
-      custcd: '',
-      taxunit: '',
-      vattype: '',
-      slipymd: slipymd,
-      slipno: '',
-      slipkind: '040',
-      deptcd: registerData.deptcd,
-      business: business,
-      userid: authStore.userid
-    })
+    const payload = {
+        mst: {
+            slipymd: slipymd,
+            cmpycd: authStore.cmpycd,
+            deptcd: registerData.deptcd,
+            fromdt: searchData.fromdt,
+            todt: searchData.todt,
+            business: business
+        },
+        items: selected.map(item => ({
+            deptcd: item.deptcd,
+            jsanym: item.jsanym,
+            jsanno: item.jsanno,
+            jsanymd: item.jsanymd,
+            spyamt: item.spyamt,
+            vatamt: item.vatamt,
+            custcd: item.custcd,
+            taxunit: item.taxunit,
+            vattype: item.vattype
+        }))
+    }
 
-    const resM = mRes.data?.[0]
-    const slipno = resM?.slipno || resM?.col_1
+    const res = await api.post('/api/hsio/HSIO_531U_SAVE', payload)
+    const { slipno, res: status } = res.data.data
 
-    if (slipno) {
-      // 2. 전표 상세 매핑 (U0) - 루프 처리
-      for (const item of selected) {
-        const dRes = await api.post('/api/hsio/HSIO_531U_STR', {
-          actkind: 'U0',
-          cmpycd: authStore.cmpycd,
-          iogbn: '200',
-          fromdt: fromdt,
-          todt: todt,
-          deptcd: item.deptcd,
-          jsanym: item.jsanym,
-          jsanno: item.jsanno,
-          jsanymd: (item.jsanymd || '').replace(/-/g, ''),
-          spyamt: String(item.spyamt || '0').replace(/,/g, ''),
-          vatamt: String(item.vatamt || '0').replace(/,/g, ''),
-          custcd: item.custcd,
-          taxunit: item.taxunit,
-          vattype: item.vattype,
-          slipymd: slipymd,
-          slipno: slipno,
-          slipkind: '040',
-          deptcd: registerData.deptcd,
-          business: business,
-          userid: authStore.userid
-        })
-        const resD = dRes.data?.[0]
-        if (resD && (resD.result === 'Y' || resD.erryn === 'Y' || resD.RESULT === 'Y' || resD.ERRYN === 'Y')) {
-          throw new Error(resD.msg || resD.MSG || '전표 상세 저장 중 업무 오류 발생')
-        }
-      }
-
-      vAlert('정상적으로 발행되었습니다.')
-
-      // 전표 인쇄 팝업 (ASP 로직 반영)
-      const printUrl = `../HASL/HASL_SLIP_PRINT_OUT.asp?slipgu=010&slipymd=${slipymd}&slipno=${slipno}&deptcd=${registerData.deptcd}`
-      window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
-
-      search()
+    if (status === 'OK') {
+        vAlert('정상적으로 발행되었습니다.')
+        // 전표 인쇄 팝업 (ASP 로직 반영)
+        const printUrl = `../HASL/HASL_SLIP_PRINT_OUT.asp?slipgu=010&slipymd=${slipymd}&slipno=${slipno}&deptcd=${registerData.deptcd}`
+        window.open(printUrl, '전표인쇄', 'left=10,top=10,width=700,height=650,scrollbars=yes')
+        search()
     } else {
-      vAlertError('전표 마스터 생성 실패')
+        vAlertError('전표 발행 중 오류가 발생했습니다.')
     }
   } catch (e: any) {
-    vAlertError(e.message || '전표 발행 실패')
+    vAlertError(e.response?.data?.message || e.message || '전표 발행 실패')
   }
 }
 

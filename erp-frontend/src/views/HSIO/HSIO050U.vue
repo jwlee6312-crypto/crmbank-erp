@@ -307,7 +307,7 @@ const handleOpenHelp = (type: string, target?: any) => {
   if (type === 'DEPT') {
     Object.assign(modalProps, {
       title: '부서 선택', path: '/api/ha00/HA00_00P_STR', defaultField: 'deptnm',
-      data: { gubun: 'D1', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' },
+      data: { gubun: 'D0', cmpycd: authStore.cmpycd, gbncd: '', code: '', remark: '' },
       columns: [{ title: '코드', field: 'deptcd', width: 80, hozAlign: 'center' }, { title: '부서명', field: 'deptnm', width: 200 }],
       onConfirm: (d: any) => { form_02.deptcd = d.deptcd; form_02.deptnm = d.deptnm; }
     });

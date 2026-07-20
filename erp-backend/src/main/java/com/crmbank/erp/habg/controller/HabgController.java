@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -43,9 +42,9 @@ public class HabgController {
             injectSession(params, session);
             fillMissingParameters(proc, params);
 
-            String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
+            String actkind = Objects.requireNonNullElse(params.get("actkind"), "").toString().toUpperCase();
             if (proc.length() >= 9 && proc.charAt(8) == 'U' && (actkind.startsWith("A") || actkind.startsWith("U"))) {
-                String validationMsg = validateParameters(HabgMapper.class, proc, params);
+                String validationMsg = validateParameters(proc, params);
                 if (validationMsg != null) {
                     return ResponseEntity.badRequest().body(Map.of(
                         "status", "VALIDATION_ERROR",
@@ -58,44 +57,29 @@ public class HabgController {
 
             List<Map<String, Object>> result;
             if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
-                String positionalSql = buildPositionalSql(proc, params);
-                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
-
-                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    List<Object> values = new ArrayList<>();
-                    int colCount = rs.getMetaData().getColumnCount();
-                    for (int i = 1; i <= colCount; i++) {
-                        Object val = rs.getObject(i);
-                        String colName = rs.getMetaData().getColumnLabel(i); 
-                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
-                        row.put(colName.toLowerCase(), val == null ? "" : val);
-                        values.add(val == null ? "" : val);
-                    }
-                    row.put("returnkeyvalue", values); // 💡 시스템 표준에 맞춰 소문자로 지정
-                    return row;
-                });
-                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+                result = executeJdbcQuery(proc, params);
             } else {
-                switch (proc) {
-                    case "HABG_010U_STR": result = habgMapper.HABG_010U_STR(params); break;
-                    case "HABG_020S_STR": result = habgMapper.HABG_020S_STR(params); break;
-                    case "HABG_030U_STR": result = habgMapper.HABG_030U_STR(params); break;
-                    case "HABG_050U_STR": result = habgMapper.HABG_050U_STR(params); break;
-                    case "HABG_060U_STR": result = habgMapper.HABG_060U_STR(params); break;
-                    case "HABG_070S_STR": result = habgMapper.HABG_070S_STR(params); break;
-                    case "HABG_110U_STR": result = habgMapper.HABG_110U_STR(params); break;
-                    case "HABG_120U_STR": result = habgMapper.HABG_120U_STR(params); break;
-                    case "HABG_210S_STR": result = habgMapper.HABG_210S_STR(params); break;
-                    case "HABG_220S_STR": result = habgMapper.HABG_220S_STR(params); break;
-                    case "HABG_230S_STR": result = habgMapper.HABG_230S_STR(params); break;
-                    default:
-                        log.warn("❌ [habg] Unregistered procedure: {}", proc);
-                        return ResponseEntity.notFound().build();
+                result = switch (proc) {
+                    case "HABG_010U_STR" -> habgMapper.HABG_010U_STR(params);
+                    case "HABG_020S_STR" -> habgMapper.HABG_020S_STR(params);
+                    case "HABG_030U_STR" -> habgMapper.HABG_030U_STR(params);
+                    case "HABG_050U_STR" -> habgMapper.HABG_050U_STR(params);
+                    case "HABG_060U_STR" -> habgMapper.HABG_060U_STR(params);
+                    case "HABG_070S_STR" -> habgMapper.HABG_070S_STR(params);
+                    case "HABG_110U_STR" -> habgMapper.HABG_110U_STR(params);
+                    case "HABG_120U_STR" -> habgMapper.HABG_120U_STR(params);
+                    case "HABG_210S_STR" -> habgMapper.HABG_210S_STR(params);
+                    case "HABG_220S_STR" -> habgMapper.HABG_220S_STR(params);
+                    case "HABG_230S_STR" -> habgMapper.HABG_230S_STR(params);
+                    default -> null;
+                };
+                if (result == null) {
+                    log.warn("❌ [habg] Unregistered procedure: {}", proc);
+                    return ResponseEntity.notFound().build();
                 }
             }
 
-            if (result == null || result.isEmpty()) {
+            if (result.isEmpty()) {
                 result = List.of(Map.of("res", "OK"));
             }
             
@@ -108,17 +92,31 @@ public class HabgController {
         }
     }
 
-    /**
-     * Map의 모든 Key를 소문자로 변환하여 일관성 보장
-     */
+    private List<Map<String, Object>> executeJdbcQuery(String proc, Map<String, Object> params) {
+        String positionalSql = buildPositionalSql(proc, params);
+        log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+
+        return jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+            Map<String, Object> row = new LinkedHashMap<>();
+            List<Object> values = new ArrayList<>();
+            int colCount = rs.getMetaData().getColumnCount();
+            for (int i = 1; i <= colCount; i++) {
+                Object val = rs.getObject(i);
+                String colName = rs.getMetaData().getColumnLabel(i); 
+                if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                row.put(colName.toLowerCase(), val == null ? "" : val);
+                values.add(val == null ? "" : val);
+            }
+            row.put("returnkeyvalue", values); 
+            return row;
+        });
+    }
+
     private List<Map<String, Object>> convertToLowerCaseKeys(List<Map<String, Object>> list) {
-        if (list == null) return new ArrayList<>();
         List<Map<String, Object>> newList = new ArrayList<>();
         for (Map<String, Object> map : list) {
             Map<String, Object> newMap = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                newMap.put(entry.getKey().toLowerCase(), entry.getValue());
-            }
+            map.forEach((k, v) -> newMap.put(k.toLowerCase(), v));
             newList.add(newMap);
         }
         return newList;
@@ -127,12 +125,8 @@ public class HabgController {
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
-                params.put("cmpycd", user.getCmpycd());
-            }
-            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
-                params.put("userid", user.getUserid());
-            }
+            params.putIfAbsent("cmpycd", user.getCmpycd());
+            params.putIfAbsent("userid", user.getUserid());
             params.put("updemp", user.getUserid());
         }
     }
@@ -147,11 +141,7 @@ public class HabgController {
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
                 String prop = pm.getProperty();
                 if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
-                    String cleanProp = prop.trim();
-                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
-                        params.put(cleanProp, "");
-                    }
-                    if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
+                    params.putIfAbsent(prop.trim(), "");
                 }
             }
         } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
@@ -164,18 +154,19 @@ public class HabgController {
             MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
             BoundSql boundSql = ms.getBoundSql(params);
             List<String> values = new ArrayList<>();
+
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
                 Object val = params.get(pm.getProperty().trim());
-                if (val == null) values.add("''");
-                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+                String valStr = (val == null || "null".equals(String.valueOf(val))) ? "''" : "N'" + val.toString().replace("'", "''").trim() + "'";
+                values.add(valStr);
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }
     }
 
-    private String validateParameters(Class<?> mapperClass, String proc, Map<String, Object> vueParams) {
+    private String validateParameters(String proc, Map<String, Object> vueParams) {
         try {
-            String statementId = mapperClass.getName() + "." + proc;
+            String statementId = HabgMapper.class.getName() + "." + proc;
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return null;
             MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
             BoundSql boundSql = ms.getBoundSql(vueParams);
@@ -185,18 +176,10 @@ public class HabgController {
                 String prop = pm.getProperty();
                 if (prop != null && !prop.startsWith("_") && !prop.contains(".")) xmlKeys.add(prop);
             }
-            Set<String> vueKeys = vueParams.keySet();
-            if (vueKeys.size() < xmlKeys.size()) {
-                return String.format("📍 [PARAM SHORTAGE] XML:%d > VUE:%d\n📋 [REQUIRED]: %s", xmlKeys.size(), vueKeys.size(), xmlKeys);
+            if (vueParams.size() < xmlKeys.size()) {
+                return String.format("📍 [PARAM SHORTAGE] XML:%d > VUE:%d\n📋 [REQUIRED]: %s", xmlKeys.size(), vueParams.size(), xmlKeys);
             }
             return null;
         } catch (Exception e) { return "VALIDATION ERROR: " + e.getMessage(); }
-    }
-
-    private String buildSsmsLog(String proc, Map<String, Object> params) {
-        String values = params.entrySet().stream()
-                .map(entry -> "@" + entry.getKey() + " = " + (entry.getValue() == null ? "''" : "'" + entry.getValue().toString().trim() + "'"))
-                .collect(Collectors.joining(", "));
-        return String.format("EXEC %s %s", proc, values);
     }
 }

@@ -198,7 +198,7 @@ const searchForm = reactive({
 const formData = reactive<any>({
   fileno: '', shipseq: '', shipseqnm: '', passseq: '10',
   passymd: today,
-  taxorg: '', passno: '', whcd: '', bigo: '',
+  taxorg: '', passno: '', whcd: '100', bigo: '',
   ideptcd: authStore.deptcd, ideptnm: authStore.deptnm,
   custcd: '', custnm: '', jsanyn: 'N',
   shipymd: '', arvymd: '', currnm: '', shipportnm: '', arvportnm: '', frgnrate: 0,
@@ -235,11 +235,12 @@ const fetchDetail = async () => {
     })
     if (res.data?.length) {
         const data = res.data[0]
-        data.passymd = formatDateToInput(data.passymd)
+        data.passymd = data.passymd ? formatDateToInput(data.passymd) : today
         data.shipymd = formatDateToInput(data.shipymd)
         data.arvymd = formatDateToInput(data.arvymd)
 
         Object.assign(formData, data)
+        if (!formData.whcd) formData.whcd = '100' // 🚀 입고창고 기본값 보정
         // 🚀 shipseq 정보가 있으면 표시, 없으면 '직통관' 등으로 유연하게 표시
         formData.shipseqnm = formData.shipseq ? `${formData.shipseq.substring(0,1)}차 선적` : '미선적(직통관)'
 
@@ -268,10 +269,10 @@ const save = async () => {
   try {
     const clean = (val: any) => String(val || '').trim()
     const passymd = (formData.passymd || '').replace(/-/g, '')
-    const ITEMgrid_data = itemGrid?.getData() || []
+    const itemgrid_data = itemGrid?.getData() || []
 
-    const rowWithIono = ITEMgrid_data.find(d => clean(d.iono) !== '')
-    const isUpdate = !!rowWithIono
+    const rowwithiono = itemgrid_data.find(d => clean(d.iono) !== '')
+    const isUpdate = !!rowwithiono
 
     // 🚀 [Rule] 모든 필드를 NULL 없이 정제 및 항공 운송(직통관) 대응
     const mstData = {
@@ -285,8 +286,8 @@ const save = async () => {
       passno: formData.passno || '',
       whcd: formData.whcd || '',
       deptcd: formData.ideptcd || '',
-      ioym: isUpdate ? clean(rowWithIono.ioym) : (clean(formData.ioym) || passymd.substring(0, 6)),
-      iono: isUpdate ? clean(rowWithIono.iono) : '',
+      ioym: isUpdate ? clean(rowwithiono.ioym) : (clean(formData.ioym) || passymd.substring(0, 6)),
+      iono: isUpdate ? clean(rowwithiono.iono) : '',
       updemp: authStore.userid || '',
       frgnrate: Number(formData.frgnrate) || 0 // 🚀 숫자형자료 준수
     }
@@ -299,7 +300,7 @@ const save = async () => {
         fileno: formData.fileno || '',
         shipseq: formData.shipseq || '10',
         passseq: formData.passseq || '10',
-        prowno: item.prowno || '', // 💡 prowno(항번)는 문자열 공백 유지 (자동생성)
+        srowno: item.srowno || '',
         itemcd: item.itemcd || '',
         itsize: item.itsize || '',
         unit: item.unit || '',
@@ -333,6 +334,7 @@ function initialize() {
     Object.assign(formData, {
       passseq: '10',
       passymd: today,
+      whcd: '100',
       ideptcd: authStore.deptcd,
       ideptnm: authStore.deptnm
     });
@@ -361,7 +363,7 @@ function openHelp(type: string) {
 onMounted(async () => {
   api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'E2', cmpycd: authStore.cmpycd, gbncd: '306' } }).then(r => taxOrgOptions.value = r.data)
   api.get('/api/hs00/HS00_000S_STR', { params: { gubun: 'W0', cmpycd: authStore.cmpycd } }).then(r => {
-    whOptions.value = r.data; if (r.data?.length) formData.whcd = r.data[0].whcd;
+    whOptions.value = r.data; formData.whcd = '100';
   })
 
   nextTick(() => {
@@ -425,6 +427,26 @@ onMounted(async () => {
           const amt = iqty * price;
           row.update({ amt: amt });
         }
+      });
+
+      // 🚀 체크박스 선택/해제 시 통관량 자동 세팅 (전체 선택 대응)
+      itemGrid.on('rowSelectionChanged', (data, rows) => {
+        itemGrid?.getRows().forEach(row => {
+          const rowData = row.getData();
+          const jqty = Number(rowData.jqty || 0);
+          const price = Number(rowData.price || 0);
+          const isSelected = row.isSelected();
+
+          if (isSelected) {
+            if (Number(rowData.iqty || 0) === 0 && jqty > 0) {
+              row.update({ iqty: jqty, amt: Math.round(jqty * price) });
+            }
+          } else {
+            if (Number(rowData.iqty || 0) !== 0) {
+              row.update({ iqty: 0, amt: 0 });
+            }
+          }
+        });
       });
     }
     fetchPoList();

@@ -42,7 +42,7 @@ public class ErpDataSourceConfig {
         
         String host = env.getProperty("ERP_DB_HOST", "127.0.0.1");
         String port = env.getProperty("ERP_DB_PORT", "1433");
-        String dbName = env.getProperty("ERP_DB_NAME", "STANDARD");
+        String dbName = env.getProperty("ERP_DB_NAME", "SMARTDB");
         String username = env.getProperty("ERP_DB_USERNAME", "sa");
         String password = env.getProperty("ERP_DB_PASSWORD", "crmbank");
         

@@ -197,96 +197,53 @@ async function fetchList() {
 }
 
 /**
- * 🚀 ASP 로직 이식: 전표 발행 (A0 -> U0 루프)
+ * 🚀 전표 발행 로직 (통합 백엔드 서비스 방식 - HSIP140U 표준 모델 준수)
  */
 async function saveSlip() {
-  const selectedRows = grid?.getData().filter((r: any) => r.procyn === true)
-  if (!selectedRows || selectedRows.length === 0) return vAlertError('발행할 항목을 선택하세요.')
+  const selectedRows = grid?.getSelectedData().filter((r: any) => r.procyn === true) || []
+  if (selectedRows.length === 0) return vAlertError('발행할 항목을 선택하세요.')
 
   const slipymd = formData.slipymd.replace(/-/g, '');
   const slipym = slipymd.substring(0, 6);
 
   if (formData.sclsym && slipym <= formData.sclsym) return vAlertError('영업정보가 마감이 되었습니다. 해당 전표일자로 작업할 수 없습니다.');
 
-  if (!confirm('외부 매입전표를 발행하시겠습니까?')) return
+  if (!confirm(`${selectedRows.length}건의 외부 매입전표를 일괄 발행하시겠습니까?`)) return
+
+  const payload = {
+    mst: {
+      pubymd: formData.slipymd,
+      deptcd: formData.deptcd,
+      cmpycd: authStore.cmpycd,
+      usernm: authStore.usernm,
+      cardyn: formData.cardyn,
+      cardno: formData.cardno,
+      fromdt: searchForm.fromdt,
+      todt: searchForm.todt
+    },
+    items: selectedRows.map(item => ({
+      jsanym: item.jsanym,
+      jsanno: item.jsanno,
+      jsanymd: item.jsanymd,
+      spyamt: item.spyamt,
+      vatamt: item.vatamt,
+      custcd: item.custcd,
+      deptcd: item.deptcd,
+      taxunit: item.taxunit,
+      vattype: item.vattype,
+      bigo: item.bigo
+    }))
+  }
 
   try {
-    const firstItem = selectedRows[0];
-    const business = `${slipymd.substring(0, 4)}년 ${slipymd.substring(4, 6)}월 매입 건`;
-
-    // 🚀 Step 1. Slip Master 생성 (A0)
-    const masterParams = {
-        actkind: 'A0',
-        cmpycd: authStore.cmpycd,
-        iogbn: '100',
-        fromdt: searchForm.fromdt.replace(/-/g, ''),
-        todt: searchForm.todt.replace(/-/g, ''),
-        udeptcd: firstItem.deptcd,
-        jsanym: firstItem.jsanym,
-        jsanno: firstItem.jsanno,
-        jsanymd: (firstItem.jsanymd || '').replace(/-/g, ''),
-        spyamt: firstItem.spyamt,
-        vatamt: firstItem.vatamt,
-        custcd: firstItem.custcd,
-        taxunit: firstItem.taxunit,
-        vattype: firstItem.vattype,
-        slipymd: slipymd,
-        slipno: '',
-        cardyn: formData.cardyn,
-        cardno: formData.cardno,
-        slipkind: '030',
-        deptcd: formData.deptcd,
-        business: business,
-        updemp: authStore.userid
+    const res = await api.post('/api/hsio/HSIO_131U_SAVE', payload)
+    if (res.data) {
+      vAlert('외부매입전표가 성공적으로 발행되었습니다.')
+      fetchList()
+      initialize()
     }
-
-    // 🚀 [Seed-Model] Step 1. 마스터 전표 발행 실행
-    const resMst = await api.post('/api/hsio/HSIO_131U_STR', masterParams)
-    const mstData = resMst.data?.[0]
-
-    // 🚀 [Seed-Model] Step 2. 무결성 키 추출 (0번: 상태, 1번: 번호)
-    const rowValues = mstData?.returnkeyvalue || Object.values(mstData || {})
-    const key1 = (rowValues[0] || '').toString().trim()
-    const key2 = (mstData?.slipno || rowValues[1] || '').toString().trim()
-
-    // 🚀 [Seed-Model] Step 3. 에러 판별
-    if (key1 === '00000000' || key1 === '000000') {
-        throw new Error(key2 || '전표 발행 중 업무 에러가 발생했습니다.')
-    }
-
-    if (!key2) throw new Error('전표 번호를 수신하지 못했습니다. (Data Integrity Error)')
-
-    // 🚀 [Seed-Model] Step 4. 상세 내역 연결 (U0 루프)
-    const slipno = key2;
-
-    for (const item of selectedRows) {
-        const detailParams = {
-            ...masterParams,
-            actkind: 'U0',
-            udeptcd: item.deptcd,
-            jsanym: item.jsanym,
-            jsanno: item.jsanno,
-            jsanymd: (item.jsanymd || '').replace(/-/g, ''),
-            spyamt: item.spyamt,
-            vatamt: item.vatamt,
-            custcd: item.custcd,
-            taxunit: item.taxunit,
-            vattype: item.vattype,
-            slipno: slipno // 확보된 전표번호 주입
-        }
-        const resDetail = await api.post('/api/hsio/HSIO_131U_STR', detailParams)
-        const dtlData = resDetail.data?.[0]
-        const dtlValues = dtlData?.returnkeyvalue || Object.values(dtlData || {})
-
-        if (dtlValues[0] === '00000000' || dtlValues[0] === '000000') {
-            throw new Error(dtlValues[1] || '상세 내역 저장 중 오류 발생');
-        }
-    }
-
-    vAlert('정상적으로 전표 발행이 완료되었습니다.');
-    fetchList();
   } catch (e: any) {
-    vAlertError(e.message || '발행 중 오류 발생');
+    vAlertError('발행 실패: ' + (e.response?.data?.message || e.message))
   }
 }
 

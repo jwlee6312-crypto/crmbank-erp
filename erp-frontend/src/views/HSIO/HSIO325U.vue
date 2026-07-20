@@ -226,40 +226,34 @@ async function issueSlip() {
   if (!confirm('선택한 내역에 대해 전표를 발행하시겠습니까?')) return
 
   try {
-    for (const item of selected) {
-        const remark = `입금번호:${item.imym}-${item.imno} 입금전표 건`
-        const baseParams = {
+    const payload = {
+        mst: {
+            slipymd: slipmaster.slipymd,
             cmpycd: authStore.cmpycd,
-            deptcd: item.deptcd || slipmaster.deptcd,
-            fromdt: searchdata.fromdt.replace(/-/g, ''),
-            todt: searchdata.todt.replace(/-/g, ''),
-            userid: searchdata.salsemp || authStore.userid,
-            iogbn: '200',
+            deptcd: slipmaster.deptcd,
+            usernm: authStore.usernm,
+            fromdt: searchdata.fromdt,
+            todt: searchdata.todt
+        },
+        items: selected.map(item => ({
             imym: item.imym,
             imno: item.imno,
-            slipkind: '040',
-            slipymd: slipymd,
+            deptcd: item.deptcd,
             imamt: item.imamt,
-            remark: remark,
             custcd: item.custcd,
-            custnm: item.custnm,
-            updemp: authStore.userid
-        }
-
-        // 1. 전표번호 채번 (actkind: 'A')
-        const resA = await api.post('/api/hsio/HSIO_325U_STR', { ...baseParams, actkind: 'A', slipno: '' })
-        const slipno = resA.data?.[0]?.slipno || resA.data?.[0]?.slipno
-        if (!slipno || slipno === '000000') throw new Error('전표 번호 채번 실패')
-
-        // 2. 실제 정산 저장 (actkind: 'U')
-        const resU = await api.post('/api/hsio/HSIO_325U_STR', { ...baseParams, actkind: 'U', slipno: slipno })
-        if (resU.data?.[0]?.jsanym === '000000' || resU.data?.[0]?.jsanym === '000000') {
-            throw new Error('전표 저장 중 오류 발생')
-        }
+            custnm: item.custnm
+        }))
     }
-    vAlert('정상적으로 전표 발행이 완료되었습니다.')
-    search()
-  } catch (e: any) { vAlertError(e.message || '전표 발행 실패') }
+
+    const res = await api.post('/api/hsio/HSIO_325U_SAVE', payload)
+
+    if (res.data?.data?.res === 'OK') {
+        vAlert('정상적으로 전표 발행이 완료되었습니다.')
+        search()
+    } else {
+        vAlertError('전표 발행 중 오류 발생')
+    }
+  } catch (e: any) { vAlertError(e.response?.data?.message || e.message || '전표 발행 실패') }
 }
 
 async function deleteSlip() {
@@ -269,15 +263,23 @@ async function deleteSlip() {
   if (!confirm('선택한 전표를 삭제하시겠습니까?')) return
 
   try {
-    for (const item of selected) {
-      await api.post('/api/hsio/HSIO_325U_STR', {
-        actkind: 'D', cmpycd: authStore.cmpycd, deptcd: item.deptcd,
-        imym: item.imym, imno: item.imno, slipymd: item.slipymd, slipno: item.slipno,
-        userid: authStore.userid
-      })
+    const payload = {
+        cmpycd: authStore.cmpycd,
+        items: selected.map(item => ({
+            slipymd: item.slipymd,
+            slipno: item.slipno,
+            deptcd: item.deptcd,
+            imym: item.imym,
+            imno: item.imno
+        }))
     }
-    vAlert('전표 삭제 완료'); search()
-  } catch (e) { vAlertError('전표 삭제 실패') }
+    const res = await api.post('/api/hsio/HSIO_325U_CANCEL', payload)
+    if (res.data?.data?.res === 'OK') {
+        vAlert('전표 삭제 완료'); search()
+    } else {
+        vAlertError('전표 삭제 실패')
+    }
+  } catch (e: any) { vAlertError(e.response?.data?.message || '전표 삭제 실패') }
 }
 
 function initialize() {

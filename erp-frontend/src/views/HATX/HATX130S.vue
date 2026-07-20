@@ -166,7 +166,7 @@ const search = async () => {
 		const ymfr = searchForm.yy + searchForm.fmm
 		const ymto = searchForm.yy + searchForm.tmm
 
-		// 1. 합계 정보 조회 (ACTKIND: S0)
+		// 1. 합계 정보 조회 (actkind: S0)
 		const resSum = await api.post('/api/hatx/HATX_130S_STR', {
 			actkind: 'S0',
 			cmpycd: authStore.cmpycd,
@@ -185,7 +185,7 @@ const search = async () => {
 		]
 		summaryGrid?.setData(sumData)
 
-		// 2. 카드/가맹점별 목록 조회 (ACTKIND: S1)
+		// 2. 카드/가맹점별 목록 조회 (actkind: S1)
 		const resList = await api.post('/api/hatx/HATX_130S_STR', {
 			actkind: 'S1',
 			cmpycd: authStore.cmpycd,

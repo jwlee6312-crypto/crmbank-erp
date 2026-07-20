@@ -181,7 +181,7 @@ const fetchList = async () => {
       cmpycd: authStore.cmpycd,
       fromdt: searchForm.fromdt.replace(/-/g, ''),
       todt: searchForm.todt.replace(/-/g, ''),
-      deptcd: searchForm.deptcd,
+      deptcd: '',
       deptnm: '', fileno: '', docno: '', pubymd: '', bigo: '',
       updemp: authStore.userid
     })
@@ -208,7 +208,7 @@ const fetchDetail = async (fileno?: string, docno?: string) => {
     if (res.data && res.data.length > 0) {
       const mst = res.data[0];
       Object.assign(formData, mst)
-      formData.remark = mst.bigo || mst.BIGO || '';
+      formData.remark = mst.bigo || mst.bigo || '';
       if (formData.pubymd && formData.pubymd.length === 8) {
         formData.pubymd = `${formData.pubymd.substring(0, 4)}-${formData.pubymd.substring(4, 6)}-${formData.pubymd.substring(6, 8)}`
       }
@@ -262,7 +262,7 @@ const save = async () => {
         cmpycd: authStore.cmpycd,
         fileno: formData.fileno,
         docno: keyDocno,
-        crowno: itemRowno,
+        rowno: itemRowno,
         costcd: item.costcd,
         deptcd: formData.deptcd,
         shipseq: item.shipseq || '10',

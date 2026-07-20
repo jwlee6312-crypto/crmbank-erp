@@ -1,8 +1,9 @@
 package com.crmbank.erp.haaa.controller;
 
-import com.crmbank.erp.comm.service.CommService;
 import com.crmbank.erp.comm.dto.UserSession;
 import com.crmbank.erp.haaa.mapper.HaaaMapper;
+import com.crmbank.erp.comm.service.CommService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -68,57 +68,52 @@ public class HaaaController {
     public ResponseEntity<?> executeProcedure(
             @PathVariable String procedure,
             @RequestBody Map<String, Object> params,
-            HttpSession session) {
+            HttpSession session,
+            HttpServletRequest request) {
         
+        String proc = procedure.toUpperCase();
+
+        // 🚀 특수 엔드포인트 수동 매핑 (Java 호출 인지 및 통제 강화)
+        switch (proc) {
+            case "LOGIN": 
+                Map<String, String> loginData = new HashMap<>();
+                params.forEach((k, v) -> loginData.put(k, String.valueOf(v)));
+                return login(loginData, request);
+            case "LOGOUT": return logout(session);
+            case "SESSION": return getSession(session);
+            case "TOP-MENUS": return getTopMenus();
+            case "LEFT-MENUS": return getLeftMenus(String.valueOf(params.getOrDefault("upmucd", "")));
+        }
+
         if (session.getAttribute("user_session") == null) {
             return ResponseEntity.status(401).build();
         }
 
         injectSession(params, session);
-        String proc = procedure.toUpperCase();
         String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
 
         try {
             fillMissingParameters(proc, params);
-
             log.info("📋 [haaa] 실행 요청: {}", proc);
             
-            List<Map<String, Object>> result;
+            List<Map<String, Object>> rawResult;
             if (proc.endsWith("U_STR") && (actkind.startsWith("A") || actkind.startsWith("U"))) {
-                String positionalSql = buildPositionalSql(proc, params);
-                log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
-
-                result = jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    List<Object> values = new ArrayList<>();
-                    int colCount = rs.getMetaData().getColumnCount();
-                    for (int i = 1; i <= colCount; i++) {
-                        Object val = rs.getObject(i);
-                        String colName = rs.getMetaData().getColumnLabel(i); 
-                        if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
-                        row.put(colName.toLowerCase(), val == null ? "" : val);
-                        values.add(val == null ? "" : val);
-                    }
-                    row.put("returnkeyvalue", values); // 💡 시스템 표준에 맞춰 소문자로 지정
-                    return row;
-                });
-                log.info("🎯 [무결성 직접 수신 성공] 데이터: {}", result);
+                rawResult = executeJdbcQuery(proc, params);
             } else {
-                switch (proc) {
-                    case "HAAA_010U_STR": result = haaaMapper.HAAA_010U_STR(params); break;
-                    case "HAAA_800U_STR": result = haaaMapper.HAAA_800U_STR(params); break;
-                    case "HAAA_810U_STR": result = haaaMapper.HAAA_810U_STR(params); break;
-                    default:
-                        return ResponseEntity.notFound().build();
-                }
+                rawResult = switch (proc) {
+                    case "HAAA_010U_STR" -> haaaMapper.HAAA_010U_STR(params);
+                    case "HAAA_800U_STR" -> haaaMapper.HAAA_800U_STR(params);
+                    case "HAAA_810U_STR" -> haaaMapper.HAAA_810U_STR(params);
+                    default -> null;
+                };
             }
 
-            if (result == null || result.isEmpty()) {
-                result = List.of(Map.of("res", "OK"));
-            }
+            if (rawResult == null) return ResponseEntity.notFound().build();
 
-            // 🚀 모든 결과를 소문자로 강제 변환하여 프론트엔드 표준 준수
-            return ResponseEntity.ok(convertToLowerCaseKeys(result));
+            List<Map<String, Object>> finalResult = rawResult.isEmpty() ? 
+                    List.of(Map.of("res", "OK")) : rawResult;
+
+            return ResponseEntity.ok(convertToLowerCaseKeys(finalResult));
 
         } catch (Exception e) {
             log.error("❌ [haaa] executeProcedure Error ({}): {}", proc, e.getMessage());
@@ -126,17 +121,31 @@ public class HaaaController {
         }
     }
 
-    /**
-     * Map의 모든 Key를 소문자로 변환하여 일관성 보장
-     */
+    private List<Map<String, Object>> executeJdbcQuery(String proc, Map<String, Object> params) {
+        String positionalSql = buildPositionalSql(proc, params);
+        log.info("📋 [ASP 스타일 실행] SQL: {}", positionalSql);
+
+        return jdbcTemplate.query(positionalSql, (rs, rowNum) -> {
+            Map<String, Object> row = new LinkedHashMap<>();
+            List<Object> values = new ArrayList<>();
+            int colCount = rs.getMetaData().getColumnCount();
+            for (int i = 1; i <= colCount; i++) {
+                Object val = rs.getObject(i);
+                String colName = rs.getMetaData().getColumnLabel(i); 
+                if (colName == null || colName.isEmpty()) colName = "col_" + (i-1);
+                row.put(colName.toLowerCase(), val == null ? "" : val);
+                values.add(val == null ? "" : val);
+            }
+            row.put("returnkeyvalue", values);
+            return row;
+        });
+    }
+
     private List<Map<String, Object>> convertToLowerCaseKeys(List<Map<String, Object>> list) {
-        if (list == null) return new ArrayList<>();
         List<Map<String, Object>> newList = new ArrayList<>();
         for (Map<String, Object> map : list) {
             Map<String, Object> newMap = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                newMap.put(entry.getKey().toLowerCase(), entry.getValue());
-            }
+            map.forEach((k, v) -> newMap.put(k.toLowerCase(), v));
             newList.add(newMap);
         }
         return newList;
@@ -145,12 +154,8 @@ public class HaaaController {
     private void injectSession(Map<String, Object> params, HttpSession session) {
         UserSession user = (UserSession) session.getAttribute("user_session");
         if (user != null) {
-            if (params.get("cmpycd") == null || params.get("cmpycd").toString().trim().isEmpty()) {
-                params.put("cmpycd", user.getCmpycd());
-            }
-            if (params.get("userid") == null || params.get("userid").toString().trim().isEmpty()) {
-                params.put("userid", user.getUserid());
-            }
+            params.putIfAbsent("cmpycd", user.getCmpycd());
+            params.putIfAbsent("userid", user.getUserid());
             params.put("updemp", user.getUserid());
         }
     }
@@ -164,11 +169,7 @@ public class HaaaController {
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
                 String prop = pm.getProperty();
                 if (prop != null && !prop.startsWith("_") && !prop.contains(".")) {
-                    String cleanProp = prop.trim();
-                    if (!params.containsKey(cleanProp) || params.get(cleanProp) == null || params.get(cleanProp).toString().trim().isEmpty()) {
-                        params.put(cleanProp, "");
-                    }
-                    if (!cleanProp.equals(prop)) params.put(prop, params.get(cleanProp));
+                    params.putIfAbsent(prop.trim(), "");
                 }
             }
         } catch (Exception e) { log.warn("🛠 누락 파라미터 보정 중 알림 ({}): {}", proc, e.getMessage()); }
@@ -180,36 +181,14 @@ public class HaaaController {
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
             MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
             BoundSql boundSql = ms.getBoundSql(params);
+
             List<String> values = new ArrayList<>();
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
                 Object val = params.get(pm.getProperty().trim());
-                if (val == null) values.add("''");
-                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+                String valStr = (val == null) ? "''" : "'" + val.toString().replace("'", "''").trim() + "'";
+                values.add(valStr);
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }
-    }
-
-    private String buildSsmsLog(String procedure, Map<String, Object> params) {
-        String[] keys;
-        String proc = procedure.toUpperCase();
-        if (proc.equals("HAAA_010U_STR")) {
-            keys = new String[]{"actkind", "cdtype", "codecd", "codenm", "dspord", "remark", "useyn", "userid"};
-        } else if (proc.equals("HAAA_800U_STR")) {
-            keys = new String[]{"actkind", "pgmid", "pgmnm", "upmucd", "grpcd", "grpnm", "dspord", "useyn", "userid"};
-        } else if (proc.equals("HAAA_810U_STR")) {
-            keys = new String[]{"actkind", "upmucd", "grpcd", "grpnm", "dspord", "useyn", "userid"};
-        } else {
-            keys = params.keySet().toArray(new String[0]);
-        }
-
-        String values = java.util.Arrays.stream(keys)
-                .map(key -> {
-                    Object val = params.get(key);
-                    return val == null ? "''" : "'" + val.toString().trim() + "'";
-                })
-                .collect(Collectors.joining(", "));
-
-        return String.format("EXEC %s %s", proc, values);
     }
 }

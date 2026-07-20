@@ -8,5 +8,5 @@ import java.util.List;
  */
 @Data
 public class Hsio590uRequest {
-    private List<Hsio590u> list;
+    private List<Hsio590u> list; // 원래 필드명인 list로 복구
 }

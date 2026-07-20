@@ -211,74 +211,38 @@ async function fetchDetail(cust: any) {
 }
 
 async function save() {
-
-  const items = itemGrid?.getSelectedData() || [] // 체크된 행 데이터만 즉시 가져옴
-  if (!items || items.length === 0) return vAlertError('입고 항목을 선택하세요.')
+  const selectedItems = itemGrid?.getSelectedData() || []
+  if (selectedItems.length === 0) return vAlertError('입고 항목을 선택하세요.')
   if (!confirm('입고작업을 하시겠습니까?')) return
 
+  const payload = {
+    mst: {
+      cmpycd: authStore.cmpycd,
+      custcd: formData.custcd,
+      whcd: formData.whcd,
+      ioymd: formData.ioymd,
+      remark: formData.remark,
+      fromdt: searchForm.fromdt,
+      todt: searchForm.todt,
+      search_deptcd: searchForm.deptcd
+    },
+    items: selectedItems.map(item => ({
+      ...item,
+      // 🚀 데이터에 포함된 발주부서(deptcd)를 그대로 서버로 전달
+      deptcd: item.deptcd
+    }))
+  }
+
   try {
-    const masterParams = {
-        actkind: 'A0',
-        cmpycd: authStore.cmpycd,
-        iogbn: '100',
-        fromdt: searchForm.fromdt.replace(/-/g, ''),
-        todt: searchForm.todt.replace(/-/g, ''),
-        deptcd: searchForm.deptcd,
-        custcd: formData.custcd,
-        ioym: '',
-        iono: '',
-        ioymd: formData.ioymd.replace(/-/g, ''),
-        iotype: '100',
-        whcd: formData.whcd,
-        address: '',
-        remark: formData.remark || '',
-        cfmyn: 'Y',
-        updemp: authStore.userid
+    const res = await api.post('/api/hsio/HSIO_060U_SAVE', payload)
+    if (res.data) {
+      vAlert('정상적으로 처리되었습니다.')
+      fetchCustList()
+      initialize()
     }
-    const mRes = await api.post('/api/hsio/HSIO_060U_STR', masterParams)
-    const mstData = mRes.data?.[0]
-
-    if (mstData && mstData.ioym === '000000') {
-      throw new Error(mstData.iono || '마스터 저장 오류')
-    }
-
-    const keyIoym = mstData?.ioym;
-    const keyIono = mstData?.iono;
-
-    for (const item of items) {
-        const balQty = Number(item.balqty) || 1
-        const inQty = Number(item.ioqty) || 0
-        const ioAmt = Math.round((Number(item.balamt) / balQty) * inQty)
-        const ioVat = Math.round((Number(item.balvat) / balQty) * inQty)
-
-        const detailParams = {
-            ...item,
-            actkind: 'A0',
-            cmpycd: authStore.cmpycd,
-            iogbn: '100',
-            ioym: keyIoym,
-            iono: keyIono,
-            iorowno: '',
-            deptcd: item.deptcd || searchForm.deptcd,
-            custcd: formData.custcd,
-            whcd: formData.whcd,
-            ioymd: formData.ioymd.replace(/-/g, ''),
-            iotype: '100',
-            ioqty: inQty,
-            ioamt: ioAmt,
-            iovat: ioVat,
-            cfmyn: 'Y',
-            updemp: authStore.userid
-        }
-        const resDtl = await api.post('/api/hsio/HSIO_061U_STR', detailParams)
-        if (resDtl.data?.[0]?.ioym === '000000') {
-            throw new Error(resDtl.data[0].iono || '상세 저장 중 오류 발생')
-        }
-    }
-    vAlert('정상적으로 처리되었습니다.');
-    fetchCustList();
-    initialize();
-  } catch (e: any) { vAlertError(e.message || '저장 실패') }
+  } catch (e: any) {
+    vAlertError('저장 실패: ' + (e.response?.data?.message || e.message))
+  }
 }
 
 function initialize() {

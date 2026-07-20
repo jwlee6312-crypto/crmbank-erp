@@ -50,7 +50,7 @@
                 </td>
                 <th class="text-center bg-light">발생일자</th>
                 <td class="d-flex align-items-center border-0 gap-1" style="height: 32px;">
-                  <DateForm v-model:fromdt="searchForm.IOYMDFR" v-model:todt="searchForm.IOYMDTO" />
+                  <DateForm v-model:fromdt="searchForm.ioymdfr" v-model:todt="searchForm.ioymdto" />
                 </td>
               </tr>
             </tbody>
@@ -98,8 +98,8 @@ const { modalVisible, modalProps, openHelp: openCommonHelp } = useCommonHelp()
 
 const searchForm = reactive({
   deptcd: authStore.deptcd, deptnm: authStore.deptnm,
-  IOYMDFR: firstDay,
-  IOYMDTO: today
+  ioymdfr: firstDay,
+  ioymdto: today
 })
 
 const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | null = null
@@ -107,11 +107,11 @@ const mainGridRef = ref<HTMLDivElement | null>(null); let mainGrid: Tabulator | 
 const fetchList = async () => {
   try {
     const params = {
-      ACTKIND: 'S0',
-      CMPYCD: authStore.CMPYCD,
+      actkind: 'S0',
+      cmpycd: authStore.cmpycd,
       deptcd: searchForm.deptcd,
-      IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
-      IOYMDTO: searchForm.IOYMDTO.replace(/-/g, '')
+      fromdt: searchForm.ioymdfr.replace(/-/g, ''),
+      todt: searchForm.ioymdto.replace(/-/g, '')
     }
     const res = await api.post('/api/hsip/HSIP_155U_STR', params)
     mainGrid?.setData(res.data || [])
@@ -126,36 +126,40 @@ const save = async () => {
   const selected = mainGrid?.getSelectedData()
   if (!selected || selected.length === 0) return vAlertError('취소할 항목을 선택하세요.')
 
+  // 💡 ASP 로직: 전송 완료된 건이 하나라도 있으면 취소 불가
+  for (const item of selected) {
+    if ((item.sendyn || item.SENDYN) === 'Y') {
+      return vAlertError(`전표번호 ${item.slipno}는 이미 전송 완료된 건이므로 취소할 수 없습니다.`)
+    }
+  }
+
   if (!confirm('선택한 항목들의 전표를 취소하시겠습니까?')) return
 
   try {
     // 🔄 선택된 각 항목에 대해 순차적으로 프로시저 호출 (ASP 패턴)
     for (const item of selected) {
-      const slipYmd = (item.slipymd || item.slipymd || '').replace(/-/g, '')
-      const sendYn = item.SENDYN || item.sendyn
+      const slipYmd = (item.slipymd || '').replace(/-/g, '')
 
-      // 💡 ASP 로직: 전표일자가 있고 더존 전송(SENDYN)이 안된 경우만 실행
-      if (slipYmd > '00000000' && sendYn !== 'Y') {
+      // 💡 ASP 로직: 전표일자가 있는 경우만 실행
+      if (slipYmd > '00000000') {
         const params = {
-          ACTKIND: 'D0',
-          CMPYCD: authStore.CMPYCD,
-          IOYMDFR: searchForm.IOYMDFR.replace(/-/g, ''),
-          IOYMDTO: searchForm.IOYMDTO.replace(/-/g, ''),
-          deptcd: item.udeptcd || item.deptcd || searchForm.deptcd,
+          actkind: 'D0',
+          cmpycd: authStore.cmpycd,
+          fromdt: searchForm.ioymdfr.replace(/-/g, ''),
+          todt: searchForm.ioymdto.replace(/-/g, ''),
+          deptcd: item.deptcd || searchForm.deptcd,
           slipymd: slipYmd,
-          slipno: item.slipno || item.slipno,
-          UPDEMP: authStore.USERID
+          slipno: item.slipno,
+          updemp: authStore.userid
         }
 
         const res = await api.post('/api/hsip/HSIP_155U_STR', params)
         const resData = res.data?.[0]
 
-        // ASP 에러 체크: if RTRIM(rs(0)) = "Y" then (오류 발생 시 중단)
-        if (resData && (resData.STATUS === 'Y' || resData.ERRYN === 'Y')) {
-          throw new Error(resData.MSG || '취소 처리 중 업무 오류가 발생했습니다.')
+        // ASP 에러 체크: rs(0) = "Y" 이면 오류
+        if (resData && (resData.status === 'Y' || resData.erryn === 'Y' || resData.STATUS === 'Y' || resData.ERRYN === 'Y')) {
+          throw new Error(resData.msg || resData.MSG || '취소 처리 중 업무 오류가 발생했습니다.')
         }
-      } else if (sendYn === 'Y') {
-          console.warn(`전표번호 ${item.slipno}는 이미 전송된 자료이므로 건너뜁니다.`);
       }
     }
 
@@ -184,20 +188,24 @@ onMounted(() => {
       layout: 'fitColumns', height: '100%', selectable: true,
       columnDefaults: { headerSort: false, headerHozAlign: "center", hozAlign: "center", vertAlign: "middle", minWidth: 100 },
       columns: [
-        { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 60, hozAlign: "center" },
-        { title: "전표일자", field: "slipymd", width: 110, formatter: (c) => {
-            const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}-${v.substring(4,6)}-${v.substring(6,8)}` : v;
+        { title: "선택", formatter: "rowSelection", titleFormatter: "rowSelection", width: 50, hozAlign: "center" },
+        { title: "전표번호", field: "slipno", width: 140, cssClass: "fw-bold text-primary", formatter: (c) => {
+            const d = c.getData(); return d.slipymd && d.slipno ? `${d.slipymd}-${d.slipno}` : '';
         }},
-        { title: "전표번호", field: "slipno", width: 100, cssClass: "fw-bold text-primary" },
-        { title: "부서명", field: "deptnm", width: 120 },
-        { title: "비용종류", field: "COSTNM", width: 150 },
-        { title: "PO No.", field: "FILENO", width: 180 },
-        { title: "비용금액", field: "spyamt", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0 } },
-        { title: "전송여부", field: "SENDYN", width: 80, formatter: "tickCross" },
-        { title: "상세 적요", field: "BIGO", minWidth: 200, widthGrow: 1, hozAlign: "left" }
+        { title: "전송여부", field: "sendyn", width: 100, formatter: (c) => c.getValue() === 'Y' ? '전송완료' : '미전송' },
+        { title: "PO No.", field: "fileno", width: 150 },
+        { title: "비용종류", field: "costnm", width: 150, hozAlign: "left" },
+        { title: "발생일", field: "slipymd", width: 120, formatter: (c) => {
+            const v = c.getValue(); return v && v.length === 8 ? `${v.substring(0,4)}.${v.substring(4,6)}.${v.substring(6,8)}` : v;
+        }},
+        { title: "적요", field: "business", minWidth: 200, widthGrow: 1, hozAlign: "left" },
+        { title: "차변금액", field: "dbamt", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
+        { title: "대변금액", field: "cramt", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0 } },
+        { title: "발행처", field: "custnm", width: 250, hozAlign: "left" }
       ]
     })
   }
+
   fetchList()
 })
 </script>

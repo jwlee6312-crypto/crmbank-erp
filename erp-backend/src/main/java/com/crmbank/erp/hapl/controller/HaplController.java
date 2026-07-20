@@ -46,7 +46,7 @@ public class HaplController {
                 for (Object itemObj : items) {
                     if (itemObj instanceof Map<?, ?> item) {
                         Map<String, Object> p = new HashMap<>(params);
-                        p.putAll((Map<String, Object>) item);
+                        item.forEach((k, v) -> p.put(String.valueOf(k), v));
                         p.remove("items");
                         resultList.addAll(executeInternal(proc, p));
                     }
@@ -99,7 +99,19 @@ public class HaplController {
     private List<Map<String, Object>> invokeMapper(String proc, Map<String, Object> params) {
         try {
             Method method = HaplMapper.class.getMethod(proc, Map.class);
-            return (List<Map<String, Object>>) method.invoke(haplMapper, params);
+            Object result = method.invoke(haplMapper, params);
+            if (result instanceof List<?> list) {
+                List<Map<String, Object>> resultList = new ArrayList<>();
+                for (Object obj : list) {
+                    if (obj instanceof Map<?, ?> map) {
+                        Map<String, Object> typedMap = new LinkedHashMap<>();
+                        map.forEach((k, v) -> typedMap.put(String.valueOf(k), v));
+                        resultList.add(typedMap);
+                    }
+                }
+                return resultList;
+            }
+            return null;
         } catch (NoSuchMethodException e) {
             return null;
         } catch (Exception e) {
@@ -130,19 +142,20 @@ public class HaplController {
 
     private String buildPositionalSql(String proc, Map<String, Object> params) {
         try {
+            // 💡 [주의] 이 부분만 해당 컨트롤러의 매퍼 클래스명으로 수정하세요 (예: HsodMapper.class)
             String statementId = HaplMapper.class.getName() + "." + proc;
+
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
             BoundSql boundSql = sqlSession.getConfiguration().getMappedStatement(statementId).getBoundSql(params);
             List<String> values = new ArrayList<>();
+
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
-                String prop = pm.getProperty().trim();
-                Object val = params.get(prop);
-                // 명칭 혼용 대응
-                if (val == null) {
-                    if ("etc".equalsIgnoreCase(prop)) val = params.get("deptcd");
-                    else if ("deptcd".equalsIgnoreCase(prop)) val = params.get("etc");
-                }
-                values.add(val == null ? "''" : "'" + val.toString().replace("'", "''").trim() + "'");
+                // XML에 정의된 #{이름}과 100% 일치하는 값만 추출 (VUE 순서 상관없음)
+                Object val = params.get(pm.getProperty().trim());
+
+                // NULL/공백 치환 및 유니코드(N) 처리하여 왜곡 차단
+                String valStr = (val == null || "null".equals(String.valueOf(val))) ? "''" : "N'" + val.toString().replace("'", "''").trim() + "'";
+                values.add(valStr);
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }

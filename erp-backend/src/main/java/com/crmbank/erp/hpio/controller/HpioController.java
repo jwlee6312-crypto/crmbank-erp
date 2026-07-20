@@ -23,7 +23,6 @@ import java.util.*;
 public class HpioController {
 
     private final HpioMapper hpioMapper;
-    private final com.crmbank.erp.hpio.service.HpioService hpioService;
     private final SqlSession sqlSession;
     private final JdbcTemplate jdbcTemplate;
 
@@ -39,14 +38,13 @@ public class HpioController {
         }
 
         String proc = procedure.toUpperCase();
-        UserSession user = (UserSession) session.getAttribute("user_session");
         try {
             injectSession(params, session);
             fillMissingParameters(proc, params);
 
             String actkind = String.valueOf(params.getOrDefault("actkind", "")).toUpperCase();
             if (proc.length() >= 9 && proc.charAt(8) == 'U' && (actkind.startsWith("A") || actkind.startsWith("U"))) {
-                String validationMsg = validateParameters(HpioMapper.class, proc, params);
+                String validationMsg = validateParameters(proc, params);
                 if (validationMsg != null) {
                     return ResponseEntity.badRequest().body(Map.of(
                         "status", "VALIDATION_ERROR",
@@ -224,9 +222,9 @@ public class HpioController {
         } catch (Exception e) { log.warn("🛠 missing parameter alarm ({}): {}", proc, e.getMessage()); }
     }
 
-    private String validateParameters(Class<?> mapperClass, String proc, Map<String, Object> vueParams) {
+    private String validateParameters(String proc, Map<String, Object> vueParams) {
         try {
-            String statementId = mapperClass.getName() + "." + proc;
+            String statementId = HpioMapper.class.getName() + "." + proc;
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return null;
             MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
             BoundSql boundSql = ms.getBoundSql(vueParams);
@@ -236,8 +234,8 @@ public class HpioController {
                 String prop = pm.getProperty();
                 if (prop != null && !prop.startsWith("_") && !prop.contains(".")) xmlKeys.add(prop);
             }
-            if (vueParams.keySet().size() < xmlKeys.size()) {
-                return String.format("📍 [PARAM SHORTAGE] XML:%d > VUE:%d\n📋 [REQUIRED]: %s", xmlKeys.size(), vueParams.keySet().size(), xmlKeys);
+            if (vueParams.size() < xmlKeys.size()) {
+                return String.format("📍 [PARAM SHORTAGE] XML:%d > VUE:%d\n📋 [REQUIRED]: %s", xmlKeys.size(), vueParams.size(), xmlKeys);
             }
             return null;
         } catch (Exception e) { return "VALIDATION ERROR: " + e.getMessage(); }
@@ -245,16 +243,20 @@ public class HpioController {
 
     private String buildPositionalSql(String proc, Map<String, Object> params) {
         try {
+            // 💡 [주의] 이 부분만 해당 컨트롤러의 매퍼 클래스명으로 수정하세요 (예: HsodMapper.class)
             String statementId = HpioMapper.class.getName() + "." + proc;
+
             if (!sqlSession.getConfiguration().hasStatement(statementId)) return "EXEC " + proc;
-            MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(statementId);
-            BoundSql boundSql = ms.getBoundSql(params);
-            
+            BoundSql boundSql = sqlSession.getConfiguration().getMappedStatement(statementId).getBoundSql(params);
             List<String> values = new ArrayList<>();
+
             for (ParameterMapping pm : boundSql.getParameterMappings()) {
+                // XML에 정의된 #{이름}과 100% 일치하는 값만 추출 (VUE 순서 상관없음)
                 Object val = params.get(pm.getProperty().trim());
-                if (val == null) values.add("''");
-                else values.add("'" + val.toString().replace("'", "''").trim() + "'");
+
+                // NULL/공백 치환 및 유니코드(N) 처리하여 왜곡 차단
+                String valStr = (val == null || "null".equals(String.valueOf(val))) ? "''" : "N'" + val.toString().replace("'", "''").trim() + "'";
+                values.add(valStr);
             }
             return String.format("EXEC %s %s", proc, String.join(", ", values));
         } catch (Exception e) { return "EXEC " + proc; }
