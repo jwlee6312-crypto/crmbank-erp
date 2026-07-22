@@ -22,7 +22,7 @@ public class ManualController {
 
     private final ManualService manualService;
 
-    @Value("${MANUAL_PATH}")
+    @Value("${MANUAL_PATH:}")
     private String basePath;
 
     /**

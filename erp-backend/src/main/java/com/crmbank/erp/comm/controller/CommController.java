@@ -22,6 +22,7 @@ public class CommController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> data, HttpServletRequest request) {
+        log.info("📡 [로그인 시도] IP: {}, Data: {}", request.getRemoteAddr(), data);
         try {
             UserSession user = commService.login(data.get("cmpycd"), data.get("userid"), data.get("passwd"), request.getRemoteAddr());
             HttpSession session = request.getSession(true);

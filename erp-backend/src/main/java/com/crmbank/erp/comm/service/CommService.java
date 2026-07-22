@@ -36,13 +36,27 @@ public class CommService {
         param.put("cmpycd", cmpycd.trim());
         param.put("userid", userid.trim());
 
+        log.info("🔐 [DB 조회 시작] cmpycd: {}, userid: {}", cmpycd, userid);
+
         // 1. 회사 정보 조회
-        Map<String, Object> companyInfo = commMapper.GET_COMPANY_INFO(param);
+        Map<String, Object> companyInfo;
+        try {
+            companyInfo = commMapper.GET_COMPANY_INFO(param);
+        } catch (Exception e) {
+            log.error("🔥 [DB 에러 - 회사정보] : {}", e.getMessage());
+            throw new Exception("데이터베이스 연결 오류가 발생했습니다. (회사조회)");
+        }
+        
         if (companyInfo == null) throw new Exception("등록되지 않은 회사아이디 입니다.");
         
         // 2. 사용자 정보 조회 (HA00_010S_STR)
-        Map<String, Object> userInfo = commMapper.GET_USER_INFO(param);
-        if (userInfo == null) throw new Exception("등록되지 않은 사용자아이디 입니다.");
+        Map<String, Object> userInfo;
+        try {
+            userInfo = commMapper.GET_USER_INFO(param);
+        } catch (Exception e) {
+            log.error("🔥 [DB 에러 - 사용자정보] : {}", e.getMessage());
+            throw new Exception("데이터베이스 연결 오류가 발생했습니다. (사용자조회)");
+        }
         
         log.info("🔍 [사용자 정보 조회 결과] keys: {}", userInfo.keySet());
         log.info("🔍 [사진 경로 확인] photo_path: {}", userInfo.get("photo_path"));

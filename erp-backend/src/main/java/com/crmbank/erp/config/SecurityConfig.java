@@ -27,12 +27,14 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.sameOrigin()) // 💡 외부 임베딩 허용 (Chatwoot 등 대비)
+            )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .sessionFixation().none()
             )
             .authorizeHttpRequests(auth -> auth
-                // 💡 모든 요청을 조건 없이 허용 (로그인 화면 차단 방지)
                 .anyRequest().permitAll()
             )
             .formLogin(AbstractHttpConfigurer::disable)
@@ -44,9 +46,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        // 💡 [데모 환경 전면 개방] 모든 도메인과 패턴을 신뢰하여 통신 차단을 원천 방지합니다.
+        configuration.setAllowedOriginPatterns(List.of("*")); 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
